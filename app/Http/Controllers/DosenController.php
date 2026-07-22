@@ -21,12 +21,12 @@ class DosenController extends Controller
             });
         }
 
-        $dosens = $query->latest()->paginate(10);
+        $dosens = $query->latest()->paginate(5)->withQueryString();
 
         return view('master.dosen.index', compact('dosens'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'nidn' => ['required', 'string', 'max:50', 'unique:dosens,nidn'],
@@ -37,12 +37,20 @@ class DosenController extends Controller
             'nama_dosen.required' => 'Nama dosen wajib diisi.',
         ]);
 
-        Dosen::create($validated);
+        $dosen = Dosen::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data dosen berhasil ditambahkan!',
+                'dosen' => $dosen
+            ]);
+        }
 
         return redirect()->route('master.dosen.index')->with('success', 'Data dosen berhasil ditambahkan!');
     }
 
-    public function update(Request $request, Dosen $dosen): RedirectResponse
+    public function update(Request $request, Dosen $dosen)
     {
         $validated = $request->validate([
             'nidn' => ['required', 'string', 'max:50', 'unique:dosens,nidn,' . $dosen->id],
@@ -55,12 +63,27 @@ class DosenController extends Controller
 
         $dosen->update($validated);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data dosen berhasil diperbarui!',
+                'dosen' => $dosen
+            ]);
+        }
+
         return redirect()->route('master.dosen.index')->with('success', 'Data dosen berhasil diperbarui!');
     }
 
-    public function destroy(Dosen $dosen): RedirectResponse
+    public function destroy(Request $request, Dosen $dosen)
     {
         $dosen->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data dosen berhasil dihapus!'
+            ]);
+        }
 
         return redirect()->route('master.dosen.index')->with('success', 'Data dosen berhasil dihapus!');
     }

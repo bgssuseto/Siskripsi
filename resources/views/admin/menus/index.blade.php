@@ -12,14 +12,136 @@
         selectedUser: null,
         userMenuIds: [],
         editMenu: { id: null, name: '', route: '', icon: '', role_default: 'all', sort_order: 0, is_active: true },
+        errors: {},
+        isLoading: false,
+        
         openEditMenu(menu) {
             this.editMenu = { ...menu };
+            this.errors = {};
             this.editMenuModal = true;
         },
         openUserAccessModal(user, menuIds) {
             this.selectedUser = user;
             this.userMenuIds = menuIds;
             this.userAccessModal = true;
+        },
+        async submitCreateMenu(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.createMenuModal = false;
+                    form.reset();
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#stats-container', '#tables-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitEditMenu(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.editMenuModal = false;
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#stats-container', '#tables-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitDeleteMenu(form) {
+            if (!confirm('Yakin ingin menghapus menu ini?')) return;
+            this.isLoading = true;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#stats-container', '#tables-container']);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menghapus menu.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitAssignUserMenus(e) {
+            this.isLoading = true;
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.userAccessModal = false;
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#stats-container', '#tables-container']);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menyimpan hak akses.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
         }
     }">
 
@@ -38,18 +160,8 @@
             </button>
         </div>
 
-        <!-- Alert Flash Notification -->
-        @if(session('success'))
-        <div class="p-4 mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center gap-3 shadow-sm">
-            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <p class="text-sm font-semibold">{{ session('success') }}</p>
-        </div>
-        @endif
-
         <!-- Summary Stat Cards (4 Grid Cards) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
             <!-- Total Menu -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
@@ -150,6 +262,7 @@
             </div>
         </div>
 
+        <div id="tables-container">
         <!-- TABLE 1: User Hak Akses Management Table -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mb-8">
             <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -296,7 +409,7 @@
                                     </button>
 
                                     <!-- Delete Button -->
-                                    <form method="POST" action="{{ route('admin.menus.destroy', $m) }}" onsubmit="return confirm('Yakin ingin menghapus menu {{ $m->name }}?')" class="inline">
+                                    <form method="POST" action="{{ route('admin.menus.destroy', $m) }}" @submit.prevent="submitDeleteMenu($event.currentTarget)" class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Hapus Menu">
@@ -312,6 +425,7 @@
                     </tbody>
                 </table>
             </div>
+        </div>
         </div>
 
         <!-- MODAL 1: ATUR HAK AKSES USER (POP UP MODAL) -->
@@ -335,7 +449,7 @@
 
                 <!-- Modal Body Form -->
                 <template x-if="selectedUser">
-                    <form :action="`{{ url('/kelola-menu/user') }}/${selectedUser.id}`" method="POST" class="space-y-6">
+                    <form :action="`{{ url('/kelola-menu/user') }}/${selectedUser.id}`" method="POST" @submit.prevent="submitAssignUserMenus($event)" class="space-y-6">
                         @csrf
                         <div>
                             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Pilih Menu Sistem yang Diberikan untuk User Ini:</p>
@@ -419,12 +533,15 @@
                     <button type="button" @click="createMenuModal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-200 flex items-center justify-center transition-all font-bold">&times;</button>
                 </div>
 
-                <form method="POST" action="{{ route('admin.menus.store') }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.menus.store') }}" @submit.prevent="submitCreateMenu($event)" class="space-y-4">
                     @csrf
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Menu</label>
                         <input type="text" name="name" required placeholder="Contoh: Jadwal Ujian" 
                                class="w-full text-sm px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium">
+                        <template x-if="errors.name">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.name[0]"></p>
+                        </template>
                     </div>
 
                     <div>
@@ -466,7 +583,7 @@
                     <button type="button" @click="editMenuModal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-200 flex items-center justify-center transition-all font-bold">&times;</button>
                 </div>
 
-                <form :action="`{{ route('admin.menus.index') }}/${editMenu.id}`" method="POST" class="space-y-4">
+                <form :action="`{{ route('admin.menus.index') }}/${editMenu.id}`" method="POST" @submit.prevent="submitEditMenu($event)" class="space-y-4">
                     @csrf
                     @method('PUT')
 
@@ -474,6 +591,9 @@
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Menu</label>
                         <input type="text" name="name" x-model="editMenu.name" required 
                                class="w-full text-sm px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium">
+                        <template x-if="errors.name">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.name[0]"></p>
+                        </template>
                     </div>
 
                     <div>

@@ -7,13 +7,124 @@
         deleteModal: false,
         editDosen: { id: null, nidn: '', nama_dosen: '' },
         deleteDosen: { id: null, nama_dosen: '' },
+        errors: {},
+        isLoading: false,
         openEdit(dosen) {
             this.editDosen = { ...dosen };
+            this.errors = {};
             this.editModal = true;
         },
         openDelete(dosen) {
             this.deleteDosen = { ...dosen };
             this.deleteModal = true;
+        },
+        async navigate(url) {
+            window.history.pushState(null, '', url);
+            await refreshComponent(['#table-container', '#filter-container']);
+        },
+        submitSearch(form) {
+            const url = new URL(form.action || window.location.href);
+            const formData = new FormData(form);
+            url.searchParams.delete('search');
+            url.searchParams.delete('page');
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    url.searchParams.set(key, value);
+                }
+            }
+            this.navigate(url.toString());
+        },
+        async submitCreate(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.createModal = false;
+                    form.reset();
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitEdit(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.editModal = false;
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitDelete(e) {
+            this.isLoading = true;
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.deleteModal = false;
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container']);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menghapus dosen.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
         }
     }">
 
@@ -33,11 +144,12 @@
         </div>
 
         <!-- Search & Filter Bar -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-            <form method="GET" action="{{ route('master.dosen.index') }}" class="w-full sm:w-80 relative">
+        <div id="filter-container" class="bg-white rounded-2xl border border-slate-200/80 p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <form method="GET" action="{{ route('master.dosen.index') }}" @submit.prevent="submitSearch($event.currentTarget)" class="w-full sm:w-80 relative">
                 <input type="text" 
                        name="search" 
                        value="{{ request('search') }}" 
+                       @input.debounce.500ms="submitSearch($event.target.form)"
                        placeholder="Cari NIDN atau Nama Dosen..." 
                        class="w-full pl-10 pr-4 py-2 rounded-xl text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +163,7 @@
         </div>
 
         <!-- Table Card -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-slate-600">
                     <thead class="bg-slate-50 border-b border-slate-200/80 text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -131,23 +243,32 @@
                         </button>
                     </div>
 
-                    <form method="POST" action="{{ route('master.dosen.store') }}" class="p-6 space-y-4">
+                    <form method="POST" action="{{ route('master.dosen.store') }}" @submit.prevent="submitCreate($event)" class="p-6 space-y-4">
                         @csrf
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-1">NIDN <span class="text-rose-500">*</span></label>
                             <input type="text" name="nidn" required placeholder="Contoh: 0012058501" 
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.nidn">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nidn[0]"></p>
+                            </template>
                         </div>
 
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Nama Dosen <span class="text-rose-500">*</span></label>
                             <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Eng. Budi Santoso, M.T." 
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.nama_dosen">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_dosen[0]"></p>
+                            </template>
                         </div>
 
                         <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                             <button type="button" @click="createModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
-                            <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-600/30">Simpan Data</button>
+                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-600/30 disabled:opacity-50">
+                                <span x-show="!isLoading">Simpan Data</span>
+                                <span x-show="isLoading">Menyimpan...</span>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -169,24 +290,33 @@
                         </button>
                     </div>
 
-                    <form :action="'/master/dosen/' + editDosen.id" method="POST" class="p-6 space-y-4">
+                    <form :action="'/master/dosen/' + editDosen.id" method="POST" @submit.prevent="submitEdit($event)" class="p-6 space-y-4">
                         @csrf
                         @method('PUT')
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-1">NIDN <span class="text-rose-500">*</span></label>
                             <input type="text" name="nidn" x-model="editDosen.nidn" required 
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.nidn">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nidn[0]"></p>
+                            </template>
                         </div>
 
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Nama Dosen <span class="text-rose-500">*</span></label>
                             <input type="text" name="nama_dosen" x-model="editDosen.nama_dosen" required 
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.nama_dosen">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_dosen[0]"></p>
+                            </template>
                         </div>
 
                         <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                             <button type="button" @click="editModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
-                            <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-600/30">Simpan Perubahan</button>
+                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-600/30 disabled:opacity-50">
+                                <span x-show="!isLoading">Simpan Perubahan</span>
+                                <span x-show="isLoading">Menyimpan...</span>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -210,11 +340,14 @@
                         Apakah Anda yakin ingin menghapus data dosen <span class="font-bold text-slate-800" x-text="deleteDosen.nama_dosen"></span>?
                     </p>
 
-                    <form :action="'/master/dosen/' + deleteDosen.id" method="POST" class="flex items-center justify-center gap-3">
+                    <form :action="'/master/dosen/' + deleteDosen.id" method="POST" @submit.prevent="submitDelete($event)" class="flex items-center justify-center gap-3">
                         @csrf
                         @method('DELETE')
                         <button type="button" @click="deleteModal = false" class="w-1/2 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
-                        <button type="submit" class="w-1/2 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-md shadow-rose-600/30">Hapus</button>
+                        <button type="submit" :disabled="isLoading" class="w-1/2 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-md shadow-rose-600/30 disabled:opacity-50">
+                            <span x-show="!isLoading">Hapus</span>
+                            <span x-show="isLoading">Menghapus...</span>
+                        </button>
                     </form>
                 </div>
             </div>

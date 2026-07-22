@@ -9,8 +9,12 @@
         deleteModal: false,
         selectedUser: { id: null, name: '', email: '', role: 'mahasiswa' },
         deleteUrl: '',
+        errors: {},
+        isLoading: false,
+        
         openEdit(user) {
             this.selectedUser = { ...user };
+            this.errors = {};
             this.editModal = true;
         },
         openDelete(id, name) {
@@ -18,6 +22,121 @@
             this.selectedUser.name = name;
             this.deleteUrl = '{{ url('users') }}/' + id;
             this.deleteModal = true;
+        },
+        async navigate(url) {
+            window.history.pushState(null, '', url);
+            await refreshComponent(['#stats-container', '#table-container', '#filter-container']);
+        },
+        submitSearch(form) {
+            const url = new URL(form.action || window.location.href);
+            const formData = new FormData(form);
+            url.searchParams.delete('search');
+            url.searchParams.delete('page');
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    url.searchParams.set(key, value);
+                }
+            }
+            const currentUrl = new URL(window.location.href);
+            if (currentUrl.searchParams.has('role')) {
+                url.searchParams.set('role', currentUrl.searchParams.get('role'));
+            }
+            this.navigate(url.toString());
+        },
+        async submitCreate(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.createModal = false;
+                    form.reset();
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#stats-container', '#table-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitEdit(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.editModal = false;
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#stats-container', '#table-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                        if (result.message && !result.errors) {
+                            window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'error' } }));
+                        }
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitDelete(e) {
+            this.isLoading = true;
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.deleteModal = false;
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#stats-container', '#table-container']);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menghapus user.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
         }
     }">
 
@@ -37,9 +156,9 @@
         </div>
 
         <!-- Summary Stat Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
             <!-- Total -->
-            <a href="{{ route('users.index') }}" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all group">
+            <a href="{{ route('users.index') }}" @click.prevent="navigate($event.currentTarget.href)" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all group">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total User</p>
@@ -54,7 +173,7 @@
             </a>
 
             <!-- Super Admin -->
-            <a href="{{ route('users.index', ['role' => 'super_admin']) }}" class="bg-white p-5 rounded-2xl border border-purple-100 shadow-sm hover:shadow-md transition-all group">
+            <a href="{{ route('users.index', ['role' => 'super_admin']) }}" @click.prevent="navigate($event.currentTarget.href)" class="bg-white p-5 rounded-2xl border border-purple-100 shadow-sm hover:shadow-md transition-all group">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wider text-purple-600">Super Admin</p>
@@ -69,7 +188,7 @@
             </a>
 
             <!-- Koordinator -->
-            <a href="{{ route('users.index', ['role' => 'koordinator']) }}" class="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm hover:shadow-md transition-all group">
+            <a href="{{ route('users.index', ['role' => 'koordinator']) }}" @click.prevent="navigate($event.currentTarget.href)" class="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm hover:shadow-md transition-all group">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wider text-blue-600">Koordinator</p>
@@ -84,7 +203,7 @@
             </a>
 
             <!-- Mahasiswa -->
-            <a href="{{ route('users.index', ['role' => 'mahasiswa']) }}" class="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-all group">
+            <a href="{{ route('users.index', ['role' => 'mahasiswa']) }}" @click.prevent="navigate($event.currentTarget.href)" class="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-all group">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wider text-emerald-600">Mahasiswa</p>
@@ -101,24 +220,28 @@
         </div>
 
         <!-- Filter & Search Bar -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 mb-6">
-            <form method="GET" action="{{ route('users.index') }}" class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div id="filter-container" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 mb-6">
+            <form method="GET" action="{{ route('users.index') }}" @submit.prevent="submitSearch($event.currentTarget)" class="flex flex-col sm:flex-row items-center justify-between gap-4">
                 
                 <!-- Role Tabs -->
                 <div class="flex items-center p-1 bg-slate-100 rounded-xl w-full sm:w-auto overflow-x-auto">
                     <a href="{{ route('users.index', array_filter(['search' => request('search')])) }}" 
+                       @click.prevent="navigate($event.currentTarget.href)"
                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap {{ !request('role') ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
                         Semua Role
                     </a>
                     <a href="{{ route('users.index', array_merge(request()->except('page'), ['role' => 'super_admin'])) }}" 
+                       @click.prevent="navigate($event.currentTarget.href)"
                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap {{ request('role') === 'super_admin' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
                         Super Admin
                     </a>
                     <a href="{{ route('users.index', array_merge(request()->except('page'), ['role' => 'koordinator'])) }}" 
+                       @click.prevent="navigate($event.currentTarget.href)"
                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap {{ request('role') === 'koordinator' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
                         Koordinator
                     </a>
                     <a href="{{ route('users.index', array_merge(request()->except('page'), ['role' => 'mahasiswa'])) }}" 
+                       @click.prevent="navigate($event.currentTarget.href)"
                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap {{ request('role') === 'mahasiswa' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
                         Mahasiswa
                     </a>
@@ -129,6 +252,7 @@
                     <input type="text" 
                            name="search" 
                            value="{{ request('search') }}"
+                           @input.debounce.500ms="submitSearch($event.target.form)"
                            placeholder="Cari nama atau email..." 
                            class="w-full pl-10 pr-4 py-2 text-xs rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 font-medium">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -141,7 +265,7 @@
         </div>
 
         <!-- Users Table -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
+        <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -237,15 +361,21 @@
                         </svg>
                     </button>
                 </div>
-                <form action="{{ route('users.store') }}" method="POST" class="mt-4 space-y-4">
+                <form action="{{ route('users.store') }}" method="POST" @submit.prevent="submitCreate($event)" class="mt-4 space-y-4">
                     @csrf
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nama Lengkap</label>
                         <input type="text" name="name" required placeholder="Contoh: Budi Santoso" class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <template x-if="errors.name">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.name[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Alamat Email</label>
                         <input type="email" name="email" required placeholder="budi@skripsi.ac.id" class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <template x-if="errors.email">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.email[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Role User</label>
@@ -254,14 +384,23 @@
                             <option value="koordinator">Koordinator</option>
                             <option value="super_admin">Super Admin</option>
                         </select>
+                        <template x-if="errors.role">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.role[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
                         <input type="password" name="password" required minlength="8" placeholder="Minimal 8 karakter" class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <template x-if="errors.password">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.password[0]"></p>
+                        </template>
                     </div>
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" @click="createModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20">Simpan User</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 disabled:opacity-50">
+                            <span x-show="!isLoading">Simpan User</span>
+                            <span x-show="isLoading">Menyimpan...</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -281,16 +420,22 @@
                         </svg>
                     </button>
                 </div>
-                <form :action="'{{ url('users') }}/' + selectedUser.id" method="POST" class="mt-4 space-y-4">
+                <form :action="'{{ url('users') }}/' + selectedUser.id" method="POST" @submit.prevent="submitEdit($event)" class="mt-4 space-y-4">
                     @csrf
                     @method('PUT')
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nama Lengkap</label>
                         <input type="text" name="name" x-model="selectedUser.name" required class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <template x-if="errors.name">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.name[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Alamat Email</label>
                         <input type="email" name="email" x-model="selectedUser.email" required class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <template x-if="errors.email">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.email[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Role User</label>
@@ -299,14 +444,23 @@
                             <option value="koordinator">Koordinator</option>
                             <option value="super_admin">Super Admin</option>
                         </select>
+                        <template x-if="errors.role">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.role[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password Baru (Opsional)</label>
                         <input type="password" name="password" placeholder="Kosongkan jika tidak diubah" minlength="8" class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <template x-if="errors.password">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.password[0]"></p>
+                        </template>
                     </div>
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" @click="editModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20">Update User</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 disabled:opacity-50">
+                            <span x-show="!isLoading">Update User</span>
+                            <span x-show="isLoading">Menyimpan...</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -326,11 +480,14 @@
                 <h3 class="text-base font-bold text-slate-900">Hapus User?</h3>
                 <p class="text-xs text-slate-500 mt-2">Apakah Anda yakin ingin menghapus user <span class="font-bold text-slate-800" x-text="selectedUser.name"></span>? Tindakan ini tidak dapat dibatalkan.</p>
 
-                <form :action="deleteUrl" method="POST" class="mt-6 flex items-center justify-center gap-3">
+                <form :action="deleteUrl" method="POST" @submit.prevent="submitDelete($event)" class="mt-6 flex items-center justify-center gap-3">
                     @csrf
                     @method('DELETE')
                     <button type="button" @click="deleteModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20">Ya, Hapus</button>
+                    <button type="submit" :disabled="isLoading" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 disabled:opacity-50">
+                        <span x-show="!isLoading">Ya, Hapus</span>
+                        <span x-show="isLoading">Menghapus...</span>
+                    </button>
                 </form>
             </div>
         </div>

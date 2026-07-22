@@ -195,69 +195,62 @@
     {{-- FullCalendar v6 CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
-    <div class="sidang-page" x-data="{ currentView: 'table' }">
+    <div class="sidang-page" x-data="{ 
+        currentView: 'table',
+        async navigate(url) {
+            window.history.pushState(null, '', url);
+            await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+            if (this.currentView === 'calendar') {
+                initCalendar();
+            }
+        },
+        submitSearch(form) {
+            const url = new URL(form.action || window.location.href);
+            const formData = new FormData(form);
+            url.searchParams.delete('search');
+            url.searchParams.delete('periode_id');
+            url.searchParams.delete('jenis');
+            url.searchParams.delete('tanggal');
+            url.searchParams.delete('page');
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    url.searchParams.set(key, value);
+                }
+            }
+            this.navigate(url.toString());
+        }
+    }">
 
-        {{-- Flash messages --}}
-        @if (session('success'))
-            <div class="alert alert-success" x-data x-init="setTimeout(()=>$el.remove(),5000)">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-        @if (session('warning'))
-            <div class="alert alert-error" style="background:#fff7ed; border-color:#fed7aa; color:#c2410c;">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                <div><strong>⚠️ Bentrok Jadwal</strong><p class="text-xs mt-1">{{ session('warning') }}</p></div>
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-error" style="background:#fff1f2; border-color:#fecaca; color:#b91c1c;">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <div><strong>❌ Pelanggaran Aturan Sidang</strong><p class="text-xs mt-1">{{ session('error') }}</p></div>
-            </div>
-        @endif
-        @php
-            $scheduleConflictCount = collect($conflictMap ?? [])->filter(fn($v) => !empty($v['schedule']))->count();
-            $ruleViolationCount    = collect($conflictMap ?? [])->filter(fn($v) => !empty($v['rules']))->count();
-        @endphp
-        @if($scheduleConflictCount > 0 || $ruleViolationCount > 0)
-            <div class="alert alert-error">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                <div>
-                    <strong>Perhatian: Terdeteksi Masalah Jadwal Sidang</strong>
-                    <ul class="text-xs mt-1 list-disc list-inside space-y-0.5">
-                        @if($scheduleConflictCount > 0)
-                            <li>⚠️ <strong>{{ $scheduleConflictCount }}</strong> sidang memiliki <em>bentrok jadwal</em> (ruangan atau penguji bersamaan). Ditandai badge merah di tabel.</li>
-                        @endif
-                        @if($ruleViolationCount > 0)
-                            <li>❌ <strong>{{ $ruleViolationCount }}</strong> sidang memiliki <em>pelanggaran aturan</em> (Pembimbing Utama bukan Penguji 2, atau Pembimbing Pendamping menguji). Ditandai badge oranye di tabel.</li>
-                        @endif
-                    </ul>
-                    <p class="text-xs mt-1.5 opacity-75">Klik ✏️ pada baris tersebut untuk melihat detail dan memperbaiki.</p>
+        <div id="alerts-container">
+            @php
+                $scheduleConflictCount = collect($conflictMap ?? [])->filter(fn($v) => !empty($v['schedule']))->count();
+                $ruleViolationCount    = collect($conflictMap ?? [])->filter(fn($v) => !empty($v['rules']))->count();
+            @endphp
+            @if($scheduleConflictCount > 0 || $ruleViolationCount > 0)
+                <div class="alert alert-error">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                    <div>
+                        <strong>Perhatian: Terdeteksi Masalah Jadwal Skripsi</strong>
+                        <ul class="text-xs mt-1 list-disc list-inside space-y-0.5">
+                            @if($scheduleConflictCount > 0)
+                                <li>⚠️ <strong>{{ $scheduleConflictCount }}</strong> skripsi memiliki <em>bentrok jadwal</em> (ruangan atau penguji bersamaan). Ditandai badge merah di tabel.</li>
+                            @endif
+                            @if($ruleViolationCount > 0)
+                                <li>❌ <strong>{{ $ruleViolationCount }}</strong> skripsi memiliki <em>pelanggaran aturan</em> (Pembimbing Utama bukan Penguji 2, atau Pembimbing Pendamping menguji). Ditandai badge oranye di tabel.</li>
+                            @endif
+                        </ul>
+                        <p class="text-xs mt-1.5 opacity-75">Klik ✏️ pada baris tersebut untuk melihat detail dan memperbaiki.</p>
+                    </div>
                 </div>
-            </div>
-        @endif
-        @if ($errors->any())
-            <div class="alert alert-error">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                <ul class="list-disc list-inside ml-2">@foreach ($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul>
-            </div>
-        @endif
-        @if (session('import_errors'))
-            <div class="alert alert-error">
-                <div>
-                    <b>Beberapa baris gagal diimpor:</b>
-                    <ul class="list-disc list-inside ml-2">@foreach (session('import_errors') as $e)<li>{{ $e }}</li>@endforeach</ul>
-                </div>
-            </div>
-        @endif
+            @endif
+        </div>
 
 
         {{-- Page header --}}
         <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Jadwal Sidang Skripsi</h1>
-                <p class="text-sm text-slate-500 mt-1">Kelola, import, dan visualisasikan jadwal ujian sidang mahasiswa.</p>
+                <p class="text-sm text-slate-500 mt-1">Plotting, kelola jadwal, dan visualisasikan sidang skripsi mahasiswa.</p>
             </div>
             
             <div class="flex items-center gap-3 flex-wrap">
@@ -270,32 +263,23 @@
                         📅 Kalender
                     </button>
                 </div>
-
-                <a href="{{ route('sidang.import.form') }}" class="btn btn-success">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                    Import Excel
-                </a>
-                <button onclick="openModal('modal-tambah')" class="btn btn-primary">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Tambah Data
-                </button>
             </div>
         </div>
 
         {{-- Stats --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
             <div class="stat-card">
                 <div class="stat-icon blue">📋</div>
                 <div>
-                    <div class="stat-value">{{ $totalSidang + $totalJurnal }}</div>
+                    <div class="stat-value">{{ $totalSkripsi + $totalJurnal }}</div>
                     <div class="stat-label">Total Mahasiswa</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon blue">🎓</div>
                 <div>
-                    <div class="stat-value">{{ $totalSidang }}</div>
-                    <div class="stat-label">Sidang Skripsi</div>
+                    <div class="stat-value">{{ $totalSkripsi }}</div>
+                    <div class="stat-label">Skripsi</div>
                 </div>
             </div>
             <div class="stat-card">
@@ -310,13 +294,25 @@
         {{-- ── TAMPILAN TABEL ── --}}
         <div x-show="currentView === 'table'" class="space-y-6">
             {{-- Toolbar / Filters --}}
-            <form method="GET" action="{{ route('sidang.index') }}" class="toolbar">
+            <form method="GET" action="{{ route('jadwal-ujian.index') }}" id="filter-container" @submit.prevent="submitSearch($event.currentTarget)" class="toolbar">
                 <div class="toolbar-search">
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/></svg>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIM, nama, judul…">
+                    <input type="text" name="search" value="{{ request('search') }}" @input.debounce.500ms="submitSearch($event.target.form)" placeholder="Cari NIM, nama, judul…">
                 </div>
                 
-                <select name="periode_id" class="filter-select" onchange="this.form.submit()">
+                <select name="status" class="filter-select" @change="submitSearch($event.target.form)">
+                    <option value="">Semua Status</option>
+                    <option value="belum" {{ request('status')=='belum'?'selected':'' }}>Belum Dijadwalkan</option>
+                    <option value="sudah" {{ request('status')=='sudah'?'selected':'' }}>Sudah Dijadwal</option>
+                </select>
+
+                <select name="jenis" class="filter-select" @change="submitSearch($event.target.form)">
+                    <option value="">Semua Jenis</option>
+                    <option value="skripsi" {{ request('jenis')=='skripsi'?'selected':'' }}>Skripsi</option>
+                    <option value="jurnal" {{ request('jenis')=='jurnal'?'selected':'' }}>Jurnal</option>
+                </select>
+
+                <select name="periode_id" class="filter-select" @change="submitSearch($event.target.form)">
                     @foreach ($periodes as $p)
                         <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode->id ?? null) == $p->id) ? 'selected' : '' }}>
                             {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
@@ -324,13 +320,7 @@
                     @endforeach
                 </select>
 
-                <select name="jenis" class="filter-select" onchange="this.form.submit()">
-                    <option value="">Semua Jenis</option>
-                    <option value="sidang" {{ request('jenis')=='sidang'?'selected':'' }}>Sidang Skripsi</option>
-                    <option value="jurnal" {{ request('jenis')=='jurnal'?'selected':'' }}>Jurnal</option>
-                </select>
-
-                <select name="tanggal" class="filter-select" onchange="this.form.submit()">
+                <select name="tanggal" class="filter-select" @change="submitSearch($event.target.form)">
                     <option value="">Semua Tanggal</option>
                     @foreach ($daftarTanggal as $t)
                         <option value="{{ $t->format('Y-m-d') }}" {{ request('tanggal')==$t->format('Y-m-d')?'selected':'' }}>
@@ -340,13 +330,13 @@
                 </select>
 
                 <button type="submit" class="btn btn-primary">Filter</button>
-                @if(request()->hasAny(['search','jenis','tanggal','periode_id']))
-                    <a href="{{ route('sidang.index') }}" class="btn btn-outline">✕ Reset</a>
+                @if(request()->hasAny(['search','jenis','status','tanggal','periode_id']))
+                    <a href="{{ route('jadwal-ujian.index') }}" @click.prevent="navigate($event.currentTarget.href)" class="btn btn-outline">✕ Reset</a>
                 @endif
             </form>
 
             {{-- Table --}}
-            <div class="table-card">
+            <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="table-card">
                 <div class="table-scroll">
                     <table class="sidang-table">
                         <thead>
@@ -356,6 +346,7 @@
                                 <th>NIM</th>
                                 <th>Nama Mahasiswa</th>
                                 <th>Judul Skripsi</th>
+                                <th>Status</th>
                                 <th>Periode</th>
                                 <th>Dosbing Utama</th>
                                 <th>Dosbing Pendamping</th>
@@ -365,7 +356,7 @@
                                 <th>Jadwal Sidang</th>
                                 <th>Ruangan</th>
                                 <th>Jenis</th>
-                                <th style="width:85px; text-align:right;">Aksi</th>
+                                <th style="width:130px; text-align:right;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -386,7 +377,6 @@
                                             @endif
                                         </div>
                                     </td>
-                                    {{-- Tgl Daftar (dipindah ke setelah No) --}}
                                     <td>
                                         @if($item->tanggal_pendaftaran)
                                             <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md whitespace-nowrap">
@@ -425,6 +415,17 @@
                                         @endif
                                     </td>
                                     <td><p class="judul-text">{{ $item->judul_skripsi }}</p></td>
+                                    <td>
+                                        @if(empty($item->tanggal))
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
+                                                ● Belum Plotting
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                                ✓ Sudah Dijadwal
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td><span class="text-xs font-semibold text-slate-500">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                     <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                     <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
@@ -449,13 +450,16 @@
                                             <span style="color:#cbd5e1;">—</span>
                                         @endif
                                     </td>
-                                    {{-- Kolom Tgl Daftar dihapus dari sini (dipindah ke depan) --}}
                                     <td>
-                                        <span class="badge {{ $item->jenis_tugas_akhir === 'sidang' ? 'badge-sidang' : 'badge-jurnal' }}">
-                                            {{ $item->jenis_tugas_akhir === 'sidang' ? 'Sidang' : 'Jurnal' }}
+                                        <span class="badge {{ $item->jenis_tugas_akhir === 'skripsi' ? 'badge-sidang' : 'badge-jurnal' }}">
+                                            {{ $item->jenis_tugas_akhir === 'skripsi' ? 'Skripsi' : 'Jurnal' }}
                                         </span>
                                     </td>
                                     <td class="text-right space-x-1 whitespace-nowrap">
+                                        <button class="btn btn-primary btn-sm"
+                                            onclick="openJadwalkan({{ $item->id }}, '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->ketua_penguji_id ?? '' }}', '{{ $item->anggota_penguji_1_id ?? '' }}', '{{ $item->anggota_penguji_2_id ?? '' }}')">
+                                            📅 {{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}
+                                        </button>
                                         <button class="btn btn-outline btn-sm"
                                             onclick="openEdit({{ $item->id }}, {{ json_encode([
                                                 'id' => $item->id,
@@ -488,10 +492,10 @@
                                 <tr>
                                     <td colspan="14" class="py-12 text-center text-slate-400">
                                         <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                        <h3>Belum ada data sidang</h3>
+                                        <h3>Belum ada data skripsi</h3>
                                         <p style="font-size:.85rem;">Import Excel atau tambah data secara manual.</p>
                                         <div class="flex gap-3 justify-center mt-4">
-                                            <a href="{{ route('sidang.import.form') }}" class="btn btn-success">Import Excel</a>
+                                            <a href="{{ route('master.skripsi.import.form') }}" class="btn btn-success">Import Excel</a>
                                             <button onclick="openModal('modal-tambah')" class="btn btn-primary">Tambah Manual</button>
                                         </div>
                                     </td>
@@ -510,8 +514,8 @@
         </div>
 
         {{-- ── TAMPILAN KALENDER ── --}}
-        <div x-show="currentView === 'calendar'" class="calendar-container" x-cloak>
-            <div id="calendar-view"></div>
+        <div x-show="currentView === 'calendar'" id="calendar-container" class="calendar-container" x-cloak>
+            <div id="calendar-view" data-events="{{ json_encode($calendarEvents->values()) }}"></div>
         </div>
     </div>
 
@@ -521,10 +525,10 @@
     <div id="modal-tambah" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-tambah')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">➕ Tambah Data Sidang</span>
+                <span class="modal-title">➕ Tambah Data Skripsi</span>
                 <button class="modal-close" onclick="closeModal('modal-tambah')">✕</button>
             </div>
-            <form method="POST" action="{{ route('sidang.store') }}">
+            <form method="POST" action="{{ route('master.skripsi.store') }}" id="form-tambah">
                 @csrf
                 <div class="modal-body">
                     {{-- Identitas mahasiswa --}}
@@ -538,7 +542,7 @@
                             <div class="form-group">
                                 <label>Jenis <span style="color:red">*</span></label>
                                 <select name="jenis_tugas_akhir" class="form-control" required>
-                                    <option value="sidang">Sidang Skripsi</option>
+                                    <option value="skripsi">Skripsi</option>
                                     <option value="jurnal">Jurnal / Artikel</option>
                                 </select>
                             </div>
@@ -655,7 +659,7 @@
     <div id="modal-edit" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-edit')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">✏️ Edit Data Sidang</span>
+                <span class="modal-title">✏️ Edit Data Skripsi</span>
                 <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
             </div>
             <form method="POST" id="form-edit" action="">
@@ -681,7 +685,7 @@
                         <div class="flex items-start gap-2">
                             <span class="text-base">❌</span>
                             <div class="flex-1">
-                                <strong class="block text-xs font-bold uppercase tracking-wider text-orange-700 mb-1.5">Pelanggaran Aturan Sidang</strong>
+                                <strong class="block text-xs font-bold uppercase tracking-wider text-orange-700 mb-1.5">Pelanggaran Aturan Skripsi</strong>
                                 <ul id="edit-conflict-rules-list" class="list-disc list-inside space-y-1 text-xs font-medium text-orange-800"></ul>
                                 <p class="mt-2 text-[11px] italic text-orange-600">* Aturan: (1) Pembimbing Utama wajib menjadi Penguji 2. (2) Pembimbing Pendamping tidak boleh menguji.</p>
                             </div>
@@ -697,7 +701,7 @@
                             <div class="form-group">
                                 <label>Jenis <span style="color:red">*</span></label>
                                 <select name="jenis_tugas_akhir" id="edit-jenis" class="form-control" required>
-                                    <option value="sidang">Sidang Skripsi</option>
+                                    <option value="skripsi">Skripsi</option>
                                     <option value="jurnal">Jurnal / Artikel</option>
                                 </select>
                             </div>
@@ -816,7 +820,7 @@
                 <button class="modal-close" onclick="closeModal('modal-hapus')">✕</button>
             </div>
             <div class="modal-body">
-                <p>Hapus data sidang untuk mahasiswa <strong id="hapus-nama">?</strong></p>
+                <p>Hapus data skripsi untuk mahasiswa <strong id="hapus-nama">?</strong></p>
                 <p class="text-xs text-rose-500 font-semibold mt-2">⚠ Tindakan ini tidak bisa dibatalkan.</p>
             </div>
             <div class="modal-footer">
@@ -835,7 +839,7 @@
     <div id="modal-detail" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-detail')">
         <div class="modal-box">
             <div class="modal-header bg-slate-50 border-b border-slate-100">
-                <span class="modal-title font-bold">📄 Detail Jadwal Sidang</span>
+                <span class="modal-title font-bold">📄 Detail Jadwal Skripsi</span>
                 <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
             </div>
             <div class="modal-body space-y-4">
@@ -896,6 +900,87 @@
     </div>
 
     {{-- ════════════════════════════════════════════════════════════════ --}}
+    {{-- MODAL: PLOTTING JADWAL SIDANG                                     --}}
+    {{-- ════════════════════════════════════════════════════════════════ --}}
+    <div id="modal-jadwalkan" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-jadwalkan')">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">📅 Plotting Jadwal & Penguji Sidang</span>
+                <button class="modal-close" onclick="closeModal('modal-jadwalkan')">✕</button>
+            </div>
+            <form method="POST" id="form-jadwalkan" action="">
+                @csrf
+                <div class="modal-body">
+                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl mb-4 text-xs">
+                        <div class="font-bold text-slate-800 text-sm" id="jadwalkan-mhs-nama"></div>
+                        <div class="text-slate-500 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
+                    </div>
+
+                    <div class="form-section mt-0">
+                        <div class="form-section-title">Waktu & Tempat Sidang</div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Hari / Tanggal Sidang <span style="color:red">*</span></label>
+                                <input type="date" name="tanggal" id="jadwalkan-tanggal" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Jam Sidang <span style="color:red">*</span></label>
+                                <input type="text" name="jam" id="jadwalkan-jam" class="form-control" placeholder="Contoh: 08.00 - 09.30" required>
+                            </div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label>Ruangan Sidang <span style="color:red">*</span></label>
+                            <select name="ruang_id" id="jadwalkan-ruang" class="form-control" required>
+                                <option value="">-- Pilih Ruangan --</option>
+                                @foreach ($ruangs as $r)
+                                    <option value="{{ $r->id }}">{{ $r->kode_ruangan }} ({{ $r->nama_ruangan }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-title">Plotting Tim Penguji</div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Ketua Penguji</label>
+                                <select name="ketua_penguji_id" id="jadwalkan-ketua" class="form-control">
+                                    <option value="">-- Pilih Dosen --</option>
+                                    @foreach ($dosens as $d)
+                                        <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Penguji 1</label>
+                                <select name="anggota_penguji_1_id" id="jadwalkan-penguji1" class="form-control">
+                                    <option value="">-- Pilih Dosen --</option>
+                                    @foreach ($dosens as $d)
+                                        <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Penguji 2</label>
+                                <select name="anggota_penguji_2_id" id="jadwalkan-penguji2" class="form-control">
+                                    <option value="">-- Pilih Dosen --</option>
+                                    @foreach ($dosens as $d)
+                                        <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-jadwalkan')">Batal</button>
+                    <button type="submit" class="btn btn-primary">💾 Simpan Jadwal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ════════════════════════════════════════════════════════════════ --}}
     {{-- SCRIPTS                                                          --}}
     {{-- ════════════════════════════════════════════════════════════════ --}}
     <script>
@@ -913,8 +998,23 @@
             if (e.target === document.getElementById(id)) closeModal(id);
         }
 
+        function openJadwalkan(id, nama, nim, tgl, jam, ruangId, ketuaId, p1Id, p2Id) {
+            const form = document.getElementById('form-jadwalkan');
+            form.action = '/jadwal/skripsi/' + id + '/jadwalkan';
+            document.getElementById('jadwalkan-mhs-nama').textContent = nama;
+            document.getElementById('jadwalkan-mhs-nim').textContent = 'NIM: ' + nim;
+            document.getElementById('jadwalkan-tanggal').value = tgl || '';
+            document.getElementById('jadwalkan-jam').value = jam || '';
+            document.getElementById('jadwalkan-ruang').value = ruangId || '';
+            document.getElementById('jadwalkan-ketua').value = ketuaId || '';
+            document.getElementById('jadwalkan-penguji1').value = p1Id || '';
+            document.getElementById('jadwalkan-penguji2').value = p2Id || '';
+            openModal('modal-jadwalkan');
+        }
+
+
         function openEdit(id, data) {
-            document.getElementById('form-edit').action = '/sidang/' + id;
+            document.getElementById('form-edit').action = '/master/skripsi/' + id;
             document.getElementById('edit-nim').value                             = data.nim || '';
             document.getElementById('edit-nama').value                            = data.nama_mahasiswa || '';
             document.getElementById('edit-judul').value                           = data.judul_skripsi || '';
@@ -928,7 +1028,7 @@
             document.getElementById('edit-tanggal').value                         = data.tanggal || '';
             document.getElementById('edit-tanggal-pendaftaran').value             = data.tanggal_pendaftaran || '';
             document.getElementById('edit-jam').value                             = data.jam || '';
-            document.getElementById('edit-jenis').value                           = data.jenis_tugas_akhir || 'sidang';
+            document.getElementById('edit-jenis').value                           = data.jenis_tugas_akhir || 'skripsi';
 
             // ── Section 1: Schedule Conflicts (red box) ──
             const scheduleBox  = document.getElementById('edit-conflict-schedule-box');
@@ -971,7 +1071,7 @@
 
         function openDelete(id, nama) {
             document.getElementById('hapus-nama').textContent = nama;
-            document.getElementById('form-hapus').action = '/sidang/' + id;
+            document.getElementById('form-hapus').action = '/master/skripsi/' + id;
             openModal('modal-hapus');
         }
 
@@ -983,15 +1083,25 @@
             }
             
             const calendarEl = document.getElementById('calendar-view');
+            if (!calendarEl) return;
+            
+            if (calendar) {
+                calendar.destroy();
+            }
+            
+            const eventsData = JSON.parse(calendarEl.getAttribute('data-events') || '[]');
+            const firstDate = (eventsData.length > 0 && eventsData[0].start) ? eventsData[0].start.split('T')[0] : null;
+
             calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
+                initialDate: firstDate || undefined,
                 locale: 'id',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
-                events: {!! json_encode($calendarEvents->values()) !!},
+                events: eventsData,
                 eventDidMount: function(info) {
                     if (info.event.backgroundColor) {
                         info.el.style.setProperty('background-color', info.event.backgroundColor, 'important');
@@ -1033,6 +1143,146 @@
             });
             calendar.render();
         }
+
+        // Intercept Form Submissions
+        document.getElementById('form-tambah')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+            
+            form.querySelectorAll('.error-feedback').forEach(el => el.remove());
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    closeModal('modal-tambah');
+                    form.reset();
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                    if (document.querySelector('.sidang-page').__x?.$data?.currentView === 'calendar') {
+                        initCalendar();
+                    }
+                } else {
+                    if (response.status === 422) {
+                        if (result.errors) {
+                            Object.keys(result.errors).forEach(key => {
+                                const input = form.querySelector(`[name="${key}"]`);
+                                if (input) {
+                                    const errEl = document.createElement('p');
+                                    errEl.className = 'error-feedback text-xs text-rose-600 mt-1 font-semibold';
+                                    errEl.textContent = result.errors[key][0];
+                                    input.parentNode.appendChild(errEl);
+                                }
+                            });
+                        } else {
+                            window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                        }
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('form-edit')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+            
+            form.querySelectorAll('.error-feedback').forEach(el => el.remove());
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    closeModal('modal-edit');
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                    if (document.querySelector('.sidang-page').__x?.$data?.currentView === 'calendar') {
+                        initCalendar();
+                    }
+                } else {
+                    if (response.status === 422) {
+                        if (result.errors) {
+                            Object.keys(result.errors).forEach(key => {
+                                const input = form.querySelector(`[name="${key}"]`);
+                                if (input) {
+                                    const errEl = document.createElement('p');
+                                    errEl.className = 'error-feedback text-xs text-rose-600 mt-1 font-semibold';
+                                    errEl.textContent = result.errors[key][0];
+                                    input.parentNode.appendChild(errEl);
+                                }
+                            });
+                        } else {
+                            window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                        }
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('form-hapus')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    closeModal('modal-hapus');
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                    if (document.querySelector('.sidang-page').__x?.$data?.currentView === 'calendar') {
+                        initCalendar();
+                    }
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menghapus.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
 
         // Escape key close
         document.addEventListener('keydown', function(e) {

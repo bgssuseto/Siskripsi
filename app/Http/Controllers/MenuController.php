@@ -28,9 +28,9 @@ class MenuController extends Controller
     }
 
     /**
-     * Store a new system menu
+     * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'name'         => ['required', 'string', 'max:255'],
@@ -40,7 +40,15 @@ class MenuController extends Controller
             'sort_order'   => ['nullable', 'integer'],
         ]);
 
-        Menu::create($validated);
+        $menu = Menu::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu sistem berhasil ditambahkan!',
+                'menu' => $menu
+            ]);
+        }
 
         return redirect()->route('admin.menus.index')->with('success', 'Menu sistem berhasil ditambahkan!');
     }
@@ -48,7 +56,7 @@ class MenuController extends Controller
     /**
      * Update an existing menu
      */
-    public function update(Request $request, Menu $menu): RedirectResponse
+    public function update(Request $request, Menu $menu)
     {
         $validated = $request->validate([
             'name'         => ['required', 'string', 'max:255'],
@@ -63,26 +71,49 @@ class MenuController extends Controller
 
         $menu->update($validated);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu berhasil diperbarui!',
+                'menu' => $menu
+            ]);
+        }
+
         return redirect()->route('admin.menus.index')->with('success', 'Menu berhasil diperbarui!');
     }
 
     /**
      * Delete a menu
      */
-    public function destroy(Menu $menu): RedirectResponse
+    public function destroy(Request $request, Menu $menu)
     {
         $menu->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu berhasil dihapus!'
+            ]);
+        }
+
         return redirect()->route('admin.menus.index')->with('success', 'Menu berhasil dihapus!');
     }
 
     /**
      * Assign custom additional menus to a specific user
      */
-    public function assignUserMenus(Request $request, User $user): RedirectResponse
+    public function assignUserMenus(Request $request, User $user)
     {
         $menuIds = $request->input('menu_ids', []);
         
         $user->menus()->sync($menuIds);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Akses menu kustom untuk user {$user->name} berhasil diperbarui!"
+            ]);
+        }
 
         return redirect()->route('admin.menus.index', ['user_id' => $user->id])
             ->with('success', "Akses menu kustom untuk user {$user->name} berhasil diperbarui!");

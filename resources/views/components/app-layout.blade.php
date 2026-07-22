@@ -35,7 +35,9 @@
       x-data="{
           sidebarOpen: true,
           mobileOpen: false,
-          dataMasterOpen: {{ request()->routeIs('master.*') ? 'true' : 'false' }},
+          dataMasterOpen: {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') ? 'true' : 'false' }},
+          dataOpen: {{ request()->routeIs('master.skripsi.*') || request()->routeIs('master.sempro.*') ? 'true' : 'false' }},
+          penjadwalanOpen: {{ request()->routeIs('jadwal-ujian.*') || request()->routeIs('jadwal-sempro.*') ? 'true' : 'false' }},
           administrasiOpen: {{ request()->routeIs('administrasi.*') ? 'true' : 'false' }},
           profileDropdown: false
       }"
@@ -192,9 +194,9 @@
                     <div x-data>
                         <button @click="dataMasterOpen = !dataMasterOpen"
                                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                                       {{ request()->routeIs('master.*') ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                       {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
                                 title="Data Master">
-                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('master.*') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
                             </svg>
                             <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Data Master</span>
@@ -249,22 +251,117 @@
                                 </svg>
                                 Master Periode
                             </a>
+
                         </div>
                     </div>
 
-                    <!-- Jadwal Ujian / Sidang -->
-                    <a href="{{ route('sidang.index') }}"
-                       class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                              {{ request()->routeIs('sidang.*') || request()->routeIs('jadwal-ujian.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
-                       title="Jadwal Sidang & Ujian">
-                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('sidang.*') || request()->routeIs('jadwal-ujian.*') ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Jadwal Sidang</span>
-                        @if(!request()->routeIs('sidang.*') && !request()->routeIs('jadwal-ujian.*'))
-                        <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                        @endif
-                    </a>
+                    <!-- DATA (with submenu) -->
+                    <div>
+                        <button @click="dataOpen = !dataOpen; if(!sidebarOpen) sidebarOpen = true"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                       {{ request()->routeIs('master.skripsi.*') || request()->routeIs('master.sempro.*') ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                title="Data">
+                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('master.skripsi.*') || request()->routeIs('master.sempro.*') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Data</span>
+                            <!-- Chevron -->
+                            <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
+                                 :class="{ 'rotate-180': dataOpen, 'opacity-0': !sidebarOpen }"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                            @if(!request()->routeIs('master.skripsi.*') && !request()->routeIs('master.sempro.*'))
+                            <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                            @endif
+                        </button>
+
+                        <!-- Submenu Data -->
+                        <div x-show="dataOpen && sidebarOpen"
+                             x-transition:enter="transition-all duration-200 ease-out"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition-all duration-150 ease-in"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
+                             x-cloak>
+
+                            <!-- Data Skripsi -->
+                            <a href="{{ route('master.skripsi.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('master.skripsi.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('master.skripsi.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                Data Skripsi
+                            </a>
+
+                            <!-- Data Sempro -->
+                            <a href="{{ route('master.sempro.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('master.sempro.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('master.sempro.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Data Sempro
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- PENJADWALAN (with submenu) -->
+                    <div>
+                        <button @click="penjadwalanOpen = !penjadwalanOpen; if(!sidebarOpen) sidebarOpen = true"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                       {{ request()->routeIs('jadwal-ujian.*') || request()->routeIs('jadwal-sempro.*') ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                title="Penjadwalan">
+                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('jadwal-ujian.*') || request()->routeIs('jadwal-sempro.*') ? 'text-violet-400' : 'text-slate-400 group-hover:text-violet-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Penjadwalan</span>
+                            <!-- Chevron -->
+                            <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
+                                 :class="{ 'rotate-180': penjadwalanOpen, 'opacity-0': !sidebarOpen }"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                            @if(!request()->routeIs('jadwal-ujian.*') && !request()->routeIs('jadwal-sempro.*'))
+                            <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-violet-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                            @endif
+                        </button>
+
+                        <!-- Submenu Penjadwalan -->
+                        <div x-show="penjadwalanOpen && sidebarOpen"
+                             x-transition:enter="transition-all duration-200 ease-out"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition-all duration-150 ease-in"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
+                             x-cloak>
+
+                            <!-- Jadwal Sidang Skripsi -->
+                            <a href="{{ route('jadwal-ujian.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('jadwal-ujian.*') ? 'bg-violet-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('jadwal-ujian.*') ? 'text-white' : 'text-slate-500 group-hover:text-violet-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                </svg>
+                                Jadwal Sidang Skripsi
+                            </a>
+
+                            <!-- Jadwal Sempro -->
+                            <a href="{{ route('jadwal-sempro.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('jadwal-sempro.*') ? 'bg-violet-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('jadwal-sempro.*') ? 'text-white' : 'text-slate-500 group-hover:text-violet-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Jadwal Sempro
+                            </a>
+                        </div>
+                    </div>
 
                     <!-- Administrasi (Dropdown) -->
                     <div class="space-y-0.5">
@@ -493,51 +590,69 @@
             <!-- ── PAGE CONTENT ── -->
             <main class="flex-1 p-4 sm:p-6 lg:p-8">
 
-                <!-- Flash: Success -->
-                @if (session('success'))
-                <div x-data="{ show: true }" x-show="show" x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 -translate-y-2"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     class="mb-5 flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl shadow-sm">
+                <!-- Dynamic Notification Wrapper -->
+                <div x-data="{ 
+                    show: false, 
+                    message: '', 
+                    type: 'success',
+                    init() {
+                        @if (session('success'))
+                            this.showNotification('{{ session('success') }}', 'success');
+                        @endif
+                        @if (session('error'))
+                            this.showNotification('{{ session('error') }}', 'error');
+                        @endif
+                    },
+                    showNotification(msg, t) {
+                        this.message = msg;
+                        this.type = t;
+                        this.show = true;
+                        // Auto hide after 4 seconds
+                        setTimeout(() => {
+                            this.show = false;
+                        }, 4000);
+                    }
+                }"
+                @notify.window="showNotification($event.detail.message, $event.detail.type)"
+                x-show="show" 
+                x-cloak
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 -translate-y-2"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-2"
+                :class="{
+                    'bg-emerald-50 border-emerald-200 text-emerald-800': type === 'success',
+                    'bg-rose-50 border-rose-200 text-rose-800': type === 'error'
+                }"
+                class="mb-5 flex items-center justify-between p-4 border rounded-2xl shadow-sm">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                        <!-- Icon Success -->
+                        <div x-show="type === 'success'" class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                             </svg>
                         </div>
-                        <p class="text-sm font-semibold">{{ session('success') }}</p>
-                    </div>
-                    <button @click="show = false" class="text-emerald-500 hover:text-emerald-700 p-1 rounded-lg hover:bg-emerald-100 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-                @endif
-
-                <!-- Flash: Error -->
-                @if (session('error'))
-                <div x-data="{ show: true }" x-show="show" x-cloak
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 -translate-y-2"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     class="mb-5 flex items-center justify-between p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0">
+                        <!-- Icon Error -->
+                        <div x-show="type === 'error'" class="w-8 h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
-                        <p class="text-sm font-semibold">{{ session('error') }}</p>
+                        <p class="text-sm font-semibold" x-text="message"></p>
                     </div>
-                    <button @click="show = false" class="text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-100 transition-colors">
+                    <button @click="show = false" 
+                            :class="{
+                                'text-emerald-500 hover:text-emerald-700 hover:bg-emerald-100': type === 'success',
+                                'text-rose-500 hover:text-rose-700 hover:bg-rose-100': type === 'error'
+                            }"
+                            class="p-1 rounded-lg transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
-                @endif
 
                 <!-- Validation Errors -->
                 @if ($errors->any())

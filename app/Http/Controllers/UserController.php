@@ -28,7 +28,7 @@ class UserController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $users = $query->latest()->paginate(5)->withQueryString();
 
         $stats = [
             'total' => User::count(),
@@ -40,7 +40,7 @@ class UserController extends Controller
         return view('users.index', compact('users', 'stats'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -49,17 +49,25 @@ class UserController extends Controller
             'role' => ['required', Rule::in([User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA])],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
         ]);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User berhasil ditambahkan!',
+                'user' => $user
+            ]);
+        }
+
         return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan!');
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(Request $request, User $user)
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -72,6 +80,12 @@ class UserController extends Controller
         if (Auth::id() === $user->id && $user->isSuperAdmin() && $validated['role'] !== User::ROLE_SUPER_ADMIN) {
             $superAdminCount = User::where('role', User::ROLE_SUPER_ADMIN)->count();
             if ($superAdminCount <= 1) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tidak dapat mengubah role karena Anda adalah satu-satunya Super Admin!'
+                    ], 422);
+                }
                 return redirect()->back()->with('error', 'Tidak dapat mengubah role karena Anda adalah satu-satunya Super Admin!');
             }
         }
@@ -88,16 +102,37 @@ class UserController extends Controller
 
         $user->update($userData);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data user berhasil diperbarui!',
+                'user' => $user
+            ]);
+        }
+
         return redirect()->route('users.index')->with('success', 'Data user berhasil diperbarui!');
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function destroy(Request $request, User $user)
     {
         if (Auth::id() === $user->id) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak dapat menghapus akun Anda sendiri yang sedang digunakan!'
+                ], 422);
+            }
             return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri yang sedang digunakan!');
         }
 
         $user->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User berhasil dihapus!'
+            ]);
+        }
 
         return redirect()->route('users.index')->with('success', 'User berhasil dihapus!');
     }

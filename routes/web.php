@@ -15,13 +15,14 @@ use App\Http\Controllers\DosenController;
 use App\Http\Controllers\RuangController;
 use App\Http\Controllers\PeriodeController;
 use App\Http\Controllers\JadwalUjianController;
-use App\Http\Controllers\SidangController;
+use App\Http\Controllers\SkripsiController;
+use App\Http\Controllers\SemproController;
 use App\Http\Controllers\AdministrasiController;
 use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\MenuController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 // Guest routes
@@ -77,14 +78,29 @@ Route::middleware('auth')->group(function () {
         Route::delete('/master/periode/{periode}', [PeriodeController::class, 'destroy'])->name('master.periode.destroy');
         Route::post('/master/periode/{periode}/active', [PeriodeController::class, 'setActive'])->name('master.periode.active');
 
-        // Sidang / Jadwal Ujian
-        Route::get('/sidang', [SidangController::class, 'index'])->name('sidang.index');
-        Route::post('/sidang', [SidangController::class, 'store'])->name('sidang.store');
-        Route::put('/sidang/{sidang}', [SidangController::class, 'update'])->name('sidang.update');
-        Route::delete('/sidang/{sidang}', [SidangController::class, 'destroy'])->name('sidang.destroy');
-        Route::get('/sidang/import', [SidangController::class, 'importForm'])->name('sidang.import.form');
-        Route::post('/sidang/import', [SidangController::class, 'import'])->name('sidang.import');
-        Route::get('/jadwal-ujian', [SidangController::class, 'index'])->name('jadwal-ujian.index');
+        // Data Skripsi
+        Route::get('/master/skripsi', [SkripsiController::class, 'index'])->name('master.skripsi.index');
+        Route::post('/master/skripsi', [SkripsiController::class, 'store'])->name('master.skripsi.store');
+        Route::put('/master/skripsi/{id}', [SkripsiController::class, 'update'])->name('master.skripsi.update');
+        Route::delete('/master/skripsi/{id}', [SkripsiController::class, 'destroy'])->name('master.skripsi.destroy');
+        Route::get('/master/skripsi/import', [SkripsiController::class, 'importForm'])->name('master.skripsi.import.form');
+        Route::post('/master/skripsi/import', [SkripsiController::class, 'import'])->name('master.skripsi.import');
+
+        // Data Sempro
+        Route::get('/master/sempro', [SemproController::class, 'index'])->name('master.sempro.index');
+        Route::post('/master/sempro', [SemproController::class, 'store'])->name('master.sempro.store');
+        Route::put('/master/sempro/{id}', [SemproController::class, 'update'])->name('master.sempro.update');
+        Route::delete('/master/sempro/{id}', [SemproController::class, 'destroy'])->name('master.sempro.destroy');
+        Route::get('/master/sempro/import', [SemproController::class, 'importForm'])->name('master.sempro.import.form');
+        Route::post('/master/sempro/import', [SemproController::class, 'import'])->name('master.sempro.import');
+
+        // Jadwal Sidang Skripsi
+        Route::get('/jadwal-ujian', [SkripsiController::class, 'jadwalIndex'])->name('jadwal-ujian.index');
+        Route::post('/jadwal/skripsi/{sidang}/jadwalkan', [SkripsiController::class, 'jadwalkan'])->name('jadwal.skripsi.jadwalkan');
+
+        // Jadwal Sempro
+        Route::get('/jadwal-sempro', [SemproController::class, 'jadwalIndex'])->name('jadwal-sempro.index');
+        Route::post('/jadwal/sempro/{sidang}/jadwalkan', [SemproController::class, 'jadwalkan'])->name('jadwal.sempro.jadwalkan');
 
         // Administrasi
         Route::get('/administrasi/undangan', [AdministrasiController::class, 'undanganIndex'])->name('administrasi.undangan.index');

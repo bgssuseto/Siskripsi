@@ -13,7 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Carbon\Carbon;
 
-class SkripsiController extends Controller
+class SemproController extends Controller
 {
     // ─── Index ───────────────────────────────────────────────────────────────
 
@@ -22,12 +22,9 @@ class SkripsiController extends Controller
         $query = Sidang::with([
             'pembimbingUtama',
             'pembimbingPendamping',
-            'ketuaPenguji',
-            'anggotaPenguji1',
-            'anggotaPenguji2',
             'ruang',
             'periode'
-        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal']);
+        ])->where('jenis_tugas_akhir', 'sempro');
 
         // Search
         if ($search = $request->get('search')) {
@@ -43,13 +40,6 @@ class SkripsiController extends Controller
                          ->orWhere('kode_ruangan', 'like', "%{$search}%");
                   });
             });
-        }
-
-        // Filter Jenis
-        if ($jenis = $request->get('jenis')) {
-            if (in_array($jenis, ['skripsi', 'jurnal'])) {
-                $query->where('jenis_tugas_akhir', $jenis);
-            }
         }
 
         // Filter Status
@@ -77,17 +67,15 @@ class SkripsiController extends Controller
             }
         }
 
-        $sidangs = $query->orderByRaw("CASE WHEN jenis_tugas_akhir='skripsi' THEN 0 ELSE 1 END")
-                         ->orderBy('tanggal', 'asc')
+        $sidangs = $query->orderBy('tanggal', 'asc')
                          ->orderBy('jam', 'asc')
                          ->orderBy('id', 'asc')
                          ->paginate(5)
                          ->withQueryString();
 
-        // 1. Fetch all records in DB to compute global conflict detection for table badges & calendar
+        // Fetch all records in DB to compute global conflict detection for table badges & calendar
         $allSidangs = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
-            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'ruang', 'periode'
         ])->get();
 
@@ -100,31 +88,24 @@ class SkripsiController extends Controller
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
 
-        // Filter valid dates for calendar events (only skripsi and jurnal for this view)
-        $calendarEvents = $allSidangs->filter(fn($s) => !empty($s->tanggal) && in_array($s->jenis_tugas_akhir, ['skripsi', 'jurnal']))->map(function ($s) use ($conflictMap) {
+        // Filter valid dates for calendar events (only sempro for this view)
+        $calendarEvents = $allSidangs->filter(fn($s) => !empty($s->tanggal) && $s->jenis_tugas_akhir === 'sempro')->map(function ($s) use ($conflictMap) {
             $conflictEntry   = $conflictMap[$s->id] ?? [];
             $hasSchedule     = !empty($conflictEntry['schedule']);
-            $hasRuleViolation = !empty($conflictEntry['rules']);
-            $hasConflict     = $hasSchedule || $hasRuleViolation;
+            $hasConflict     = $hasSchedule;
 
-            $prefix      = $hasSchedule ? '⚠️ ' : ($hasRuleViolation ? '❌ ' : '');
-            $title       = $prefix . $s->nama_mahasiswa . ' (' . ($s->jenis_tugas_akhir == 'skripsi' ? 'Skripsi' : 'Jurnal') . ')';
+            $prefix      = $hasSchedule ? '⚠️ ' : '';
+            $title       = $prefix . $s->nama_mahasiswa . ' (Sempro)';
             $ruangName   = $s->ruang ? $s->ruang->kode_ruangan : 'TBA';
             $dosbing     = $s->pembimbingUtama ? $s->pembimbingUtama->nama_dosen : 'TBA';
 
-            $description = "NIM: {$s->nim}\nJudul: {$s->judul_skripsi}\nDosbing: {$dosbing}\nPenguji: " . ($s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-') . "\nJam: {$s->jam}\nRuang: {$ruangName}";
+            $description = "NIM: {$s->nim}\nJudul: {$s->judul_skripsi}\nDosbing: {$dosbing}\nJam: {$s->jam}\nRuang: {$ruangName}";
             if ($hasSchedule) {
                 $description .= "\n\n⚠️ BENTROK JADWAL:\n" . implode("\n", $conflictEntry['schedule']);
             }
-            if ($hasRuleViolation) {
-                $description .= "\n\n❌ PELANGGARAN ATURAN:\n" . implode("\n", $conflictEntry['rules']);
-            }
 
-            // Flatten all messages for conflict_notes
-            $allNotes = array_merge($conflictEntry['schedule'] ?? [], $conflictEntry['rules'] ?? []);
-
-            $eventColor = $hasSchedule ? '#ef4444' : ($hasRuleViolation ? '#f97316' : ($s->jenis_tugas_akhir == 'skripsi' ? '#6366f1' : '#10b981'));
-            $borderColor = $hasSchedule ? '#dc2626' : ($hasRuleViolation ? '#ea580c' : ($s->jenis_tugas_akhir == 'skripsi' ? '#4f46e5' : '#059669'));
+            $eventColor = $hasSchedule ? '#ef4444' : '#a855f7'; // Purple for sempro
+            $borderColor = $hasSchedule ? '#dc2626' : '#9333ea';
 
             return [
                 'id'              => $s->id,
@@ -140,14 +121,11 @@ class SkripsiController extends Controller
                     'mahasiswa'      => $s->nama_mahasiswa,
                     'judul'          => $s->judul_skripsi,
                     'dosbing'        => $dosbing,
-                    'ketua_penguji'  => $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-',
-                    'penguji_1'      => $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-',
-                    'penguji_2'      => $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-',
                     'jam'            => $s->jam ?? '-',
                     'ruang'          => $ruangName,
-                    'jenis'          => $s->jenis_label,
+                    'jenis'          => 'Sempro',
                     'has_conflict'   => $hasConflict,
-                    'conflict_notes' => !empty($allNotes) ? implode('; ', $allNotes) : null,
+                    'conflict_notes' => !empty($conflictEntry['schedule']) ? implode('; ', $conflictEntry['schedule']) : null,
                 ]
             ];
         });
@@ -159,24 +137,21 @@ class SkripsiController extends Controller
             ->orderBy('tanggal', 'asc')
             ->pluck('tanggal');
 
-        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->count();
-        $totalJurnal = Sidang::where('jenis_tugas_akhir', 'jurnal')->count();
+        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->count();
 
-        return view('master.skripsi.index', compact(
+        return view('master.sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode', 
-            'daftarTanggal', 'totalSkripsi', 'totalJurnal', 'calendarEvents', 'conflictMap'
+            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap'
         ));
     }
 
-    // ─── Jadwal Index (Halaman Jadwal Sidang Skripsi) ─────────────────────────
+    // ─── Jadwal Index (Halaman Jadwal Sempro) ─────────────────────────────────
 
     public function jadwalIndex(Request $request): View
     {
         $query = Sidang::with([
-            'pembimbingUtama', 'pembimbingPendamping',
-            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
-            'ruang', 'periode'
-        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal']);
+            'pembimbingUtama', 'pembimbingPendamping', 'ruang', 'periode'
+        ])->where('jenis_tugas_akhir', 'sempro');
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
@@ -184,12 +159,6 @@ class SkripsiController extends Controller
                   ->orWhere('nim', 'like', "%{$search}%")
                   ->orWhere('judul_skripsi', 'like', "%{$search}%");
             });
-        }
-
-        if ($jenis = $request->get('jenis')) {
-            if (in_array($jenis, ['skripsi', 'jurnal'])) {
-                $query->where('jenis_tugas_akhir', $jenis);
-            }
         }
 
         if ($status = $request->get('status')) {
@@ -215,31 +184,26 @@ class SkripsiController extends Controller
                          ->paginate(5)
                          ->withQueryString();
 
-        $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang', 'periode'])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal'])->get();
+        $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ruang', 'periode'])
+                            ->where('jenis_tugas_akhir', 'sempro')->get();
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
         $calendarEvents = $allSidangs->filter(fn($s) => !empty($s->tanggal))->map(function ($s) use ($conflictMap) {
-            $conflictEntry    = $conflictMap[$s->id] ?? [];
-            $hasSchedule      = !empty($conflictEntry['schedule']);
-            $hasRuleViolation = !empty($conflictEntry['rules']);
-            $hasConflict      = $hasSchedule || $hasRuleViolation;
+            $conflictEntry   = $conflictMap[$s->id] ?? [];
+            $hasSchedule     = !empty($conflictEntry['schedule']);
+            $hasConflict     = $hasSchedule;
 
-            $prefix      = $hasSchedule ? '⚠️ ' : ($hasRuleViolation ? '❌ ' : '');
-            $title       = $prefix . $s->nama_mahasiswa . ' (' . ($s->jenis_tugas_akhir == 'skripsi' ? 'Skripsi' : 'Jurnal') . ')';
+            $prefix      = $hasSchedule ? '⚠️ ' : '';
+            $title       = $prefix . $s->nama_mahasiswa . ' (Sempro)';
             $ruangName   = $s->ruang ? $s->ruang->kode_ruangan : 'TBA';
             $dosbing     = $s->pembimbingUtama ? $s->pembimbingUtama->nama_dosen : 'TBA';
 
-            $description = "NIM: {$s->nim}\nJudul: {$s->judul_skripsi}\nDosbing: {$dosbing}\nPenguji: " . ($s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-') . "\nJam: {$s->jam}\nRuang: {$ruangName}";
+            $description = "NIM: {$s->nim}\nJudul: {$s->judul_skripsi}\nDosbing: {$dosbing}\nJam: {$s->jam}\nRuang: {$ruangName}";
             if ($hasSchedule) {
                 $description .= "\n\n⚠️ BENTROK JADWAL:\n" . implode("\n", $conflictEntry['schedule']);
             }
-            if ($hasRuleViolation) {
-                $description .= "\n\n❌ PELANGGARAN ATURAN:\n" . implode("\n", $conflictEntry['rules']);
-            }
 
-            $allNotes = array_merge($conflictEntry['schedule'] ?? [], $conflictEntry['rules'] ?? []);
-
-            $eventColor  = $hasSchedule ? '#ef4444' : ($hasRuleViolation ? '#f97316' : ($s->jenis_tugas_akhir == 'skripsi' ? '#6366f1' : '#10b981'));
-            $borderColor = $hasSchedule ? '#dc2626' : ($hasRuleViolation ? '#ea580c' : ($s->jenis_tugas_akhir == 'skripsi' ? '#4f46e5' : '#059669'));
+            $eventColor = $hasSchedule ? '#ef4444' : '#8b5cf6';
+            $borderColor = $hasSchedule ? '#dc2626' : '#7c3aed';
 
             return [
                 'id'              => $s->id,
@@ -255,43 +219,37 @@ class SkripsiController extends Controller
                     'mahasiswa'      => $s->nama_mahasiswa,
                     'judul'          => $s->judul_skripsi,
                     'dosbing'        => $dosbing,
-                    'ketua_penguji'  => $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-',
-                    'penguji_1'      => $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-',
-                    'penguji_2'      => $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-',
                     'jam'            => $s->jam ?? '-',
                     'ruang'          => $ruangName,
-                    'jenis'          => $s->jenis_label,
+                    'jenis'          => 'Sempro',
                     'has_conflict'   => $hasConflict,
-                    'conflict_notes' => !empty($allNotes) ? implode('; ', $allNotes) : null,
+                    'conflict_notes' => !empty($conflictEntry['schedule']) ? implode('; ', $conflictEntry['schedule']) : null,
                 ]
             ];
         });
 
-        $dosens = Dosen::orderBy('nama_dosen')->get();
-        $ruangs = Ruang::orderBy('kode_ruangan')->get();
+        $dosens  = Dosen::orderBy('nama_dosen')->get();
+        $ruangs  = Ruang::orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
-        $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal'])->orderBy('tanggal')->pluck('tanggal');
-        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->count();
-        $totalJurnal  = Sidang::where('jenis_tugas_akhir', 'jurnal')->count();
+        $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')
+                               ->where('jenis_tugas_akhir', 'sempro')->orderBy('tanggal')->pluck('tanggal');
+        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->count();
 
-        return view('skripsi.index', compact(
+        return view('sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
-            'daftarTanggal', 'totalSkripsi', 'totalJurnal', 'calendarEvents', 'conflictMap'
+            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap'
         ));
     }
 
-    // ─── Jadwalkan (Plotting Jadwal Sidang Skripsi) ───────────────────────────
+    // ─── Jadwalkan (Plotting Jadwal Sempro) ───────────────────────────────────
 
     public function jadwalkan(Request $request, Sidang $sidang)
     {
         $validated = $request->validate([
-            'tanggal'          => ['required', 'date'],
-            'jam'              => ['required', 'string', 'max:100'],
-            'ruang_id'         => ['required', 'exists:ruangs,id'],
-            'ketua_penguji_id'    => ['nullable', 'exists:dosens,id'],
-            'anggota_penguji_1_id'=> ['nullable', 'exists:dosens,id'],
-            'anggota_penguji_2_id'=> ['nullable', 'exists:dosens,id'],
+            'tanggal'  => ['required', 'date'],
+            'jam'      => ['required', 'string', 'max:100'],
+            'ruang_id' => ['required', 'exists:ruangs,id'],
         ]);
 
         // Check schedule conflicts
@@ -303,7 +261,7 @@ class SkripsiController extends Controller
 
         $sidang->update($validated);
 
-        return back()->with('success', '✅ Jadwal sidang berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!');
+        return back()->with('success', '✅ Jadwal sempro berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!');
     }
 
     // ─── Store (manual input) ─────────────────────────────────────────────────
@@ -316,30 +274,19 @@ class SkripsiController extends Controller
             'judul_skripsi'                  => ['required', 'string'],
             'dosen_pembimbing_utama_id'      => ['required', 'exists:dosens,id'],
             'dosen_pembimbing_pendamping_id' => ['nullable', 'exists:dosens,id'],
-            'ketua_penguji_id'               => ['required', 'exists:dosens,id'],
-            'anggota_penguji_1_id'           => ['required', 'exists:dosens,id'],
-            'anggota_penguji_2_id'           => ['nullable', 'exists:dosens,id'],
             'ruang_id'                       => ['nullable', 'exists:ruangs,id'],
             'periode_id'                     => ['nullable', 'exists:periodes,id'],
             'tanggal'                        => ['nullable', 'date'],
             'tanggal_pendaftaran'            => ['nullable', 'date'],
             'jam'                            => ['nullable', 'string', 'max:100'],
-            'jenis_tugas_akhir'              => ['required', 'in:skripsi,jurnal'],
         ]);
 
-        // 1. Check business rules (Pembimbing Utama wajib jadi Penguji 2, Pendamping tidak boleh menguji)
-        $ruleErrors = SidangConflictService::checkBusinessRules($validated);
-        if (!empty($ruleErrors)) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Pelanggaran Aturan: ' . implode(' | ', $ruleErrors)
-                ], 422);
-            }
-            return back()->withInput()->with('error', '❌ Pelanggaran Aturan: ' . implode(' | ', $ruleErrors));
-        }
+        $validated['jenis_tugas_akhir'] = 'sempro';
+        $validated['ketua_penguji_id'] = null;
+        $validated['anggota_penguji_1_id'] = null;
+        $validated['anggota_penguji_2_id'] = null;
 
-        // 2. Check schedule conflicts (room, examiner overlap)
+        // Check schedule conflicts (room overlaps)
         $scheduleConflicts = SidangConflictService::checkConflicts($validated);
         if (!empty($scheduleConflicts)) {
             if ($request->expectsJson()) {
@@ -362,12 +309,12 @@ class SkripsiController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Data skripsi mahasiswa berhasil ditambahkan!',
+                'message' => 'Data sempro mahasiswa berhasil ditambahkan!',
                 'sidang' => $sidang
             ]);
         }
 
-        return back()->with('success', 'Data skripsi mahasiswa berhasil ditambahkan!');
+        return back()->with('success', 'Data sempro mahasiswa berhasil ditambahkan!');
     }
 
     // ─── Update ───────────────────────────────────────────────────────────────
@@ -380,30 +327,19 @@ class SkripsiController extends Controller
             'judul_skripsi'                  => ['required', 'string'],
             'dosen_pembimbing_utama_id'      => ['required', 'exists:dosens,id'],
             'dosen_pembimbing_pendamping_id' => ['nullable', 'exists:dosens,id'],
-            'ketua_penguji_id'               => ['required', 'exists:dosens,id'],
-            'anggota_penguji_1_id'           => ['required', 'exists:dosens,id'],
-            'anggota_penguji_2_id'           => ['nullable', 'exists:dosens,id'],
             'ruang_id'                       => ['nullable', 'exists:ruangs,id'],
             'periode_id'                     => ['nullable', 'exists:periodes,id'],
             'tanggal'                        => ['nullable', 'date'],
             'tanggal_pendaftaran'            => ['nullable', 'date'],
             'jam'                            => ['nullable', 'string', 'max:100'],
-            'jenis_tugas_akhir'              => ['required', 'in:skripsi,jurnal'],
         ]);
 
-        // 1. Check business rules
-        $ruleErrors = SidangConflictService::checkBusinessRules($validated);
-        if (!empty($ruleErrors)) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Pelanggaran Aturan: ' . implode(' | ', $ruleErrors)
-                ], 422);
-            }
-            return back()->withInput()->with('error', '❌ Pelanggaran Aturan: ' . implode(' | ', $ruleErrors));
-        }
+        $validated['jenis_tugas_akhir'] = 'sempro';
+        $validated['ketua_penguji_id'] = null;
+        $validated['anggota_penguji_1_id'] = null;
+        $validated['anggota_penguji_2_id'] = null;
 
-        // 2. Check schedule conflicts excluding current ID
+        // Check schedule conflicts excluding current ID
         $scheduleConflicts = SidangConflictService::checkConflicts($validated, $sidang->id);
         if (!empty($scheduleConflicts)) {
             if ($request->expectsJson()) {
@@ -420,12 +356,12 @@ class SkripsiController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Data skripsi berhasil diperbarui!',
+                'message' => 'Data sempro berhasil diperbarui!',
                 'sidang' => $sidang
             ]);
         }
 
-        return back()->with('success', 'Data skripsi berhasil diperbarui!');
+        return back()->with('success', 'Data sempro berhasil diperbarui!');
     }
 
     // ─── Destroy ──────────────────────────────────────────────────────────────
@@ -437,18 +373,18 @@ class SkripsiController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Data skripsi berhasil dihapus!'
+                'message' => 'Data sempro berhasil dihapus!'
             ]);
         }
 
-        return back()->with('success', 'Data skripsi berhasil dihapus!');
+        return back()->with('success', 'Data sempro berhasil dihapus!');
     }
 
     // ─── Import Excel ─────────────────────────────────────────────────────────
 
     public function importForm(): View
     {
-        return view('skripsi.import');
+        return view('sempro.import');
     }
 
     public function import(Request $request): RedirectResponse
@@ -491,17 +427,17 @@ class SkripsiController extends Controller
                 continue;
             }
 
-            // Determine default jenis_tugas_akhir from sheet title (Sidang/Skripsi -> skripsi, Jurnal -> jurnal, Sempro -> sempro)
+            // Determine default jenis_tugas_akhir from sheet title
             $sheetLower = strtolower(trim($sheetName));
             if (str_contains($sheetLower, 'jurnal') || str_contains($sheetLower, 'article') || str_contains($sheetLower, 'artikel')) {
                 $defaultJenis = 'jurnal';
-            } elseif (str_contains($sheetLower, 'sempro') || str_contains($sheetLower, 'proposal')) {
-                $defaultJenis = 'sempro';
-            } else {
+            } elseif (str_contains($sheetLower, 'sidang') || str_contains($sheetLower, 'skripsi')) {
                 $defaultJenis = 'skripsi';
+            } else {
+                $defaultJenis = 'sempro';
             }
 
-            // 1. Detect Header Row (inspect top 3 rows)
+            // Detect Header Row (inspect top 3 rows)
             $headerRow = 1;
             $maxColNum = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheet->getHighestColumn());
 
@@ -521,7 +457,7 @@ class SkripsiController extends Controller
                 }
             }
 
-            // 2. Build Column Map from Header Row
+            // Build Column Map from Header Row
             $colMap = [];
             for ($c = 1; $c <= $maxColNum; $c++) {
                 $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
@@ -548,12 +484,6 @@ class SkripsiController extends Controller
                     $colMap['dosbing1'] = $colLetter;
                 } elseif (str_contains($val, 'pembimbing pendamping') || str_contains($val, 'dosbing pendamping') || str_contains($val, 'dosbing 2') || str_contains($val, 'pembimbing 2')) {
                     $colMap['dosbing2'] = $colLetter;
-                } elseif (str_contains($val, 'ketua')) {
-                    $colMap['ketua'] = $colLetter;
-                } elseif (str_contains($val, 'penguji 1') || str_contains($val, 'penguji i') || $val === 'penguji 1') {
-                    $colMap['penguji1'] = $colLetter;
-                } elseif (str_contains($val, 'penguji 2') || str_contains($val, 'penguji ii') || $val === 'penguji 2') {
-                    $colMap['penguji2'] = $colLetter;
                 } elseif (str_contains($val, 'hari') || str_contains($val, 'tanggal')) {
                     $colMap['hari_tgl'] = $colLetter;
                 } elseif (str_contains($val, 'jam') || str_contains($val, 'waktu')) {
@@ -563,7 +493,7 @@ class SkripsiController extends Controller
                 }
             }
 
-            // Fallback column positions if header mapping missed basic columns
+            // Fallback column positions if header mapping missed basic columns (ignoring column A if it is NO)
             $firstColVal = strtolower(trim((string)$sheet->getCell("A{$headerRow}")->getValue()));
             $hasNoCol    = in_array($firstColVal, ['no', 'no.', 'no urut']);
             $colMap['nim']       = $colMap['nim']       ?? ($hasNoCol ? 'B' : 'A');
@@ -610,14 +540,12 @@ class SkripsiController extends Controller
                 $judul     = $getVal($sheet, $colMap['judul'], $row);
                 $dosbing1  = $getVal($sheet, $colMap['dosbing1'], $row);
                 $dosbing2  = $getVal($sheet, $colMap['dosbing2'], $row);
-                $waktuJam  = isset($colMap['jam']) ? $getVal($sheet, $colMap['jam'], $row) : '';
-                $kodeRuang = isset($colMap['ruang']) ? $getVal($sheet, $colMap['ruang'], $row) : '';
-                $ketuaPeng = isset($colMap['ketua']) ? $getVal($sheet, $colMap['ketua'], $row) : '';
-                $penguji1  = isset($colMap['penguji1']) ? $getVal($sheet, $colMap['penguji1'], $row) : '';
-                $penguji2  = isset($colMap['penguji2']) ? $getVal($sheet, $colMap['penguji2'], $row) : '';
                 $hariTgl   = isset($colMap['hari_tgl']) ? $getVal($sheet, $colMap['hari_tgl'], $row) : '';
                 $tglDaftar = isset($colMap['tgl_daftar']) ? $getVal($sheet, $colMap['tgl_daftar'], $row) : '';
                 $rawJenis  = isset($colMap['jenis']) ? $getVal($sheet, $colMap['jenis'], $row) : '';
+
+                $waktuJam  = isset($colMap['jam']) ? $getVal($sheet, $colMap['jam'], $row) : '';
+                $kodeRuang = isset($colMap['ruang']) ? $getVal($sheet, $colMap['ruang'], $row) : '';
 
                 if (empty($nim) && empty($namaMhs)) {
                     continue; // Skip empty rows
@@ -628,10 +556,10 @@ class SkripsiController extends Controller
                     $jenisLower = strtolower($rawJenis);
                     if (str_contains($jenisLower, 'jurnal') || str_contains($jenisLower, 'artikel')) {
                         $jenisParsed = 'jurnal';
-                    } elseif (str_contains($jenisLower, 'sempro') || str_contains($jenisLower, 'proposal')) {
-                        $jenisParsed = 'sempro';
-                    } else {
+                    } elseif (str_contains($jenisLower, 'skripsi') || str_contains($jenisLower, 'sidang')) {
                         $jenisParsed = 'skripsi';
+                    } else {
+                        $jenisParsed = 'sempro';
                     }
                 } else {
                     $jenisParsed = $defaultJenis;
@@ -641,9 +569,6 @@ class SkripsiController extends Controller
                     // Resolve Dosen IDs
                     $dosenUtama = $resolveDosen($dosbing1);
                     $dosenPend  = $resolveDosen($dosbing2);
-                    $ketua      = $resolveDosen($ketuaPeng);
-                    $p1         = $resolveDosen($penguji1);
-                    $p2         = $resolveDosen($penguji2);
 
                     // Resolve Ruang ID if present in Excel
                     $ruang = !empty($kodeRuang) ? Ruang::firstOrCreate(
@@ -651,7 +576,7 @@ class SkripsiController extends Controller
                         ['nama_ruangan' => 'Ruangan ' . $kodeRuang]
                     ) : null;
 
-                    // Parse Tanggal Ujian (Jadwal Sidang) from Excel
+                    // Parse Tanggal Ujian (Jadwal Sempro) from Excel
                     $tanggalParsed = !empty($hariTgl) ? $this->parseIndonesianDate($hariTgl) : null;
 
                     // Parse Tanggal Pendaftaran
@@ -667,10 +592,10 @@ class SkripsiController extends Controller
                             'judul_skripsi'                => $judul,
                             'dosen_pembimbing_utama_id'      => $dosenUtama?->id,
                             'dosen_pembimbing_pendamping_id' => $dosenPend?->id,
-                            'ketua_penguji_id'               => $ketua?->id,
-                            'anggota_penguji_1_id'           => $p1?->id,
-                            'anggota_penguji_2_id'           => $p2?->id,
-                            'tanggal'                      => $tanggalParsed, // Jika ada di Excel -> Sudah Dijadwal, jika kosong -> Belum Dijadwalkan
+                            'ketua_penguji_id'               => null,
+                            'anggota_penguji_1_id'           => null,
+                            'anggota_penguji_2_id'           => null,
+                            'tanggal'                      => $tanggalParsed,
                             'jam'                          => $waktuJam ?: null,
                             'ruang_id'                     => $ruang?->id,
                             'periode_id'                   => $activePeriode->id,
@@ -686,12 +611,12 @@ class SkripsiController extends Controller
             }
         }
 
-        $message = "Berhasil mengimpor {$imported} data skripsi!";
+        $message = "Berhasil mengimpor {$imported} data sempro!";
         if ($skipped > 0) {
             $message .= " ({$skipped} baris dilewati/gagal)";
         }
 
-        return redirect()->route('master.skripsi.index')->with('success', $message);
+        return redirect()->route('master.sempro.index')->with('success', $message);
     }
 
     /**

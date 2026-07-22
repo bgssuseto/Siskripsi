@@ -159,8 +159,8 @@
                                 @endif
                             </td>
                             <td class="py-3.5 px-4 text-center">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $item->jenis_tugas_akhir === 'sidang' ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700' }}">
-                                    {{ $item->jenis_tugas_akhir === 'sidang' ? 'Sidang' : 'Jurnal' }}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ ($item->jenis_tugas_akhir === 'sidang' || $item->jenis_tugas_akhir === 'skripsi') ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700' }}">
+                                    {{ ($item->jenis_tugas_akhir === 'sidang' || $item->jenis_tugas_akhir === 'skripsi') ? 'Skripsi' : 'Jurnal' }}
                                 </span>
                             </td>
                             <td class="py-3.5 px-4 text-center flex items-center justify-center gap-1.5">

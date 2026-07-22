@@ -96,18 +96,22 @@ class Sidang extends Model
     public function getJenisBadgeClassAttribute(): string
     {
         return match ($this->jenis_tugas_akhir) {
-            'sidang' => 'badge-sidang',
-            'jurnal' => 'badge-jurnal',
-            default  => 'badge-default',
+            'sidang'  => 'badge-sidang',
+            'skripsi' => 'badge-sidang',
+            'jurnal'  => 'badge-jurnal',
+            'sempro'  => 'badge-sempro',
+            default   => 'badge-default',
         };
     }
 
     public function getJenisLabelAttribute(): string
     {
         return match ($this->jenis_tugas_akhir) {
-            'sidang' => 'Sidang Skripsi',
-            'jurnal' => 'Jurnal / Artikel',
-            default  => ucfirst($this->jenis_tugas_akhir ?? ''),
+            'sidang'  => 'Skripsi',
+            'skripsi' => 'Skripsi',
+            'sempro'  => 'Sempro',
+            'jurnal'  => 'Jurnal / Artikel',
+            default   => ucfirst($this->jenis_tugas_akhir ?? ''),
         };
     }
 }

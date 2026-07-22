@@ -13,8 +13,8 @@
                 Halaman pencetakan Surat Keputusan (SK) Dekan untuk Penugasan Dosen Pembimbing dan Tim Dosen Penguji Ujian Sidang Skripsi.
             </p>
             <div class="mt-6 flex justify-center gap-3">
-                <a href="{{ route('sidang.index') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition-all shadow-md">
-                    Lihat Jadwal Ujian
+                <a href="{{ route('master.skripsi.index') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition-all shadow-md">
+                    Lihat Data Skripsi
                 </a>
             </div>
         </div>

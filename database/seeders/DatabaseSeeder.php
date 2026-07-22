@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
 
         // ── Sample Sidang ──────────────────────────────────────────────
         Sidang::firstOrCreate(
-            ['nim' => '202251146', 'jenis_tugas_akhir' => 'sidang'],
+            ['nim' => '202251146', 'jenis_tugas_akhir' => 'skripsi'],
             [
                 'no_urut' => 1,
                 'nama_mahasiswa' => 'HELMI AGHIB RIZKI',
@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
         );
 
         Sidang::firstOrCreate(
-            ['nim' => '202251081', 'jenis_tugas_akhir' => 'sidang'],
+            ['nim' => '202251081', 'jenis_tugas_akhir' => 'skripsi'],
             [
                 'no_urut' => 2,
                 'nama_mahasiswa' => 'MUHAMMAD ROKHIBUL ILMI',

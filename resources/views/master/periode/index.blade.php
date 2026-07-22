@@ -5,38 +5,154 @@
         createModal: false, 
         editModal: false, 
         deleteModal: false,
-        editPeriode: { id: null, nama_periode: '', aktif: false }
+        editPeriode: { id: null, nama_periode: '', aktif: false },
+        errors: {},
+        isLoading: false,
+        
+        openEdit(item) {
+            this.editPeriode = { ...item };
+            this.errors = {};
+            this.editModal = true;
+        },
+        openDelete(item) {
+            this.editPeriode = { ...item };
+            this.deleteModal = true;
+        },
+        async navigate(url) {
+            window.history.pushState(null, '', url);
+            await refreshComponent(['#table-container', '#filter-container', '#stats-container']);
+        },
+        submitSearch(form) {
+            const url = new URL(form.action || window.location.href);
+            const formData = new FormData(form);
+            url.searchParams.delete('search');
+            url.searchParams.delete('page');
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    url.searchParams.set(key, value);
+                }
+            }
+            this.navigate(url.toString());
+        },
+        async submitCreate(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.createModal = false;
+                    form.reset();
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitEdit(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.editModal = false;
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    } else {
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitDelete(e) {
+            this.isLoading = true;
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.deleteModal = false;
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container']);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menghapus periode.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitSetActive(e) {
+            this.isLoading = true;
+            const form = e.currentTarget;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container']);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal mengaktifkan periode.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        }
     }">
-        {{-- Flash message success --}}
-        @if (session('success'))
-            <div class="mb-4 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-3">
-                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="text-sm font-medium">{{ session('success') }}</span>
-            </div>
-        @endif
-
-        {{-- Flash message error --}}
-        @if (session('error'))
-            <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-center gap-3">
-                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="text-sm font-medium">{{ session('error') }}</span>
-            </div>
-        @endif
-
-        {{-- Validation errors --}}
-        @if ($errors->any())
-            <div class="mb-4 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl">
-                <ul class="list-disc list-inside text-sm">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
 
         {{-- Header & Add button --}}
         <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -54,24 +170,24 @@
 
         {{-- Search & stats bar --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div class="lg:col-span-2 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between gap-4">
-                <form method="GET" action="{{ route('master.periode.index') }}" class="w-full flex gap-3">
+            <div id="filter-container" class="lg:col-span-2 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between gap-4">
+                <form method="GET" action="{{ route('master.periode.index') }}" @submit.prevent="submitSearch($event.currentTarget)" class="w-full flex gap-3">
                     <div class="relative flex-1">
                         <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama periode..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400 text-slate-800">
+                        <input type="text" name="search" value="{{ request('search') }}" @input.debounce.500ms="submitSearch($event.target.form)" placeholder="Cari nama periode..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400 text-slate-800">
                     </div>
                     <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm px-4 py-2 rounded-xl transition-all">Filter</button>
                     @if (request()->filled('search'))
-                        <a href="{{ route('master.periode.index') }}" class="inline-flex items-center justify-center border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm px-4 py-2 rounded-xl transition-all">Reset</a>
+                        <a href="{{ route('master.periode.index') }}" @click.prevent="navigate($event.currentTarget.href)" class="inline-flex items-center justify-center border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm px-4 py-2 rounded-xl transition-all">Reset</a>
                     @endif
                 </form>
             </div>
             
-            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div id="stats-container" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Periode Aktif</p>
                     <p class="text-sm font-bold text-slate-800 mt-1">
@@ -84,8 +200,8 @@
             </div>
         </div>
 
-        {{-- Table --}}
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <!-- Table -->
+        <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -115,24 +231,15 @@
                                 </td>
                                 <td class="py-4 px-6 text-right space-x-2">
                                     @if (!$item->aktif)
-                                        <form method="POST" action="{{ route('master.periode.active', $item->id) }}" class="inline-block">
+                                        <form method="POST" action="{{ route('master.periode.active', $item->id) }}" @submit.prevent="submitSetActive($event)" class="inline-block">
                                             @csrf
-                                            <button type="submit" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-all">Set Aktif</button>
+                                            <button type="submit" :disabled="isLoading" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-all disabled:opacity-50">Set Aktif</button>
                                         </form>
                                     @endif
-                                    <button @click="
-                                        editPeriode.id = {{ $item->id }};
-                                        editPeriode.nama_periode = '{{ addslashes($item->nama_periode) }}';
-                                        editPeriode.aktif = {{ $item->aktif ? 'true' : 'false' }};
-                                        editModal = true;
-                                    " class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-lg transition-all">
+                                    <button @click="openEdit({{ json_encode(['id' => $item->id, 'nama_periode' => $item->nama_periode, 'aktif' => (bool)$item->aktif]) }})" class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-lg transition-all">
                                         Edit
                                     </button>
-                                    <button @click="
-                                        editPeriode.id = {{ $item->id }};
-                                        editPeriode.nama_periode = '{{ addslashes($item->nama_periode) }}';
-                                        deleteModal = true;
-                                    " class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition-all">
+                                    <button @click="openDelete({{ json_encode(['id' => $item->id, 'nama_periode' => $item->nama_periode]) }})" class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition-all">
                                         Hapus
                                     </button>
                                 </td>
@@ -168,11 +275,14 @@
                         ✕
                     </button>
                 </div>
-                <form method="POST" action="{{ route('master.periode.store') }}" class="p-6 space-y-4">
+                <form method="POST" action="{{ route('master.periode.store') }}" @submit.prevent="submitCreate($event)" class="p-6 space-y-4">
                     @csrf
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nama Periode <span class="text-rose-500">*</span></label>
                         <input type="text" name="nama_periode" required placeholder="Contoh: Semester Genap 2026/2027" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <template x-if="errors.nama_periode">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_periode[0]"></p>
+                        </template>
                     </div>
                     <div class="flex items-center gap-3 pt-2">
                         <input type="checkbox" name="aktif" value="1" id="create-aktif" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20">
@@ -180,7 +290,10 @@
                     </div>
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" @click="createModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20">Simpan Data</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50">
+                            <span x-show="!isLoading">Simpan Data</span>
+                            <span x-show="isLoading">Menyimpan...</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -195,12 +308,15 @@
                         ✕
                     </button>
                 </div>
-                <form method="POST" :action="`{{ route('master.periode.index') }}/${editPeriode.id}`" class="p-6 space-y-4">
+                <form method="POST" :action="`{{ route('master.periode.index') }}/${editPeriode.id}`" @submit.prevent="submitEdit($event)" class="p-6 space-y-4">
                     @csrf
                     @method('PUT')
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nama Periode <span class="text-rose-500">*</span></label>
                         <input type="text" name="nama_periode" x-model="editPeriode.nama_periode" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <template x-if="errors.nama_periode">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_periode[0]"></p>
+                        </template>
                     </div>
                     <div class="flex items-center gap-3 pt-2">
                         <input type="checkbox" name="aktif" value="1" id="edit-aktif" x-model="editPeriode.aktif" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20">
@@ -208,7 +324,10 @@
                     </div>
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" @click="editModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20">Simpan Perubahan</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50">
+                            <span x-show="!isLoading">Simpan Perubahan</span>
+                            <span x-show="isLoading">Menyimpan...</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -229,10 +348,10 @@
                 </div>
                 <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
                     <button type="button" @click="deleteModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
-                    <form method="POST" :action="`{{ route('master.periode.index') }}/${editPeriode.id}`" class="inline">
+                    <form method="POST" :action="`{{ route('master.periode.index') }}/${editPeriode.id}`" @submit.prevent="submitDelete($event)" class="inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl transition-all">Ya, Hapus</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl transition-all disabled:opacity-50">Ya, Hapus</button>
                     </form>
                 </div>
             </div>

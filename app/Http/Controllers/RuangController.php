@@ -21,12 +21,12 @@ class RuangController extends Controller
             });
         }
 
-        $ruangs = $query->latest()->paginate(10);
+        $ruangs = $query->latest()->paginate(5)->withQueryString();
 
         return view('master.ruang.index', compact('ruangs'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'kode_ruangan' => ['required', 'string', 'max:50', 'unique:ruangs,kode_ruangan'],
@@ -37,12 +37,20 @@ class RuangController extends Controller
             'nama_ruangan.required' => 'Nama ruangan wajib diisi.',
         ]);
 
-        Ruang::create($validated);
+        $ruang = Ruang::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data ruangan berhasil ditambahkan!',
+                'ruang' => $ruang
+            ]);
+        }
 
         return redirect()->route('master.ruang.index')->with('success', 'Data ruangan berhasil ditambahkan!');
     }
 
-    public function update(Request $request, Ruang $ruang): RedirectResponse
+    public function update(Request $request, Ruang $ruang)
     {
         $validated = $request->validate([
             'kode_ruangan' => ['required', 'string', 'max:50', 'unique:ruangs,kode_ruangan,' . $ruang->id],
@@ -55,12 +63,27 @@ class RuangController extends Controller
 
         $ruang->update($validated);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data ruangan berhasil diperbarui!',
+                'ruang' => $ruang
+            ]);
+        }
+
         return redirect()->route('master.ruang.index')->with('success', 'Data ruangan berhasil diperbarui!');
     }
 
-    public function destroy(Ruang $ruang): RedirectResponse
+    public function destroy(Request $request, Ruang $ruang)
     {
         $ruang->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data ruangan berhasil dihapus!'
+            ]);
+        }
 
         return redirect()->route('master.ruang.index')->with('success', 'Data ruangan berhasil dihapus!');
     }

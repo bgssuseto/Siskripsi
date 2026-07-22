@@ -604,7 +604,7 @@ class AdministrasiController extends Controller
 
             $tglStr = $s->tanggal ? Carbon::parse($s->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y') : '-';
             $ruangKode = $s->ruang ? $s->ruang->kode_ruangan : '-';
-            $jenisStr = $s->jenis_tugas_akhir == 'sidang' ? 'Sidang Skripsi' : 'Sidang Jurnal';
+            $jenisStr = ($s->jenis_tugas_akhir == 'sidang' || $s->jenis_tugas_akhir == 'skripsi') ? 'Sidang Skripsi' : 'Sidang Jurnal';
 
             $sheet->setCellValue("A{$currentRow}", $no++);
             $sheet->setCellValue("B{$currentRow}", $s->nim);

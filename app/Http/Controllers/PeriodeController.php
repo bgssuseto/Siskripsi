@@ -20,7 +20,7 @@ class PeriodeController extends Controller
             $query->where('nama_periode', 'like', '%' . $request->search . '%');
         }
 
-        $periodes = $query->orderBy('id', 'desc')->paginate(10);
+        $periodes = $query->orderBy('id', 'desc')->paginate(5)->withQueryString();
 
         return view('master.periode.index', compact('periodes'));
     }
@@ -28,7 +28,7 @@ class PeriodeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $request->validate([
             'nama_periode' => ['required', 'string', 'max:255', 'unique:periodes,nama_periode'],
@@ -45,10 +45,18 @@ class PeriodeController extends Controller
             Periode::where('aktif', true)->update(['aktif' => false]);
         }
 
-        Periode::create([
+        $periode = Periode::create([
             'nama_periode' => $request->nama_periode,
             'aktif'        => $aktif,
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Periode berhasil ditambahkan!',
+                'periode' => $periode
+            ]);
+        }
 
         return redirect()->route('master.periode.index')->with('success', 'Data Periode berhasil ditambahkan!');
     }
@@ -56,7 +64,7 @@ class PeriodeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Periode $periode): RedirectResponse
+    public function update(Request $request, Periode $periode)
     {
         $request->validate([
             'nama_periode' => ['required', 'string', 'max:255', 'unique:periodes,nama_periode,' . $periode->id],
@@ -78,20 +86,41 @@ class PeriodeController extends Controller
             'aktif'        => $aktif,
         ]);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Periode berhasil diperbarui!',
+                'periode' => $periode
+            ]);
+        }
+
         return redirect()->route('master.periode.index')->with('success', 'Data Periode berhasil diperbarui!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Periode $periode): RedirectResponse
+    public function destroy(Request $request, Periode $periode)
     {
         // Check if there are sidangs in this period
         if ($periode->sidangs()->count() > 0) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus! Periode ini masih digunakan oleh data sidang.'
+                ], 422);
+            }
             return redirect()->route('master.periode.index')->with('error', 'Gagal menghapus! Periode ini masih digunakan oleh data sidang.');
         }
 
         $periode->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Periode berhasil dihapus!'
+            ]);
+        }
 
         return redirect()->route('master.periode.index')->with('success', 'Data Periode berhasil dihapus!');
     }
@@ -99,10 +128,17 @@ class PeriodeController extends Controller
     /**
      * Set active a period.
      */
-    public function setActive(Periode $periode): RedirectResponse
+    public function setActive(Request $request, Periode $periode)
     {
         Periode::where('aktif', true)->update(['aktif' => false]);
         $periode->update(['aktif' => true]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Periode {$periode->nama_periode} telah diaktifkan!"
+            ]);
+        }
 
         return redirect()->route('master.periode.index')->with('success', "Periode {$periode->nama_periode} telah diaktifkan!");
     }

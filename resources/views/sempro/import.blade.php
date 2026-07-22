@@ -1,4 +1,4 @@
-<x-app-layout title="Import Excel Data Skripsi">
+<x-app-layout title="Import Excel Data Sempro">
     <x-slot:header>Import Excel</x-slot:header>
 
     <style>
@@ -113,8 +113,8 @@
     <div class="import-page">
         {{-- Breadcrumb --}}
         <div style="margin-bottom:1rem;">
-            <a href="{{ route('master.skripsi.index') }}" style="color:#6366f1;font-size:.875rem;text-decoration:none;">
-                ← Kembali ke Data Skripsi
+            <a href="{{ route('master.sempro.index') }}" style="color:#6366f1;font-size:.875rem;text-decoration:none;">
+                ← Kembali ke Data Sempro
             </a>
         </div>
 
@@ -130,12 +130,12 @@
         <div class="import-card">
             {{-- Header --}}
             <div class="import-header">
-                <h1>📥 Import Data Skripsi dari Excel</h1>
+                <h1>📥 Import Data Sempro dari Excel</h1>
                 <p>Upload file Excel (.xlsx) sesuai format yang sudah ditentukan. Data akan diproses secara otomatis.</p>
             </div>
 
             {{-- Body --}}
-            <form method="POST" action="{{ route('master.skripsi.import') }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('master.sempro.import') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="import-body">
 
@@ -153,7 +153,7 @@
                     <div class="info-box" style="margin-top:1.5rem;">
                         <h3>📋 Format Excel yang Diperlukan</h3>
                         <ul>
-                            <li>File Excel harus memiliki 2 sheet: <strong>"Skripsi"</strong> dan <strong>"Jurnal"</strong></li>
+                            <li>File Excel harus memiliki sheet berisi data Sempro</li>
                             <li>Baris pertama adalah header, data dimulai dari baris ke-2</li>
                             <li>Kolom harus sesuai urutan di bawah ini</li>
                             <li>Data yang sudah ada (berdasarkan NIM) akan diperbarui secara otomatis</li>
@@ -163,33 +163,33 @@
                         <table class="col-table" style="margin-top:.85rem;">
                             <thead>
                                 <tr>
-                                    <th style="width:15%;">Kolom</th>
-                                    <th style="width:30%;">Nama Header</th>
+                                    <th style="width:20%;">Dengan Kolom No</th>
+                                    <th style="width:20%;">Tanpa Kolom No</th>
+                                    <th>Nama Header</th>
                                     <th>Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>A</td><td>Tanggal Pendaftaran</td><td>Opsional (Contoh: <em>Senin, 13 Juli 2026</em>)</td></tr>
-                                <tr><td>B</td><td>NIM</td><td>⚠ Wajib, unik per sheet</td></tr>
-                                <tr><td>C</td><td>Nama</td><td>⚠ Wajib, huruf kapital</td></tr>
-                                <tr><td>D</td><td>Judul Skripsi</td><td>⚠ Wajib</td></tr>
-                                <tr><td>E</td><td>Dosbing Utama</td><td>Nama dosen pembimbing utama</td></tr>
-                                <tr><td>F</td><td>Dosbing Pendamping</td><td>Opsional</td></tr>
-                                <tr><td>G</td><td>Ketua Penguji</td><td>Opsional (disimpan untuk plotting)</td></tr>
-                                <tr><td>H</td><td>Penguji 1</td><td>Opsional</td></tr>
-                                <tr><td>I</td><td>Penguji 2</td><td>Opsional</td></tr>
+                                <tr><td>A</td><td>—</td><td>No</td><td>Opsional (diabaikan & tidak diimpor)</td></tr>
+                                <tr><td>B</td><td>A</td><td>NIM</td><td>⚠ Wajib, unik per sheet</td></tr>
+                                <tr><td>C</td><td>B</td><td>Nama</td><td>⚠ Wajib, huruf kapital</td></tr>
+                                <tr><td>D</td><td>C</td><td>Judul Skripsi</td><td>⚠ Wajib (dapat berupa judul proposal/skripsi)</td></tr>
+                                <tr><td>E</td><td>D</td><td>Dosbing Utama</td><td>Nama dosen pembimbing utama</td></tr>
+                                <tr><td>F</td><td>E</td><td>Dosbing Pendamping</td><td>Opsional</td></tr>
+                                <tr><td>G</td><td>F</td><td>Tgl Daftar</td><td>Contoh: <em>Senin, 13 Juli 2026</em></td></tr>
                             </tbody>
                         </table>
                     </div>
 
                     {{-- Warning --}}
-                    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.85rem 1rem;margin-top:1rem;font-size:.82rem;color:#1e40af;">
-                        ℹ️ <strong>Catatan:</strong> Header <code>NO</code> (jika ada) akan otomatis diabaikan. Data yang baru diimpor berstatus <strong>"Belum Dijadwalkan"</strong> agar dapat di-plot dan dicek bentroknya di menu <strong>Penjadwalan → Jadwal Sidang Skripsi</strong>.
+                    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:.85rem 1rem;margin-top:1rem;font-size:.82rem;color:#92400e;">
+                        ⚠ <strong>Perhatian:</strong> Import akan memperbarui data yang sudah ada berdasarkan NIM.
+                        Data baru akan ditambahkan otomatis.
                     </div>
                 </div>
 
                 <div class="import-footer">
-                    <a href="{{ route('master.skripsi.index') }}" class="btn btn-outline">Batal</a>
+                    <a href="{{ route('master.sempro.index') }}" class="btn btn-outline">Batal</a>
                     <button type="submit" class="btn btn-primary">
                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                         Proses Import
