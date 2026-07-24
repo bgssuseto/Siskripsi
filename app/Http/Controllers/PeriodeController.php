@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Periode;
+use App\Models\PendaftaranPeriode;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -21,8 +22,11 @@ class PeriodeController extends Controller
         }
 
         $periodes = $query->orderBy('id', 'desc')->paginate(5)->withQueryString();
+        
+        // Fetch all registration waves/periods
+        $pendaftaranPeriodes = PendaftaranPeriode::with('periode')->orderBy('id', 'desc')->get();
 
-        return view('master.periode.index', compact('periodes'));
+        return view('master.periode.index', compact('periodes', 'pendaftaranPeriodes'));
     }
 
     /**
@@ -141,5 +145,119 @@ class PeriodeController extends Controller
         }
 
         return redirect()->route('master.periode.index')->with('success', "Periode {$periode->nama_periode} telah diaktifkan!");
+    }
+
+    /**
+     * Store registration wave
+     */
+    public function storePendaftaranPeriode(Request $request)
+    {
+        $validated = $request->validate([
+            'periode_id'      => ['required', 'exists:periodes,id'],
+            'jenis'           => ['required', 'string', 'in:sempro,skripsi'],
+            'gelombang'       => ['required', 'integer', 'min:1', 'max:10'],
+            'tanggal_mulai'   => ['required', 'date'],
+            'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
+        ], [
+            'periode_id.required'      => 'Periode Akademik wajib dipilih.',
+            'jenis.required'           => 'Jenis pendaftaran wajib dipilih.',
+            'gelombang.required'       => 'Gelombang wajib diisi.',
+            'tanggal_mulai.required'   => 'Tanggal mulai wajib diisi.',
+            'tanggal_selesai.required' => 'Tanggal selesai wajib diisi.',
+            'tanggal_selesai.after_or_equal' => 'Tanggal selesai harus setelah atau sama dengan tanggal mulai.',
+        ]);
+
+        $exists = PendaftaranPeriode::where('periode_id', $validated['periode_id'])
+            ->where('jenis', $validated['jenis'])
+            ->where('gelombang', $validated['gelombang'])
+            ->exists();
+
+        if ($exists) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gelombang pendaftaran ini sudah terdaftar untuk periode dan jenis yang sama.'
+                ], 422);
+            }
+            return back()->with('error', 'Gelombang pendaftaran ini sudah terdaftar untuk periode dan jenis yang sama.');
+        }
+
+        $pendaftaran = PendaftaranPeriode::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Gelombang Pendaftaran berhasil ditambahkan!',
+                'pendaftaran' => $pendaftaran
+            ]);
+        }
+
+        return redirect()->route('master.periode.index')->with('success', 'Gelombang Pendaftaran berhasil ditambahkan!');
+    }
+
+    /**
+     * Update registration wave
+     */
+    public function updatePendaftaranPeriode(Request $request, PendaftaranPeriode $pendaftaranPeriode)
+    {
+        $validated = $request->validate([
+            'periode_id'      => ['required', 'exists:periodes,id'],
+            'jenis'           => ['required', 'string', 'in:sempro,skripsi'],
+            'gelombang'       => ['required', 'integer', 'min:1', 'max:10'],
+            'tanggal_mulai'   => ['required', 'date'],
+            'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
+        ], [
+            'periode_id.required'      => 'Periode Akademik wajib dipilih.',
+            'jenis.required'           => 'Jenis pendaftaran wajib dipilih.',
+            'gelombang.required'       => 'Gelombang wajib diisi.',
+            'tanggal_mulai.required'   => 'Tanggal mulai wajib diisi.',
+            'tanggal_selesai.required' => 'Tanggal selesai wajib diisi.',
+            'tanggal_selesai.after_or_equal' => 'Tanggal selesai harus setelah atau sama dengan tanggal mulai.',
+        ]);
+
+        $exists = PendaftaranPeriode::where('periode_id', $validated['periode_id'])
+            ->where('jenis', $validated['jenis'])
+            ->where('gelombang', $validated['gelombang'])
+            ->where('id', '!=', $pendaftaranPeriode->id)
+            ->exists();
+
+        if ($exists) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gelombang pendaftaran ini sudah terdaftar untuk periode dan jenis yang sama.'
+                ], 422);
+            }
+            return back()->with('error', 'Gelombang pendaftaran ini sudah terdaftar untuk periode dan jenis yang sama.');
+        }
+
+        $pendaftaranPeriode->update($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Gelombang Pendaftaran berhasil diperbarui!',
+                'pendaftaran' => $pendaftaranPeriode
+            ]);
+        }
+
+        return redirect()->route('master.periode.index')->with('success', 'Gelombang Pendaftaran berhasil diperbarui!');
+    }
+
+    /**
+     * Delete registration wave
+     */
+    public function destroyPendaftaranPeriode(Request $request, PendaftaranPeriode $pendaftaranPeriode)
+    {
+        $pendaftaranPeriode->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Gelombang Pendaftaran berhasil dihapus!'
+            ]);
+        }
+
+        return redirect()->route('master.periode.index')->with('success', 'Gelombang Pendaftaran berhasil dihapus!');
     }
 }

@@ -93,6 +93,7 @@
             <nav class="flex-1 py-5 px-3 overflow-y-auto sidebar-scroll space-y-0.5">
 
                 <!-- Section: MAIN -->
+                @if(!Auth::user()->hasRole('dosen'))
                 <div class="mb-2">
                     <p class="px-3 text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-500 mb-1 transition-all duration-300"
                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">Menu Utama</p>
@@ -111,6 +112,7 @@
                         @endif
                     </a>
                 </div>
+                @endif
 
                     <!-- Section: MAHASISWA -->
                     @if(Auth::user()->hasRole('mahasiswa'))
@@ -120,42 +122,237 @@
 
                         @php
                             $mahasiswaMenus = Auth::user()->getAccessibleMenus();
+                            $parentMenus = $mahasiswaMenus->whereNull('parent_id')->filter(function ($m) {
+                                return strtolower($m->name) !== 'dashboard' && !str_contains(strtolower($m->name), 'dashboard');
+                            });
                         @endphp
 
-                        @foreach($mahasiswaMenus as $m)
-                            @if($m->is_active)
-                            @php
-                                $routeName = $m->route;
-                                $targetUrl = ($routeName && Route::has($routeName)) ? route($routeName) : '#';
-                                $isActive = $routeName ? (request()->routeIs($routeName . '*') || ($routeName === 'mahasiswa.sempro.index' && request()->routeIs('mahasiswa.pendaftaran.*'))) : false;
-                            @endphp
-                            <a href="{{ $targetUrl }}"
-                               class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                                      {{ $isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
-                               title="{{ $m->name }}">
-                                <svg class="w-5 h-5 shrink-0 {{ $isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    @if(str_contains(strtolower($m->name), 'sempro'))
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6"/>
-                                    @elseif(str_contains(strtolower($m->name), 'skripsi'))
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    @elseif(str_contains(strtolower($m->name), 'jadwal'))
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    @else
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                    @endif
-                                </svg>
-                                <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">{{ $m->name }}</span>
-                                @if(!$isActive)
-                                <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                        @foreach($parentMenus as $parent)
+                            @if($parent->is_active)
+                                @php
+                                    $children = $mahasiswaMenus->where('parent_id', $parent->id)->where('is_active', true);
+                                @endphp
+
+                                @if($children->isEmpty())
+                                    @php
+                                        $routeName = $parent->route;
+                                        $targetUrl = ($routeName && Route::has($routeName)) ? route($routeName) : '#';
+                                        $isActive = $routeName ? (request()->routeIs($routeName . '*') || ($routeName === 'mahasiswa.sempro.index' && request()->routeIs('mahasiswa.pendaftaran.*'))) : false;
+                                    @endphp
+                                    <a href="{{ $targetUrl }}"
+                                       class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                              {{ $isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                       title="{{ $parent->name }}">
+                                        <svg class="w-5 h-5 shrink-0 {{ $isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            @if(str_contains(strtolower($parent->name), 'dashboard'))
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                            @elseif(str_contains(strtolower($parent->name), 'pendaftaran') || str_contains(strtolower($parent->name), 'daftar'))
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            @elseif(str_contains(strtolower($parent->name), 'jadwal') || str_contains(strtolower($parent->name), 'penjadwalan'))
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            @else
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                            @endif
+                                        </svg>
+                                        <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">{{ $parent->name }}</span>
+                                        @if(!$isActive)
+                                        <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                                        @endif
+                                    </a>
+                                @else
+                                    @php
+                                        $childRoutes = $children->pluck('route')->filter()->toArray();
+                                        $isActive = false;
+                                        foreach($childRoutes as $cr) {
+                                            if(request()->routeIs($cr . '*')) {
+                                                $isActive = true;
+                                            }
+                                        }
+                                    @endphp
+                                    <div x-data="{ open: {{ $isActive ? 'true' : 'false' }} }">
+                                        <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
+                                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                                       {{ $isActive ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                                title="{{ $parent->name }}">
+                                            <svg class="w-5 h-5 shrink-0 {{ $isActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                @if(str_contains(strtolower($parent->name), 'pendaftaran') || str_contains(strtolower($parent->name), 'daftar'))
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                @elseif(str_contains(strtolower($parent->name), 'jadwal') || str_contains(strtolower($parent->name), 'penjadwalan'))
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                @else
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                                @endif
+                                            </svg>
+                                            <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">{{ $parent->name }}</span>
+                                            <!-- Chevron -->
+                                            <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
+                                                 :class="{ 'rotate-180': open, 'opacity-0': !sidebarOpen }"
+                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                            @if(!$isActive)
+                                            <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                                            @endif
+                                        </button>
+
+                                        <!-- Submenu -->
+                                        <div x-show="open && sidebarOpen"
+                                             x-transition:enter="transition-all duration-200 ease-out"
+                                             x-transition:enter-start="opacity-0 -translate-y-2"
+                                             x-transition:enter-end="opacity-100 translate-y-0"
+                                             x-transition:leave="transition-all duration-150 ease-in"
+                                             x-transition:leave-start="opacity-100 translate-y-0"
+                                             x-transition:leave-end="opacity-0 -translate-y-2"
+                                             class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
+                                             x-cloak>
+                                            
+                                            @foreach($children as $child)
+                                                @php
+                                                    $childRoute = $child->route;
+                                                    $childUrl = ($childRoute && Route::has($childRoute)) ? route($childRoute) : '#';
+                                                    $childActive = $childRoute ? request()->routeIs($childRoute . '*') : false;
+                                                @endphp
+                                                <a href="{{ $childUrl }}"
+                                                   class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 group relative
+                                                          {{ $childActive ? 'bg-indigo-600/30 text-indigo-300 font-bold border border-indigo-500/30' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                                   title="{{ $child->name }}">
+                                                    <span class="w-1.5 h-1.5 rounded-full {{ $childActive ? 'bg-indigo-400' : 'bg-slate-600 group-hover:bg-indigo-400' }} transition-colors"></span>
+                                                    <span class="truncate">{{ $child->name }}</span>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 @endif
-                            </a>
                             @endif
                         @endforeach
                     </div>
                     @endif
 
-                @if(Auth::user()->hasRole(['super_admin', 'koordinator']))
-                <!-- Section: ADMINISTRASI -->
+                    <!-- Section: DOSEN -->
+                    @if(Auth::user()->hasRole('dosen'))
+                    <div class="mb-2 pt-3">
+                        <p class="px-3 text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-500 mb-1 transition-all duration-300"
+                           :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">Dosen</p>
+
+                        @php
+                            $dosenMenus = Auth::user()->getAccessibleMenus();
+                            $parentMenus = $dosenMenus->whereNull('parent_id');
+                        @endphp
+
+                        @foreach($parentMenus as $parent)
+                            @if($parent->is_active)
+                                @php
+                                    $children = $dosenMenus->where('parent_id', $parent->id)->where('is_active', true);
+                                @endphp
+
+                                @if($children->isEmpty())
+                                    @php
+                                        $routeName = $parent->route;
+                                    @endphp
+                                    @if(!$routeName)
+                                        @continue
+                                    @endif
+                                    @php
+                                        $targetUrl = Route::has($routeName) ? route($routeName) : '#';
+                                        $isActive = request()->routeIs($routeName . '*');
+                                    @endphp
+                                    <a href="{{ $targetUrl }}"
+                                       class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                              {{ $isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                       title="{{ $parent->name }}">
+                                        <svg class="w-5 h-5 shrink-0 {{ $isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            @if($parent->icon === 'home' || str_contains(strtolower($parent->name), 'dashboard'))
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                            @elseif($parent->icon === 'clock' || str_contains(strtolower($parent->name), 'kalender'))
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            @elseif($parent->icon === 'user' || str_contains(strtolower($parent->name), 'profil'))
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            @else
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                            @endif
+                                        </svg>
+                                        <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">{{ $parent->name }}</span>
+                                        @if(!$isActive)
+                                        <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                                        @endif
+                                    </a>
+                                @else
+                                    @php
+                                        $stateName = strtolower(str_replace(' ', '', $parent->name)) . 'Open';
+                                        $childRoutes = $children->pluck('route')->filter()->toArray();
+                                        $isActive = false;
+                                        foreach($childRoutes as $cr) {
+                                            if(request()->routeIs($cr . '*')) {
+                                                $isActive = true;
+                                            }
+                                        }
+                                    @endphp
+                                    <div x-data="{ open: {{ $isActive ? 'true' : 'false' }} }">
+                                        <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
+                                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                                       {{ $isActive ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                                title="{{ $parent->name }}">
+                                            <svg class="w-5 h-5 shrink-0 {{ $isActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                @if(str_contains(strtolower($parent->name), 'jadwal'))
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                @else
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                                @endif
+                                            </svg>
+                                            <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">{{ $parent->name }}</span>
+                                            <!-- Chevron -->
+                                            <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
+                                                 :class="{ 'rotate-180': open, 'opacity-0': !sidebarOpen }"
+                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                            @if(!$isActive)
+                                            <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                                            @endif
+                                        </button>
+
+                                        <!-- Submenu -->
+                                        <div x-show="open && sidebarOpen"
+                                             x-transition:enter="transition-all duration-200 ease-out"
+                                             x-transition:enter-start="opacity-0 -translate-y-2"
+                                             x-transition:enter-end="opacity-100 translate-y-0"
+                                             x-transition:leave="transition-all duration-150 ease-in"
+                                             x-transition:leave-start="opacity-100 translate-y-0"
+                                             x-transition:leave-end="opacity-0 -translate-y-2"
+                                             class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
+                                             x-cloak>
+                                            
+                                            @foreach($children as $child)
+                                                @php
+                                                    $childRoute = $child->route;
+                                                    $childUrl = ($childRoute && Route::has($childRoute)) ? route($childRoute) : '#';
+                                                    $childActive = $childRoute ? request()->routeIs($childRoute . '*') : false;
+                                                @endphp
+                                                <a href="{{ $childUrl }}"
+                                                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                                          {{ $childActive ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                                    <svg class="w-4 h-4 shrink-0 {{ $childActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        @if(str_contains(strtolower($child->name), 'proposal') || str_contains(strtolower($child->name), 'sempro'))
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6"/>
+                                                        @elseif(str_contains(strtolower($child->name), 'skripsi') || str_contains(strtolower($child->name), 'sidang'))
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                        @else
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                        @endif
+                                                    </svg>
+                                                    {{ $child->name }}
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endif
+                        @endforeach
+                    </div>
+                    @endif
+
+                @if(Auth::user()->isSuperAdmin())
+                <!-- Section: ADMINISTRASI (Super Admin only) -->
                 <div class="mb-2 pt-3">
                     <p class="px-3 text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-500 mb-1 transition-all duration-300"
                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">Administrasi</p>
@@ -169,13 +366,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>
                         <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Manajemen User</span>
-                        @if(request()->routeIs('users.*'))
-                        @else
+                        @if(!request()->routeIs('users.*'))
                         <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
                         @endif
                     </a>
 
-                    <!-- Manajemen Menu (Super Admin & Koordinator) -->
+                    <!-- Manajemen Menu -->
                     <a href="{{ route('admin.menus.index') }}"
                        class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
                               {{ request()->routeIs('admin.menus.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
@@ -200,18 +396,15 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
                             </svg>
                             <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Data Master</span>
-                            <!-- Chevron -->
                             <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
                                  :class="{ 'rotate-180': dataMasterOpen, 'opacity-0': !sidebarOpen }"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
-                            @if(!request()->routeIs('master.*'))
+                            @if(!request()->routeIs('master.dosen.*') && !request()->routeIs('master.ruang.*') && !request()->routeIs('master.periode.*'))
                             <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
                             @endif
                         </button>
-
-                        <!-- Submenu -->
                         <div x-show="dataMasterOpen && sidebarOpen"
                              x-transition:enter="transition-all duration-200 ease-out"
                              x-transition:enter-start="opacity-0 -translate-y-2"
@@ -221,8 +414,6 @@
                              x-transition:leave-end="opacity-0 -translate-y-2"
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
-
-                            <!-- Master Dosen -->
                             <a href="{{ route('master.dosen.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('master.dosen.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -231,8 +422,6 @@
                                 </svg>
                                 Master Dosen
                             </a>
-
-                            <!-- Master Ruang -->
                             <a href="{{ route('master.ruang.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('master.ruang.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -241,8 +430,6 @@
                                 </svg>
                                 Master Ruang
                             </a>
-
-                            <!-- Master Periode -->
                             <a href="{{ route('master.periode.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('master.periode.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -251,7 +438,6 @@
                                 </svg>
                                 Master Periode
                             </a>
-
                         </div>
                     </div>
 
@@ -265,7 +451,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                             <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Data</span>
-                            <!-- Chevron -->
                             <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
                                  :class="{ 'rotate-180': dataOpen, 'opacity-0': !sidebarOpen }"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,8 +460,6 @@
                             <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
                             @endif
                         </button>
-
-                        <!-- Submenu Data -->
                         <div x-show="dataOpen && sidebarOpen"
                              x-transition:enter="transition-all duration-200 ease-out"
                              x-transition:enter-start="opacity-0 -translate-y-2"
@@ -286,8 +469,6 @@
                              x-transition:leave-end="opacity-0 -translate-y-2"
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
-
-                            <!-- Data Skripsi -->
                             <a href="{{ route('master.skripsi.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('master.skripsi.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -296,8 +477,6 @@
                                 </svg>
                                 Data Skripsi
                             </a>
-
-                            <!-- Data Sempro -->
                             <a href="{{ route('master.sempro.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('master.sempro.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -319,7 +498,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                             <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Penjadwalan</span>
-                            <!-- Chevron -->
                             <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
                                  :class="{ 'rotate-180': penjadwalanOpen, 'opacity-0': !sidebarOpen }"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,8 +507,6 @@
                             <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-violet-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
                             @endif
                         </button>
-
-                        <!-- Submenu Penjadwalan -->
                         <div x-show="penjadwalanOpen && sidebarOpen"
                              x-transition:enter="transition-all duration-200 ease-out"
                              x-transition:enter-start="opacity-0 -translate-y-2"
@@ -340,8 +516,6 @@
                              x-transition:leave-end="opacity-0 -translate-y-2"
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
-
-                            <!-- Jadwal Sidang Skripsi -->
                             <a href="{{ route('jadwal-ujian.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('jadwal-ujian.*') ? 'bg-violet-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -350,8 +524,6 @@
                                 </svg>
                                 Jadwal Sidang Skripsi
                             </a>
-
-                            <!-- Jadwal Sempro -->
                             <a href="{{ route('jadwal-sempro.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('jadwal-sempro.*') ? 'bg-violet-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -359,6 +531,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                                 Jadwal Sempro
+                            </a>
+                            <a href="{{ route('master.kesediaan-dosen.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('master.kesediaan-dosen.index') ? 'bg-violet-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('master.kesediaan-dosen.index') ? 'text-white' : 'text-slate-500 group-hover:text-violet-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                </svg>
+                                Kesediaan Dosen
                             </a>
                         </div>
                     </div>
@@ -373,7 +553,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                             <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Administrasi</span>
-                            <!-- Chevron -->
                             <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
                                  :class="{ 'rotate-180': administrasiOpen, 'opacity-0': !sidebarOpen }"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -383,8 +562,6 @@
                             <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
                             @endif
                         </button>
-
-                        <!-- Submenu -->
                         <div x-show="administrasiOpen && sidebarOpen"
                              x-transition:enter="transition-all duration-200 ease-out"
                              x-transition:enter-start="opacity-0 -translate-y-2"
@@ -394,8 +571,6 @@
                              x-transition:leave-end="opacity-0 -translate-y-2"
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
-
-                            <!-- Undangan -->
                             <a href="{{ route('administrasi.undangan.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('administrasi.undangan.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -404,8 +579,6 @@
                                 </svg>
                                 Undangan
                             </a>
-
-                            <!-- Berita Acara -->
                             <a href="{{ route('administrasi.berita-acara.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('administrasi.berita-acara.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -414,8 +587,6 @@
                                 </svg>
                                 Berita Acara
                             </a>
-
-                            <!-- Surat Keputusan (SK) -->
                             <a href="{{ route('administrasi.sk.index') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
                                       {{ request()->routeIs('administrasi.sk.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
@@ -428,6 +599,113 @@
                     </div>
                 </div>
                 @endif
+
+                @if(Auth::user()->isKoordinator())
+                <!-- Section: KOORDINATOR - Dynamic menus from DB -->
+                @php
+                    $koordinatorMenus = Auth::user()->getAccessibleMenus();
+                    $koordinatorParents = $koordinatorMenus->whereNull('parent_id');
+                @endphp
+                @if($koordinatorParents->isNotEmpty())
+                <div class="mb-2 pt-3">
+                    <p class="px-3 text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-500 mb-1 transition-all duration-300"
+                       :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">Koordinator</p>
+
+                    @foreach($koordinatorParents as $kParent)
+                        @if($kParent->is_active)
+                            @php
+                                $kChildren = $koordinatorMenus->where('parent_id', $kParent->id)->where('is_active', true);
+                                $kChildRoutes = $kChildren->pluck('route')->filter()->toArray();
+                                $kParentActive = false;
+                                foreach($kChildRoutes as $kcr) {
+                                    if(request()->routeIs($kcr . '*')) { $kParentActive = true; }
+                                }
+                                if(!$kChildren->count() && $kParent->route) {
+                                    $kParentActive = request()->routeIs($kParent->route . '*');
+                                }
+                            @endphp
+
+                            @if($kChildren->isEmpty())
+                                @php
+                                    $kUrl = ($kParent->route && Route::has($kParent->route)) ? route($kParent->route) : '#';
+                                @endphp
+                                <a href="{{ $kUrl }}"
+                                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                          {{ $kParentActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                   title="{{ $kParent->name }}">
+                                    <svg class="w-5 h-5 shrink-0 {{ $kParentActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">{{ $kParent->name }}</span>
+                                    @if(!$kParentActive)
+                                    <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                                    @endif
+                                </a>
+                            @else
+                                <div x-data="{ open: {{ $kParentActive ? 'true' : 'false' }} }">
+                                    <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
+                                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                                   {{ $kParentActive ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                            title="{{ $kParent->name }}">
+                                        <svg class="w-5 h-5 shrink-0 {{ $kParentActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            @if(str_contains(strtolower($kParent->name), 'data'))
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            @elseif(str_contains(strtolower($kParent->name), 'jadwal') || str_contains(strtolower($kParent->name), 'penjadwalan'))
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            @else
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                            @endif
+                                        </svg>
+                                        <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">{{ $kParent->name }}</span>
+                                        <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
+                                             :class="{ 'rotate-180': open, 'opacity-0': !sidebarOpen }"
+                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                        @if(!$kParentActive)
+                                        <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                                        @endif
+                                    </button>
+                                    <div x-show="open && sidebarOpen"
+                                         x-transition:enter="transition-all duration-200 ease-out"
+                                         x-transition:enter-start="opacity-0 -translate-y-2"
+                                         x-transition:enter-end="opacity-100 translate-y-0"
+                                         x-transition:leave="transition-all duration-150 ease-in"
+                                         x-transition:leave-start="opacity-100 translate-y-0"
+                                         x-transition:leave-end="opacity-0 -translate-y-2"
+                                         class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
+                                         x-cloak>
+                                        @foreach($kChildren as $kChild)
+                                            @php
+                                                $kChildUrl = ($kChild->route && Route::has($kChild->route)) ? route($kChild->route) : '#';
+                                                $kChildActive = $kChild->route ? request()->routeIs($kChild->route . '*') : false;
+                                            @endphp
+                                            <a href="{{ $kChildUrl }}"
+                                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                                      {{ $kChildActive ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                                <svg class="w-4 h-4 shrink-0 {{ $kChildActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    @if(str_contains(strtolower($kChild->name), 'skripsi'))
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                                    @elseif(str_contains(strtolower($kChild->name), 'sempro'))
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                    @elseif(str_contains(strtolower($kChild->name), 'jadwal'))
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                    @else
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                    @endif
+                                                </svg>
+                                                {{ $kChild->name }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+                    @endforeach
+                </div>
+                @endif
+                @endif
+
 
             </nav>
 
@@ -497,7 +775,158 @@
                 </div>
 
                 <!-- Right: Profile & Actions -->
+                @php
+                    $upcomingCount = 0;
+                    $upcomingSidangs = collect();
+                    if (Auth::check()) {
+                        $tomorrow = now()->timezone('Asia/Jakarta')->addDay()->format('Y-m-d');
+                        if (Auth::user()->isDosen() && Auth::user()->dosen) {
+                            $dosenId = Auth::user()->dosen->id;
+                            
+                            $upcomingSidangs = \App\Models\Sidang::with(['ruang', 'pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2'])
+                                ->whereDate('tanggal', $tomorrow)
+                                ->where(function ($q) use ($dosenId) {
+                                    $q->where(function ($sq) use ($dosenId) {
+                                        $sq->where('jenis_tugas_akhir', 'sempro')
+                                           ->where(function ($inner) use ($dosenId) {
+                                               $inner->where('dosen_pembimbing_utama_id', $dosenId)
+                                                     ->orWhere('dosen_pembimbing_pendamping_id', $dosenId)
+                                                     ->orWhere('ketua_penguji_id', $dosenId)
+                                                     ->orWhere('anggota_penguji_1_id', $dosenId)
+                                                     ->orWhere('anggota_penguji_2_id', $dosenId);
+                                           });
+                                    })->orWhere(function ($sq) use ($dosenId) {
+                                        $sq->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])
+                                           ->where(function ($inner) use ($dosenId) {
+                                               $inner->where('dosen_pembimbing_utama_id', $dosenId)
+                                                     ->orWhere('ketua_penguji_id', $dosenId)
+                                                     ->orWhere('anggota_penguji_1_id', $dosenId)
+                                                     ->orWhere('anggota_penguji_2_id', $dosenId);
+                                           });
+                                    });
+                                })
+                                ->get();
+                            $upcomingCount = $upcomingSidangs->count();
+                        } elseif (Auth::user()->isMahasiswa()) {
+                            $nim = Auth::user()->nim ?? null;
+                            $name = Auth::user()->name;
+                            
+                            $upcomingSidangs = \App\Models\Sidang::with(['ruang', 'pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2'])
+                                ->whereDate('tanggal', $tomorrow)
+                                ->where(function ($q) use ($nim, $name) {
+                                    if ($nim) {
+                                        $q->where('nim', $nim);
+                                    } else {
+                                        $q->where('nama_mahasiswa', $name);
+                                    }
+                                })
+                                ->get();
+                            $upcomingCount = $upcomingSidangs->count();
+                        }
+                    }
+                @endphp
+
                 <div class="flex items-center gap-2 sm:gap-3" x-data="{ open: false }" @click.away="open = false">
+
+                    <!-- Notification Bell Dropdown -->
+                    @if (Auth::user()->isDosen() || Auth::user()->isMahasiswa())
+                    <div class="relative" x-data="{ notifOpen: false }" @click.away="notifOpen = false">
+                        <button @click="notifOpen = !notifOpen" 
+                                class="relative flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-inner border border-slate-100"
+                                title="Notifikasi Ujian H-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            @if ($upcomingCount > 0)
+                            <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white animate-pulse"></span>
+                            @endif
+                        </button>
+
+                        <!-- Notification Dropdown -->
+                        <div x-show="notifOpen"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95 translate-y-1"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 translate-y-1"
+                             class="absolute top-12 right-0 sm:-right-6 w-[320px] sm:w-[380px] bg-white border border-slate-200/90 rounded-2xl shadow-2xl shadow-slate-900/15 overflow-hidden z-50"
+                             x-cloak>
+                            <div class="px-4 py-3 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🔔</span>
+                                    <span class="font-extrabold text-xs tracking-wider uppercase">Notifikasi Ujian H-1</span>
+                                </div>
+                                @if ($upcomingCount > 0)
+                                <span class="bg-indigo-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-indigo-400">
+                                    {{ $upcomingCount }} Baru
+                                </span>
+                                @endif
+                            </div>
+                            
+                            <div class="max-h-80 overflow-y-auto divide-y divide-slate-100 bg-white">
+                                @forelse ($upcomingSidangs as $us)
+                                    <div class="p-4 hover:bg-slate-50/80 transition-colors">
+                                        <div class="flex items-center justify-between gap-2 mb-2">
+                                            <span class="inline-flex px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                                {{ $us->jenis_tugas_akhir === 'sempro' ? 'Sempro' : 'Sidang Skripsi' }}
+                                            </span>
+                                            <span class="text-[10px] font-extrabold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">
+                                                Besok, {{ $us->jam }} WIB
+                                            </span>
+                                        </div>
+                                        
+                                        @if(Auth::user()->isDosen())
+                                            <p class="text-xs font-bold text-slate-800 leading-snug">{{ $us->nama_mahasiswa }}</p>
+                                            <p class="text-[10px] text-slate-400 font-mono">NIM: {{ $us->nim }}</p>
+                                        @else
+                                            <p class="text-xs font-bold text-slate-800 leading-snug">Jadwal Ujian Anda</p>
+                                            <p class="text-[10px] text-slate-400 font-mono">NIM: {{ $us->nim }}</p>
+                                        @endif
+
+                                        <p class="text-[11px] text-slate-600 mt-1.5 font-medium leading-relaxed italic line-clamp-2">"{{ $us->judul_skripsi }}"</p>
+                                        
+                                        <div class="mt-2.5 pt-2 border-t border-slate-50 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-slate-500 font-medium">
+                                            <div class="flex items-center gap-1">
+                                                <span>📍 Ruang:</span>
+                                                <strong class="text-slate-700">{{ $us->ruang->kode_ruangan ?? '-' }}</strong>
+                                            </div>
+                                            
+                                            @if(Auth::user()->isDosen() && isset($dosenId))
+                                                @php
+                                                    $peran = [];
+                                                    if ($us->dosen_pembimbing_utama_id == $dosenId) $peran[] = 'Dosbing Utama';
+                                                    if ($us->dosen_pembimbing_pendamping_id == $dosenId) $peran[] = 'Dosbing Pendamping';
+                                                    if ($us->ketua_penguji_id == $dosenId) $peran[] = 'Ketua Penguji';
+                                                    if ($us->anggota_penguji_1_id == $dosenId) $peran[] = 'Penguji 1';
+                                                    if ($us->anggota_penguji_2_id == $dosenId) $peran[] = 'Penguji 2';
+                                                @endphp
+                                                <div class="flex items-center gap-1">
+                                                    <span>👤 Peran:</span>
+                                                    <strong class="text-slate-700">{{ implode(', ', $peran) ?: 'Penguji' }}</strong>
+                                                </div>
+                                            @else
+                                                <div class="flex items-center gap-1">
+                                                    <span>👤 Ketua Penguji:</span>
+                                                    <strong class="text-slate-700">{{ $us->ketuaPenguji ? $us->ketuaPenguji->nama_dosen : '-' }}</strong>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="px-4 py-8 text-center text-slate-400">
+                                        <div class="w-10 h-10 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-2.5">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                            </svg>
+                                        </div>
+                                        <p class="text-xs font-semibold text-slate-500">Tidak ada jadwal ujian esok hari.</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                    @endif
 
                     <!-- Standalone Quick Logout Button in Top Right Header -->
                     <form method="POST" action="{{ route('logout') }}" class="inline-flex">

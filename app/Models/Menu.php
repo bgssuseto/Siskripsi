@@ -10,6 +10,7 @@ class Menu extends Model
     protected $fillable = [
         'name',
         'route',
+        'parent_id',
         'icon',
         'role_default',
         'is_active',
@@ -24,5 +25,15 @@ class Menu extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_menu')->withTimestamps();
+    }
+
+    public function parent(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order');
     }
 }

@@ -15,10 +15,14 @@ class Periode extends Model
     protected $fillable = [
         'nama_periode',
         'aktif',
+        'show_form_kesediaan',
+        'lock_form_kesediaan',
     ];
 
     protected $casts = [
         'aktif' => 'boolean',
+        'show_form_kesediaan' => 'boolean',
+        'lock_form_kesediaan' => 'boolean',
     ];
 
     /**

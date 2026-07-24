@@ -67,12 +67,6 @@ class SemproController extends Controller
             }
         }
 
-        $sidangs = $query->orderBy('tanggal', 'asc')
-                         ->orderBy('jam', 'asc')
-                         ->orderBy('id', 'asc')
-                         ->paginate(5)
-                         ->withQueryString();
-
         // Fetch all records in DB to compute global conflict detection for table badges & calendar
         $allSidangs = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
@@ -81,6 +75,48 @@ class SemproController extends Controller
 
         // Detect all conflicts across the entire database
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
+
+        // Get array of IDs that have conflicts
+        $conflictIds = [];
+        foreach ($conflictMap as $sId => $cEntry) {
+            if (!empty($cEntry['schedule']) || !empty($cEntry['rules'])) {
+                $conflictIds[] = $sId;
+            }
+        }
+
+        // Get matching records
+        $allMatching = $query->get();
+
+        // Sort: Items WITH conflict FIRST, then date, jam, id
+        $sortedSidangs = $allMatching->sortBy(function ($s) use ($conflictIds) {
+            $hasConflict = in_array($s->id, $conflictIds);
+            $tglOrder    = $s->tanggal ? $s->tanggal->format('Y-m-d') : '9999-12-31';
+            $jamOrder    = $s->jam ?? '99:99';
+
+            return [
+                $hasConflict ? 0 : 1,
+                $tglOrder,
+                $jamOrder,
+                $s->id
+            ];
+        })->values();
+
+        // Paginate (per_page options: 5, 10, 25, 100)
+        $perPage = (int) $request->get('per_page', 5);
+        if (!in_array($perPage, [5, 10, 25, 100])) {
+            $perPage = 5;
+        }
+
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('page') ?: 1;
+        $currentPageItems = $sortedSidangs->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $sidangs = new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentPageItems,
+            $sortedSidangs->count(),
+            $perPage,
+            $page,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
 
         // Dropdown lists
         $dosens = Dosen::orderBy('nama_dosen')->get();
@@ -178,15 +214,47 @@ class SemproController extends Controller
             }
         }
 
-        $sidangs = $query->orderByRaw("CASE WHEN tanggal IS NULL THEN 0 ELSE 1 END")
-                         ->orderBy('tanggal', 'asc')
-                         ->orderBy('id', 'asc')
-                         ->paginate(5)
-                         ->withQueryString();
-
         $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ruang', 'periode'])
                             ->where('jenis_tugas_akhir', 'sempro')->get();
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
+
+        $conflictIds = [];
+        foreach ($conflictMap as $sId => $cEntry) {
+            if (!empty($cEntry['schedule']) || !empty($cEntry['rules'])) {
+                $conflictIds[] = $sId;
+            }
+        }
+
+        $allMatching = $query->get();
+
+        $sortedSidangs = $allMatching->sortBy(function ($s) use ($conflictIds) {
+            $hasConflict = in_array($s->id, $conflictIds);
+            $hasDate     = !empty($s->tanggal) ? 0 : 1;
+            $tglOrder    = $s->tanggal ? $s->tanggal->format('Y-m-d') : '9999-12-31';
+
+            return [
+                $hasConflict ? 0 : 1,
+                $hasDate,
+                $tglOrder,
+                $s->id
+            ];
+        })->values();
+
+        $perPage = (int) $request->get('per_page', 5);
+        if (!in_array($perPage, [5, 10, 25, 100])) {
+            $perPage = 5;
+        }
+
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('page') ?: 1;
+        $currentPageItems = $sortedSidangs->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $sidangs = new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentPageItems,
+            $sortedSidangs->count(),
+            $perPage,
+            $page,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
         $calendarEvents = $allSidangs->filter(fn($s) => !empty($s->tanggal))->map(function ($s) use ($conflictMap) {
             $conflictEntry   = $conflictMap[$s->id] ?? [];
             $hasSchedule     = !empty($conflictEntry['schedule']);
@@ -236,9 +304,11 @@ class SemproController extends Controller
                                ->where('jenis_tugas_akhir', 'sempro')->orderBy('tanggal')->pluck('tanggal');
         $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->count();
 
+        $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
+
         return view('sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
-            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap'
+            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap', 'kesediaanDosens'
         ));
     }
 
@@ -256,11 +326,17 @@ class SemproController extends Controller
         $checkData = array_merge($sidang->toArray(), $validated);
         $scheduleConflicts = SidangConflictService::checkConflicts($checkData, $sidang->id);
         if (!empty($scheduleConflicts)) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)], 422);
+            }
             return back()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
 
         $sidang->update($validated);
 
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => '✅ Jadwal sempro berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!', 'sidang' => $sidang->fresh()]);
+        }
         return back()->with('success', '✅ Jadwal sempro berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!');
     }
 
@@ -268,6 +344,10 @@ class SemproController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->filled('jam_mulai') && $request->filled('jam_selesai')) {
+            $request->merge(['jam' => $request->input('jam_mulai') . ' - ' . $request->input('jam_selesai')]);
+        }
+
         $validated = $request->validate([
             'nim'                            => ['required', 'string', 'max:30'],
             'nama_mahasiswa'                 => ['required', 'string', 'max:255'],
@@ -321,6 +401,10 @@ class SemproController extends Controller
 
     public function update(Request $request, Sidang $sidang)
     {
+        if ($request->filled('jam_mulai') && $request->filled('jam_selesai')) {
+            $request->merge(['jam' => $request->input('jam_mulai') . ' - ' . $request->input('jam_selesai')]);
+        }
+
         $validated = $request->validate([
             'nim'                            => ['required', 'string', 'max:30'],
             'nama_mahasiswa'                 => ['required', 'string', 'max:255'],
@@ -600,6 +684,8 @@ class SemproController extends Controller
                             'ruang_id'                     => $ruang?->id,
                             'periode_id'                   => $activePeriode->id,
                             'tanggal_pendaftaran'          => $tglDaftarParsed,
+                            'verifikasi_status'            => 'disetujui',
+                            'verifikasi_tanggal'           => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
                         ]
                     );
 

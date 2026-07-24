@@ -12,5 +12,10 @@ class Dosen extends Model
     protected $fillable = [
         'nidn',
         'nama_dosen',
+        'can_fill_kesediaan',
+    ];
+
+    protected $casts = [
+        'can_fill_kesediaan' => 'boolean',
     ];
 }

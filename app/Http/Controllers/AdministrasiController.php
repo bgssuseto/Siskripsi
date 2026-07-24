@@ -39,6 +39,7 @@ class AdministrasiController extends Controller
 
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $jenisUndangan = $request->get('jenis', 'sempro');
 
         // Query sidangs for examiners
         $query = Sidang::with([
@@ -46,6 +47,12 @@ class AdministrasiController extends Controller
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'ruang', 'periode'
         ]);
+
+        if ($jenisUndangan === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } else {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
 
         if ($selectedPeriodeId) {
             $query->where('periode_id', $selectedPeriodeId);
@@ -95,8 +102,76 @@ class AdministrasiController extends Controller
 
         return view('administrasi.undangan.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId',
-            'tglMulai', 'tglSelesai', 'dosenList', 'sidangs'
+            'tglMulai', 'tglSelesai', 'dosenList', 'sidangs', 'jenisUndangan'
         ));
+    }
+
+    /**
+     * Preview HTML Undangan untuk Cetak / Tampilan Web 1 Dosen
+     */
+    public function previewUndanganHtml(Request $request, Dosen $dosen): View
+    {
+        $periodeId = $request->get('periode_id');
+        $tglMulai = $request->get('tanggal_pendaftaran_mulai');
+        $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+
+        $periode = $periodeId ? Periode::find($periodeId) : Periode::where('aktif', true)->first();
+        $namaPeriode = $periode ? $periode->nama_periode : 'Periode ' . date('Y');
+
+        $jenisUndangan = $request->get('jenis', 'sempro');
+
+        $query = Sidang::with([
+            'pembimbingUtama', 'pembimbingPendamping',
+            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
+            'ruang', 'periode'
+        ])
+        ->where(function ($q) use ($dosen) {
+            $q->where('ketua_penguji_id', $dosen->id)
+              ->orWhere('anggota_penguji_1_id', $dosen->id)
+              ->orWhere('anggota_penguji_2_id', $dosen->id);
+        });
+
+        if ($jenisUndangan === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } else {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
+
+        if ($periode) {
+            $query->where('periode_id', $periode->id);
+        }
+
+        if ($tglMulai) {
+            $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
+        }
+
+        if ($tglSelesai) {
+            $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        $mySidangs = $query->orderBy('tanggal', 'asc')
+                           ->orderBy('jam', 'asc')
+                           ->get();
+
+        $rekapSesi = $this->buildSimplifiedSessions($mySidangs);
+
+        $kopPath = public_path('images/kop_surat.png');
+        $kopBase64 = '';
+        if (file_exists($kopPath)) {
+            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
+            $data = file_get_contents($kopPath);
+            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+
+        return view('administrasi.undangan.preview', [
+            'dosen'         => $dosen,
+            'namaPeriode'   => $namaPeriode,
+            'rekapSesi'     => $rekapSesi,
+            'sidangs'       => $mySidangs,
+            'kopBase64'     => $kopBase64,
+            'totalUji'      => $mySidangs->count(),
+            'jenisUndangan' => $jenisUndangan,
+        ]);
     }
 
     /**
@@ -111,6 +186,8 @@ class AdministrasiController extends Controller
         $periode = $periodeId ? Periode::find($periodeId) : Periode::where('aktif', true)->first();
         $namaPeriode = $periode ? $periode->nama_periode : 'Periode ' . date('Y');
 
+        $jenisUndangan = $request->get('jenis', 'sempro');
+
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
@@ -121,6 +198,12 @@ class AdministrasiController extends Controller
               ->orWhere('anggota_penguji_1_id', $dosen->id)
               ->orWhere('anggota_penguji_2_id', $dosen->id);
         });
+
+        if ($jenisUndangan === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } else {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
 
         if ($periode) {
             $query->where('periode_id', $periode->id);
@@ -151,17 +234,19 @@ class AdministrasiController extends Controller
         }
 
         $pdf = Pdf::loadView('administrasi.undangan.pdf', [
-            'dosen'       => $dosen,
-            'namaPeriode' => $namaPeriode,
-            'rekapSesi'   => $rekapSesi,
-            'sidangs'     => $mySidangs,
-            'kopBase64'   => $kopBase64,
-            'totalUji'    => $mySidangs->count(),
+            'dosen'         => $dosen,
+            'namaPeriode'   => $namaPeriode,
+            'rekapSesi'     => $rekapSesi,
+            'sidangs'       => $mySidangs,
+            'kopBase64'     => $kopBase64,
+            'totalUji'      => $mySidangs->count(),
+            'jenisUndangan' => $jenisUndangan,
         ]);
 
         $pdf->setPaper('a4', 'landscape');
 
-        $filename = "Undangan Sidang - {$dosen->nama_dosen}.pdf";
+        $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
+        $filename = "Undangan_{$invType}_{$dosen->nama_dosen}.pdf";
 
         return $pdf->download($filename);
     }
@@ -178,6 +263,8 @@ class AdministrasiController extends Controller
         $periode = $periodeId ? Periode::find($periodeId) : Periode::where('aktif', true)->first();
         $namaPeriode = $periode ? $periode->nama_periode : 'JULI ' . date('Y');
 
+        $jenisUndangan = $request->get('jenis', 'sempro');
+
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
@@ -188,6 +275,12 @@ class AdministrasiController extends Controller
               ->orWhere('anggota_penguji_1_id', $dosen->id)
               ->orWhere('anggota_penguji_2_id', $dosen->id);
         });
+
+        if ($jenisUndangan === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } else {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
 
         if ($periode) {
             $query->where('periode_id', $periode->id);
@@ -219,7 +312,7 @@ class AdministrasiController extends Controller
         ]);
 
         // Title Header
-        $titleText = "REKAP HARI DAN RUANG SIDANG SKRIPSI " . strtoupper($namaPeriode);
+        $titleText = "REKAP HARI DAN RUANG SIDANG " . ($jenisUndangan === 'sempro' ? 'SEMPRO' : 'SKRIPSI') . " " . strtoupper($namaPeriode);
         $section->addText($titleText, [
             'name' => 'Calibri', 'size' => 12, 'bold' => true
         ], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spaceAfter' => 180]);
@@ -264,7 +357,7 @@ class AdministrasiController extends Controller
         $table2->addCell(2500)->addText('Nama', ['bold' => true, 'size' => 9]);
         $table2->addCell(2500)->addText('Ketua Penguji', ['bold' => true, 'size' => 9]);
         $table2->addCell(2500)->addText('Penguji 1', ['bold' => true, 'size' => 9]);
-        $table2->addCell(2500)->addText('Penguji2', ['bold' => true, 'size' => 9]);
+        $table2->addCell(2500)->addText('Penguji 2', ['bold' => true, 'size' => 9]);
         $table2->addCell(2200)->addText('Hari', ['bold' => true, 'size' => 9]);
         $table2->addCell(1500)->addText('Jam', ['bold' => true, 'size' => 9]);
         $table2->addCell(1200)->addText('Ruang', ['bold' => true, 'size' => 9]);
@@ -301,6 +394,7 @@ class AdministrasiController extends Controller
         $periodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $jenisUndangan = $request->get('jenis', 'sempro');
 
         $periode = $periodeId ? Periode::find($periodeId) : Periode::where('aktif', true)->first();
         $namaPeriode = $periode ? $periode->nama_periode : 'Periode ' . date('Y');
@@ -310,6 +404,12 @@ class AdministrasiController extends Controller
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'ruang', 'periode'
         ]);
+
+        if ($jenisUndangan === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } else {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
 
         if ($periode) {
             $query->where('periode_id', $periode->id);
@@ -338,7 +438,8 @@ class AdministrasiController extends Controller
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
         }
 
-        $zipFilename = "Undangan_Sidang_Skripsi_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
+        $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
+        $zipFilename = "Undangan_{$invType}_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
         $tempZipPath = storage_path('app/public/' . $zipFilename);
 
         $zip = new ZipArchive();
@@ -366,12 +467,13 @@ class AdministrasiController extends Controller
             $rekapSesi = $this->buildSimplifiedSessions($mySidangs);
 
             $pdf = Pdf::loadView('administrasi.undangan.pdf', [
-                'dosen'       => $dosen,
-                'namaPeriode' => $namaPeriode,
-                'rekapSesi'   => $rekapSesi,
-                'sidangs'     => $mySidangs,
-                'kopBase64'   => $kopBase64,
-                'totalUji'    => $mySidangs->count(),
+                'dosen'         => $dosen,
+                'namaPeriode'   => $namaPeriode,
+                'rekapSesi'     => $rekapSesi,
+                'sidangs'       => $mySidangs,
+                'kopBase64'     => $kopBase64,
+                'totalUji'      => $mySidangs->count(),
+                'jenisUndangan' => $jenisUndangan,
             ]);
 
             $pdf->setPaper('a4', 'landscape');
@@ -394,6 +496,7 @@ class AdministrasiController extends Controller
         $selectedPeriodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $jenisUndangan = $request->get('jenis', 'sempro');
 
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
@@ -411,6 +514,12 @@ class AdministrasiController extends Controller
 
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        if ($jenisUndangan === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } else {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
         }
 
         $query->where(function ($q) use ($dosen) {
@@ -435,11 +544,12 @@ class AdministrasiController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Undangan Menguji');
 
-        $this->buildUndanganExcelForDosen($sheet, $dosen, $mySidangs, $namaPeriode);
+        $this->buildUndanganExcelForDosen($sheet, $dosen, $mySidangs, $namaPeriode, $jenisUndangan);
 
         $writer = new Xlsx($spreadsheet);
         $safeName = preg_replace('/[^\w\s\.,-]/', '_', $dosen->nama_dosen);
-        $fileName = "Undangan_Menguji_{$safeName}.xlsx";
+        $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Menguji';
+        $fileName = "Undangan_{$invType}_{$safeName}.xlsx";
 
         return response()->streamDownload(function () use ($writer) {
             $writer->save('php://output');
@@ -458,11 +568,19 @@ class AdministrasiController extends Controller
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
 
+        $jenisUndangan = $request->get('jenis', 'sempro');
+
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'ruang', 'periode'
         ]);
+
+        if ($jenisUndangan === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } else {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
 
         if ($selectedPeriodeId) {
             $query->where('periode_id', $selectedPeriodeId);
@@ -520,7 +638,7 @@ class AdministrasiController extends Controller
             $sheetTitle = mb_substr($cleanTitle, 0, 28);
             $sheet->setTitle($sheetTitle ?: 'Dosen ' . ($sheetIndex + 1));
 
-            $this->buildUndanganExcelForDosen($sheet, $dosen, $mySidangs, $namaPeriode);
+            $this->buildUndanganExcelForDosen($sheet, $dosen, $mySidangs, $namaPeriode, $jenisUndangan);
             $sheetIndex++;
         }
 
@@ -529,7 +647,8 @@ class AdministrasiController extends Controller
         }
 
         $writer = new Xlsx($spreadsheet);
-        $fileName = "Undangan_Menguji_Semua_Dosen.xlsx";
+        $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
+        $fileName = "Undangan_Menguji_Semua_Dosen_{$invType}.xlsx";
 
         return response()->streamDownload(function () use ($writer) {
             $writer->save('php://output');
@@ -542,7 +661,7 @@ class AdministrasiController extends Controller
     /**
      * Helper to write structured Undangan data into a PhpSpreadsheet Worksheet
      */
-    private function buildUndanganExcelForDosen($sheet, Dosen $dosen, $mySidangs, string $namaPeriode): void
+    private function buildUndanganExcelForDosen($sheet, Dosen $dosen, $mySidangs, string $namaPeriode, string $jenisUndangan = 'sempro'): void
     {
         // ── Title Header Block ──
         $sheet->setCellValue('A1', 'UNIVERSITAS MURIA KUDUS - FAKULTAS TEKNIK');
@@ -555,7 +674,8 @@ class AdministrasiController extends Controller
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        $sheet->setCellValue('A3', 'JADWAL UNDANGAN MENGUJI SIDANG SKRIPSI / JURNAL');
+        $titleText = $jenisUndangan === 'sempro' ? 'JADWAL UNDANGAN MENGUJI SEMINAR PROPOSAL' : 'JADWAL UNDANGAN MENGUJI SIDANG SKRIPSI / JURNAL';
+        $sheet->setCellValue('A3', $titleText);
         $sheet->mergeCells('A3:I3');
         $sheet->getStyle('A3')->getFont()->setBold(true)->setSize(11);
         $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);

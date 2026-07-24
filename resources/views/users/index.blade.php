@@ -7,7 +7,7 @@
         createModal: false, 
         editModal: false,
         deleteModal: false,
-        selectedUser: { id: null, name: '', email: '', role: 'mahasiswa' },
+        selectedUser: { id: null, name: '', email: '', role: 'mahasiswa', dosen_id: null },
         deleteUrl: '',
         errors: {},
         isLoading: false,
@@ -156,7 +156,7 @@
         </div>
 
         <!-- Summary Stat Cards -->
-        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
             <!-- Total -->
             <a href="{{ route('users.index') }}" @click.prevent="navigate($event.currentTarget.href)" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all group">
                 <div class="flex items-center justify-between">
@@ -202,6 +202,22 @@
                 </div>
             </a>
 
+            <!-- Dosen -->
+            <a href="{{ route('users.index', ['role' => 'dosen']) }}" @click.prevent="navigate($event.currentTarget.href)" class="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md transition-all group">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-amber-600">Dosen</p>
+                        <p class="text-2xl font-extrabold text-slate-900 mt-1">{{ $stats['dosen'] }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
             <!-- Mahasiswa -->
             <a href="{{ route('users.index', ['role' => 'mahasiswa']) }}" @click.prevent="navigate($event.currentTarget.href)" class="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-all group">
                 <div class="flex items-center justify-between">
@@ -240,6 +256,11 @@
                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap {{ request('role') === 'koordinator' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
                         Koordinator
                     </a>
+                    <a href="{{ route('users.index', array_merge(request()->except('page'), ['role' => 'dosen'])) }}" 
+                       @click.prevent="navigate($event.currentTarget.href)"
+                       class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap {{ request('role') === 'dosen' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
+                        Dosen
+                    </a>
                     <a href="{{ route('users.index', array_merge(request()->except('page'), ['role' => 'mahasiswa'])) }}" 
                        @click.prevent="navigate($event.currentTarget.href)"
                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap {{ request('role') === 'mahasiswa' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900' }}">
@@ -254,7 +275,7 @@
                            value="{{ request('search') }}"
                            @input.debounce.500ms="submitSearch($event.target.form)"
                            placeholder="Cari nama atau email..." 
-                           class="w-full pl-10 pr-4 py-2 text-xs rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 font-medium">
+                           class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white transition-all font-medium">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -301,7 +322,7 @@
                             <td class="py-4 px-6 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <!-- Edit Button -->
-                                    <button @click="openEdit({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role]) }})" 
+                                    <button @click="openEdit({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'dosen_id' => $user->dosen_id]) }})" 
                                             class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                                             title="Edit User">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,22 +386,23 @@
                     @csrf
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nama Lengkap</label>
-                        <input type="text" name="name" required placeholder="Contoh: Budi Santoso" class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="name" required placeholder="Contoh: Budi Santoso" class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200">
                         <template x-if="errors.name">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.name[0]"></p>
                         </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Alamat Email</label>
-                        <input type="email" name="email" required placeholder="budi@skripsi.ac.id" class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="email" name="email" required placeholder="budi@skripsi.ac.id" class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200">
                         <template x-if="errors.email">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.email[0]"></p>
                         </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Role User</label>
-                        <select name="role" required class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <select name="role" x-model="selectedUser.role" required class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200 cursor-pointer">
                             <option value="mahasiswa">Mahasiswa</option>
+                            <option value="dosen">Dosen</option>
                             <option value="koordinator">Koordinator</option>
                             <option value="super_admin">Super Admin</option>
                         </select>
@@ -388,9 +410,22 @@
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.role[0]"></p>
                         </template>
                     </div>
+                    <!-- Link Dosen dropdown (only shown if role is Dosen) -->
+                    <div x-show="selectedUser.role === 'dosen'">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Hubungkan ke Profil Dosen</label>
+                        <select name="dosen_id" class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200 cursor-pointer">
+                            <option value="">-- Pilih Profil Dosen (Opsional) --</option>
+                            @foreach($dosens as $d)
+                                <option value="{{ $d->id }}">{{ $d->nidn }} - {{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                        <template x-if="errors.dosen_id">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.dosen_id[0]"></p>
+                        </template>
+                    </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
-                        <input type="password" name="password" required minlength="8" placeholder="Minimal 8 karakter" class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="password" name="password" required minlength="8" placeholder="Minimal 8 karakter" class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200">
                         <template x-if="errors.password">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.password[0]"></p>
                         </template>
@@ -425,22 +460,23 @@
                     @method('PUT')
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nama Lengkap</label>
-                        <input type="text" name="name" x-model="selectedUser.name" required class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="text" name="name" x-model="selectedUser.name" required class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200">
                         <template x-if="errors.name">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.name[0]"></p>
                         </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Alamat Email</label>
-                        <input type="email" name="email" x-model="selectedUser.email" required class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="email" name="email" x-model="selectedUser.email" required class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200">
                         <template x-if="errors.email">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.email[0]"></p>
                         </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Role User</label>
-                        <select name="role" x-model="selectedUser.role" required class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <select name="role" x-model="selectedUser.role" required class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200 cursor-pointer">
                             <option value="mahasiswa">Mahasiswa</option>
+                            <option value="dosen">Dosen</option>
                             <option value="koordinator">Koordinator</option>
                             <option value="super_admin">Super Admin</option>
                         </select>
@@ -448,9 +484,22 @@
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.role[0]"></p>
                         </template>
                     </div>
+                    <!-- Link Dosen dropdown (only shown if role is Dosen) -->
+                    <div x-show="selectedUser.role === 'dosen'">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Hubungkan ke Profil Dosen</label>
+                        <select name="dosen_id" x-model="selectedUser.dosen_id" class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200 cursor-pointer">
+                            <option value="">-- Pilih Profil Dosen (Opsional) --</option>
+                            @foreach($dosens as $d)
+                                <option value="{{ $d->id }}">{{ $d->nidn }} - {{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                        <template x-if="errors.dosen_id">
+                            <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.dosen_id[0]"></p>
+                        </template>
+                    </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password Baru (Opsional)</label>
-                        <input type="password" name="password" placeholder="Kosongkan jika tidak diubah" minlength="8" class="w-full text-sm rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="password" name="password" placeholder="Kosongkan jika tidak diubah" minlength="8" class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200">
                         <template x-if="errors.password">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.password[0]"></p>
                         </template>

@@ -9,8 +9,11 @@
         createMenuModal: false,
         editMenuModal: false,
         userAccessModal: false,
-        selectedUser: null,
+        selectedUser: { id: null, name: '', email: '', role: '' },
         userMenuIds: [],
+        roleAccessModal: false,
+        selectedRole: '',
+        roleMenuIds: [],
         editMenu: { id: null, name: '', route: '', icon: '', role_default: 'all', sort_order: 0, is_active: true },
         errors: {},
         isLoading: false,
@@ -24,6 +27,11 @@
             this.selectedUser = user;
             this.userMenuIds = menuIds;
             this.userAccessModal = true;
+        },
+        openRoleAccessModal(role, menuIds) {
+            this.selectedRole = role;
+            this.roleMenuIds = menuIds;
+            this.roleAccessModal = true;
         },
         async submitCreateMenu(e) {
             this.isLoading = true;
@@ -42,8 +50,7 @@
                 if (response.ok) {
                     this.createMenuModal = false;
                     form.reset();
-                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    await refreshComponent(['#stats-container', '#tables-container']);
+                    window.location.reload();
                 } else {
                     if (response.status === 422) {
                         this.errors = result.errors || {};
@@ -74,8 +81,7 @@
                 const result = await response.json();
                 if (response.ok) {
                     this.editMenuModal = false;
-                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    await refreshComponent(['#stats-container', '#tables-container']);
+                    window.location.reload();
                 } else {
                     if (response.status === 422) {
                         this.errors = result.errors || {};
@@ -104,8 +110,7 @@
                 });
                 const result = await response.json();
                 if (response.ok) {
-                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    await refreshComponent(['#stats-container', '#tables-container']);
+                    window.location.reload();
                 } else {
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menghapus menu.', type: 'error' } }));
                 }
@@ -131,8 +136,7 @@
                 const result = await response.json();
                 if (response.ok) {
                     this.userAccessModal = false;
-                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    await refreshComponent(['#stats-container', '#tables-container']);
+                    window.location.reload();
                 } else {
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menyimpan hak akses.', type: 'error' } }));
                 }
@@ -142,7 +146,33 @@
             } finally {
                 this.isLoading = false;
             }
-        }
+        },
+        async submitAssignRoleMenus(e) {
+            this.isLoading = true;
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.roleAccessModal = false;
+                    window.location.reload();
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menyimpan hak akses role.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
     }">
 
         <!-- Page Header & Action Button -->
@@ -151,17 +181,29 @@
                 <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Manajemen Menu</h2>
                 <p class="text-sm text-slate-500 mt-1">Kelola hak akses menu dinamis per-user dan struktur menu sistem.</p>
             </div>
-            <button @click="createMenuModal = true" 
-                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Tambah Menu Baru
-            </button>
+            @php
+                $dosenMenuIds = \Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'dosen')->pluck('menu_id')->toArray();
+            @endphp
+            <div class="flex gap-2">
+                <button @click="openRoleAccessModal('dosen', {{ json_encode($dosenMenuIds) }})" 
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-sm shadow-md shadow-orange-500/20 hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    Atur Akses Role Dosen
+                </button>
+                <button @click="createMenuModal = true" 
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Tambah Menu Baru
+                </button>
+            </div>
         </div>
 
-        <!-- Summary Stat Cards (4 Grid Cards) -->
-        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <!-- Summary Stat Cards (5 Grid Cards) -->
+        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
             <!-- Total Menu -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
@@ -207,6 +249,22 @@
                 </div>
             </div>
 
+            <!-- Dosen -->
+            <div class="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-amber-600">Dosen</p>
+                        <p class="text-2xl font-extrabold text-slate-900 mt-1">{{ $users->where('role', 'dosen')->count() }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
             <!-- Mahasiswa -->
             <div class="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-all">
                 <div class="flex items-center justify-between">
@@ -227,25 +285,30 @@
         <!-- Filter Tabs & Search Bar Card -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <!-- Role Tabs Filter -->
-            <div class="flex flex-wrap gap-1 p-1 bg-slate-100/80 rounded-xl">
+            <div class="flex items-center gap-1 p-1 bg-slate-100/80 rounded-xl overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
                 <button @click="activeTab = 'all'" 
                         :class="activeTab === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all">
+                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Semua Role
                 </button>
                 <button @click="activeTab = 'super_admin'" 
                         :class="activeTab === 'super_admin' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all">
+                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Super Admin
                 </button>
                 <button @click="activeTab = 'koordinator'" 
                         :class="activeTab === 'koordinator' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all">
+                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Koordinator
+                </button>
+                <button @click="activeTab = 'dosen'" 
+                        :class="activeTab === 'dosen' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
+                    Dosen
                 </button>
                 <button @click="activeTab = 'mahasiswa'" 
                         :class="activeTab === 'mahasiswa' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all">
+                        class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Mahasiswa
                 </button>
             </div>
@@ -311,6 +374,10 @@
                                     @elseif($u->isKoordinator())
                                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 inline-block">
                                             Koordinator
+                                        </span>
+                                    @elseif($u->isDosen())
+                                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 inline-block">
+                                            Dosen
                                         </span>
                                     @else
                                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 inline-block">
@@ -434,7 +501,7 @@
                 
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-                    <template x-if="selectedUser">
+                    <template x-if="selectedUser && selectedUser.id">
                         <div class="flex items-center gap-3">
                             <div class="w-11 h-11 rounded-2xl bg-indigo-600 text-white font-extrabold flex items-center justify-center text-base shadow-md shadow-indigo-600/20"
                                  x-text="selectedUser.name.charAt(0).toUpperCase()"></div>
@@ -448,7 +515,7 @@
                 </div>
 
                 <!-- Modal Body Form -->
-                <template x-if="selectedUser">
+                <template x-if="selectedUser && selectedUser.id">
                     <form :action="`{{ url('/kelola-menu/user') }}/${selectedUser.id}`" method="POST" @submit.prevent="submitAssignUserMenus($event)" class="space-y-6">
                         @csrf
                         <div>
@@ -488,6 +555,7 @@
                                             <div class="flex items-center gap-3.5 min-w-0">
                                                 <input type="checkbox" name="menu_ids[]" value="{{ $menu->id }}" id="modal_menu_{{ $menu->id }}"
                                                     :checked="userMenuIds.includes({{ $menu->id }}) || '{{ $menu->role_default }}' === 'all' || '{{ $menu->role_default }}' === selectedUser.role"
+                                                    @change="if($el.checked) { if(!userMenuIds.includes({{ $menu->id }})) userMenuIds.push({{ $menu->id }}) } else { userMenuIds = userMenuIds.filter(id => id !== {{ $menu->id }}) }"
                                                     class="w-5 h-5 rounded-lg border-2 border-slate-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer shrink-0 transition-all">
                                                 
                                                 <div class="min-w-0">
@@ -628,6 +696,70 @@
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" @click="editMenuModal = false" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition-all">Batal</button>
                         <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs rounded-xl shadow-md transition-all">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL 4: ATUR HAK AKSES ROLE -->
+        <div x-show="roleAccessModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 space-y-6 my-8 border border-slate-100" @click.away="roleAccessModal = false">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white font-extrabold flex items-center justify-center text-base shadow-md shadow-amber-500/20">R</div>
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-lg leading-tight" x-text="`Pengaturan Hak Akses Role: Dosen`"></h3>
+                            <p class="text-xs text-slate-400 font-medium mt-0.5">Konfigurasi menu default yang dapat diakses oleh seluruh pengguna dengan Role Dosen.</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="roleAccessModal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-200 flex items-center justify-center transition-all font-bold">&times;</button>
+                </div>
+
+                <!-- Modal Body Form -->
+                <form :action="`{{ url('/kelola-menu/role') }}/${selectedRole}`" method="POST" @submit.prevent="submitAssignRoleMenus($event)" class="space-y-6">
+                    @csrf
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Pilih Menu Sistem yang Aktif untuk Role Ini:</p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-h-[380px] overflow-y-auto pr-1.5">
+                            @foreach($menus as $menu)
+                                <label for="role_menu_{{ $menu->id }}" 
+                                       class="px-4 py-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer select-none"
+                                       :class="roleMenuIds.includes({{ $menu->id }}) ? 'bg-indigo-50/50 border-indigo-300 shadow-xs ring-1 ring-indigo-200/60' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'">
+                                    
+                                    <div class="flex items-center gap-3.5 min-w-0">
+                                        <input type="checkbox" name="menu_ids[]" value="{{ $menu->id }}" id="role_menu_{{ $menu->id }}"
+                                            :checked="roleMenuIds.includes({{ $menu->id }})"
+                                            @change="if($el.checked) { if(!roleMenuIds.includes({{ $menu->id }})) roleMenuIds.push({{ $menu->id }}) } else { roleMenuIds = roleMenuIds.filter(id => id !== {{ $menu->id }}) }"
+                                            class="w-5 h-5 rounded-lg border-2 border-slate-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer shrink-0 transition-all">
+                                        
+                                        <div class="min-w-0">
+                                            <p class="font-bold text-xs sm:text-sm text-slate-900 truncate leading-snug">{{ $menu->name }}</p>
+                                            <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5">{{ $menu->route ?? 'Tanpa Route' }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="shrink-0">
+                                        <template x-if="roleMenuIds.includes({{ $menu->id }})">
+                                            <span class="px-2.5 py-1 text-[10px] font-extrabold bg-amber-100 text-amber-700 border border-amber-200 rounded-lg">Aktif</span>
+                                        </template>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Modal Actions -->
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" @click="roleAccessModal = false" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition-all">Batal</button>
+                        <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Simpan Hak Akses
+                        </button>
                     </div>
                 </form>
             </div>

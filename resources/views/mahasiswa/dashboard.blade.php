@@ -36,12 +36,26 @@
             <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Status Sidang Skripsi</p>
             @if($sidangSkripsi)
                 <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full">
-                        {{ $sidangSkripsi->status ?? 'Terdaftar' }}
+                    @php
+                        $statusText = 'Menunggu Verifikasi';
+                        $statusClass = 'bg-amber-100 text-amber-700 border border-amber-250';
+                        if (($sidangSkripsi->verifikasi_status ?? 'menunggu') === 'disetujui') {
+                            $statusText = 'Terverifikasi Koordinator';
+                            $statusClass = 'bg-emerald-100 text-emerald-700 border border-emerald-250';
+                        } elseif (($sidangSkripsi->verifikasi_status ?? 'menunggu') === 'ditolak') {
+                            $statusText = 'Ditolak';
+                            $statusClass = 'bg-rose-100 text-rose-700 border border-rose-250';
+                        }
+                    @endphp
+                    <span class="px-2.5 py-1 {{ $statusClass }} text-xs font-bold rounded-full">
+                        {{ $statusText }}
                     </span>
                     <span class="text-xs text-slate-400">{{ optional($sidangSkripsi->tanggal)->format('d M Y') ?? '-' }}</span>
                 </div>
                 <p class="text-xs text-slate-600 truncate" title="{{ $sidangSkripsi->judul_skripsi }}">{{ $sidangSkripsi->judul_skripsi }}</p>
+                @if(($sidangSkripsi->verifikasi_status ?? 'menunggu') === 'ditolak' && $sidangSkripsi->verifikasi_komentar)
+                    <p class="text-[10px] text-rose-500 font-medium">Catatan: {{ $sidangSkripsi->verifikasi_komentar }}</p>
+                @endif
             @else
                 <p class="text-xs text-slate-400 italic">Belum ada pendaftaran sidang skripsi.</p>
             @endif
@@ -52,12 +66,26 @@
             <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Status Sidang Jurnal</p>
             @if($sidangJurnal)
                 <div class="flex items-center justify-between">
-                    <span class="px-2.5 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">
-                        {{ $sidangJurnal->status ?? 'Terdaftar' }}
+                    @php
+                        $statusText = 'Menunggu Verifikasi';
+                        $statusClass = 'bg-amber-100 text-amber-700 border border-amber-250';
+                        if (($sidangJurnal->verifikasi_status ?? 'menunggu') === 'disetujui') {
+                            $statusText = 'Terverifikasi Koordinator';
+                            $statusClass = 'bg-emerald-100 text-emerald-700 border border-emerald-250';
+                        } elseif (($sidangJurnal->verifikasi_status ?? 'menunggu') === 'ditolak') {
+                            $statusText = 'Ditolak';
+                            $statusClass = 'bg-rose-100 text-rose-700 border border-rose-250';
+                        }
+                    @endphp
+                    <span class="px-2.5 py-1 {{ $statusClass }} text-xs font-bold rounded-full">
+                        {{ $statusText }}
                     </span>
                     <span class="text-xs text-slate-400">{{ optional($sidangJurnal->tanggal)->format('d M Y') ?? '-' }}</span>
                 </div>
                 <p class="text-xs text-slate-600 truncate" title="{{ $sidangJurnal->judul_skripsi }}">{{ $sidangJurnal->judul_skripsi }}</p>
+                @if(($sidangJurnal->verifikasi_status ?? 'menunggu') === 'ditolak' && $sidangJurnal->verifikasi_komentar)
+                    <p class="text-[10px] text-rose-500 font-medium">Catatan: {{ $sidangJurnal->verifikasi_komentar }}</p>
+                @endif
             @else
                 <p class="text-xs text-slate-400 italic">Belum ada pendaftaran sidang jurnal.</p>
             @endif
@@ -93,9 +121,7 @@
                                 <td class="py-3 px-4 text-slate-600">{{ optional($s->tanggal)->format('d M Y') ?? '-' }}</td>
                                 <td class="py-3 px-4 text-slate-600">{{ $s->ruang->kode_ruangan ?? $s->ruang->nama ?? '-' }}</td>
                                 <td class="py-3 px-4 text-center">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold {{ $s->status == 'Lulus' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
-                                        {{ $s->status ?? 'Terdaftar' }}
-                                    </span>
+                                    {!! $s->getVerifikasiStatusHtml() !!}
                                 </td>
                             </tr>
                         @endforeach

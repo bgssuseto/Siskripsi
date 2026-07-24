@@ -76,6 +76,41 @@ class DosenController extends Controller
 
     public function destroy(Request $request, Dosen $dosen)
     {
+        // Ensure Super Administrator Dosen exists
+        $superAdminDosen = Dosen::firstOrCreate(
+            ['nidn' => '0000000000'],
+            ['nama_dosen' => 'Super Administrator']
+        );
+
+        // Link the first super_admin User to this Super Administrator Dosen if they are not already linked
+        $superAdminUser = \App\Models\User::where('role', \App\Models\User::ROLE_SUPER_ADMIN)->first();
+        if ($superAdminUser && !$superAdminUser->dosen_id) {
+            $superAdminUser->update(['dosen_id' => $superAdminDosen->id]);
+        }
+
+        $dosenId = $dosen->id;
+        if ($dosenId !== $superAdminDosen->id) {
+            // Reassign kesediaan_dosens
+            \App\Models\KesediaanDosen::where('dosen_id', $dosenId)
+                ->update(['dosen_id' => $superAdminDosen->id]);
+
+            // Reassign sidang roles
+            \App\Models\Sidang::where('dosen_pembimbing_utama_id', $dosenId)
+                ->update(['dosen_pembimbing_utama_id' => $superAdminDosen->id]);
+
+            \App\Models\Sidang::where('dosen_pembimbing_pendamping_id', $dosenId)
+                ->update(['dosen_pembimbing_pendamping_id' => $superAdminDosen->id]);
+
+            \App\Models\Sidang::where('ketua_penguji_id', $dosenId)
+                ->update(['ketua_penguji_id' => $superAdminDosen->id]);
+
+            \App\Models\Sidang::where('anggota_penguji_1_id', $dosenId)
+                ->update(['anggota_penguji_1_id' => $superAdminDosen->id]);
+
+            \App\Models\Sidang::where('anggota_penguji_2_id', $dosenId)
+                ->update(['anggota_penguji_2_id' => $superAdminDosen->id]);
+        }
+
         $dosen->delete();
 
         if ($request->expectsJson()) {

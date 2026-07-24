@@ -37,6 +37,17 @@ class DatabaseSeeder extends Seeder
         $d4 = Dosen::firstOrCreate(['nidn' => '0031107804'], ['nama_dosen' => 'Aditya Akbar Riadi, S.Kom., M.Kom']);
         $d5 = Dosen::firstOrCreate(['nidn' => '0022098905'], ['nama_dosen' => 'Dr. Anastasya Latubessy, S.Kom., M.Cs']);
 
+        // ── Dosen User Account ──────────────────────────────────────────
+        User::firstOrCreate(
+            ['email' => 'arief@skripsi.ac.id'],
+            [
+                'name' => 'Arief Susanto, ST., M.Kom',
+                'password' => bcrypt('password'),
+                'role' => User::ROLE_DOSEN,
+                'dosen_id' => $d1->id
+            ]
+        );
+
         // ── Sample Ruang ───────────────────────────────────────────────
         $r1 = Ruang::firstOrCreate(['kode_ruangan' => 'J.5.05'], ['nama_ruangan' => 'Ruang J.5.05 (Lt. 5 Gedung J)']);
         $r2 = Ruang::firstOrCreate(['kode_ruangan' => 'J.4.03'], ['nama_ruangan' => 'Ruang J.4.03 (Lt. 4 Gedung J)']);
@@ -53,7 +64,6 @@ class DatabaseSeeder extends Seeder
         Sidang::firstOrCreate(
             ['nim' => '202251146', 'jenis_tugas_akhir' => 'skripsi'],
             [
-                'no_urut' => 1,
                 'nama_mahasiswa' => 'HELMI AGHIB RIZKI',
                 'judul_skripsi' => 'PROTOTYPE "NGOCEH GO" PENDATAAN KEMISKINAN KELUARGA DI DESA KALIWUNGU BERBASIS SUARA',
                 'dosen_pembimbing_utama_id' => $d1->id,
@@ -72,7 +82,6 @@ class DatabaseSeeder extends Seeder
         Sidang::firstOrCreate(
             ['nim' => '202251081', 'jenis_tugas_akhir' => 'skripsi'],
             [
-                'no_urut' => 2,
                 'nama_mahasiswa' => 'MUHAMMAD ROKHIBUL ILMI',
                 'judul_skripsi' => 'RANCANG BANGUN APLIKASI TOP-UP GAME BERBASIS WEB MENGGUNAKAN LARAVEL DAN INTEGRASI PAYMENT GATEWAY MIDTRANS',
                 'dosen_pembimbing_utama_id' => $d5->id,
@@ -91,7 +100,6 @@ class DatabaseSeeder extends Seeder
         Sidang::firstOrCreate(
             ['nim' => '202251109', 'jenis_tugas_akhir' => 'jurnal'],
             [
-                'no_urut' => 1,
                 'nama_mahasiswa' => 'QATRHUNNADA ABIYU AKHDAN',
                 'judul_skripsi' => 'WEB-BASED CUSTOMER LOYALTY POINT SYSTEM USING QR CODE WITH WHATSAPP NOTIFICATION',
                 'dosen_pembimbing_utama_id' => $d4->id,
@@ -106,5 +114,8 @@ class DatabaseSeeder extends Seeder
                 'jam' => '11.00 - 11.30',
             ]
         );
+
+        // Seed default system menus and role permissions
+        (new \App\Http\Controllers\MenuController())->ensureDefaultMenusExist();
     }
 }

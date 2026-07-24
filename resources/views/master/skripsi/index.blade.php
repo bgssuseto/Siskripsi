@@ -50,8 +50,10 @@
 
         /* Table */
         .table-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #f1f5f9; }
-        .table-scroll { overflow-x: auto; }
-        table.data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+        .top-scrollbar-wrap { overflow-x: auto; overflow-y: hidden; height: 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        .top-scrollbar-dummy { height: 1px; }
+        .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table.data-table { min-width: 1400px; width: 100%; border-collapse: collapse; font-size: .82rem; }
         table.data-table thead th {
             background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
             color: #e2e8f0; font-weight: 600; padding: .75rem .85rem;
@@ -155,6 +157,13 @@
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIM, nama, judul…">
             </div>
 
+            <select name="per_page" class="filter-select" onchange="this.form.submit()">
+                <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
+                <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>Tampilkan 10 data</option>
+                <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
+                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Tampilkan 100 data</option>
+            </select>
+
             <select name="jenis" class="filter-select">
                 <option value="">Semua Jenis</option>
                 <option value="skripsi" {{ request('jenis') == 'skripsi' ? 'selected' : '' }}>Skripsi</option>
@@ -176,7 +185,7 @@
             </select>
 
             <button type="submit" class="btn btn-primary">Filter</button>
-            @if(request()->hasAny(['search','jenis','status','periode_id']))
+            @if(request()->hasAny(['search','jenis','status','periode_id','per_page']))
                 <a href="{{ route('master.skripsi.index') }}" class="btn btn-outline">✕ Reset</a>
             @endif
         </form>
@@ -184,7 +193,7 @@
         {{-- Table --}}
         <div class="table-card">
             <div class="table-scroll">
-                <table class="data-table">
+                <table class="data-table" id="skripsi-table">
                     <thead>
                         <tr>
                             <th style="width:42px; text-align:center;">No</th>
@@ -192,7 +201,8 @@
                             <th>NIM</th>
                             <th>Nama Mahasiswa</th>
                             <th>Judul Skripsi / TA</th>
-                            <th>Status</th>
+                            <th>Status Ujian</th>
+                            <th>Verifikasi</th>
                             <th>Periode</th>
                             <th>Dosbing Utama</th>
                             <th>Dosbing Pendamping</th>
@@ -200,12 +210,12 @@
                             <th>Penguji 1</th>
                             <th>Penguji 2</th>
                             <th>Jenis</th>
-                            <th style="width:85px; text-align:right;">Aksi</th>
+                            <th style="width:160px; text-align:right;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($sidangs as $item)
-                            <tr>
+                            <tr id="row-skripsi-{{ $item->id }}">
                                 <td style="text-align:center; color:#475569; font-weight:700; font-size:.78rem;">
                                     {{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}
                                 </td>
@@ -218,19 +228,42 @@
                                         <span style="color:#cbd5e1;">—</span>
                                     @endif
                                 </td>
-                                <td><span class="nim-pill">{{ $item->nim }}</span></td>
+                                <td>
+                                    <span class="nim-pill">{{ $item->nim }}</span>
+                                    @if($item->bukti_pembayaran)
+                                        <div class="mt-1">
+                                            <a href="{{ asset($item->bukti_pembayaran) }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-indigo-600 hover:text-indigo-800 hover:underline font-bold">
+                                                <span>📄</span> Bukti Bayar
+                                            </a>
+                                        </div>
+                                    @endif
+                                </td>
                                 <td style="font-weight:600; color:#1e293b; min-width:150px;">{{ $item->nama_mahasiswa }}</td>
                                 <td><p class="judul-text">{{ $item->judul_skripsi }}</p></td>
                                 <td>
-                                    @if(empty($item->tanggal))
-                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
-                                            ● Belum Dijadwalkan
+                                    {!! $item->getJadwalStatusHtml() !!}
+                                </td>
+                                <td>
+                                    @php
+                                        $verifStatus = $item->verifikasi_status ?? 'menunggu';
+                                        $bgClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                                        $labelTxt = 'Menunggu';
+                                        if ($verifStatus === 'disetujui') {
+                                            $bgClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                            $labelTxt = 'Disetujui';
+                                        } elseif ($verifStatus === 'ditolak') {
+                                            $bgClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                                            $labelTxt = 'Ditolak';
+                                        }
+                                    @endphp
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border {{ $bgClass }}">
+                                            {{ $labelTxt }}
                                         </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-                                            ✓ Sudah Dijadwal
-                                        </span>
-                                    @endif
+                                        @if($verifStatus === 'ditolak' && $item->verifikasi_komentar)
+                                            <span class="text-[10px] text-slate-500 font-normal max-w-[150px] truncate" title="{{ $item->verifikasi_komentar }}">Catatan: {{ $item->verifikasi_komentar }}</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td><span class="text-xs font-semibold text-slate-500">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                 <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
@@ -247,6 +280,20 @@
                                 </td>
                                 <td class="text-right space-x-1 whitespace-nowrap">
                                     <button class="btn btn-outline btn-sm"
+                                        onclick="openVerifikasi(
+                                            {{ $item->id }},
+                                            '{{ $item->verifikasi_status ?? 'menunggu' }}',
+                                            '{{ addslashes($item->verifikasi_komentar ?? '') }}',
+                                            '{{ addslashes($item->nama_mahasiswa) }}',
+                                            '{{ $item->nim }}',
+                                            '{{ addslashes($item->judul_skripsi) }}',
+                                            '{{ addslashes($item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—') }}',
+                                            '{{ addslashes($item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—') }}',
+                                            '{{ $item->bukti_pembayaran ? asset($item->bukti_pembayaran) : '' }}'
+                                        )">
+                                        🛡️ Verifikasi
+                                    </button>
+                                    <button class="btn btn-outline btn-sm"
                                         onclick="openEdit({{ $item->id }}, {{ json_encode([
                                             'id'                             => $item->id,
                                             'nim'                            => $item->nim,
@@ -261,13 +308,12 @@
                                             'anggota_penguji_1_id'           => $item->anggota_penguji_1_id,
                                             'anggota_penguji_2_id'           => $item->anggota_penguji_2_id,
                                         ]) }})">
-                                        ✏️ Edit
+                                        ✏️
                                     </button>
-                                    <form method="POST" action="{{ route('master.skripsi.destroy', $item->id) }}" style="display:inline;"
-                                          onsubmit="return confirm('Hapus data ini?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-                                    </form>
+                                    <button class="btn btn-danger btn-sm"
+                                        onclick="confirmHapus({{ $item->id }}, {{ json_encode($item->nama_mahasiswa) }})">
+                                        🗑️
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -285,7 +331,7 @@
 
             {{-- Pagination --}}
             @if($sidangs->hasPages())
-            <div class="pagination-wrap">
+            <div class="pagination-wrap" id="skripsi-pagination">
                 <div class="pagination-info">
                     Menampilkan {{ $sidangs->firstItem() }}–{{ $sidangs->lastItem() }} dari {{ $sidangs->total() }} data
                 </div>
@@ -533,12 +579,215 @@
         </div>
     </div>
 
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    {{-- MODAL: KONFIRMASI HAPUS                                         --}}
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    <div id="modal-hapus" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-hapus')">
+        <div class="modal-box modal-sm">
+            <div class="modal-header">
+                <span class="modal-title">🗑️ Konfirmasi Hapus</span>
+                <button class="modal-close" onclick="closeModal('modal-hapus')">✕</button>
+            </div>
+            <div class="modal-body" style="text-align:center; padding: 2rem 1.5rem;">
+                <div style="font-size:3rem; margin-bottom:1rem;">⚠️</div>
+                <p style="font-weight:700; color:#0f172a; font-size:1rem; margin-bottom:.5rem;">Hapus data ini?</p>
+                <p id="hapus-detail" style="font-size:.85rem; color:#64748b; margin-bottom:0;"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('modal-hapus')" class="btn btn-outline">Batal</button>
+                <button type="button" id="btn-konfirmasi-hapus" class="btn btn-danger">🗑️ Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    {{-- MODAL: VERIFIKASI PENDAFTARAN                                    --}}
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    <div id="modal-verifikasi" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-verifikasi')">
+        <div class="modal-box modal-sm">
+            <div class="modal-header">
+                <span class="modal-title" id="verif-title">🛡️ Verifikasi Pendaftaran</span>
+                <button class="modal-close" onclick="closeModal('modal-verifikasi')">✕</button>
+            </div>
+            <form id="verif-form" method="POST" action="">
+                @csrf
+                <div class="modal-body space-y-4">
+                    {{-- Student Registration Details Panel --}}
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem; font-size: 0.8rem; line-height: 1.5; color: #334155; text-align: left;">
+                        <div style="margin-bottom: 0.4rem;"><strong>NIM:</strong> <span id="verif-detail-nim"></span></div>
+                        <div style="margin-bottom: 0.4rem;"><strong>Nama:</strong> <span id="verif-detail-nama"></span></div>
+                        <div style="margin-bottom: 0.4rem;"><strong>Judul:</strong> <span id="verif-detail-judul" style="font-style: italic;"></span></div>
+                        <div style="margin-bottom: 0.4rem;"><strong>Pembimbing Utama:</strong> <span id="verif-detail-dosbing-utama"></span></div>
+                        <div style="margin-bottom: 0.4rem;"><strong>Pembimbing Pendamping:</strong> <span id="verif-detail-dosbing-pendamping"></span></div>
+                        <div style="margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid #e2e8f0;" id="verif-detail-bukti-container">
+                            <strong>Bukti Pembayaran:</strong> 
+                            <a id="verif-detail-bukti" href="#" target="_blank" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Lihat Bukti</a>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status Verifikasi</label>
+                        <select name="verifikasi_status" id="verif-status" onchange="toggleKomentarField()" class="form-control">
+                            <option value="menunggu">Menunggu Verifikasi</option>
+                            <option value="disetujui">Setujui (Terverifikasi Koordinator)</option>
+                            <option value="ditolak">Tolak Pendaftaran</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="komentar-group" style="display:none; margin-top: 1rem;">
+                        <label>Catatan / Komentar Penolakan</label>
+                        <textarea name="verifikasi_komentar" id="verif-komentar" placeholder="Sebutkan alasan penolakan persyaratan..." class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-verifikasi')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Verifikasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    {{-- TOAST NOTIFICATION SYSTEM                                        --}}
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    <style>
+        #toast-container {
+            position: fixed; bottom: 1.5rem; right: 1.5rem;
+            z-index: 99999; display: flex; flex-direction: column; gap: .65rem;
+            pointer-events: none;
+        }
+        .toast {
+            display: flex; align-items: flex-start; gap: .85rem;
+            background: #fff; border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+            padding: .9rem 1.1rem; min-width: 300px; max-width: 400px;
+            border-left: 4px solid #6366f1;
+            pointer-events: all;
+            animation: toastIn .35s cubic-bezier(.34,1.56,.64,1);
+        }
+        .toast.toast-success { border-color: #10b981; }
+        .toast.toast-error   { border-color: #ef4444; }
+        .toast.toast-warning { border-color: #f59e0b; }
+        .toast.toast-out { animation: toastOut .3s ease forwards; }
+        @keyframes toastIn {
+            from { opacity:0; transform: translateX(2rem) scale(.92); }
+            to   { opacity:1; transform: translateX(0) scale(1); }
+        }
+        @keyframes toastOut {
+            from { opacity:1; transform: translateX(0) scale(1); }
+            to   { opacity:0; transform: translateX(2rem) scale(.9); }
+        }
+        .toast-icon { font-size:1.4rem; flex-shrink:0; line-height:1; }
+        .toast-body { flex:1; }
+        .toast-title { font-weight:700; font-size:.88rem; color:#0f172a; }
+        .toast-msg   { font-size:.8rem; color:#64748b; margin-top:.15rem; line-height:1.4; }
+        .toast-close {
+            background:none; border:none; color:#94a3b8; cursor:pointer;
+            font-size:1.1rem; line-height:1; padding:.1rem .2rem; flex-shrink:0;
+            transition: color .15s;
+        }
+        .toast-close:hover { color: #475569; }
+        .toast-progress {
+            position: absolute; bottom:0; left:0; height:3px;
+            background: currentColor; opacity:.25; border-radius: 0 0 14px 14px;
+            animation: toastProgress 4s linear forwards;
+        }
+        @keyframes toastProgress { from { width:100%; } to { width:0%; } }
+    </style>
+    <div id="toast-container"></div>
+
     @push('scripts')
     <script>
-        function openModal(id)  { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        // ── Utility: Toast Notification ────────────────────────────────────────
+        const TOAST_ICONS = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+        const TOAST_TITLES = { success:'Berhasil!', error:'Gagal!', warning:'Peringatan', info:'Informasi' };
+
+        function showToast(type, message, duration = 4000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.style.position = 'relative';
+            toast.innerHTML = `
+                <span class="toast-icon">${TOAST_ICONS[type] || 'ℹ️'}</span>
+                <div class="toast-body">
+                    <div class="toast-title">${TOAST_TITLES[type] || type}</div>
+                    <div class="toast-msg">${message}</div>
+                </div>
+                <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>
+                <div class="toast-progress" style="color:${type==='success'?'#10b981':type==='error'?'#ef4444':type==='warning'?'#f59e0b':'#6366f1'}"></div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => dismissToast(toast), duration);
+        }
+
+        function dismissToast(el) {
+            if (!el || el.classList.contains('toast-out')) return;
+            el.classList.add('toast-out');
+            setTimeout(() => el.remove(), 300);
+        }
+
+        // ── Flash messages from server ────────────────────────────────────────
+        @if(session('success'))
+            showToast('success', @json(session('success')));
+        @endif
+        @if(session('error'))
+            showToast('error', @json(session('error')));
+        @endif
+        @if(session('warning'))
+            showToast('warning', @json(session('warning')));
+        @endif
+
+        // ── Modal helpers ─────────────────────────────────────────────────────
+        function openModal(id)  { document.getElementById(id).style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; document.body.style.overflow = ''; }
         function closeOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
+        // ── AJAX Helpers ───────────────────────────────────────────────────
+        const CSRF = '{{ csrf_token() }}';
+
+        async function refreshTableContent() {
+            try {
+                const res = await fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const html = await res.text();
+                const doc = (new DOMParser()).parseFromString(html, 'text/html');
+                const newTbody = doc.querySelector('#skripsi-table tbody');
+                const newPag   = doc.querySelector('#skripsi-pagination');
+                if (newTbody) document.querySelector('#skripsi-table tbody').innerHTML = newTbody.innerHTML;
+                if (newPag)   document.getElementById('skripsi-pagination').innerHTML = newPag.innerHTML;
+            } catch(e) { location.reload(); }
+        }
+
+        // ── Tambah Data (AJAX) ────────────────────────────────────────────────
+        document.getElementById('form-tambah').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('[type=submit]');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '⏳ Menyimpan…';
+
+            try {
+                const res = await fetch(this.action, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: new FormData(this)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    closeModal('modal-tambah');
+                    this.reset();
+                    showToast('success', data.message || 'Data berhasil ditambahkan!');
+                    await refreshTableContent();
+                } else {
+                    const msg = data.message || 'Terjadi kesalahan, coba lagi.';
+                    showToast(res.status === 422 ? 'warning' : 'error', msg);
+                }
+            } catch (err) {
+                showToast('error', 'Gagal terhubung ke server.');
+            } finally {
+                btn.disabled = false; btn.innerHTML = orig;
+            }
+        });
+
+        // ── Edit Modal Setup ──────────────────────────────────────────────────
         function openEdit(id, data) {
             const base = '{{ url("master/skripsi") }}/' + id;
             document.getElementById('form-edit').action = base;
@@ -560,7 +809,174 @@
             const el = document.getElementById(id);
             if (el) el.value = val || '';
         }
+
+        // ── Edit Data (AJAX) ──────────────────────────────────────────────────
+        document.getElementById('form-edit').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('[type=submit]');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '⏳ Menyimpan…';
+
+            const formData = new FormData(this);
+            formData.append('_method', 'PUT');
+
+            try {
+                const res = await fetch(this.action, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    closeModal('modal-edit');
+                    showToast('success', data.message || 'Data berhasil diperbarui!');
+                    await refreshTableContent();
+                } else {
+                    const msg = data.message || 'Terjadi kesalahan, coba lagi.';
+                    showToast(res.status === 422 ? 'warning' : 'error', msg);
+                }
+            } catch (err) {
+                showToast('error', 'Gagal terhubung ke server.');
+            } finally {
+                btn.disabled = false; btn.innerHTML = orig;
+            }
+        });
+
+        // ── Delete Confirmation Modal ─────────────────────────────────────────
+        let _deleteUrl = null;
+
+        function confirmHapus(id, nama) {
+            _deleteUrl = '{{ url("master/skripsi") }}/' + id;
+            document.getElementById('hapus-detail').textContent = 'Data mahasiswa "' + nama + '" akan dihapus secara permanen.';
+            openModal('modal-hapus');
+        }
+
+        document.getElementById('btn-konfirmasi-hapus').addEventListener('click', async function() {
+            if (!_deleteUrl) return;
+            const btn = this;
+            btn.disabled = true; btn.innerHTML = '⏳ Menghapus…';
+
+            try {
+                const res = await fetch(_deleteUrl, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json',
+                               'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: '_method=DELETE'
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    closeModal('modal-hapus');
+                    showToast('success', data.message || 'Data berhasil dihapus!');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    closeModal('modal-hapus');
+                    showToast('error', data.message || 'Gagal menghapus data.');
+                }
+            } catch (err) {
+                closeModal('modal-hapus');
+                showToast('error', 'Gagal terhubung ke server.');
+            } finally {
+                btn.disabled = false; btn.innerHTML = '🗑️ Ya, Hapus';
+                _deleteUrl = null;
+            }
+        });
+
+        // ── Verifikasi Modal Setup ────────────────────────────────────────────
+        function openVerifikasi(id, status, komentar, nama, nim, judul, dosbingUtama, dosbingPendamping, buktiBayarUrl) {
+            document.getElementById('verif-title').innerText = '🛡️ Verifikasi: ' + nama;
+            document.getElementById('verif-form').action = '{{ url("master/sidang") }}/' + id + '/verifikasi';
+            document.getElementById('verif-status').value = status;
+            document.getElementById('verif-komentar').value = komentar;
+
+            // Populate student details
+            document.getElementById('verif-detail-nim').innerText = nim;
+            document.getElementById('verif-detail-nama').innerText = nama;
+            document.getElementById('verif-detail-judul').innerText = judul;
+            document.getElementById('verif-detail-dosbing-utama').innerText = dosbingUtama;
+            document.getElementById('verif-detail-dosbing-pendamping').innerText = dosbingPendamping;
+
+            const buktiContainer = document.getElementById('verif-detail-bukti-container');
+            const buktiLink = document.getElementById('verif-detail-bukti');
+            if (buktiBayarUrl) {
+                buktiContainer.style.display = 'block';
+                buktiLink.href = buktiBayarUrl;
+            } else {
+                buktiContainer.style.display = 'none';
+            }
+            
+            toggleKomentarField();
+            openModal('modal-verifikasi');
+        }
+        
+        function toggleKomentarField() {
+            const status = document.getElementById('verif-status').value;
+            const commentGroup = document.getElementById('komentar-group');
+            if (status === 'ditolak') {
+                commentGroup.style.display = 'block';
+                document.getElementById('verif-komentar').required = true;
+            } else {
+                commentGroup.style.display = 'none';
+                document.getElementById('verif-komentar').required = false;
+            }
+        }
+
+        // ── Verifikasi Form (AJAX) ───────────────────────────────────────────────────
+        document.getElementById('verif-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('[type=submit]'), orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '⏳ Memproses…';
+            const fd = new FormData(this);
+            try {
+                const res = await fetch(this.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }, body: fd });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    closeModal('modal-verifikasi');
+                    showToast('success', data.message || 'Verifikasi berhasil!');
+                    await refreshTableContent();
+                } else {
+                    showToast(res.status === 422 ? 'warning' : 'error', data.message || 'Terjadi kesalahan.');
+                }
+            } catch(err) { showToast('error', 'Gagal terhubung ke server.'); }
+            finally { btn.disabled = false; btn.innerHTML = orig; }
+        });
+
+        // ── CSRF fix for all fetch ─────────────────────────────────────────────
+        document.querySelectorAll('.ajax-form-edit, .ajax-form-tambah').forEach(f => f.querySelectorAll('[headers]').forEach(h => h['X-CSRF-TOKEN'] = CSRF));
+
+        // ── Top Scrollbar Sync ────────────────────────────────────────────────
+        const topScroll = document.getElementById('skripsi-top-scroll-wrap');
+        const topDummy  = document.getElementById('skripsi-top-scroll-dummy');
+        const bottomScroll = document.getElementById('skripsi-bottom-scroll-wrap');
+        const table = document.getElementById('skripsi-table');
+
+        if (topScroll && bottomScroll && table) {
+            const updateWidth = () => {
+                topDummy.style.width = table.scrollWidth + 'px';
+            };
+            updateWidth();
+            window.addEventListener('resize', updateWidth);
+
+            let isSyncingTop = false;
+            let isSyncingBottom = false;
+
+            topScroll.addEventListener('scroll', function() {
+                if (!isSyncingTop) {
+                    isSyncingBottom = true;
+                    bottomScroll.scrollLeft = topScroll.scrollLeft;
+                }
+                isSyncingTop = false;
+            });
+
+            bottomScroll.addEventListener('scroll', function() {
+                if (!isSyncingBottom) {
+                    isSyncingTop = true;
+                    topScroll.scrollLeft = bottomScroll.scrollLeft;
+                }
+                isSyncingBottom = false;
+            });
+        }
     </script>
     @endpush
 
 </x-app-layout>
+

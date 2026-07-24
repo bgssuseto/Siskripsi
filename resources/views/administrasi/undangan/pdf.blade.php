@@ -71,7 +71,7 @@
 
     <!-- ============ JUDUL DOKUMEN ============ -->
     <div class="doc-title-block">
-        <h2>REKAP HARI DAN RUANG SIDANG SKRIPSI {{ strtoupper($namaPeriode) }}</h2>
+        <h2>REKAP HARI DAN RUANG {{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'SEMINAR PROPOSAL' : 'SIDANG SKRIPSI' }} {{ strtoupper($namaPeriode) }}</h2>
     </div>
 
     <!-- ============ TABEL 1: Rekap Hari & Ruang ============ -->

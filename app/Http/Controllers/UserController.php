@@ -24,7 +24,7 @@ class UserController extends Controller
             });
         }
 
-        if ($request->filled('role') && in_array($request->role, [User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA], true)) {
+        if ($request->filled('role') && in_array($request->role, [User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA, User::ROLE_DOSEN], true)) {
             $query->where('role', $request->role);
         }
 
@@ -35,9 +35,12 @@ class UserController extends Controller
             'super_admin' => User::where('role', User::ROLE_SUPER_ADMIN)->count(),
             'koordinator' => User::where('role', User::ROLE_KOORDINATOR)->count(),
             'mahasiswa' => User::where('role', User::ROLE_MAHASISWA)->count(),
+            'dosen' => User::where('role', User::ROLE_DOSEN)->count(),
         ];
 
-        return view('users.index', compact('users', 'stats'));
+        $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
+
+        return view('users.index', compact('users', 'stats', 'dosens'));
     }
 
     public function store(Request $request)
@@ -46,7 +49,8 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', Rule::in([User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA])],
+            'role' => ['required', Rule::in([User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA, User::ROLE_DOSEN])],
+            'dosen_id' => ['nullable', 'exists:dosens,id'],
         ]);
 
         $user = User::create([
@@ -54,6 +58,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'dosen_id' => $validated['role'] === User::ROLE_DOSEN ? ($validated['dosen_id'] ?? null) : null,
         ]);
 
         if ($request->expectsJson()) {
@@ -72,8 +77,9 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', Rule::in([User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA])],
+            'role' => ['required', Rule::in([User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA, User::ROLE_DOSEN])],
             'password' => ['nullable', 'string', 'min:8'],
+            'dosen_id' => ['nullable', 'exists:dosens,id'],
         ]);
 
         // Prevent self role demotion if last super admin
@@ -94,6 +100,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
+            'dosen_id' => $validated['role'] === User::ROLE_DOSEN ? ($validated['dosen_id'] ?? null) : null,
         ];
 
         if ($request->filled('password')) {
@@ -125,7 +132,46 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri yang sedang digunakan!');
         }
 
+        $dosenId = $user->dosen_id;
+        if ($user->role === User::ROLE_DOSEN && $dosenId) {
+            // Ensure Super Administrator Dosen exists
+            $superAdminDosen = \App\Models\Dosen::firstOrCreate(
+                ['nidn' => '0000000000'],
+                ['nama_dosen' => 'Super Administrator']
+            );
+
+            // Link the first super_admin User to this Super Administrator Dosen if they are not already linked
+            $superAdminUser = User::where('role', User::ROLE_SUPER_ADMIN)->first();
+            if ($superAdminUser && !$superAdminUser->dosen_id) {
+                $superAdminUser->update(['dosen_id' => $superAdminDosen->id]);
+            }
+
+            // Reassign kesediaan_dosens
+            \App\Models\KesediaanDosen::where('dosen_id', $dosenId)
+                ->update(['dosen_id' => $superAdminDosen->id]);
+
+            // Reassign sidang roles
+            \App\Models\Sidang::where('dosen_pembimbing_utama_id', $dosenId)
+                ->update(['dosen_pembimbing_utama_id' => $superAdminDosen->id]);
+
+            \App\Models\Sidang::where('dosen_pembimbing_pendamping_id', $dosenId)
+                ->update(['dosen_pembimbing_pendamping_id' => $superAdminDosen->id]);
+
+            \App\Models\Sidang::where('ketua_penguji_id', $dosenId)
+                ->update(['ketua_penguji_id' => $superAdminDosen->id]);
+
+            \App\Models\Sidang::where('anggota_penguji_1_id', $dosenId)
+                ->update(['anggota_penguji_1_id' => $superAdminDosen->id]);
+
+            \App\Models\Sidang::where('anggota_penguji_2_id', $dosenId)
+                ->update(['anggota_penguji_2_id' => $superAdminDosen->id]);
+        }
+
         $user->delete();
+
+        if ($dosenId) {
+            \App\Models\Dosen::where('id', $dosenId)->delete();
+        }
 
         if ($request->expectsJson()) {
             return response()->json([

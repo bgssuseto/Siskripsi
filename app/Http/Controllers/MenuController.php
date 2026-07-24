@@ -61,11 +61,13 @@ class MenuController extends Controller
         $validated = $request->validate([
             'name'         => ['required', 'string', 'max:255'],
             'route'        => ['nullable', 'string', 'max:255'],
-            'icon'         => ['nullable', 'string', 'max:255'],
             'role_default' => ['nullable', 'string', 'in:mahasiswa,super_admin,koordinator,dosen,all'],
             'sort_order'   => ['nullable', 'integer'],
-            'is_active'    => ['nullable', 'boolean'],
         ]);
+
+        if ($request->has('icon')) {
+            $validated['icon'] = $request->input('icon');
+        }
 
         $validated['is_active'] = $request->has('is_active');
 
@@ -120,9 +122,49 @@ class MenuController extends Controller
     }
 
     /**
+     * Assign dynamic menus to a specific role (e.g. dosen)
+     */
+    public function assignRoleMenus(Request $request, string $role)
+    {
+        $validated = $request->validate([
+            'menu_ids' => ['array'],
+            'menu_ids.*' => ['exists:menus,id'],
+        ]);
+
+        $menuIds = $request->input('menu_ids', []);
+
+        // Delete existing menus for this role
+        \Illuminate\Support\Facades\DB::table('role_menu')->where('role', $role)->delete();
+
+        // Insert new ones
+        $insertData = array_map(function ($menuId) use ($role) {
+            return [
+                'role' => $role,
+                'menu_id' => $menuId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }, $menuIds);
+
+        if (!empty($insertData)) {
+            \Illuminate\Support\Facades\DB::table('role_menu')->insert($insertData);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Hak akses menu untuk role {$role} berhasil diperbarui!"
+            ]);
+        }
+
+        return redirect()->route('admin.menus.index')
+            ->with('success', "Hak akses menu untuk role {$role} berhasil diperbarui!");
+    }
+
+    /**
      * Seed default system menus if menus table is empty
      */
-    private function ensureDefaultMenusExist(): void
+    public function ensureDefaultMenusExist(): void
     {
         $defaultMenus = [
             [
@@ -203,16 +245,246 @@ class MenuController extends Controller
                 'sort_order'   => 11,
             ],
             [
+                'name'         => 'Kesediaan Dosen',
+                'route'        => 'master.kesediaan-dosen.index',
+                'icon'         => 'clipboard',
+                'role_default' => 'super_admin',
+                'sort_order'   => 12,
+            ],
+            [
                 'name'         => 'Manajemen Menu',
                 'route'        => 'admin.menus.index',
                 'icon'         => 'cog',
                 'role_default' => 'super_admin',
-                'sort_order'   => 12,
+                'sort_order'   => 13,
             ],
+            // ── Dosen menus ──
+            [
+                'name'         => 'Dashboard',
+                'route'        => 'dosen.dashboard',
+                'icon'         => 'home',
+                'role_default' => 'dosen',
+                'sort_order'   => 20,
+            ],
+            [
+                'name'         => 'Kalender',
+                'route'        => 'dosen.kalender',
+                'icon'         => 'clock',
+                'role_default' => 'dosen',
+                'sort_order'   => 24,
+            ],
+            [
+                'name'         => 'Profil',
+                'route'        => 'dosen.profil',
+                'icon'         => 'user',
+                'role_default' => 'dosen',
+                'sort_order'   => 25,
+            ]
         ];
 
+        // Seed top-level menus first
         foreach ($defaultMenus as $menu) {
             Menu::firstOrCreate(['route' => $menu['route']], $menu);
+        }
+
+        // Remove any parent menu named 'Jadwal Sidang' for role_default = 'dosen' to prevent duplicate/incorrect menu
+        $oldJadwalSidang = Menu::where('name', 'Jadwal Sidang')
+            ->whereNull('parent_id')
+            ->where('role_default', 'dosen')
+            ->first();
+        if ($oldJadwalSidang) {
+            \Illuminate\Support\Facades\DB::table('role_menu')->where('menu_id', $oldJadwalSidang->id)->delete();
+            \Illuminate\Support\Facades\DB::table('user_menu')->where('menu_id', $oldJadwalSidang->id)->delete();
+            $oldJadwalSidang->delete();
+        }
+
+        // Also clean up any user_menu mappings for Dosen users to administrative Jadwal Sidang (menu id 76 / route 'sidang.index')
+        $adminJadwalMenu = Menu::where('route', 'sidang.index')->first();
+        if ($adminJadwalMenu) {
+            $dosenUserIds = \App\Models\User::where('role', \App\Models\User::ROLE_DOSEN)->pluck('id')->toArray();
+            if (!empty($dosenUserIds)) {
+                \Illuminate\Support\Facades\DB::table('user_menu')
+                    ->whereIn('user_id', $dosenUserIds)
+                    ->where('menu_id', $adminJadwalMenu->id)
+                    ->delete();
+            }
+        }
+
+        // Seed Jadwal (parent) for Dosen
+        $jadwalMenu = Menu::firstOrCreate(
+            ['name' => 'Jadwal', 'role_default' => 'dosen'],
+            [
+                'route'        => null,
+                'icon'         => 'calendar',
+                'role_default' => 'dosen',
+                'sort_order'   => 21,
+            ]
+        );
+
+        // Seed children of Jadwal
+        $semproMenu = Menu::firstOrCreate(
+            ['route' => 'dosen.jadwal.sempro'],
+            [
+                'name'         => 'Seminar Proposal',
+                'parent_id'    => $jadwalMenu->id,
+                'icon'         => 'document',
+                'role_default' => 'dosen',
+                'sort_order'   => 22,
+            ]
+        );
+        $semproMenu->update(['parent_id' => $jadwalMenu->id]);
+
+        $skripsiMenu = Menu::firstOrCreate(
+            ['route' => 'dosen.jadwal.skripsi'],
+            [
+                'name'         => 'Sidang Skripsi',
+                'parent_id'    => $jadwalMenu->id,
+                'icon'         => 'academic',
+                'role_default' => 'dosen',
+                'sort_order'   => 23,
+            ]
+        );
+        $skripsiMenu->update(['parent_id' => $jadwalMenu->id]);
+
+        // Seed default role_menu mappings for dosen
+        $dosenMenuRoutes = [
+            'dosen.dashboard',
+            'dosen.kalender',
+            'dosen.profil',
+            'dosen.jadwal.sempro',
+            'dosen.jadwal.skripsi'
+        ];
+
+        $dosenMenus = Menu::whereIn('route', $dosenMenuRoutes)
+            ->orWhere(function($q) {
+                $q->where('name', 'Jadwal')->where('role_default', 'dosen');
+            })
+            ->get();
+
+        foreach ($dosenMenus as $dm) {
+            \Illuminate\Support\Facades\DB::table('role_menu')->updateOrInsert(
+                ['role' => 'dosen', 'menu_id' => $dm->id],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+        }
+
+        // ── Seed Mahasiswa Menus (Pendaftaran & Penjadwalan with submenus) ──
+        $mhsPendaftaranParent = Menu::firstOrCreate(
+            ['name' => 'Pendaftaran', 'role_default' => 'mahasiswa'],
+            [
+                'route'        => null,
+                'icon'         => 'document',
+                'role_default' => 'mahasiswa',
+                'sort_order'   => 2,
+            ]
+        );
+
+        $mhsSemproDaftar = Menu::firstOrCreate(
+            ['route' => 'mahasiswa.sempro.index'],
+            [
+                'name'         => 'Daftar Sempro',
+                'parent_id'    => $mhsPendaftaranParent->id,
+                'icon'         => 'document',
+                'role_default' => 'mahasiswa',
+                'sort_order'   => 3,
+            ]
+        );
+        $mhsSemproDaftar->update(['parent_id' => $mhsPendaftaranParent->id]);
+
+        $mhsSkripsiDaftar = Menu::firstOrCreate(
+            ['route' => 'mahasiswa.skripsi.index'],
+            [
+                'name'         => 'Daftar Skripsi',
+                'parent_id'    => $mhsPendaftaranParent->id,
+                'icon'         => 'academic',
+                'role_default' => 'mahasiswa',
+                'sort_order'   => 4,
+            ]
+        );
+        $mhsSkripsiDaftar->update(['parent_id' => $mhsPendaftaranParent->id]);
+
+        $mhsPenjadwalanParent = Menu::firstOrCreate(
+            ['name' => 'Penjadwalan', 'role_default' => 'mahasiswa'],
+            [
+                'route'        => null,
+                'icon'         => 'calendar',
+                'role_default' => 'mahasiswa',
+                'sort_order'   => 5,
+            ]
+        );
+
+        $mhsJadwalSempro = Menu::firstOrCreate(
+            ['route' => 'mahasiswa.jadwal.sempro'],
+            [
+                'name'         => 'Jadwal Sempro',
+                'parent_id'    => $mhsPenjadwalanParent->id,
+                'icon'         => 'calendar',
+                'role_default' => 'mahasiswa',
+                'sort_order'   => 6,
+            ]
+        );
+        $mhsJadwalSempro->update(['parent_id' => $mhsPenjadwalanParent->id]);
+
+        $mhsJadwalSkripsi = Menu::firstOrCreate(
+            ['route' => 'mahasiswa.jadwal.skripsi'],
+            [
+                'name'         => 'Jadwal Skripsi',
+                'parent_id'    => $mhsPenjadwalanParent->id,
+                'icon'         => 'calendar',
+                'role_default' => 'mahasiswa',
+                'sort_order'   => 7,
+            ]
+        );
+        $mhsJadwalSkripsi->update(['parent_id' => $mhsPenjadwalanParent->id]);
+
+        // Seed default role_menu mappings for mahasiswa
+        $mhsMenuRoutes = [
+            'mahasiswa.dashboard',
+            'mahasiswa.sempro.index',
+            'mahasiswa.skripsi.index',
+            'mahasiswa.jadwal.sempro',
+            'mahasiswa.jadwal.skripsi'
+        ];
+
+        $mhsMenus = Menu::whereIn('route', $mhsMenuRoutes)
+            ->orWhere(function($q) {
+                $q->whereIn('name', ['Pendaftaran', 'Penjadwalan'])->where('role_default', 'mahasiswa');
+            })
+            ->get();
+
+        foreach ($mhsMenus as $mm) {
+            \Illuminate\Support\Facades\DB::table('role_menu')->updateOrInsert(
+                ['role' => 'mahasiswa', 'menu_id' => $mm->id],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+        }
+
+        // ── Seed Koordinator Default Menus ──
+        // Koordinator defaults: Dashboard, Data (Sempro, Skripsi), Penjadwalan (Sempro, Skripsi).
+        // Manajemen User & Manajemen Menu are NOT default for Koordinator.
+        $koordinatorRoutes = [
+            'dashboard',
+            'master.sempro.index',
+            'master.skripsi.index',
+            'jadwal-sempro.index',
+            'jadwal-ujian.index',
+            'master.kesediaan-dosen.index'
+        ];
+
+        $koordinatorMenus = Menu::whereIn('route', $koordinatorRoutes)
+            ->orWhere(function($q) {
+                $q->whereIn('name', ['Data', 'Penjadwalan'])->whereNull('parent_id');
+            })
+            ->get();
+
+        \Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'koordinator')->delete();
+        foreach ($koordinatorMenus as $km) {
+            \Illuminate\Support\Facades\DB::table('role_menu')->insert([
+                'role'       => 'koordinator',
+                'menu_id'    => $km->id,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
         }
     }
 }

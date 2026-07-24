@@ -300,6 +300,13 @@
                     <input type="text" name="search" value="{{ request('search') }}" @input.debounce.500ms="submitSearch($event.target.form)" placeholder="Cari NIM, nama, judul…">
                 </div>
                 
+                <select name="per_page" class="filter-select" @change="submitSearch($event.target.form)">
+                    <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
+                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>Tampilkan 10 data</option>
+                    <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
+                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Tampilkan 100 data</option>
+                </select>
+
                 <select name="status" class="filter-select" @change="submitSearch($event.target.form)">
                     <option value="">Semua Status</option>
                     <option value="belum" {{ request('status')=='belum'?'selected':'' }}>Belum Dijadwalkan</option>
@@ -416,15 +423,7 @@
                                     </td>
                                     <td><p class="judul-text">{{ $item->judul_skripsi }}</p></td>
                                     <td>
-                                        @if(empty($item->tanggal))
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
-                                                ● Belum Plotting
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-                                                ✓ Sudah Dijadwal
-                                            </span>
-                                        @endif
+                                        {!! $item->getJadwalStatusHtml() !!}
                                     </td>
                                     <td><span class="text-xs font-semibold text-slate-500">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                     <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
@@ -777,15 +776,33 @@
 
                     <div class="form-section">
                         <div class="form-section-title">Jadwal & Ruangan</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                                <input type="date" name="tanggal" id="edit-tanggal" class="form-control text-xs p-2.5">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai *</label>
+                                <select name="jam_mulai" id="edit-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer">
+                                    @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
+                                        <option value="{{ $t }}">{{ $t }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Selesai *</label>
+                                <select name="jam_selesai" id="edit-jam-selesai" class="form-control text-xs p-2.5 bg-white cursor-pointer">
+                                    @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
+                                        <option value="{{ $t }}">{{ $t }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Keterangan (Opsional)</label>
+                            <input type="text" name="keterangan" id="edit-keterangan" placeholder="Catatan tambahan..." class="form-control text-xs p-2.5">
+                        </div>
                         <div class="form-grid-2">
-                            <div class="form-group">
-                                <label>Tanggal Sidang</label>
-                                <input type="date" name="tanggal" id="edit-tanggal" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label>Jam</label>
-                                <input type="text" name="jam" id="edit-jam" class="form-control">
-                            </div>
                             <div class="form-group">
                                 <label>Ruangan</label>
                                 <select name="ruang_id" id="edit-ruangan" class="form-control">
@@ -916,17 +933,60 @@
                         <div class="text-slate-500 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
                     </div>
 
+                    {{-- Info Box Kesediaan Menguji Dosen --}}
+                    @if(isset($kesediaanDosens) && $kesediaanDosens->count() > 0)
+                        <div class="mb-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3.5 text-xs">
+                            <div class="flex items-center justify-between font-extrabold text-emerald-900 mb-2">
+                                <span class="flex items-center gap-1.5">
+                                    <span>📝</span> Data Ketersediaan Menguji Dosen (Sinkron)
+                                </span>
+                                <span class="bg-emerald-200 text-emerald-900 text-[10px] px-2 py-0.5 rounded-full font-extrabold">
+                                    {{ $kesediaanDosens->count() }} Slot Terdaftar
+                                </span>
+                            </div>
+                            <div class="max-h-32 overflow-y-auto space-y-1.5 pr-1">
+                                @foreach($kesediaanDosens as $kd)
+                                    <div class="flex items-center justify-between bg-white border border-emerald-100 rounded-xl p-2 text-[11px]">
+                                        <div>
+                                            <strong class="text-slate-800">{{ $kd->dosen->nama_dosen ?? 'Dosen' }}</strong>
+                                            <span class="text-slate-500 font-medium">({{ \Carbon\Carbon::parse($kd->tanggal)->format('d/m/Y') }})</span>
+                                        </div>
+                                        <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                            ⏰ {{ $kd->jam_mulai }} - {{ $kd->jam_selesai }} WIB
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="form-section mt-0">
                         <div class="form-section-title">Waktu & Tempat Sidang</div>
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label>Hari / Tanggal Sidang <span style="color:red">*</span></label>
-                                <input type="date" name="tanggal" id="jadwalkan-tanggal" class="form-control" required>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                                <input type="date" name="tanggal" id="jadwalkan-tanggal" class="form-control text-xs p-2.5" required>
                             </div>
-                            <div class="form-group">
-                                <label>Jam Sidang <span style="color:red">*</span></label>
-                                <input type="text" name="jam" id="jadwalkan-jam" class="form-control" placeholder="Contoh: 08.00 - 09.30" required>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai *</label>
+                                <select name="jam_mulai" id="jadwalkan-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
+                                    @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
+                                        <option value="{{ $t }}">{{ $t }}</option>
+                                    @endforeach
+                                </select>
                             </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Selesai *</label>
+                                <select name="jam_selesai" id="jadwalkan-jam-selesai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
+                                    @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
+                                        <option value="{{ $t }}">{{ $t }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Keterangan (Opsional)</label>
+                            <input type="text" name="keterangan" id="jadwalkan-keterangan" placeholder="Catatan tambahan..." class="form-control text-xs p-2.5">
                         </div>
                         <div class="form-group mt-3">
                             <label>Ruangan Sidang <span style="color:red">*</span></label>
@@ -998,13 +1058,28 @@
             if (e.target === document.getElementById(id)) closeModal(id);
         }
 
+        function parseJamRange(jamStr) {
+            if (!jamStr) return { mulai: '08.00', selesai: '12.00' };
+            const parts = jamStr.split('-');
+            if (parts.length === 2) {
+                let m = parts[0].trim().replace(':', '.');
+                let s = parts[1].trim().replace(':', '.');
+                if (m.indexOf('.') === 1) m = '0' + m;
+                if (s.indexOf('.') === 1) s = '0' + s;
+                return { mulai: m, selesai: s };
+            }
+            return { mulai: '08.00', selesai: '12.00' };
+        }
+
         function openJadwalkan(id, nama, nim, tgl, jam, ruangId, ketuaId, p1Id, p2Id) {
             const form = document.getElementById('form-jadwalkan');
             form.action = '/jadwal/skripsi/' + id + '/jadwalkan';
             document.getElementById('jadwalkan-mhs-nama').textContent = nama;
             document.getElementById('jadwalkan-mhs-nim').textContent = 'NIM: ' + nim;
             document.getElementById('jadwalkan-tanggal').value = tgl || '';
-            document.getElementById('jadwalkan-jam').value = jam || '';
+            const parsed = parseJamRange(jam);
+            if (document.getElementById('jadwalkan-jam-mulai')) document.getElementById('jadwalkan-jam-mulai').value = parsed.mulai;
+            if (document.getElementById('jadwalkan-jam-selesai')) document.getElementById('jadwalkan-jam-selesai').value = parsed.selesai;
             document.getElementById('jadwalkan-ruang').value = ruangId || '';
             document.getElementById('jadwalkan-ketua').value = ketuaId || '';
             document.getElementById('jadwalkan-penguji1').value = p1Id || '';
@@ -1027,7 +1102,9 @@
             document.getElementById('edit-periode').value                         = data.periode_id || '';
             document.getElementById('edit-tanggal').value                         = data.tanggal || '';
             document.getElementById('edit-tanggal-pendaftaran').value             = data.tanggal_pendaftaran || '';
-            document.getElementById('edit-jam').value                             = data.jam || '';
+            const parsed = parseJamRange(data.jam);
+            if (document.getElementById('edit-jam-mulai')) document.getElementById('edit-jam-mulai').value = parsed.mulai;
+            if (document.getElementById('edit-jam-selesai')) document.getElementById('edit-jam-selesai').value = parsed.selesai;
             document.getElementById('edit-jenis').value                           = data.jenis_tugas_akhir || 'skripsi';
 
             // ── Section 1: Schedule Conflicts (red box) ──

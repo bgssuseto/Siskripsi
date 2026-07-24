@@ -20,6 +20,8 @@ use App\Http\Controllers\SemproController;
 use App\Http\Controllers\AdministrasiController;
 use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\DosenPortalController;
+use App\Http\Controllers\KesediaanDosenController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -40,6 +42,15 @@ Route::middleware('guest')->group(function () {
 // Authenticated routes
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
+        $user = auth()->user();
+        if ($user) {
+            if ($user->isDosen()) {
+                return redirect()->route('dosen.dashboard');
+            }
+            if ($user->isMahasiswa()) {
+                return redirect()->route('mahasiswa.dashboard');
+            }
+        }
         return view('dashboard');
     })->name('dashboard');
 
@@ -52,8 +63,8 @@ Route::middleware('auth')->group(function () {
     Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])->middleware('signed')->name('verification.verify');
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->middleware('throttle:6,1')->name('verification.send');
 
-    // User Management (Super Admin & Koordinator)
-    Route::middleware('role:super_admin,koordinator')->group(function () {
+    // User Management (Super Admin)
+    Route::middleware('role:super_admin')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
@@ -77,22 +88,26 @@ Route::middleware('auth')->group(function () {
         Route::put('/master/periode/{periode}', [PeriodeController::class, 'update'])->name('master.periode.update');
         Route::delete('/master/periode/{periode}', [PeriodeController::class, 'destroy'])->name('master.periode.destroy');
         Route::post('/master/periode/{periode}/active', [PeriodeController::class, 'setActive'])->name('master.periode.active');
+        Route::post('/master/pendaftaran-periode', [PeriodeController::class, 'storePendaftaranPeriode'])->name('master.pendaftaran-periode.store');
+        Route::put('/master/pendaftaran-periode/{pendaftaranPeriode}', [PeriodeController::class, 'updatePendaftaranPeriode'])->name('master.pendaftaran-periode.update');
+        Route::delete('/master/pendaftaran-periode/{pendaftaranPeriode}', [PeriodeController::class, 'destroyPendaftaranPeriode'])->name('master.pendaftaran-periode.destroy');
 
         // Data Skripsi
         Route::get('/master/skripsi', [SkripsiController::class, 'index'])->name('master.skripsi.index');
         Route::post('/master/skripsi', [SkripsiController::class, 'store'])->name('master.skripsi.store');
-        Route::put('/master/skripsi/{id}', [SkripsiController::class, 'update'])->name('master.skripsi.update');
-        Route::delete('/master/skripsi/{id}', [SkripsiController::class, 'destroy'])->name('master.skripsi.destroy');
+        Route::put('/master/skripsi/{sidang}', [SkripsiController::class, 'update'])->name('master.skripsi.update');
+        Route::delete('/master/skripsi/{sidang}', [SkripsiController::class, 'destroy'])->name('master.skripsi.destroy');
         Route::get('/master/skripsi/import', [SkripsiController::class, 'importForm'])->name('master.skripsi.import.form');
         Route::post('/master/skripsi/import', [SkripsiController::class, 'import'])->name('master.skripsi.import');
 
         // Data Sempro
         Route::get('/master/sempro', [SemproController::class, 'index'])->name('master.sempro.index');
         Route::post('/master/sempro', [SemproController::class, 'store'])->name('master.sempro.store');
-        Route::put('/master/sempro/{id}', [SemproController::class, 'update'])->name('master.sempro.update');
-        Route::delete('/master/sempro/{id}', [SemproController::class, 'destroy'])->name('master.sempro.destroy');
+        Route::put('/master/sempro/{sidang}', [SemproController::class, 'update'])->name('master.sempro.update');
+        Route::delete('/master/sempro/{sidang}', [SemproController::class, 'destroy'])->name('master.sempro.destroy');
         Route::get('/master/sempro/import', [SemproController::class, 'importForm'])->name('master.sempro.import.form');
         Route::post('/master/sempro/import', [SemproController::class, 'import'])->name('master.sempro.import');
+        Route::post('/master/sidang/{sidang}/verifikasi', [SkripsiController::class, 'verifikasi'])->name('master.sidang.verifikasi');
 
         // Jadwal Sidang Skripsi
         Route::get('/jadwal-ujian', [SkripsiController::class, 'jadwalIndex'])->name('jadwal-ujian.index');
@@ -104,6 +119,7 @@ Route::middleware('auth')->group(function () {
 
         // Administrasi
         Route::get('/administrasi/undangan', [AdministrasiController::class, 'undanganIndex'])->name('administrasi.undangan.index');
+        Route::get('/administrasi/undangan/preview/{dosen}', [AdministrasiController::class, 'previewUndanganHtml'])->name('administrasi.undangan.preview');
         Route::get('/administrasi/undangan/pdf/{dosen}', [AdministrasiController::class, 'generateUndanganPdf'])->name('administrasi.undangan.pdf');
         Route::get('/administrasi/undangan/docx/{dosen}', [AdministrasiController::class, 'generateUndanganDocx'])->name('administrasi.undangan.docx');
         Route::get('/administrasi/undangan/excel/{dosen}', [AdministrasiController::class, 'generateUndanganExcel'])->name('administrasi.undangan.excel');
@@ -116,6 +132,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/administrasi/berita-acara/preview/{sidang}', [AdministrasiController::class, 'previewBeritaAcaraPdf'])->name('administrasi.berita-acara.preview');
         Route::get('/administrasi/berita-acara/zip', [AdministrasiController::class, 'generateBeritaAcaraZip'])->name('administrasi.berita-acara.zip');
         Route::get('/administrasi/sk', [AdministrasiController::class, 'skIndex'])->name('administrasi.sk.index');
+
+    });
+
+    // Kesediaan Dosen Management (Super Admin & Koordinator)
+    Route::middleware('role:super_admin,koordinator')->group(function () {
+        Route::get('/master/kesediaan-dosen', [KesediaanDosenController::class, 'index'])->name('master.kesediaan-dosen.index');
+        Route::delete('/master/kesediaan-dosen/{kesediaanDosen}', [KesediaanDosenController::class, 'destroy'])->name('master.kesediaan-dosen.destroy');
+        Route::post('/master/kesediaan-dosen/settings', [KesediaanDosenController::class, 'updateSettings'])->name('master.kesediaan-dosen.settings');
+        Route::post('/master/kesediaan-dosen/toggle-access/{dosen}', [KesediaanDosenController::class, 'toggleAccess'])->name('master.kesediaan-dosen.toggle-access');
+        Route::post('/master/kesediaan-dosen/destroy-group', [KesediaanDosenController::class, 'destroyGroup'])->name('master.kesediaan-dosen.destroy-group');
     });
     // Mahasiswa routes
     Route::middleware('role:mahasiswa')->group(function () {
@@ -124,14 +150,30 @@ Route::middleware('auth')->group(function () {
         Route::get('/mahasiswa/sempro', [MahasiswaController::class, 'semproIndex'])->name('mahasiswa.sempro.index');
         Route::get('/mahasiswa/skripsi', [MahasiswaController::class, 'skripsiIndex'])->name('mahasiswa.skripsi.index');
         Route::get('/mahasiswa/jadwal', [MahasiswaController::class, 'jadwalIndex'])->name('mahasiswa.jadwal.index');
+        Route::get('/mahasiswa/jadwal/sempro', [MahasiswaController::class, 'jadwalSemproIndex'])->name('mahasiswa.jadwal.sempro');
+        Route::get('/mahasiswa/jadwal/skripsi', [MahasiswaController::class, 'jadwalSkripsiIndex'])->name('mahasiswa.jadwal.skripsi');
+        Route::post('/mahasiswa/daftar', [MahasiswaController::class, 'storeRegistration'])->name('mahasiswa.daftar.store');
+        Route::post('/mahasiswa/sidang/{sidang}/update-bukti', [MahasiswaController::class, 'updateBukti'])->name('mahasiswa.sidang.update-bukti');
     });
-    // Super Admin & Koordinator menu management
-    Route::middleware('role:super_admin,koordinator')->group(function () {
+    // Dosen routes
+    Route::middleware(['role:dosen', 'menu.permission'])->group(function () {
+        Route::get('/dosen/dashboard', [DosenPortalController::class, 'dashboard'])->name('dosen.dashboard');
+        Route::get('/dosen/jadwal/sempro', [DosenPortalController::class, 'sempro'])->name('dosen.jadwal.sempro');
+        Route::get('/dosen/jadwal/skripsi', [DosenPortalController::class, 'skripsi'])->name('dosen.jadwal.skripsi');
+        Route::get('/dosen/kalender', [DosenPortalController::class, 'kalender'])->name('dosen.kalender');
+        Route::get('/dosen/profil', [DosenPortalController::class, 'profil'])->name('dosen.profil');
+        Route::post('/dosen/kesediaan', [DosenPortalController::class, 'storeKesediaan'])->name('dosen.kesediaan.store');
+        Route::delete('/dosen/kesediaan/{id}', [DosenPortalController::class, 'destroyKesediaan'])->name('dosen.kesediaan.destroy');
+    });
+
+    // Super Admin menu management
+    Route::middleware('role:super_admin')->group(function () {
         Route::get('/kelola-menu', [MenuController::class, 'index'])->name('admin.menus.index');
         Route::post('/kelola-menu', [MenuController::class, 'store'])->name('admin.menus.store');
         Route::put('/kelola-menu/{menu}', [MenuController::class, 'update'])->name('admin.menus.update');
         Route::delete('/kelola-menu/{menu}', [MenuController::class, 'destroy'])->name('admin.menus.destroy');
         Route::post('/kelola-menu/user/{user}', [MenuController::class, 'assignUserMenus'])->name('admin.menus.assign');
+        Route::post('/kelola-menu/role/{role}', [MenuController::class, 'assignRoleMenus'])->name('admin.menus.assign-role');
     });
 });
 
