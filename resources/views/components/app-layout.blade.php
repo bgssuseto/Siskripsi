@@ -118,9 +118,9 @@
         }
 
         html.dark .bg-indigo-50, html.dark .bg-indigo-100 {
-            background-color: rgba(99, 102, 241, 0.18) !important;
-            color: #a5b4fc !important;
-            border-color: rgba(99, 102, 241, 0.35) !important;
+            background-color: rgba(67, 97, 238, 0.18) !important;
+            color: #8b9cf7 !important;
+            border-color: rgba(67, 97, 238, 0.35) !important;
         }
 
         html.dark .bg-purple-50, html.dark .bg-purple-100 {
@@ -167,14 +167,14 @@
         .fc {
             --fc-page-bg-color: #ffffff;
             --fc-neutral-bg-color: #f8fafc;
-            --fc-list-event-hover-bg-color: rgba(99, 102, 241, 0.1);
+            --fc-list-event-hover-bg-color: rgba(67, 97, 238, 0.10);
             --fc-border-color: #cbd5e1;
-            --fc-button-bg-color: #4f46e5;
-            --fc-button-border-color: #4338ca;
-            --fc-button-hover-bg-color: #4338ca;
-            --fc-button-hover-border-color: #3730a3;
-            --fc-button-active-bg-color: #3730a3;
-            --fc-button-active-border-color: #312e81;
+            --fc-button-bg-color: #4361ee;
+            --fc-button-border-color: #3251d4;
+            --fc-button-hover-bg-color: #3251d4;
+            --fc-button-hover-border-color: #2a43b0;
+            --fc-button-active-bg-color: #2a43b0;
+            --fc-button-active-border-color: #192355;
         }
         .fc .fc-toolbar-title {
             font-size: 1.15rem !important;
@@ -224,18 +224,18 @@
 
         /* Buttons Styling */
         .fc .fc-button-primary {
-            background-color: #4f46e5 !important;
-            border-color: #4338ca !important;
+            background-color: #4361ee !important;
+            border-color: #3251d4 !important;
             color: #ffffff !important;
             border-radius: 0.75rem !important;
             font-weight: 700 !important;
             font-size: 0.75rem !important;
             padding: 0.4rem 0.8rem !important;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 1px 2px 0 rgba(67, 97, 238, 0.20) !important;
         }
         .fc .fc-button-primary:hover {
-            background-color: #4338ca !important;
-            border-color: #3730a3 !important;
+            background-color: #3251d4 !important;
+            border-color: #2a43b0 !important;
         }
 
         /* FullCalendar Dark Mode Override - Dark Cell Background & White Date Numbers */
@@ -243,12 +243,12 @@
             --fc-page-bg-color: #0f172a;
             --fc-neutral-bg-color: #1e293b;
             --fc-border-color: #334155;
-            --fc-button-bg-color: #6366f1;
-            --fc-button-border-color: #4f46e5;
-            --fc-button-hover-bg-color: #4f46e5;
-            --fc-button-hover-border-color: #4338ca;
-            --fc-button-active-bg-color: #4338ca;
-            --fc-button-active-border-color: #3730a3;
+            --fc-button-bg-color: #6b7ff3;
+            --fc-button-border-color: #5472f0;
+            --fc-button-hover-bg-color: #5472f0;
+            --fc-button-hover-border-color: #4361ee;
+            --fc-button-active-bg-color: #4361ee;
+            --fc-button-active-border-color: #3251d4;
         }
         html.dark .fc .fc-scrollgrid,
         html.dark .fc .fc-daygrid-day,
@@ -299,13 +299,13 @@
             font-weight: 800 !important;
         }
         html.dark .fc .fc-button-primary {
-            background-color: #6366f1 !important;
-            border-color: #4f46e5 !important;
+            background-color: #6b7ff3 !important;
+            border-color: #5472f0 !important;
             color: #ffffff !important;
         }
         html.dark .fc .fc-button-primary:hover {
-            background-color: #4f46e5 !important;
-            border-color: #4338ca !important;
+            background-color: #5472f0 !important;
+            border-color: #4361ee !important;
         }
     </style>
 </head>
@@ -350,7 +350,7 @@
             <!-- Brand / Logo -->
             <div class="flex items-center h-16 px-4 border-b border-white/[0.07] shrink-0">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
-                    <div class="w-9 h-9 shrink-0 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                    <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #5472f0, #3251d4); box-shadow: 0 8px 20px rgba(67,97,238,0.35);">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                         </svg>

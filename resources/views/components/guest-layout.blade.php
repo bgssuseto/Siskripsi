@@ -18,11 +18,11 @@
 <body class="font-sans antialiased">
     <div class="min-h-screen flex flex-col lg:flex-row">
         <!-- Left Side - Branding -->
-        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 p-12 flex-col justify-between relative overflow-hidden">
+        <div class="hidden lg:flex lg:w-1/2 p-12 flex-col justify-between relative overflow-hidden" style="background: linear-gradient(135deg, #4361ee 0%, #3251d4 40%, #192355 100%);">
             <!-- Decorative circles -->
-            <div class="absolute top-20 left-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-20 right-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl"></div>
-            <div class="absolute top-1/2 left-1/3 w-48 h-48 bg-indigo-300/20 rounded-full blur-2xl"></div>
+            <div class="absolute top-20 left-20 w-64 h-64 rounded-full blur-3xl" style="background: rgba(255,255,255,0.08);"></div>
+            <div class="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-3xl" style="background: rgba(107,127,243,0.20);"></div>
+            <div class="absolute top-1/2 left-1/3 w-48 h-48 rounded-full blur-2xl" style="background: rgba(139,156,247,0.15);"></div>
 
             <!-- Logo & Title -->
             <div class="relative z-10">
@@ -34,7 +34,7 @@
                     </div>
                     <h1 class="text-3xl font-bold text-white tracking-tight">Skripsi TI</h1>
                 </div>
-                <p class="text-indigo-200 text-lg">Sistem Informasi Tugas Akhir</p>
+                <p class="text-lg" style="color: #b5c1fb;">Sistem Informasi Tugas Akhir</p>
             </div>
 
             <!-- Feature List -->
@@ -76,7 +76,7 @@
 
             <!-- Footer -->
             <div class="relative z-10">
-                <p class="text-indigo-200 text-sm">© 2026 Skripsi TI. All rights reserved.</p>
+                <p class="text-sm" style="color: #b5c1fb;">© 2026 Skripsi TI. All rights reserved.</p>
             </div>
         </div>
 
@@ -84,7 +84,7 @@
         <div class="flex-1 flex items-center justify-center p-6 lg:p-12 bg-gray-50">
             <!-- Mobile Logo -->
             <div class="lg:hidden absolute top-6 left-6 flex items-center gap-2">
-                <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #4361ee;">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                     </svg>

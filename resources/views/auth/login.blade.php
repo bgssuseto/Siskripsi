@@ -30,16 +30,16 @@
         @csrf
 
         <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email / NIM</label>
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
                     </svg>
                 </div>
-                <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="username"
+                <input id="email" name="email" type="text" value="{{ old('email') }}" required autofocus autocomplete="username"
                     class="block w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 @error('email') border-red-300 focus:border-red-500 focus:ring-red-500/20 @enderror"
-                    placeholder="nama@email.com">
+                    placeholder="Masukkan Email atau NIM">
             </div>
             @error('email')
                 <p class="mt-2 text-sm text-red-600 flex items-center gap-1">

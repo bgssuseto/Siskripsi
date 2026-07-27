@@ -183,7 +183,7 @@
                                     <div class="flex flex-wrap gap-1.5 max-w-md">
                                         @foreach($item['dates'] as $date)
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-xs font-bold whitespace-nowrap">
-                                                📅 {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y') }}
+                                                📅 {{ \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('l, d F Y') }}
                                             </span>
                                         @endforeach
                                     </div>

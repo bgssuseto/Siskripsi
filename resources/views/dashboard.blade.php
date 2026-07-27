@@ -281,7 +281,7 @@
                     labels: ['Sidang Skripsi (Reguler)', 'Artikel Jurnal', 'Seminar Proposal'],
                     datasets: [{
                         data: [{{ $skripsiRegulerCount }}, {{ $artikelJurnalCount }}, {{ $semproCount }}],
-                        backgroundColor: ['#6366f1', '#10b981', '#a855f7'],
+                        backgroundColor: ['#4361ee', '#10b981', '#a855f7'],
                         borderWidth: 2,
                         borderColor: isDark ? '#0f172a' : '#ffffff'
                     }]

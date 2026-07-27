@@ -40,7 +40,7 @@
             @if($sidangSkripsi)
                 <div class="flex items-center justify-between">
                     @php
-                        $statusText = 'Menunggu Verifikasi';
+                        $statusText = 'Belum Diverifikasi';
                         $statusClass = 'bg-amber-100 text-amber-700 border border-amber-250';
                         if (($sidangSkripsi->verifikasi_status ?? 'menunggu') === 'disetujui') {
                             $statusText = 'Terverifikasi Koordinator';
@@ -70,7 +70,7 @@
             @if($sidangJurnal)
                 <div class="flex items-center justify-between">
                     @php
-                        $statusText = 'Menunggu Verifikasi';
+                        $statusText = 'Belum Diverifikasi';
                         $statusClass = 'bg-amber-100 text-amber-700 border border-amber-250';
                         if (($sidangJurnal->verifikasi_status ?? 'menunggu') === 'disetujui') {
                             $statusText = 'Terverifikasi Koordinator';

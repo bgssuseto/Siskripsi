@@ -436,7 +436,7 @@
                                     <div class="flex items-center justify-between bg-white border border-emerald-100 rounded-xl p-2 text-[11px]">
                                         <div>
                                             <strong class="text-slate-800">{{ $kd->dosen->nama_dosen ?? 'Dosen' }}</strong>
-                                            <span class="text-slate-500 font-medium">({{ \Carbon\Carbon::parse($kd->tanggal)->format('d/m/Y') }})</span>
+                                            <span class="text-indigo-700 font-bold ml-1">({{ \Carbon\Carbon::parse($kd->tanggal)->locale('id')->translatedFormat('l, d F Y') }})</span>
                                         </div>
                                         <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                                             ⏰ {{ $kd->jam_mulai }} - {{ $kd->jam_selesai }} WIB

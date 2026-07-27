@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         );
         User::firstOrCreate(
             ['email' => 'mahasiswa@skripsi.ac.id'],
-            ['name' => 'Ahmad Mahasiswa', 'password' => bcrypt('password'), 'role' => User::ROLE_MAHASISWA]
+            ['name' => 'Ahmad Mahasiswa', 'password' => bcrypt('password'), 'role' => User::ROLE_MAHASISWA, 'nim' => '201951161']
         );
 
         // ── Sample Dosen ───────────────────────────────────────────────

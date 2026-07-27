@@ -13,7 +13,7 @@
         }
 
         .import-header {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #4361ee 0%, #8b5cf6 100%);
             padding: 2rem 2rem 1.5rem;
             color: #fff;
         }
@@ -41,17 +41,17 @@
             position: relative;
         }
         .drop-zone:hover, .drop-zone.drag-over {
-            border-color: #6366f1;
+            border-color: #4361ee;
             background: #eef2ff;
         }
         .drop-zone input[type=file] {
             position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
         }
         .drop-zone-icon { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
-        .drop-zone-title { font-weight: 700; color: #4338ca; font-size: 1rem; }
+        .drop-zone-title { font-weight: 700; color: #2a43b0; font-size: 1rem; }
         .drop-zone-hint  { font-size: .8rem; color: #7c3aed; margin-top: .3rem; }
         .file-name-display {
-            margin-top: .75rem; font-size: .82rem; color: #6366f1;
+            margin-top: .75rem; font-size: .82rem; color: #4361ee;
             font-weight: 600; display: none;
         }
 
@@ -100,8 +100,8 @@
             font-weight: 600; cursor: pointer; transition: all .15s;
             border: none; text-decoration: none;
         }
-        .btn-primary { background: #6366f1; color: #fff; }
-        .btn-primary:hover { background: #4f46e5; box-shadow: 0 4px 14px rgba(99,102,241,.4); }
+        .btn-primary { background: #4361ee; color: #fff; }
+        .btn-primary:hover { background: #3251d4; box-shadow: 0 4px 14px rgba(99,102,241,.4); }
         .btn-outline { background: #fff; color: #475569; border: 1px solid #e2e8f0; }
         .btn-outline:hover { background: #f8fafc; }
 
@@ -113,7 +113,7 @@
     <div class="import-page">
         {{-- Breadcrumb --}}
         <div style="margin-bottom:1rem;">
-            <a href="{{ route('master.sempro.index') }}" style="color:#6366f1;font-size:.875rem;text-decoration:none;">
+            <a href="{{ route('master.sempro.index') }}" style="color:#4361ee;font-size:.875rem;text-decoration:none;">
                 ← Kembali ke Data Sempro
             </a>
         </div>

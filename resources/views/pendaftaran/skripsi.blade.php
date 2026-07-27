@@ -24,7 +24,7 @@
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Pendaftaran Sidang Skripsi</h1>
                 <p class="text-xs text-purple-200/90 mt-1 max-w-2xl leading-relaxed">
-                    Periksa kelayakan pendaftaran, validasi bukti pembayaran, dan berikan persetujuan untuk meneruskan mahasiswa ke Master Skripsi.
+                    Periksa kelayakan pendaftaran, validasi berkas persyaratan, dan berikan persetujuan untuk meneruskan mahasiswa ke Master Skripsi.
                 </p>
             </div>
             
@@ -324,9 +324,9 @@
         @endif
     </div>
 
-    <!-- POP-UP MODAL PREVIEW BUKTI PEMBAYARAN -->
+    <!-- POP-UP MODAL PREVIEW BERKAS PERSYARATAN -->
     <div x-show="previewModal" x-cloak 
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md overflow-y-auto"
+         class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md overflow-y-auto"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 scale-95"
          x-transition:enter-end="opacity-100 scale-100"
@@ -334,24 +334,27 @@
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95">
         
-        <div @click.away="previewModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 text-slate-800 dark:text-slate-100 shadow-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 space-y-4">
+        <div @click.away="previewModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full p-6 text-slate-800 dark:text-slate-100 shadow-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center text-sm border border-purple-100 dark:border-purple-900">
-                        🖼️
+                        📄
                     </div>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100" x-text="previewTitle"></h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Pratinjau Berkas Bukti Pembayaran Pendaftaran</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Pratinjau Berkas Persyaratan Pendaftaran</p>
                     </div>
                 </div>
                 <button type="button" @click="previewModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs transition-colors">✕</button>
             </div>
 
             <!-- Preview Content -->
-            <div class="bg-slate-950 rounded-2xl p-2 flex items-center justify-center min-h-[300px] max-h-[500px] overflow-auto border border-slate-800">
-                <template x-if="previewUrl">
-                    <img :src="previewUrl" alt="Bukti Pembayaran" class="max-w-full max-h-[460px] rounded-xl object-contain shadow-lg">
+            <div class="bg-slate-950 rounded-2xl p-2 flex items-center justify-center min-h-[350px] max-h-[550px] overflow-auto border border-slate-800">
+                <template x-if="previewUrl && previewUrl.toLowerCase().includes('.pdf')">
+                    <iframe :src="previewUrl" class="w-full h-[500px] rounded-xl border-0 bg-white"></iframe>
+                </template>
+                <template x-if="previewUrl && !previewUrl.toLowerCase().includes('.pdf')">
+                    <img :src="previewUrl" alt="Berkas Persyaratan" class="max-w-full max-h-[500px] rounded-xl object-contain shadow-lg">
                 </template>
             </div>
 
@@ -376,7 +379,7 @@
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95">
         
-        <div @click.away="verifikasiModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-4 sm:p-5 text-slate-800 dark:text-slate-100 shadow-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 space-y-3 max-h-[85vh] overflow-y-auto">
+        <div @click.away="if (!previewModal) verifikasiModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-4 sm:p-5 text-slate-800 dark:text-slate-100 shadow-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 space-y-3 max-h-[85vh] overflow-y-auto">
             <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center text-sm border border-purple-100 dark:border-purple-900">
@@ -408,15 +411,15 @@
 
                     <!-- Compact PDF Document Preview & Download -->
                     <div class="pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between gap-2">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Berkas Persyaratan (PDF):</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Berkas Persyaratan:</span>
                         <template x-if="selectedSidang.file_persyaratan">
                             <div class="flex items-center gap-2">
                                 <button type="button" 
-                                         @click="previewUrl = '{{ asset('') }}' + selectedSidang.file_persyaratan; previewTitle = 'Berkas Persyaratan - ' + selectedSidang.nama_mahasiswa; previewModal = true"
-                                         class="inline-flex items-center gap-1 text-[10.5px] text-purple-600 dark:text-purple-400 font-extrabold hover:underline">
-                                    👁️ Preview PDF
+                                         @click.stop="previewUrl = (selectedSidang.file_persyaratan.startsWith('http') || selectedSidang.file_persyaratan.startsWith('/')) ? selectedSidang.file_persyaratan : '{{ asset('') }}' + selectedSidang.file_persyaratan; previewTitle = 'Berkas Persyaratan - ' + selectedSidang.nama_mahasiswa; previewModal = true"
+                                         class="inline-flex items-center gap-1 text-[10.5px] text-purple-600 dark:text-purple-400 font-extrabold hover:underline cursor-pointer">
+                                    👁️ Preview Berkas
                                 </button>
-                                <a :href="'{{ asset('') }}' + selectedSidang.file_persyaratan" download
+                                <a :href="(selectedSidang.file_persyaratan.startsWith('http') || selectedSidang.file_persyaratan.startsWith('/')) ? selectedSidang.file_persyaratan : '{{ asset('') }}' + selectedSidang.file_persyaratan" download
                                    class="inline-flex items-center gap-1 text-[10.5px] text-emerald-600 dark:text-emerald-400 font-extrabold hover:underline">
                                     📥 Download
                                 </a>
@@ -451,7 +454,7 @@
                 <div x-show="verifikasiStatus === 'ditolak'">
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Catatan Alasan Penolakan <span class="text-rose-500">*</span></label>
                     <textarea name="verifikasi_komentar" x-model="verifikasiKomentar" rows="2" 
-                              placeholder="Tuliskan catatan alasan penolakan (misal: Bukti pembayaran kurang jelas)..."
+                              placeholder="Tuliskan catatan alasan penolakan (misal: Berkas persyaratan belum lengkap)..."
                               class="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-medium focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"></textarea>
                 </div>
 
