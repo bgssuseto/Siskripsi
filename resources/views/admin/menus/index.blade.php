@@ -283,31 +283,31 @@
         </div>
 
         <!-- Filter Tabs & Search Bar Card -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <!-- Role Tabs Filter -->
-            <div class="flex items-center gap-1 p-1 bg-slate-100/80 rounded-xl overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
+            <div class="flex items-center gap-1 p-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
                 <button @click="activeTab = 'all'" 
-                        :class="activeTab === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        :class="activeTab === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Semua Role
                 </button>
                 <button @click="activeTab = 'super_admin'" 
-                        :class="activeTab === 'super_admin' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        :class="activeTab === 'super_admin' ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Super Admin
                 </button>
                 <button @click="activeTab = 'koordinator'" 
-                        :class="activeTab === 'koordinator' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        :class="activeTab === 'koordinator' ? 'bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Koordinator
                 </button>
                 <button @click="activeTab = 'dosen'" 
-                        :class="activeTab === 'dosen' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        :class="activeTab === 'dosen' ? 'bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Dosen
                 </button>
                 <button @click="activeTab = 'mahasiswa'" 
-                        :class="activeTab === 'mahasiswa' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        :class="activeTab === 'mahasiswa' ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Mahasiswa
                 </button>
@@ -321,7 +321,7 @@
                     </svg>
                 </div>
                 <input type="text" x-model="search" placeholder="Cari nama atau email..." 
-                       class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                       class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all dark:text-slate-200">
             </div>
         </div>
 

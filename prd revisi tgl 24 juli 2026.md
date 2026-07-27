@@ -1,349 +1,458 @@
-# Product Requirement Document (PRD)
-# Revisi dan Penyempurnaan Sistem Penjadwalan Seminar Proposal & Skripsi
-
-| Dokumen | PRD Revisi |
-|----------|------------|
-| Sistem | Sistem Penjadwalan Seminar Proposal & Skripsi |
-| Status | Enhancement / Improvement |
-| Versi | 1.1 |
-| Tanggal | Juli 2026 |
+# Product Requirements Document (PRD)
+# Perbaikan Sistem Informasi Seminar Proposal & Skripsi
+Versi: 1.0  
+Status: Revision Request  
+Platform: Web (Laravel)  
+Tanggal: Juli 2026
 
 ---
 
-# 1. Latar Belakang
+# Latar Belakang
 
-Sistem Penjadwalan Seminar Proposal dan Skripsi saat ini telah berjalan dan digunakan dalam proses administrasi Program Studi. Namun, berdasarkan hasil evaluasi penggunaan oleh Koordinator, Super Admin, Dosen, dan Mahasiswa, masih terdapat beberapa fitur yang memerlukan penyempurnaan baik dari sisi fungsional maupun antarmuka pengguna (UI/UX).
+Hasil evaluasi terhadap implementasi sistem menunjukkan masih terdapat beberapa masalah pada konsistensi tampilan (Light/Dark Mode), proses pendaftaran Seminar Proposal dan Skripsi, serta alur verifikasi oleh Super Admin dan Koordinator. Selain itu diperlukan peningkatan keamanan registrasi akun melalui verifikasi email institusi.
 
-Dokumen ini berisi daftar revisi dan enhancement yang akan diterapkan pada sistem agar proses administrasi, pengisian kesediaan menguji, penjadwalan, serta penyampaian notifikasi menjadi lebih efektif, efisien, dan mudah digunakan.
-
----
-
-# 2. Tujuan
-
-- Menyempurnakan alur pengisian kesediaan menguji dosen.
-- Mempermudah proses plotting jadwal Seminar Proposal dan Skripsi.
-- Meningkatkan kualitas tampilan antarmuka pengguna.
-- Meningkatkan efektivitas sistem notifikasi.
-- Meningkatkan pengalaman pengguna (User Experience).
+Dokumen ini menjadi acuan pengembangan lanjutan agar sistem lebih konsisten, mudah digunakan, dan sesuai dengan proses bisnis Program Studi Teknik Informatika.
 
 ---
 
-# 3. Ruang Lingkup
+# Tujuan
 
-Pengembangan hanya mencakup penyempurnaan modul yang sudah tersedia, meliputi:
-
-- Dashboard Dosen
-- Dashboard Mahasiswa
-- Dashboard Super Admin
-- Dashboard Koordinator
-- Modul Penjadwalan
-- Modul Kesediaan Menguji
-- Modul Notifikasi
+- Menyempurnakan tampilan UI pada seluruh role.
+- Menyesuaikan seluruh komponen agar mendukung Dark Mode dan Light Mode secara konsisten.
+- Menyempurnakan proses pendaftaran Sempro dan Skripsi.
+- Menambahkan proses verifikasi pendaftaran oleh Super Admin dan Koordinator.
+- Meningkatkan keamanan registrasi akun mahasiswa melalui verifikasi email.
 
 ---
 
-# 4. Daftar Perubahan
+# Role yang Terlibat
+
+- Mahasiswa
+- Dosen
+- Koordinator
+- Super Admin
 
 ---
+
+# Functional Requirements
 
 # A. Role Dosen
 
-## REQ-01
-### Otomatis Menampilkan Form Kesediaan Menguji
+## A.1 Highlight Hari Ini pada Kalender
 
-### Kondisi Saat Ini
+### Deskripsi
 
-Form kesediaan menguji belum muncul secara otomatis setelah masa pendaftaran berakhir.
+Kalender belum memberikan indikator visual terhadap tanggal hari ini sehingga pengguna kesulitan mengetahui posisi tanggal saat membuka kalender.
 
-### Perubahan
+### Requirement
 
-Apabila Koordinator atau Super Admin telah membuka gelombang Seminar Proposal atau Skripsi, kemudian masa pendaftaran telah berakhir, maka sistem secara otomatis menampilkan tombol:
+- Tambahkan highlight khusus pada tanggal hari ini.
+- Warna highlight mengikuti tema sistem.
+- Pada Light Mode menggunakan warna kuning/oranye lembut.
+- Pada Dark Mode menggunakan warna yang tetap kontras.
+- Berlaku pada seluruh role yang menggunakan komponen kalender.
 
-> **Isi Kesediaan Menguji**
+### Acceptance Criteria
 
-pada Dashboard seluruh dosen.
-
-### Ketentuan
-
-- Tombol muncul otomatis setelah tanggal penutupan pendaftaran.
-- Berlaku untuk Sempro maupun Skripsi.
-- Tombol hanya muncul pada role Dosen.
-- Tombol muncul di Dashboard.
+- Hari ini otomatis diberi highlight.
+- Highlight berubah otomatis setiap pergantian hari.
+- Berlaku pada seluruh kalender di semua role.
 
 ---
 
-## REQ-02
-### Batas Waktu Pengisian
+## A.2 Konsistensi Dark Mode Kalender
 
-### Perubahan
+### Deskripsi
 
-Form kesediaan hanya dapat diisi selama **6 hari**.
+Container kalender masih menggunakan warna Light Mode meskipun sistem berada pada Dark Mode.
 
-### Ketentuan
+### Requirement
 
-Hari ke-1 sampai Hari ke-6
+Perbaiki komponen berikut:
 
-- Tombol aktif.
-- Dosen dapat mengubah jawaban.
+- Background kalender
+- Header kalender
+- Border kalender
+- Tombol Next
+- Tombol Previous
+- Tombol Today
 
-Hari ke-7
+Semua harus mengikuti tema aktif.
 
-- Tombol otomatis hilang.
-- Form tidak dapat diakses.
+### Acceptance Criteria
 
----
-
-## REQ-03
-### Lock Jawaban
-
-### Perubahan
-
-Setelah dosen selesai mengisi kesediaan menguji, sistem menyediakan tombol:
-
-> **Lock Jawaban**
-
-### Ketentuan
-
-Sebelum Lock
-
-- Jawaban masih dapat diubah.
-
-Sesudah Lock
-
-- Jawaban tidak dapat diedit kembali.
-- Status berubah menjadi **Locked**.
+- Tidak terdapat komponen kalender yang tetap berwarna putih saat Dark Mode aktif.
+- Warna tombol mengikuti design system.
 
 ---
 
-## REQ-04
-### Format Jam
+## A.3 Perbaikan Card Form Kesediaan Dosen
 
-### Kondisi Saat Ini
+### Deskripsi
 
-Format waktu masih menggunakan AM / PM.
+Card Form Kesediaan Menguji masih berwarna putih sehingga kurang terlihat pada Dark Mode.
 
-### Perubahan
+### Requirement
 
-Seluruh input waktu menggunakan format 24 jam.
+Sesuaikan:
 
-Contoh:
+- Background card
+- Border
+- Shadow
+- Text
+- Icon
+- Button
+
+Mengikuti Light dan Dark Mode.
+
+### Acceptance Criteria
+
+- Card tampil jelas pada kedua mode.
+- Tidak ada background putih saat Dark Mode.
+
+---
+
+# B. Role Super Admin
+
+## B.1 Konsistensi Header Tabel Master Periode
+
+### Requirement
+
+Header tabel Master Periode harus mengikuti mode sistem.
+
+Perbaiki:
+
+- Header Table
+- Border
+- Text Color
+- Hover
+
+### Acceptance Criteria
+
+Header tidak lagi berwarna putih pada Dark Mode.
+
+---
+
+## B.2 Konsistensi DataTables
+
+Berlaku untuk:
+
+- Data Skripsi
+- Data Sempro
+
+Perbaiki:
+
+- Header Table
+- Body Table
+- Pagination
+- Search Box
+- Sorting
+- Empty State
+- Form Input
+- Form Edit
+- Modal
+- Select Option
+- Date Picker
+
+Semua harus mendukung:
+
+- Light Mode
+- Dark Mode
+
+### Acceptance Criteria
+
+Tidak ada lagi komponen putih yang bertabrakan dengan Dark Mode.
+
+---
+
+## B.3 Verifikasi Pendaftaran
+
+Tambahkan proses verifikasi pendaftaran.
+
+Menu:
+
+- Daftar Sempro
+- Daftar Skripsi
+
+Data yang ditampilkan:
+
+- Nama Mahasiswa
+- NIM
+- Judul Skripsi
+- Jenis TA
+- Pembimbing Utama
+- Pembimbing Pendamping
+- Nomor WA
+- Tanggal Pendaftaran
+- Status
+- File Persyaratan
+
+Fitur:
+
+- Preview PDF
+- Download PDF
+- Approve
+- Reject
+- Catatan Revisi
+
+Status:
+
+- Menunggu Verifikasi
+- Disetujui
+- Ditolak
+
+Role yang dapat melakukan verifikasi:
+
+- Super Admin
+- Koordinator
+
+Jika disetujui:
+
+- Status berubah menjadi **Pendaftaran Berhasil**
+- Mahasiswa memperoleh notifikasi pada dashboard.
+
+---
+
+# C. Role Mahasiswa
+
+## C.1 Perubahan Form Pendaftaran Sempro dan Skripsi
+
+### Field
+
+| Field | Ketentuan |
+|---------|-----------|
+| Nama | Otomatis dari akun |
+| NIM | Otomatis dari akun |
+| Judul Skripsi | Input |
+| Jenis TA | Dropdown (Sidang Skripsi / Jurnal) |
+| Dosen Pembimbing Utama | Dropdown dari Master Dosen |
+| Dosen Pembimbing Pendamping | Dropdown dari Master Dosen |
+| Nomor WA Aktif | Input |
+| Tanggal Pendaftaran | Otomatis sesuai tanggal server (Read Only) |
+| Upload Berkas | PDF |
+
+---
+
+## Validasi
+
+Nama:
+
+- Tidak dapat diedit.
+
+NIM:
+
+- Tidak dapat diedit.
+
+Tanggal:
+
+- Tidak dapat diedit.
+- Mengambil tanggal server.
+
+---
+
+## Upload Berkas
+
+Hanya terdapat satu upload file.
+
+Ketentuan:
+
+- PDF
+- Maksimal 4 MB
+- Preview PDF
+- Replace File
+
+Jika mahasiswa mengunggah ulang:
+
+- File lama otomatis dihapus.
+- File baru menggantikan file sebelumnya.
+
+Database hanya menyimpan:
 
 ```
-08:00
-13:00
-15:30
+file_persyaratan
 ```
 
-Bukan
+Field upload lama dihapus.
+
+---
+
+# C.2 Persyaratan Sidang Skripsi
+
+Tambahkan panel informasi pada halaman pendaftaran.
+
+## Syarat dan Ketentuan Sidang Skripsi
+
+1. Scan bukti surat pendaftaran skripsi yang sudah ditandatangani Ir. Alvin Rainaldy Hakim, S.Kom., M.Kom.
+2. Scan transkrip nilai resmi dari BAAK.
+3. Tidak terdapat nilai E.
+4. Nilai D maksimal 14 SKS.
+5. Nilai Metodologi Penelitian minimal BC.
+6. Nilai Pancasila minimal BC.
+7. Nilai Kewarganegaraan minimal BC.
+8. Nilai Bahasa Indonesia minimal C.
+9. Nilai Pendidikan Agama minimal C.
+10. Scan KRS semester berjalan.
+11. Total SKS minimal 138 SKS.
+12. Surat pengumpulan proposal.
+13. Hasil Turnitin maksimal 25%.
+14. Halaman persetujuan yang telah ditandatangani.
+15. Lampiran ACC pada buku bimbingan.
+
+Semua dokumen digabung menjadi satu file PDF.
+
+Format nama file:
 
 ```
-08:00 AM
-03:30 PM
+NIM_NAMA_SKRIPSI.pdf
 ```
 
 ---
 
-## REQ-05
-### Pengisian Kesediaan Pada Gelombang Berikutnya
+# C.3 Persyaratan Seminar Proposal
 
-### Perubahan
+Tambahkan panel informasi.
 
-Apabila terdapat pembukaan gelombang baru Seminar Proposal maupun Skripsi, maka sistem kembali menampilkan tombol pengisian kesediaan menguji.
+## Persyaratan Akademik
 
-### Ketentuan
+- Minimal 125 SKS.
+- Metodologi Penelitian minimal BC.
+- PKL/KP lulus.
+- KKL lulus.
+- KKN lulus.
+- Mata kuliah umum minimal C.
+- IPK minimal 2.50.
+- Nilai D maksimal 14 SKS.
 
-- Berlaku setiap gelombang baru.
-- Tidak menggunakan data kesediaan pada gelombang sebelumnya.
-- Riwayat tetap tersimpan.
+## Pembayaran
 
----
+Nominal:
 
-## REQ-06
-### Penyempurnaan Tampilan Notifikasi
+Rp200.000
 
-### Kondisi Saat Ini
-
-Tampilan notifikasi masih kurang rapi.
-
-### Perubahan
-
-Melakukan redesign tampilan notifikasi agar lebih informatif dan mudah dibaca.
-
-### Rekomendasi
-
-- Icon berdasarkan jenis notifikasi.
-- Badge jumlah notifikasi.
-- Warna berdasarkan kategori.
-- Timestamp yang jelas.
-- Tombol "Lihat Semua".
-- Status sudah dibaca / belum dibaca.
-
----
-
-# B. Role Mahasiswa
-
-## REQ-07
-### Perbaikan Popup Form Pendaftaran
-
-### Kondisi Saat Ini
-
-Ukuran popup pendaftaran terlalu besar.
-
-### Perubahan
-
-Popup tetap dipertahankan, namun tampilannya dibuat lebih ringkas.
-
-### Ketentuan
-
-- Lebih kecil.
-- Tidak memenuhi layar.
-- Responsive.
-- Jarak antar field lebih proporsional.
-- Tetap nyaman digunakan.
-
----
-
-## REQ-08
-### Notifikasi H-1 Seminar Proposal dan Sidang Skripsi
-
-### Perubahan
-
-Sistem memberikan notifikasi otomatis kepada mahasiswa satu hari sebelum jadwal Seminar Proposal maupun Sidang Skripsi.
-
-### Contoh
+Rekening BSI
 
 ```
-Besok Anda memiliki jadwal Seminar Proposal.
+7318709593
 
-Tanggal :
-25 Juli 2026
-
-Jam :
-09.00 WIB
-
-Ruangan :
-Lab AI
+Ahmad Abdul Chamid
+dan
+Alvin R
 ```
 
-### Ketentuan
+## Dokumen Wajib
 
-- Otomatis H-1.
-- Muncul pada Dashboard.
-- Status dapat ditandai telah dibaca.
+- Persetujuan Judul
+- Bukti Pembayaran
+- Transkrip
+- KRS Sempro
+
+Semua dijadikan satu file PDF.
 
 ---
 
-# C. Role Super Admin & Koordinator
+## C.4 Validasi Upload
 
-## REQ-09
-### Menu Kesediaan Menguji
+Validasi sistem:
 
-### Perubahan
+- Hanya PDF.
+- Maksimal 4 MB.
+- Preview PDF.
+- Replace file jika upload ulang.
+- Menampilkan pesan validasi apabila ukuran melebihi batas.
 
-Seluruh data kesediaan dosen disimpan dalam menu baru.
+---
+
+# D. Registrasi Mahasiswa
+
+## D.1 Verifikasi Email
+
+Tambahkan aktivasi akun melalui email.
+
+Alur:
+
+1. Mahasiswa registrasi.
+2. Sistem mengirim email verifikasi.
+3. Mahasiswa klik link aktivasi.
+4. Akun aktif.
+
+Sebelum verifikasi:
+
+- Tidak dapat login.
+
+---
+
+## D.2 Validasi Domain Email
+
+Hanya menerima email:
 
 ```
-Penjadwalan
-    └── Kesediaan Menguji
+@std.umk.ac.id
 ```
 
-### Data yang Ditampilkan
+Contoh valid:
 
-- Nama Dosen
-- NIDN
-- Gelombang
-- Jenis Ujian
-- Hari Bersedia
-- Jam Bersedia
-- Status Lock
-- Tanggal Pengisian
+```
+202251001@std.umk.ac.id
+```
 
----
+Contoh tidak valid:
 
-## REQ-10
-### Integrasi Dengan Plotting Jadwal
+```
+@gmail.com
+@yahoo.com
+@hotmail.com
+@student.umk.ac.id
+```
 
-### Kondisi Saat Ini
+Pesan validasi:
 
-Super Admin masih harus melihat data kesediaan secara manual.
-
-### Perubahan
-
-Saat melakukan plotting jadwal, sistem otomatis menampilkan data kesediaan dosen sehingga mempermudah proses penjadwalan.
-
-### Informasi yang Ditampilkan
-
-- Hari bersedia
-- Jam bersedia
-- Status Lock
-- Jenis ujian
-- Gelombang
-- Dosen belum mengisi
-- Dosen sudah mengisi
+> Email harus menggunakan domain @std.umk.ac.id.
 
 ---
 
-## REQ-11
-### Filter Data Kesediaan
+# Non Functional Requirements
 
-Untuk mempermudah pencarian data, sistem menyediakan filter berdasarkan:
+## UI/UX
 
-- Nama Dosen
-- Gelombang
-- Jenis Ujian
-- Hari
-- Status Lock
+- Seluruh komponen mendukung Light Mode.
+- Seluruh komponen mendukung Dark Mode.
+- Tidak ada elemen dengan warna tetap (hardcoded) yang menyebabkan ketidaksesuaian tema.
+- Menggunakan warna dari Design System aplikasi.
 
 ---
 
-# 5. Acceptance Criteria
+## Keamanan
 
-| No | Requirement | Acceptance Criteria |
-|----|-------------|---------------------|
-| 1 | Tombol Kesediaan | Muncul otomatis setelah penutupan gelombang |
-| 2 | Batas Pengisian | Aktif selama 6 hari, hilang pada hari ke-7 |
-| 3 | Lock Jawaban | Jawaban tidak dapat diubah setelah dikunci |
-| 4 | Format Jam | Menggunakan format 24 jam |
-| 5 | Gelombang Baru | Tombol muncul kembali pada setiap gelombang baru |
-| 6 | Notifikasi Dosen | Tampilan lebih rapi dan informatif |
-| 7 | Popup Mahasiswa | Lebih kecil dan efisien |
-| 8 | Notifikasi H-1 | Muncul otomatis satu hari sebelum sidang |
-| 9 | Menu Kesediaan | Data tersimpan pada submenu Penjadwalan |
-| 10 | Plotting Jadwal | Menampilkan data kesediaan dosen saat penjadwalan |
-| 11 | Filter Data | Dapat difilter berdasarkan beberapa parameter |
+- Verifikasi email wajib sebelum akun aktif.
+- Validasi MIME Type PDF.
+- Validasi ukuran file maksimal 4 MB.
+- Proteksi upload file terhadap ekstensi selain PDF.
+- Penyimpanan file menggunakan nama unik untuk menghindari konflik.
 
 ---
 
-# 6. Dampak Pengembangan
+## Performa
 
-## Bagi Dosen
-
-- Lebih mudah mengisi kesediaan menguji.
-- Tidak perlu mengingat jadwal pengisian karena sistem berjalan otomatis.
-- Notifikasi lebih informatif.
-
-## Bagi Mahasiswa
-
-- Form pendaftaran lebih nyaman digunakan.
-- Mendapat pengingat sebelum pelaksanaan sidang.
-
-## Bagi Super Admin dan Koordinator
-
-- Proses plotting jadwal lebih cepat.
-- Tidak perlu melakukan pengecekan manual kesediaan dosen.
-- Data kesediaan lebih mudah dicari dan dikelola.
-- Mengurangi potensi bentrok jadwal karena informasi kesediaan tersedia secara langsung saat proses penjadwalan.
+- Preview PDF kurang dari 2 detik.
+- Upload file maksimal 4 MB selesai tanpa timeout pada koneksi normal.
+- Pergantian Light/Dark Mode berlangsung secara instan tanpa reload halaman.
 
 ---
 
-# 7. Prioritas Pengembangan
+# Acceptance Criteria
 
-| Prioritas | Fitur |
-|------------|-------|
-| Tinggi | Otomatisasi Form Kesediaan Menguji |
-| Tinggi | Integrasi Kesediaan dengan Plotting Jadwal |
-| Tinggi | Lock Jawaban |
-| Tinggi | Notifikasi H-1 Sidang |
-| Sedang | Perbaikan UI Popup Mahasiswa |
-| Sedang | Penyempurnaan Tampilan Notifikasi |
-| Rendah | Penyempurnaan Visual Dashboard |
+| No | Requirement | Status |
+|-----|------------|--------|
+| 1 | Kalender memiliki highlight hari ini | ✅ |
+| 2 | Kalender mendukung Light & Dark Mode | ✅ |
+| 3 | Card Kesediaan Dosen mengikuti tema | ✅ |
+| 4 | Header Master Periode mengikuti tema | ✅ |
+| 5 | DataTables mendukung Light & Dark Mode | ✅ |
+| 6 | Form Input/Edit mengikuti tema | ✅ |
+| 7 | Super Admin dapat preview dan verifikasi pendaftaran | ✅ |
+| 8 | Mahasiswa mengisi form pendaftaran lengkap | ✅ |
+| 9 | Upload hanya 1 file PDF maksimal 4 MB | ✅ |
+| 10 | Upload ulang menimpa file lama | ✅ |
+| 11 | Informasi syarat Sempro dan Skripsi tampil pada halaman pendaftaran | ✅ |
+| 12 | Registrasi menggunakan email @std.umk.ac.id | ✅ |
+| 13 | Akun aktif setelah verifikasi email | ✅ |

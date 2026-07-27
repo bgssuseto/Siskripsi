@@ -22,6 +22,7 @@ use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\DosenPortalController;
 use App\Http\Controllers\KesediaanDosenController;
+use App\Http\Controllers\PendaftaranController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -51,10 +52,92 @@ Route::middleware('auth')->group(function () {
                 return redirect()->route('mahasiswa.dashboard');
             }
         }
-        return view('dashboard');
+
+        // Real Data Metrics
+        $totalMahasiswa     = \App\Models\Sidang::distinct('nim')->count('nim');
+        $totalSempro        = \App\Models\Sidang::where('jenis_tugas_akhir', 'sempro')->count();
+        $totalSkripsi       = \App\Models\Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count();
+        
+        $totalBelumPlotting = \App\Models\Sidang::whereNull('tanggal')->count();
+        $totalTerjadwal     = \App\Models\Sidang::whereNotNull('tanggal')->count();
+        
+        $verifikasiMenunggu  = \App\Models\Sidang::where(function($q) {
+                                  $q->where('verifikasi_status', 'menunggu')
+                                    ->orWhereNull('verifikasi_status');
+                              })->count();
+        $verifikasiDisetujui = \App\Models\Sidang::where('verifikasi_status', 'disetujui')->count();
+        $verifikasiDitolak   = \App\Models\Sidang::where('verifikasi_status', 'ditolak')->count();
+        
+        $totalDosen = \App\Models\Dosen::count();
+        $totalRuang = \App\Models\Ruang::count();
+        $totalUser  = \App\Models\User::count();
+
+        // Chart Data 1: Jalur Tugas Akhir (Skripsi Reguler vs Artikel Jurnal vs Sempro)
+        $skripsiRegulerCount = \App\Models\Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang'])->count();
+        $artikelJurnalCount  = \App\Models\Sidang::where('jenis_tugas_akhir', 'jurnal')->count();
+        $semproCount         = \App\Models\Sidang::where('jenis_tugas_akhir', 'sempro')->count();
+
+        $jalurCounts = [
+            'Sidang Skripsi (Reguler)' => $skripsiRegulerCount,
+            'Artikel Jurnal'           => $artikelJurnalCount,
+            'Seminar Proposal'         => $semproCount,
+        ];
+
+        // Chart Data 2: Status Verifikasi
+        $verifikasiCounts = [
+            'Menunggu'  => $verifikasiMenunggu,
+            'Disetujui' => $verifikasiDisetujui,
+            'Ditolak'   => $verifikasiDitolak,
+        ];
+
+        // Chart Data 3: Histogram Lulusan Tiap Tahun
+        $yearlyGraduates = \App\Models\Sidang::selectRaw('YEAR(tanggal) as tahun, COUNT(*) as total')
+            ->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])
+            ->whereNotNull('tanggal')
+            ->where('tanggal', '<=', now()->timezone('Asia/Jakarta')->format('Y-m-d'))
+            ->groupBy('tahun')
+            ->orderBy('tahun', 'asc')
+            ->get();
+
+        if ($yearlyGraduates->isEmpty()) {
+            $currYr = (int) date('Y');
+            $yearlyGraduates = collect([
+                (object)['tahun' => $currYr - 2, 'total' => 0],
+                (object)['tahun' => $currYr - 1, 'total' => 0],
+                (object)['tahun' => $currYr,     'total' => \App\Models\Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count()],
+            ]);
+        }
+
+        $recentActivities = \App\Models\Sidang::with(['periode', 'ruang', 'pembimbingUtama'])
+            ->latest('id')
+            ->take(6)
+            ->get();
+
+        return view('dashboard', compact(
+            'totalMahasiswa',
+            'totalSempro',
+            'totalSkripsi',
+            'totalBelumPlotting',
+            'totalTerjadwal',
+            'verifikasiMenunggu',
+            'verifikasiDisetujui',
+            'verifikasiDitolak',
+            'totalDosen',
+            'totalRuang',
+            'totalUser',
+            'skripsiRegulerCount',
+            'artikelJurnalCount',
+            'semproCount',
+            'jalurCounts',
+            'verifikasiCounts',
+            'yearlyGraduates',
+            'recentActivities'
+        ));
     })->name('dashboard');
 
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
@@ -94,6 +177,7 @@ Route::middleware('auth')->group(function () {
 
         // Data Skripsi
         Route::get('/master/skripsi', [SkripsiController::class, 'index'])->name('master.skripsi.index');
+        Route::get('/master/skripsi/export', [SkripsiController::class, 'exportExcel'])->name('master.skripsi.export');
         Route::post('/master/skripsi', [SkripsiController::class, 'store'])->name('master.skripsi.store');
         Route::put('/master/skripsi/{sidang}', [SkripsiController::class, 'update'])->name('master.skripsi.update');
         Route::delete('/master/skripsi/{sidang}', [SkripsiController::class, 'destroy'])->name('master.skripsi.destroy');
@@ -102,6 +186,7 @@ Route::middleware('auth')->group(function () {
 
         // Data Sempro
         Route::get('/master/sempro', [SemproController::class, 'index'])->name('master.sempro.index');
+        Route::get('/master/sempro/export', [SemproController::class, 'exportExcel'])->name('master.sempro.export');
         Route::post('/master/sempro', [SemproController::class, 'store'])->name('master.sempro.store');
         Route::put('/master/sempro/{sidang}', [SemproController::class, 'update'])->name('master.sempro.update');
         Route::delete('/master/sempro/{sidang}', [SemproController::class, 'destroy'])->name('master.sempro.destroy');
@@ -132,11 +217,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/administrasi/berita-acara/preview/{sidang}', [AdministrasiController::class, 'previewBeritaAcaraPdf'])->name('administrasi.berita-acara.preview');
         Route::get('/administrasi/berita-acara/zip', [AdministrasiController::class, 'generateBeritaAcaraZip'])->name('administrasi.berita-acara.zip');
         Route::get('/administrasi/sk', [AdministrasiController::class, 'skIndex'])->name('administrasi.sk.index');
+        Route::get('/administrasi/sk/export-pembimbing', [AdministrasiController::class, 'exportSkPembimbingExcel'])->name('administrasi.sk.export-pembimbing');
+        Route::get('/administrasi/sk/export-penguji', [AdministrasiController::class, 'exportSkPengujiExcel'])->name('administrasi.sk.export-penguji');
 
     });
 
-    // Kesediaan Dosen Management (Super Admin & Koordinator)
+    // Pendaftaran & Kesediaan Dosen Management (Super Admin & Koordinator)
     Route::middleware('role:super_admin,koordinator')->group(function () {
+        // Menu Pendaftaran & Verifikasi Pembayaran
+        Route::get('/pendaftaran/sempro', [PendaftaranController::class, 'semproIndex'])->name('pendaftaran.sempro');
+        Route::get('/pendaftaran/sempro/export', [PendaftaranController::class, 'exportExcelSempro'])->name('pendaftaran.sempro.export');
+        Route::get('/pendaftaran/skripsi', [PendaftaranController::class, 'skripsiIndex'])->name('pendaftaran.skripsi');
+        Route::get('/pendaftaran/skripsi/export', [PendaftaranController::class, 'exportExcelSkripsi'])->name('pendaftaran.skripsi.export');
+        Route::post('/pendaftaran/{sidang}/verifikasi', [PendaftaranController::class, 'verifikasi'])->name('pendaftaran.verifikasi');
+        Route::delete('/pendaftaran/{sidang}', [PendaftaranController::class, 'destroy'])->name('pendaftaran.destroy');
+
         Route::get('/master/kesediaan-dosen', [KesediaanDosenController::class, 'index'])->name('master.kesediaan-dosen.index');
         Route::delete('/master/kesediaan-dosen/{kesediaanDosen}', [KesediaanDosenController::class, 'destroy'])->name('master.kesediaan-dosen.destroy');
         Route::post('/master/kesediaan-dosen/settings', [KesediaanDosenController::class, 'updateSettings'])->name('master.kesediaan-dosen.settings');
@@ -161,7 +256,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dosen/jadwal/sempro', [DosenPortalController::class, 'sempro'])->name('dosen.jadwal.sempro');
         Route::get('/dosen/jadwal/skripsi', [DosenPortalController::class, 'skripsi'])->name('dosen.jadwal.skripsi');
         Route::get('/dosen/kalender', [DosenPortalController::class, 'kalender'])->name('dosen.kalender');
-        Route::get('/dosen/profil', [DosenPortalController::class, 'profil'])->name('dosen.profil');
+        Route::get('/dosen/profil', fn() => redirect()->route('profile.edit'))->name('dosen.profil');
         Route::post('/dosen/kesediaan', [DosenPortalController::class, 'storeKesediaan'])->name('dosen.kesediaan.store');
         Route::delete('/dosen/kesediaan/{id}', [DosenPortalController::class, 'destroyKesediaan'])->name('dosen.kesediaan.destroy');
     });

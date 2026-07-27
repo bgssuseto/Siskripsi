@@ -7,13 +7,13 @@
         .sidang-page { font-family: 'Inter', 'Segoe UI', sans-serif; }
 
         .fc { font-family: 'Inter', sans-serif !important; }
-        .fc-col-header-cell-cushion { font-size: .8rem; font-weight: 700; color: #475569; text-transform: uppercase; }
+        .fc-col-header-cell-cushion { font-size: .8rem; font-weight: 800; text-transform: uppercase; text-decoration: none !important; }
         .fc-event { border-radius: 6px !important; padding: .1rem .3rem !important; cursor: pointer !important; font-size: .75rem !important; font-weight: 600 !important; }
         .fc-header-toolbar { margin-bottom: 1.25rem !important; }
         .fc-button-primary { background-color: #8b5cf6 !important; border-color: #8b5cf6 !important; border-radius: 8px !important; font-size: .85rem !important; font-weight: 600 !important; }
         .fc-button-primary:hover { background-color: #7c3aed !important; border-color: #7c3aed !important; }
         .fc-button-active { background-color: #6d28d9 !important; border-color: #6d28d9 !important; }
-        .fc-daygrid-day-number { font-size: .82rem !important; font-weight: 700 !important; color: #334155 !important; }
+        .fc-daygrid-day-number { font-size: .85rem !important; font-weight: 800 !important; text-decoration: none !important; }
 
         .view-toggle {
             display: inline-flex; background: #e2e8f0; border-radius: 12px; padding: .25rem; gap: .25rem;
@@ -38,8 +38,8 @@
         }
         .stat-icon.purple { background: #f3e8ff; }
         .stat-icon.green  { background: #f0fdf4; }
-        .stat-value { font-size: 1.75rem; font-weight: 800; color: #0f172a; line-height: 1; }
-        .stat-label { font-size: .8rem; color: #64748b; margin-top: .2rem; }
+        .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; }
+        .stat-label { font-size: .8rem; font-weight: 600; margin-top: .2rem; }
 
         .toolbar {
             background: #fff; border-radius: 14px; padding: 1rem;
@@ -92,8 +92,69 @@
         }
         table.sidang-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
         table.sidang-table tbody tr:hover { background: #f8fafc; }
-        table.sidang-table tbody tr.conflict-schedule { background: #fff1f2 !important; }
+        table.sidang-table tbody tr.conflict-schedule { background: #fef2f2 !important; }
         table.sidang-table td { padding: .75rem .85rem; vertical-align: top; color: #334155; }
+
+        /* Dark Mode Overrides for Penjadwalan Sempro */
+        html.dark .sidang-page h1 { color: #f8fafc !important; }
+        html.dark .sidang-page p { color: #cbd5e1 !important; }
+        html.dark .view-toggle { background: #334155 !important; }
+        html.dark .view-toggle-btn { color: #94a3b8 !important; }
+        html.dark .view-toggle-btn.active { background: #1e293b !important; color: #a78bfa !important; }
+        html.dark .stat-card, html.dark .toolbar, html.dark .table-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        html.dark .stat-value { color: #f8fafc !important; }
+        html.dark .stat-label { color: #94a3b8 !important; }
+        html.dark table.sidang-table tbody tr {
+            border-bottom-color: #334155 !important;
+        }
+        html.dark table.sidang-table tbody tr:hover {
+            background-color: #334155 !important;
+        }
+        html.dark table.sidang-table tbody tr.conflict-schedule {
+            background-color: rgba(159, 18, 57, 0.3) !important;
+        }
+        html.dark table.sidang-table td {
+            color: #e2e8f0 !important;
+        }
+        html.dark .schedule-hari {
+            color: #f8fafc !important;
+        }
+        html.dark .schedule-jam {
+            color: #a5b4fc !important;
+        }
+        html.dark .schedule-ruang {
+            background-color: rgba(147, 51, 234, 0.25) !important;
+            color: #c084fc !important;
+        }
+        html.dark .filter-select, html.dark .toolbar-search input {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #475569 !important;
+        }
+        html.dark .modal-box {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border: 1px solid #334155 !important;
+        }
+        html.dark .modal-header, html.dark .modal-footer {
+            border-color: #334155 !important;
+            background-color: #0f172a !important;
+        }
+        html.dark .modal-title { color: #f8fafc !important; }
+        html.dark .form-control {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #475569 !important;
+        }
+        html.dark .form-group label { color: #cbd5e1 !important; }
+        html.dark .form-section-title { color: #94a3b8 !important; border-bottom-color: #334155 !important; }
+        html.dark .nim-pill { background-color: #334155 !important; color: #cbd5e1 !important; }
+        html.dark .dosen-chip { background-color: #334155 !important; border-color: #475569 !important; color: #cbd5e1 !important; }
+        html.dark .dosen-chip.utama { background-color: rgba(147, 51, 234, 0.25) !important; border-color: rgba(147, 51, 234, 0.5) !important; color: #c084fc !important; }
 
         .badge { display: inline-flex; align-items: center; padding: .25rem .65rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
         .badge-sempro  { background: #f3e8ff; color: #6b21a8; }
@@ -137,8 +198,8 @@
         {{-- Top Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Jadwal Sempro</h1>
-                <p class="text-sm text-slate-500 mt-1">Penjadwalan seminar proposal mahasiswa.</p>
+                <h1 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Jadwal Sempro</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Penjadwalan seminar proposal mahasiswa.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <div class="view-toggle">
@@ -215,7 +276,6 @@
                                 <th style="width:90px;">Tgl Daftar</th>
                                 <th>NIM</th>
                                 <th>Nama Mahasiswa</th>
-                                <th>Judul Proposal</th>
                                 <th>Status</th>
                                 <th>Periode</th>
                                 <th>Dosbing Utama</th>
@@ -249,22 +309,21 @@
                                         @endif
                                     </td>
                                     <td><span class="nim-pill">{{ $item->nim }}</span></td>
-                                    <td style="font-weight:600; color:#1e293b; min-width:160px;">
-                                        <div>{{ $item->nama_mahasiswa }}</div>
-                                        @if($hasConflict)
-                                            <div class="mt-1">
-                                                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
-                                                    ⚠️ Jadwal Bentrok
-                                                </span>
-                                            </div>
-                                            <div class="mt-1 space-y-0.5">
-                                                @foreach($conflictMap[$item->id]['schedule'] as $msg)
-                                                    <div class="text-[10px] leading-snug text-red-700 pl-1">• {{ $msg }}</div>
-                                                @endforeach
-                                            </div>
-                                        @endif
-                                    </td>
-                                    <td><p class="judul-text">{{ $item->judul_skripsi }}</p></td>
+                                        <td style="font-weight:600; color:#1e293b; min-width:160px;">
+                                            <div class="text-slate-900 dark:text-slate-100 font-extrabold">{{ $item->nama_mahasiswa }}</div>
+                                            @if($hasConflict)
+                                                <div class="mt-1">
+                                                    <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-2xs">
+                                                        ⚠️ Jadwal Bentrok
+                                                    </span>
+                                                </div>
+                                                <div class="mt-1 space-y-0.5">
+                                                    @foreach($conflictMap[$item->id]['schedule'] as $msg)
+                                                        <div class="text-[10.5px] leading-snug text-rose-800 dark:text-rose-300 font-bold pl-1">• {{ $msg }}</div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </td>
                                     <td>
                                         {!! $item->getJadwalStatusHtml() !!}
                                     </td>
@@ -273,7 +332,7 @@
                                     <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                     <td class="schedule-cell">
                                         @if($item->tanggal)
-                                            <div class="schedule-hari">{{ $item->tanggal->translatedFormat('d F Y') }}</div>
+                                            <div class="schedule-hari">{{ $item->tanggal->locale('id')->translatedFormat('l, d F Y') }}</div>
                                             <div class="schedule-jam">{{ $item->jam ?: '—' }}</div>
                                         @else
                                             <span style="color:#cbd5e1;">—</span>
@@ -655,9 +714,69 @@
             calendar.render();
         }
 
+        // ── Shared AJAX helper ───────────────────────────────────────────────
+        async function submitAjaxForm(formId, modalId, onSuccess) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const origText  = submitBtn ? submitBtn.innerHTML : '';
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '⏳ Menyimpan…'; }
+                this.querySelectorAll('.error-feedback').forEach(el => el.remove());
+                try {
+                    const response = await fetch(this.action, {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: new FormData(this)
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        closeModal(modalId);
+                        if (formId === 'form-tambah') this.reset();
+                        // Show brief success toast then reload
+                        const toastDiv = document.createElement('div');
+                        toastDiv.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;background:#10b981;color:#fff;padding:.75rem 1.25rem;border-radius:.75rem;font-size:.875rem;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.15);';
+                        toastDiv.textContent = result.message || '✅ Berhasil!';
+                        document.body.appendChild(toastDiv);
+                        setTimeout(() => { toastDiv.remove(); location.reload(); }, 1000);
+                        if (typeof onSuccess === 'function') onSuccess();
+                    } else {
+                        if (response.status === 422 && result.errors) {
+                            Object.keys(result.errors).forEach(key => {
+                                const input = form.querySelector(`[name="${key}"]`);
+                                if (input) {
+                                    const errEl = document.createElement('p');
+                                    errEl.className = 'error-feedback text-xs text-rose-600 mt-1 font-semibold';
+                                    errEl.textContent = result.errors[key][0];
+                                    input.parentNode.appendChild(errEl);
+                                }
+                            });
+                        } else {
+                            const toastDiv = document.createElement('div');
+                            toastDiv.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;background:#ef4444;color:#fff;padding:.75rem 1.25rem;border-radius:.75rem;font-size:.875rem;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.15);';
+                            toastDiv.textContent = result.message || '❌ Terjadi kesalahan.';
+                            document.body.appendChild(toastDiv);
+                            setTimeout(() => toastDiv.remove(), 4000);
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal terhubung ke server. Silakan coba lagi.');
+                } finally {
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origText; }
+                }
+            });
+        }
+
+        submitAjaxForm('form-tambah',    'modal-tambah');
+        submitAjaxForm('form-edit',      'modal-edit');
+        submitAjaxForm('form-hapus',     'modal-hapus');
+        submitAjaxForm('form-jadwalkan', 'modal-jadwalkan');
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                ['modal-jadwalkan','modal-edit','modal-hapus'].forEach(closeModal);
+                ['modal-jadwalkan','modal-edit','modal-hapus','modal-tambah'].forEach(closeModal);
             }
         });
     </script>

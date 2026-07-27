@@ -27,7 +27,8 @@ class SkripsiController extends Controller
             'anggotaPenguji2',
             'ruang',
             'periode'
-        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal']);
+        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal'])
+          ->where('verifikasi_status', 'disetujui');
 
         // Search
         if ($search = $request->get('search')) {
@@ -205,6 +206,90 @@ class SkripsiController extends Controller
         ));
     }
 
+    // ─── Export Excel (Data Skripsi) ──────────────────────────────────────────
+
+    public function exportExcel(Request $request)
+    {
+        $query = Sidang::with([
+            'pembimbingUtama', 'pembimbingPendamping',
+            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
+            'ruang', 'periode'
+        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])
+          ->where('verifikasi_status', 'disetujui');
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_mahasiswa', 'like', "%{$search}%")
+                  ->orWhere('nim', 'like', "%{$search}%")
+                  ->orWhere('judul_skripsi', 'like', "%{$search}%");
+            });
+        }
+        if ($jenis = $request->get('jenis')) {
+            $query->where('jenis_tugas_akhir', $jenis);
+        }
+        if ($periodeId = $request->get('periode_id')) {
+            $query->where('periode_id', $periodeId);
+        } else {
+            $activePeriode = Periode::where('aktif', true)->first();
+            if ($activePeriode) $query->where('periode_id', $activePeriode->id);
+        }
+
+        $data = $query->orderBy('nama_mahasiswa')->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data Skripsi');
+
+        // Header
+        $headers = ['No', 'NIM', 'Nama Mahasiswa', 'Judul Skripsi', 'Jenis TA', 'Periode',
+                    'Tgl Daftar', 'Dosbing Utama', 'Dosbing Pendamping',
+                    'Ketua Penguji', 'Penguji 1', 'Penguji 2',
+                    'Ruang', 'Tgl Sidang', 'Jam'];
+        foreach ($headers as $i => $h) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValue("{$col}1", $h);
+            $sheet->getStyle("{$col}1")->getFont()->setBold(true);
+            $sheet->getStyle("{$col}1")->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FF1E293B');
+            $sheet->getStyle("{$col}1")->getFont()->getColor()->setARGB('FFFFFFFF');
+        }
+
+        foreach ($data as $i => $s) {
+            $row = $i + 2;
+            $sheet->setCellValue("A{$row}", $i + 1);
+            $sheet->setCellValue("B{$row}", $s->nim);
+            $sheet->setCellValue("C{$row}", $s->nama_mahasiswa);
+            $sheet->setCellValue("D{$row}", $s->judul_skripsi);
+            $sheet->setCellValue("E{$row}", ucfirst($s->jenis_tugas_akhir));
+            $sheet->setCellValue("F{$row}", $s->periode?->nama_periode ?? '-');
+            $sheet->setCellValue("G{$row}", $s->tanggal_pendaftaran ? $s->tanggal_pendaftaran->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("H{$row}", $s->pembimbingUtama?->nama_dosen ?? '-');
+            $sheet->setCellValue("I{$row}", $s->pembimbingPendamping?->nama_dosen ?? '-');
+            $sheet->setCellValue("J{$row}", $s->ketuaPenguji?->nama_dosen ?? '-');
+            $sheet->setCellValue("K{$row}", $s->anggotaPenguji1?->nama_dosen ?? '-');
+            $sheet->setCellValue("L{$row}", $s->anggotaPenguji2?->nama_dosen ?? '-');
+            $sheet->setCellValue("M{$row}", $s->ruang?->kode_ruangan ?? '-');
+            $sheet->setCellValue("N{$row}", $s->tanggal ? $s->tanggal->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("O{$row}", $s->jam ?? '-');
+        }
+
+        foreach (range('A', 'O') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $periodeLabel = $request->get('periode_id') ? "Periode_{$request->get('periode_id')}" : 'Semua_Periode';
+        $filename = "Data_Skripsi_{$periodeLabel}_" . date('Ymd') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"{$filename}\"");
+        header('Cache-Control: max-age=0');
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit;
+    }
+
     // ─── Jadwal Index (Halaman Jadwal Sidang Skripsi) ─────────────────────────
 
     public function jadwalIndex(Request $request): View
@@ -360,13 +445,25 @@ class SkripsiController extends Controller
             $request->merge(['jam' => $request->input('jam_mulai') . ' - ' . $request->input('jam_selesai')]);
         }
 
+        // Convert empty string values to null for optional relations
+        foreach (['ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id', 'ruang_id'] as $fk) {
+            if ($request->has($fk) && ($request->input($fk) === '' || $request->input($fk) === 'null')) {
+                $request->merge([$fk => null]);
+            }
+        }
+
         $validated = $request->validate([
-            'tanggal'          => ['required', 'date'],
-            'jam'              => ['required', 'string', 'max:100'],
-            'ruang_id'         => ['required', 'exists:ruangs,id'],
-            'ketua_penguji_id'    => ['nullable', 'exists:dosens,id'],
-            'anggota_penguji_1_id'=> ['nullable', 'exists:dosens,id'],
-            'anggota_penguji_2_id'=> ['nullable', 'exists:dosens,id'],
+            'tanggal'              => ['required', 'date'],
+            'jam'                  => ['required', 'string', 'max:100'],
+            'ruang_id'             => ['required', 'exists:ruangs,id'],
+            'ketua_penguji_id'     => ['nullable', 'exists:dosens,id'],
+            'anggota_penguji_1_id' => ['nullable', 'exists:dosens,id'],
+            'anggota_penguji_2_id' => ['nullable', 'exists:dosens,id'],
+        ], [
+            'tanggal.required'  => 'Tanggal sidang wajib diisi.',
+            'jam.required'      => 'Waktu / Jam sidang wajib dipilih.',
+            'ruang_id.required' => 'Ruangan sidang wajib dipilih.',
+            'ruang_id.exists'   => 'Ruangan yang dipilih tidak valid.',
         ]);
 
         // Check schedule conflicts
@@ -442,6 +539,7 @@ class SkripsiController extends Controller
             $validated['periode_id'] = $activePeriode ? $activePeriode->id : null;
         }
 
+        $validated['verifikasi_status'] = 'disetujui';
         $sidang = Sidang::create($validated);
 
         if ($request->expectsJson()) {

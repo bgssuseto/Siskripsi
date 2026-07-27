@@ -44,9 +44,9 @@ class DosenPortalTest extends TestCase
         $response = $this->actingAs($dosenUser)->get(route('dosen.dashboard'));
         $response->assertStatus(200);
 
-        // Access profil
+        // Access profil (redirects to unified profile page)
         $response = $this->actingAs($dosenUser)->get(route('dosen.profil'));
-        $response->assertStatus(200);
+        $response->assertRedirect(route('profile.edit'));
     }
 
     public function test_dosen_access_without_role_menu_permission_returns_forbidden(): void

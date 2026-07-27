@@ -144,29 +144,29 @@
         </div>
 
         <!-- Search & Filter Bar -->
-        <div id="filter-container" class="bg-white rounded-2xl border border-slate-200/80 p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div id="filter-container" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
             <form method="GET" action="{{ route('master.ruang.index') }}" @submit.prevent="submitSearch($event.currentTarget)" class="w-full sm:w-80 relative">
                 <input type="text" 
                        name="search" 
                        value="{{ request('search') }}" 
                        @input.debounce.500ms="submitSearch($event.target.form)"
                        placeholder="Cari Kode atau Nama Ruangan..." 
-                       class="w-full pl-10 pr-4 py-2 rounded-xl text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                       class="w-full pl-10 pr-4 py-2 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </form>
 
-            <div class="text-xs font-semibold text-slate-500">
-                Total: <span class="font-extrabold text-slate-900">{{ $ruangs->total() }}</span> Ruangan
+            <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Total: <span class="font-extrabold text-slate-900 dark:text-slate-100">{{ $ruangs->total() }}</span> Ruangan
             </div>
         </div>
 
         <!-- Table Card -->
-        <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="bg-slate-50 border-b border-slate-200/80 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                    <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         <tr>
                             <th class="px-6 py-4">No</th>
                             <th class="px-6 py-4">Kode Ruangan</th>
@@ -174,16 +174,16 @@
                             <th class="px-6 py-4 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                         @forelse ($ruangs as $index => $ruang)
-                        <tr class="hover:bg-slate-50/80 transition-colors">
-                            <td class="px-6 py-4 font-medium text-slate-400">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors">
+                            <td class="px-6 py-4 font-medium text-slate-400 dark:text-slate-500">
                                 {{ $ruangs->firstItem() + $index }}
                             </td>
-                            <td class="px-6 py-4 font-mono font-bold text-indigo-600">
+                            <td class="px-6 py-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
                                 {{ $ruang->kode_ruangan }}
                             </td>
-                            <td class="px-6 py-4 font-semibold text-slate-900">
+                            <td class="px-6 py-4 font-semibold text-slate-900 dark:text-slate-100">
                                 {{ $ruang->nama_ruangan }}
                             </td>
                             <td class="px-6 py-4 text-right">
@@ -233,10 +233,10 @@
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div @click="createModal = false" class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm"></div>
 
-                <div class="inline-block relative z-10 w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white rounded-2xl shadow-xl">
-                    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-                        <h3 class="text-lg font-extrabold text-slate-900">Tambah Ruangan Baru</h3>
-                        <button @click="createModal = false" class="text-slate-400 hover:text-slate-600">
+                <div class="inline-block relative z-10 w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">Tambah Ruangan Baru</h3>
+                        <button @click="createModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -246,18 +246,18 @@
                     <form method="POST" action="{{ route('master.ruang.store') }}" @submit.prevent="submitCreate($event)" class="p-6 space-y-4">
                         @csrf
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Kode Ruangan <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Kode Ruangan <span class="text-rose-500">*</span></label>
                             <input type="text" name="kode_ruangan" required placeholder="Contoh: R-101" 
-                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <template x-if="errors.kode_ruangan">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.kode_ruangan[0]"></p>
                             </template>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Nama Ruangan <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Nama Ruangan <span class="text-rose-500">*</span></label>
                             <input type="text" name="nama_ruangan" required placeholder="Contoh: Ruang Ujian Skripsi Lt. 2" 
-                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <template x-if="errors.nama_ruangan">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_ruangan[0]"></p>
                             </template>
@@ -280,10 +280,10 @@
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div @click="editModal = false" class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm"></div>
 
-                <div class="inline-block relative z-10 w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white rounded-2xl shadow-xl">
-                    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-                        <h3 class="text-lg font-extrabold text-slate-900">Edit Data Ruangan</h3>
-                        <button @click="editModal = false" class="text-slate-400 hover:text-slate-600">
+                <div class="inline-block relative z-10 w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">Edit Data Ruangan</h3>
+                        <button @click="editModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -294,9 +294,9 @@
                         @csrf
                         @method('PUT')
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Kode Ruangan <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Kode Ruangan <span class="text-rose-500">*</span></label>
                             <input type="text" name="kode_ruangan" x-model="editRuang.kode_ruangan" required 
-                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <template x-if="errors.kode_ruangan">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.kode_ruangan[0]"></p>
                             </template>

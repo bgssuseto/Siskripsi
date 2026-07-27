@@ -3,35 +3,43 @@
     <style>
         /* ── Calendar container ── */
         .calendar-container {
-            background: #fff; border-radius: 20px; padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #f1f5f9;
+            background: #fff;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08);
+            border: 1px solid #f1f5f9;
+        }
+        html.dark .calendar-container {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 1px 3px rgba(0,0,0,.3);
         }
         
         /* Customizing FullCalendar */
         .fc { font-family: 'Plus Jakarta Sans', sans-serif !important; }
         .fc-col-header-cell-cushion { font-size: .8rem; font-weight: 700; color: #475569; text-transform: uppercase; }
+        html.dark .fc-col-header-cell-cushion { color: #94a3b8 !important; }
         .fc-event { border-radius: 6px !important; padding: .1rem .3rem !important; cursor: pointer !important; font-size: .75rem !important; font-weight: 600 !important; }
         .fc-header-toolbar { margin-bottom: 1.25rem !important; }
-        .fc-button-primary {
-            background-color: #6366f1 !important; border-color: #6366f1 !important; border-radius: 8px !important;
-            font-size: .85rem !important; font-weight: 600 !important;
-        }
-        .fc-button-primary:hover { background-color: #4f46e5 !important; border-color: #4f46e5 !important; }
-        .fc-button-active { background-color: #4338ca !important; border-color: #4338ca !important; }
         .fc-daygrid-day-number { font-size: .82rem !important; font-weight: 700 !important; color: #334155 !important; }
+        html.dark .fc-daygrid-day-number { color: #e2e8f0 !important; }
 
         /* Badges */
         .badge { display: inline-flex; align-items: center; padding: .22rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
         .badge-sempro { background: #dbeafe; color: #1d4ed8; }
         .badge-sidang { background: #dcfce7; color: #15803d; }
+        html.dark .badge-sempro { background: rgba(29,78,216,.25); color: #93c5fd; }
+        html.dark .badge-sidang { background: rgba(21,128,61,.25); color: #86efac; }
         
         .nim-pill { font-family: 'Plus Jakarta Sans', sans-serif; background: #f1f5f9; color: #475569; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
+        html.dark .nim-pill { background: #334155; color: #94a3b8; }
 
         .schedule-ruang {
             display: inline-flex; align-items: center; gap: .3rem;
             background: #fdf4ff; border: 1px solid #e9d5ff; color: #7e22ce;
             font-size: .72rem; font-weight: 700; padding: .15rem .5rem; border-radius: 6px; margin-top: .25rem;
         }
+        html.dark .schedule-ruang { background: rgba(126,34,206,.2); border-color: rgba(233,213,255,.2); color: #d8b4fe; }
 
         /* ── Modals ── */
         .modal-overlay {
@@ -42,14 +50,20 @@
             background: #fff; border-radius: 20px; width: 100%; max-width: 680px; max-height: 90vh;
             overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,.2);
         }
+        html.dark .modal-box { background: #1e293b; border: 1px solid #334155; }
         .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; }
+        html.dark .modal-header { border-bottom-color: #334155; background: #0f172a; }
         .modal-title { font-size: 1.05rem; font-weight: 700; color: #0f172a; }
+        html.dark .modal-title { color: #f1f5f9; }
         .modal-close {
             width: 32px; height: 32px; border: none; background: #f1f5f9; border-radius: 8px;
             cursor: pointer; display: flex; align-items: center; justify-content: center; color: #64748b;
         }
-        .modal-body { padding: 1.25rem 1.5rem; }
+        html.dark .modal-close { background: #334155; color: #94a3b8; }
+        .modal-body { padding: 1.25rem 1.5rem; color: #334155; }
+        html.dark .modal-body { color: #e2e8f0; }
         .modal-footer { display: flex; gap: .75rem; justify-content: flex-end; padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; }
+        html.dark .modal-footer { border-top-color: #334155; background: #0f172a; }
 
         /* Buttons */
         .btn {
@@ -59,6 +73,8 @@
         }
         .btn-outline { background: #fff; border: 1px solid #e2e8f0; color: #475569; }
         .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; color: #1e293b; }
+        html.dark .btn-outline { background: #1e293b; border-color: #475569; color: #94a3b8; }
+        html.dark .btn-outline:hover { background: #334155; color: #e2e8f0; }
     </style>
     @endpush
 

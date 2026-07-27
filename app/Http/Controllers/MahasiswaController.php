@@ -21,11 +21,6 @@ class MahasiswaController extends Controller
         $nim  = $user->nim ?? null;
         $name = $user->name ?? null;
 
-        $activePeriode = Periode::where('aktif', true)->first();
-        if (!$activePeriode) {
-            return collect();
-        }
-
         $query = Sidang::with([
             'pembimbingUtama',
             'pembimbingPendamping',
@@ -34,7 +29,7 @@ class MahasiswaController extends Controller
             'anggotaPenguji2',
             'ruang',
             'periode'
-        ])->where('periode_id', $activePeriode->id);
+        ]);
 
         if ($nim && $name) {
             return $query->where(function ($q) use ($nim, $name) {
@@ -102,28 +97,26 @@ class MahasiswaController extends Controller
         $activePeriode = Periode::where('aktif', true)->first();
         $dosens = Dosen::orderBy('nama_dosen')->get();
 
+        $allStudentSidangs = $this->getStudentSidangs($user);
         // Filter student's sidang skripsi only
-        $sidangs = $this->getStudentSidangs($user)->where('jenis_tugas_akhir', 'sidang');
+        $sidangs = $allStudentSidangs->where('jenis_tugas_akhir', 'sidang');
+
+        // Check if student has registered for Sempro
+        $semproRecord = $allStudentSidangs->where('jenis_tugas_akhir', 'sempro')->first();
+        $hasSempro = $semproRecord ? true : false;
+        $isSemproApproved = $semproRecord && $semproRecord->verifikasi_status === 'disetujui';
 
         return view('mahasiswa.skripsi', compact(
-            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens'
+            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens', 'hasSempro', 'isSemproApproved', 'semproRecord'
         ));
     }
 
     /**
      * Student Jadwal Sidang index - Strictly filters schedule for THIS student only
      */
-    public function jadwalIndex(): View
+    public function jadwalIndex()
     {
-        $user          = Auth::user();
-        $activePeriode = Periode::where('aktif', true)->first();
-
-        // Strictly fetch schedule matching logged-in student's NIM or Name
-        $sidangs = $this->getStudentSidangs($user)->sortByDesc('tanggal');
-
-        return view('mahasiswa.jadwal', compact(
-            'user', 'sidangs', 'activePeriode'
-        ));
+        return redirect()->route('mahasiswa.jadwal.sempro');
     }
 
     public function jadwalSemproIndex(): View
@@ -131,17 +124,21 @@ class MahasiswaController extends Controller
         $user          = Auth::user();
         $activePeriode = Periode::where('aktif', true)->first();
         $sidangs       = $this->getStudentSidangs($user)->where('jenis_tugas_akhir', 'sempro')->sortByDesc('tanggal');
+        $type          = 'sempro';
 
-        return view('mahasiswa.jadwal', compact('user', 'sidangs', 'activePeriode'));
+        return view('mahasiswa.jadwal', compact('user', 'sidangs', 'activePeriode', 'type'));
     }
 
     public function jadwalSkripsiIndex(): View
     {
-        $user          = Auth::user();
-        $activePeriode = Periode::where('aktif', true)->first();
-        $sidangs       = $this->getStudentSidangs($user)->whereIn('jenis_tugas_akhir', ['sidang', 'skripsi', 'jurnal'])->sortByDesc('tanggal');
+        $user           = Auth::user();
+        $activePeriode  = Periode::where('aktif', true)->first();
+        $studentSidangs = $this->getStudentSidangs($user);
+        $sidangs        = $studentSidangs->whereIn('jenis_tugas_akhir', ['sidang', 'skripsi', 'jurnal'])->sortByDesc('tanggal');
+        $semproHistory  = $studentSidangs->where('jenis_tugas_akhir', 'sempro')->sortByDesc('tanggal');
+        $type           = 'skripsi';
 
-        return view('mahasiswa.jadwal', compact('user', 'sidangs', 'activePeriode'));
+        return view('mahasiswa.jadwal', compact('user', 'sidangs', 'semproHistory', 'activePeriode', 'type'));
     }
 
     /**
@@ -179,6 +176,21 @@ class MahasiswaController extends Controller
             return back()->with('error', $msg);
         }
 
+        // Check if registering for skripsi, ensure student has registered sempro first
+        if ($request->input('jenis_tugas_akhir') === 'skripsi') {
+            $hasSempro = Sidang::where('nim', $request->input('nim'))
+                ->where('jenis_tugas_akhir', 'sempro')
+                ->exists();
+
+            if (!$hasSempro) {
+                $msg = 'Pendaftaran Skripsi gagal! Anda belum melakukan pendaftaran Seminar Proposal (Sempro). Silakan daftar Sempro terlebih dahulu.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+                return back()->with('error', $msg);
+            }
+        }
+
         // Validate request
         $validated = $request->validate([
             'nim'                            => ['required', 'string', 'max:30'],
@@ -186,14 +198,17 @@ class MahasiswaController extends Controller
             'judul_skripsi'                  => ['required', 'string'],
             'dosen_pembimbing_utama_id'      => ['required', 'exists:dosens,id'],
             'dosen_pembimbing_pendamping_id' => ['nullable', 'exists:dosens,id'],
-            'bukti_pembayaran'               => [$isRevision ? 'nullable' : 'required', 'file', 'mimes:pdf,png,jpg,jpeg', 'max:2048'],
+            'no_wa_aktif'                    => ['required', 'string', 'max:20'],
+            'jenis_ta_pilihan'               => ['nullable', 'string', 'in:sidang,jurnal'],
+            'file_persyaratan'               => [$isRevision ? 'nullable' : 'required', 'file', 'mimes:pdf', 'max:4096'],
         ], [
             'nim.required'                       => 'NIM wajib diisi.',
             'judul_skripsi.required'             => 'Judul tugas akhir wajib diisi.',
             'dosen_pembimbing_utama_id.required' => 'Dosen Pembimbing Utama wajib dipilih.',
-            'bukti_pembayaran.required'          => 'Bukti pembayaran wajib diunggah.',
-            'bukti_pembayaran.mimes'             => 'Format bukti pembayaran harus PDF, PNG, JPG, atau JPEG.',
-            'bukti_pembayaran.max'               => 'Ukuran bukti pembayaran maksimal 2 MB.',
+            'no_wa_aktif.required'               => 'Nomor WhatsApp aktif wajib diisi.',
+            'file_persyaratan.required'          => 'File persyaratan wajib diunggah.',
+            'file_persyaratan.mimes'             => 'File persyaratan harus berformat PDF.',
+            'file_persyaratan.max'               => 'Ukuran file persyaratan maksimal 4 MB.',
         ]);
 
         $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
@@ -213,28 +228,34 @@ class MahasiswaController extends Controller
             return back()->with('error', $msg);
         }
 
-        // Handle File Upload
-        $filePath = $existing ? $existing->bukti_pembayaran : null;
-        if ($request->hasFile('bukti_pembayaran')) {
+        // Handle File Upload (file_persyaratan - PDF only, max 4MB, overwrite old)
+        $filePath = $existing ? $existing->file_persyaratan : null;
+        if ($request->hasFile('file_persyaratan')) {
             // Delete old file if exists
-            if ($existing && $existing->bukti_pembayaran) {
-                $oldPath = public_path($existing->bukti_pembayaran);
+            if ($existing && $existing->file_persyaratan) {
+                $oldPath = public_path($existing->file_persyaratan);
                 if (file_exists($oldPath)) {
                     @unlink($oldPath);
                 }
             }
 
             // Ensure directory exists
-            $uploadDir = public_path('uploads/bukti_pembayaran');
+            $uploadDir = public_path('uploads/persyaratan');
             if (!file_exists($uploadDir)) {
                 @mkdir($uploadDir, 0777, true);
             }
 
             // Save new file
-            $file = $request->file('bukti_pembayaran');
-            $fileName = time() . '_' . $validated['nim'] . '_' . $validated['jenis_tugas_akhir'] . '.' . $file->getClientOriginalExtension();
+            $file = $request->file('file_persyaratan');
+            $fileName = time() . '_' . $validated['nim'] . '_' . $validated['jenis_tugas_akhir'] . '.pdf';
             $file->move($uploadDir, $fileName);
-            $filePath = 'uploads/bukti_pembayaran/' . $fileName;
+            $filePath = 'uploads/persyaratan/' . $fileName;
+        }
+
+        // Determine actual jenis_tugas_akhir for skripsi (sidang/jurnal)
+        $actualJenis = $validated['jenis_tugas_akhir'];
+        if ($actualJenis === 'skripsi') {
+            $actualJenis = $request->input('jenis_ta_pilihan', 'sidang') ?: 'sidang';
         }
 
         if ($isRevision) {
@@ -244,7 +265,9 @@ class MahasiswaController extends Controller
                 'judul_skripsi'                  => $validated['judul_skripsi'],
                 'dosen_pembimbing_utama_id'      => $validated['dosen_pembimbing_utama_id'],
                 'dosen_pembimbing_pendamping_id' => $validated['dosen_pembimbing_pendamping_id'] ?? null,
-                'bukti_pembayaran'               => $filePath,
+                'no_wa_aktif'                    => $validated['no_wa_aktif'],
+                'file_persyaratan'               => $filePath,
+                'jenis_tugas_akhir'              => $actualJenis,
                 'verifikasi_status'              => 'menunggu',
                 'verifikasi_komentar'            => null,
                 'verifikasi_tanggal'             => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
@@ -258,14 +281,15 @@ class MahasiswaController extends Controller
                 'judul_skripsi'                  => $validated['judul_skripsi'],
                 'dosen_pembimbing_utama_id'      => $validated['dosen_pembimbing_utama_id'],
                 'dosen_pembimbing_pendamping_id' => $validated['dosen_pembimbing_pendamping_id'] ?? null,
-                'jenis_tugas_akhir'              => $validated['jenis_tugas_akhir'] === 'skripsi' ? 'sidang' : $validated['jenis_tugas_akhir'],
+                'jenis_tugas_akhir'              => $actualJenis,
                 'periode_id'                     => $activePeriode->id,
-                'tanggal_pendaftaran'            => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
+                'tanggal_pendaftaran'            => now()->timezone('Asia/Jakarta')->format('Y-m-d'),
+                'no_wa_aktif'                    => $validated['no_wa_aktif'],
                 'ketua_penguji_id'               => null,
                 'anggota_penguji_1_id'           => null,
                 'anggota_penguji_2_id'           => null,
                 'verifikasi_status'              => 'menunggu',
-                'bukti_pembayaran'               => $filePath,
+                'file_persyaratan'               => $filePath,
             ]);
             $message = 'Pendaftaran ' . ($validated['jenis_tugas_akhir'] === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi') . ' berhasil dikirim!';
         }
@@ -293,45 +317,45 @@ class MahasiswaController extends Controller
         }
 
         $request->validate([
-            'bukti_pembayaran' => ['required', 'file', 'mimes:pdf,png,jpg,jpeg', 'max:2048'],
+            'file_persyaratan' => ['required', 'file', 'mimes:pdf', 'max:4096'],
         ], [
-            'bukti_pembayaran.required' => 'Bukti pembayaran wajib diunggah.',
-            'bukti_pembayaran.mimes'    => 'Format bukti pembayaran harus PDF, PNG, JPG, atau JPEG.',
-            'bukti_pembayaran.max'      => 'Ukuran bukti pembayaran maksimal 2 MB.',
+            'file_persyaratan.required' => 'File persyaratan wajib diunggah.',
+            'file_persyaratan.mimes'    => 'File persyaratan harus berformat PDF.',
+            'file_persyaratan.max'      => 'Ukuran file persyaratan maksimal 4 MB.',
         ]);
 
         // Delete old file
-        if ($sidang->bukti_pembayaran) {
-            $oldPath = public_path($sidang->bukti_pembayaran);
+        if ($sidang->file_persyaratan) {
+            $oldPath = public_path($sidang->file_persyaratan);
             if (file_exists($oldPath)) {
                 @unlink($oldPath);
             }
         }
 
         // Ensure directory exists
-        $uploadDir = public_path('uploads/bukti_pembayaran');
+        $uploadDir = public_path('uploads/persyaratan');
         if (!file_exists($uploadDir)) {
             @mkdir($uploadDir, 0777, true);
         }
 
         // Store new file
-        $file = $request->file('bukti_pembayaran');
-        $fileName = time() . '_' . $sidang->nim . '_revisi_bukti.' . $file->getClientOriginalExtension();
+        $file = $request->file('file_persyaratan');
+        $fileName = time() . '_' . $sidang->nim . '_revisi_persyaratan.pdf';
         $file->move($uploadDir, $fileName);
         
         $sidang->update([
-            'bukti_pembayaran' => 'uploads/bukti_pembayaran/' . $fileName,
-            'verifikasi_status' => 'menunggu',
+            'file_persyaratan'    => 'uploads/persyaratan/' . $fileName,
+            'verifikasi_status'   => 'menunggu',
             'verifikasi_komentar' => null,
-            'verifikasi_tanggal' => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
+            'verifikasi_tanggal'  => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
         ]);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Bukti pembayaran berhasil diperbarui!',
+                'message' => 'File persyaratan berhasil diperbarui!',
             ]);
         }
-        return back()->with('success', 'Bukti pembayaran berhasil diperbarui!');
+        return back()->with('success', 'File persyaratan berhasil diperbarui!');
     }
 }

@@ -12,9 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sidangs', function (Blueprint $table) {
-            if (!Schema::hasColumn('sidangs', 'tanggal_pendaftaran')) {
-                $table->date('tanggal_pendaftaran')->nullable()->after('tanggal');
-            }
+            $table->date('tanggal_pendaftaran')->nullable()->after('tanggal');
         });
     }
 
@@ -24,9 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('sidangs', function (Blueprint $table) {
-            if (Schema::hasColumn('sidangs', 'tanggal_pendaftaran')) {
-                $table->dropColumn('tanggal_pendaftaran');
-            }
+            $table->dropColumn('tanggal_pendaftaran');
         });
     }
 };

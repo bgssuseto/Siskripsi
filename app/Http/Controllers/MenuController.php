@@ -272,15 +272,16 @@ class MenuController extends Controller
                 'icon'         => 'clock',
                 'role_default' => 'dosen',
                 'sort_order'   => 24,
-            ],
-            [
-                'name'         => 'Profil',
-                'route'        => 'dosen.profil',
-                'icon'         => 'user',
-                'role_default' => 'dosen',
-                'sort_order'   => 25,
             ]
         ];
+
+        // Clean up old dosen.profil menu if exists
+        $oldDosenProfil = Menu::where('route', 'dosen.profil')->first();
+        if ($oldDosenProfil) {
+            \Illuminate\Support\Facades\DB::table('role_menu')->where('menu_id', $oldDosenProfil->id)->delete();
+            \Illuminate\Support\Facades\DB::table('user_menu')->where('menu_id', $oldDosenProfil->id)->delete();
+            $oldDosenProfil->delete();
+        }
 
         // Seed top-level menus first
         foreach ($defaultMenus as $menu) {

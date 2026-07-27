@@ -31,6 +31,8 @@ class Sidang extends Model
         'verifikasi_komentar',
         'verifikasi_tanggal',
         'bukti_pembayaran',
+        'no_wa_aktif',
+        'file_persyaratan',
     ];
 
     protected $casts = [
@@ -186,5 +188,13 @@ class Sidang extends Model
                    '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">⏳ Menunggu Verifikasi</span>' .
                    '</div>';
         }
+    }
+
+    /**
+     * Accessor for verifikasi_status_html attribute.
+     */
+    public function getVerifikasiStatusHtmlAttribute(): string
+    {
+        return $this->getVerifikasiStatusHtml();
     }
 }

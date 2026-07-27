@@ -102,6 +102,51 @@
         .page-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
         .page-btn.disabled { opacity: .4; pointer-events: none; }
 
+        /* Dark Mode Overrides */
+        html.dark .stat-card { background: #1e293b; border-color: #334155; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+        html.dark .stat-value { color: #f8fafc; }
+        html.dark .stat-label { color: #94a3b8; }
+        html.dark .stat-icon.blue   { background: rgba(59,130,246,.15); }
+        html.dark .stat-icon.violet { background: rgba(139,92,246,.15); }
+        html.dark .stat-icon.green  { background: rgba(34,197,94,.15); }
+
+        html.dark .toolbar { background: #1e293b; border-color: #334155; }
+        html.dark .toolbar-search input,
+        html.dark .filter-select { background: #0f172a; border-color: #334155; color: #f8fafc; }
+        html.dark .toolbar-search input:focus,
+        html.dark .filter-select:focus { border-color: #818cf8; }
+
+        html.dark .btn-outline { background: #1e293b; color: #94a3b8; border-color: #334155; }
+        html.dark .btn-outline:hover { background: #334155; color: #f8fafc; }
+
+        html.dark .table-card { background: #1e293b; border-color: #334155; }
+        html.dark .top-scrollbar-wrap { background: #0f172a; border-bottom-color: #334155; }
+        html.dark table.data-table tbody tr { border-bottom-color: #334155; }
+        html.dark table.data-table tbody tr:hover { background: #0f172a; }
+        html.dark table.data-table td { color: #cbd5e1; }
+        html.dark .judul-text { color: #f8fafc; }
+        html.dark .nim-pill { background: #0f172a; color: #94a3b8; }
+        html.dark .dosen-chip { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+        html.dark .dosen-chip.utama { background: rgba(29,78,216,.2); border-color: rgba(191,219,254,.2); color: #93c5fd; }
+        html.dark .dosen-chip.ketua { background: rgba(146,64,14,.2); border-color: rgba(253,230,138,.2); color: #fcd34d; }
+
+        html.dark .modal-box { background: #1e293b; border: 1px solid #334155; }
+        html.dark .modal-header { border-bottom-color: #334155; background: #0f172a; }
+        html.dark .modal-title { color: #f8fafc; }
+        html.dark .modal-close { background: #334155; color: #94a3b8; }
+        html.dark .modal-footer { border-top-color: #334155; background: #0f172a; }
+
+        html.dark .form-group label { color: #cbd5e1; }
+        html.dark .form-control { background: #0f172a; border-color: #334155; color: #f8fafc; }
+        html.dark .form-control:focus { border-color: #818cf8; }
+        html.dark .form-section-title { color: #64748b; border-bottom-color: #334155; }
+
+        html.dark .pagination-wrap { background: #1e293b; border-top-color: #334155; }
+        html.dark .pagination-info { color: #94a3b8; }
+        html.dark .page-btn { background: #0f172a; border-color: #334155; color: #94a3b8; }
+        html.dark .page-btn:hover { background: #334155; color: #f8fafc; }
+        html.dark .page-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+
         @media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
     </style>
 
@@ -110,10 +155,13 @@
         {{-- Page Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Data Skripsi</h1>
-                <p class="text-sm text-slate-500 mt-1">Kelola data mahasiswa sidang skripsi dan jurnal.</p>
+                <h1 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Data Skripsi</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola data mahasiswa sidang skripsi dan jurnal.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
+                <a href="{{ route('master.skripsi.export', request()->query()) }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 border border-emerald-500 cursor-pointer">
+                    📊 Export Excel
+                </a>
                 <a href="{{ route('master.skripsi.import.form') }}" class="btn btn-success">
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                     Import Excel
@@ -200,7 +248,6 @@
                             <th style="width:90px;">Tgl Daftar</th>
                             <th>NIM</th>
                             <th>Nama Mahasiswa</th>
-                            <th>Judul Skripsi / TA</th>
                             <th>Status Ujian</th>
                             <th>Verifikasi</th>
                             <th>Periode</th>
@@ -221,8 +268,8 @@
                                 </td>
                                 <td>
                                     @if($item->tanggal_pendaftaran)
-                                        <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md whitespace-nowrap">
-                                            {{ $item->tanggal_pendaftaran->format('d/m/Y') }}
+                                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md whitespace-nowrap">
+                                            {{ $item->tanggal_pendaftaran->locale('id')->translatedFormat('l, d/m/Y') }}
                                         </span>
                                     @else
                                         <span style="color:#cbd5e1;">—</span>
@@ -230,16 +277,15 @@
                                 </td>
                                 <td>
                                     <span class="nim-pill">{{ $item->nim }}</span>
-                                    @if($item->bukti_pembayaran)
+                                    @if($item->file_persyaratan)
                                         <div class="mt-1">
-                                            <a href="{{ asset($item->bukti_pembayaran) }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-indigo-600 hover:text-indigo-800 hover:underline font-bold">
-                                                <span>📄</span> Bukti Bayar
+                                            <a href="{{ asset($item->file_persyaratan) }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-purple-600 dark:text-purple-400 hover:underline font-bold">
+                                                <span>📄</span> Berkas (PDF)
                                             </a>
                                         </div>
                                     @endif
                                 </td>
-                                <td style="font-weight:600; color:#1e293b; min-width:150px;">{{ $item->nama_mahasiswa }}</td>
-                                <td><p class="judul-text">{{ $item->judul_skripsi }}</p></td>
+                                <td class="font-bold text-slate-800 dark:text-slate-100" style="min-width:150px;">{{ $item->nama_mahasiswa }}</td>
                                 <td>
                                     {!! $item->getJadwalStatusHtml() !!}
                                 </td>
@@ -279,20 +325,6 @@
                                     @endif
                                 </td>
                                 <td class="text-right space-x-1 whitespace-nowrap">
-                                    <button class="btn btn-outline btn-sm"
-                                        onclick="openVerifikasi(
-                                            {{ $item->id }},
-                                            '{{ $item->verifikasi_status ?? 'menunggu' }}',
-                                            '{{ addslashes($item->verifikasi_komentar ?? '') }}',
-                                            '{{ addslashes($item->nama_mahasiswa) }}',
-                                            '{{ $item->nim }}',
-                                            '{{ addslashes($item->judul_skripsi) }}',
-                                            '{{ addslashes($item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—') }}',
-                                            '{{ addslashes($item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—') }}',
-                                            '{{ $item->bukti_pembayaran ? asset($item->bukti_pembayaran) : '' }}'
-                                        )">
-                                        🛡️ Verifikasi
-                                    </button>
                                     <button class="btn btn-outline btn-sm"
                                         onclick="openEdit({{ $item->id }}, {{ json_encode([
                                             'id'                             => $item->id,

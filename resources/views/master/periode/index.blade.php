@@ -293,10 +293,10 @@
                 </form>
             </div>
             
-            <div id="stats-container" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div id="stats-container" class="bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Periode Aktif</p>
-                    <p class="text-sm font-bold text-slate-800 mt-1">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Periode Aktif</p>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-200 mt-1">
                         {{ \App\Models\Periode::where('aktif', true)->first()->nama_periode ?? 'Belum ada yang aktif' }}
                     </p>
                 </div>
@@ -307,22 +307,22 @@
         </div>
 
         <!-- Table -->
-        <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50/75 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <tr class="bg-slate-50/75 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <th class="py-4 px-6">No</th>
                             <th class="py-4 px-6">Nama Periode</th>
                             <th class="py-4 px-6">Status</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-sm text-slate-700 dark:text-slate-300">
                         @forelse ($periodes as $index => $item)
-                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="py-4 px-6 font-medium text-slate-400">{{ $periodes->firstItem() + $index }}</td>
-                                <td class="py-4 px-6 font-semibold text-slate-900">{{ $item->nama_periode }}</td>
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
+                                <td class="py-4 px-6 font-medium text-slate-400 dark:text-slate-500">{{ $periodes->firstItem() + $index }}</td>
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-slate-100">{{ $item->nama_periode }}</td>
                                 <td class="py-4 px-6">
                                     @if ($item->aktif)
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -366,7 +366,7 @@
             </div>
 
             @if ($periodes->hasPages())
-                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30">
                     {{ $periodes->links() }}
                 </div>
             @endif
@@ -391,11 +391,11 @@
         </div>
 
         <!-- Wave Table -->
-        <div id="wave-table-container" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-8">
+        <div id="wave-table-container" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mb-8">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50/75 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <tr class="bg-slate-50/75 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <th class="py-4 px-6">No</th>
                             <th class="py-4 px-6">Periode Akademik</th>
                             <th class="py-4 px-6">Jenis Ujian</th>
@@ -405,7 +405,7 @@
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-sm text-slate-700 dark:text-slate-300">
                         @forelse ($pendaftaranPeriodes as $index => $wave)
                             @php
                                 $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');

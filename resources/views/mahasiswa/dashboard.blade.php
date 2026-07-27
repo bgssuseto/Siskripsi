@@ -24,8 +24,11 @@
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-2">
             <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Periode Akademik Aktif</p>
             @if($activePeriode)
-                <p class="text-base font-extrabold text-slate-800">{{ $activePeriode->nama_periode ?? $activePeriode->nama }}</p>
-                <p class="text-xs text-slate-500">Tahun: {{ $activePeriode->tahun ?? '-' }}</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                    <p class="text-base font-extrabold text-slate-800">{{ $activePeriode->nama_periode }}</p>
+                </div>
+                <p class="text-xs text-indigo-600 font-semibold mt-1">Status: Periode Akademik Berjalan</p>
             @else
                 <p class="text-xs text-slate-400 italic">Belum ada periode aktif.</p>
             @endif

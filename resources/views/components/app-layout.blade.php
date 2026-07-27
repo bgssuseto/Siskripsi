@@ -11,6 +11,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 
+    <!-- Dark Mode Initializer Script (Default: Dark Mode) -->
+    <script>
+        if (localStorage.getItem('theme') !== 'light') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
     <!-- Styles & Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
@@ -29,13 +38,284 @@
 
         /* Smooth submenu */
         [x-cloak] { display: none !important; }
+
+        /* Global Dark Mode Styling */
+        html.dark body {
+            background-color: #0b0f19 !important;
+            color: #f8fafc !important;
+        }
+
+        html.dark header {
+            background-color: #111827 !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+
+        html.dark .bg-white {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+
+        html.dark .bg-slate-50, html.dark .bg-slate-50\/40, html.dark .bg-slate-50\/50, html.dark .bg-slate-50\/60, html.dark .bg-slate-50\/80 {
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+            border-color: #1e293b !important;
+        }
+
+        html.dark .bg-slate-100 {
+            background-color: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+
+        html.dark .text-slate-900, html.dark .text-slate-800 {
+            color: #f8fafc !important;
+        }
+
+        html.dark .text-slate-700, html.dark .text-slate-600 {
+            color: #cbd5e1 !important;
+        }
+
+        html.dark .text-slate-500, html.dark .text-slate-400 {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .border-slate-200, html.dark .border-slate-200\/80, html.dark .border-slate-200\/90, html.dark .border-slate-100 {
+            border-color: #334155 !important;
+        }
+
+        html.dark input, html.dark select, html.dark textarea {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #475569 !important;
+        }
+
+        html.dark input::placeholder, html.dark textarea::placeholder {
+            color: #64748b !important;
+        }
+
+        html.dark tr:hover {
+            background-color: #334155 !important;
+        }
+
+        /* High-Contrast Badges & Text adjustments for Dark Mode */
+        html.dark .bg-amber-50, html.dark .bg-amber-100 {
+            background-color: rgba(245, 158, 11, 0.18) !important;
+            color: #fcd34d !important;
+            border-color: rgba(245, 158, 11, 0.35) !important;
+        }
+
+        html.dark .bg-emerald-50, html.dark .bg-emerald-100 {
+            background-color: rgba(16, 185, 129, 0.18) !important;
+            color: #6ee7b7 !important;
+            border-color: rgba(16, 185, 129, 0.35) !important;
+        }
+
+        html.dark .bg-rose-50, html.dark .bg-rose-100 {
+            background-color: rgba(244, 63, 94, 0.18) !important;
+            color: #fda4af !important;
+            border-color: rgba(244, 63, 94, 0.35) !important;
+        }
+
+        html.dark .bg-indigo-50, html.dark .bg-indigo-100 {
+            background-color: rgba(99, 102, 241, 0.18) !important;
+            color: #a5b4fc !important;
+            border-color: rgba(99, 102, 241, 0.35) !important;
+        }
+
+        html.dark .bg-purple-50, html.dark .bg-purple-100 {
+            background-color: rgba(168, 85, 247, 0.18) !important;
+            color: #d8b4fe !important;
+            border-color: rgba(168, 85, 247, 0.35) !important;
+        }
+
+        html.dark .nim-pill {
+            background-color: #334155 !important;
+            color: #cbd5e1 !important;
+        }
+
+        html.dark .judul-text {
+            color: #f1f5f9 !important;
+        }
+
+        /* Highlight Nama & Judul in Crisp Bright White on Row Hover in Dark Mode */
+        html.dark tr:hover td .text-slate-900,
+        html.dark tr:hover td .text-slate-800,
+        html.dark tr:hover td .text-slate-700,
+        html.dark tr:hover td .judul-text,
+        html.dark tr:hover td div.font-extrabold,
+        html.dark tr:hover td p.font-bold,
+        html.dark tr:hover td h3,
+        html.dark tr:hover td h4 {
+            color: #ffffff !important;
+            transition: color 0.15s ease;
+        }
+
+        html.dark td, html.dark th {
+            border-color: #334155 !important;
+        }
+
+        /* Stat Infographics High Contrast Rules */
+        .stat-card { background-color: #ffffff; border: 1px solid #e2e8f0; }
+        .stat-value { color: #0f172a !important; font-weight: 800 !important; }
+        .stat-label { color: #475569 !important; font-weight: 600 !important; }
+        html.dark .stat-card { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark .stat-value { color: #f8fafc !important; }
+        html.dark .stat-label { color: #cbd5e1 !important; }
+
+        /* FullCalendar Global Styling for Crisp Visibility in Light & Dark Mode */
+        .fc {
+            --fc-page-bg-color: #ffffff;
+            --fc-neutral-bg-color: #f8fafc;
+            --fc-list-event-hover-bg-color: rgba(99, 102, 241, 0.1);
+            --fc-border-color: #cbd5e1;
+            --fc-button-bg-color: #4f46e5;
+            --fc-button-border-color: #4338ca;
+            --fc-button-hover-bg-color: #4338ca;
+            --fc-button-hover-border-color: #3730a3;
+            --fc-button-active-bg-color: #3730a3;
+            --fc-button-active-border-color: #312e81;
+        }
+        .fc .fc-toolbar-title {
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+            color: #0f172a !important;
+        }
+        .fc .fc-col-header-cell {
+            background-color: #f1f5f9 !important;
+            padding: 8px 0 !important;
+        }
+        .fc .fc-col-header-cell-cushion {
+            font-size: 0.8rem !important;
+            font-weight: 800 !important;
+            color: #0f172a !important;
+            text-transform: uppercase !important;
+            text-decoration: none !important;
+        }
+        .fc .fc-daygrid-day-number {
+            font-size: 0.85rem !important;
+            font-weight: 800 !important;
+            color: #0f172a !important;
+            text-decoration: none !important;
+        }
+        .fc .fc-daygrid-day-top {
+            color: #0f172a !important;
+        }
+        .fc .fc-event {
+            border-radius: 8px !important;
+            padding: 2px 6px !important;
+            font-weight: 700 !important;
+            font-size: 0.75rem !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Today Date Highlight - Soft Yellow/Amber in Light Mode */
+        .fc .fc-day-today,
+        .fc .fc-day-today .fc-daygrid-day-frame {
+            background-color: #fef3c7 !important;
+        }
+        .fc .fc-day-today .fc-daygrid-day-number {
+            background-color: #f59e0b !important;
+            color: #ffffff !important;
+            padding: 2px 8px !important;
+            border-radius: 9999px !important;
+            font-weight: 800 !important;
+        }
+
+        /* Buttons Styling */
+        .fc .fc-button-primary {
+            background-color: #4f46e5 !important;
+            border-color: #4338ca !important;
+            color: #ffffff !important;
+            border-radius: 0.75rem !important;
+            font-weight: 700 !important;
+            font-size: 0.75rem !important;
+            padding: 0.4rem 0.8rem !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+        .fc .fc-button-primary:hover {
+            background-color: #4338ca !important;
+            border-color: #3730a3 !important;
+        }
+
+        /* FullCalendar Dark Mode Override - Dark Cell Background & White Date Numbers */
+        html.dark .fc {
+            --fc-page-bg-color: #0f172a;
+            --fc-neutral-bg-color: #1e293b;
+            --fc-border-color: #334155;
+            --fc-button-bg-color: #6366f1;
+            --fc-button-border-color: #4f46e5;
+            --fc-button-hover-bg-color: #4f46e5;
+            --fc-button-hover-border-color: #4338ca;
+            --fc-button-active-bg-color: #4338ca;
+            --fc-button-active-border-color: #3730a3;
+        }
+        html.dark .fc .fc-scrollgrid,
+        html.dark .fc .fc-daygrid-day,
+        html.dark .fc .fc-daygrid-day-frame,
+        html.dark .fc .fc-theme-standard td,
+        html.dark .fc .fc-theme-standard th {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+        }
+        html.dark .fc .fc-toolbar-title {
+            color: #f8fafc !important;
+        }
+        html.dark .fc .fc-col-header-cell {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        html.dark .fc .fc-col-header-cell-cushion {
+            color: #f8fafc !important;
+            text-decoration: none !important;
+        }
+        html.dark .fc .fc-daygrid-day-number,
+        html.dark .fc .fc-daygrid-day-top a {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            text-decoration: none !important;
+        }
+        html.dark .fc .fc-daygrid-day-top {
+            color: #ffffff !important;
+        }
+        html.dark .fc .fc-day-other {
+            background-color: #090d16 !important;
+        }
+        html.dark .fc .fc-day-other .fc-daygrid-day-number {
+            color: #64748b !important;
+            opacity: 0.7 !important;
+        }
+
+        /* Today Date Highlight - Soft Dark Amber in Dark Mode */
+        html.dark .fc .fc-day-today,
+        html.dark .fc .fc-day-today .fc-daygrid-day-frame {
+            background-color: #451a03 !important;
+        }
+        html.dark .fc .fc-day-today .fc-daygrid-day-number {
+            background-color: #f59e0b !important;
+            color: #0f172a !important;
+            padding: 2px 8px !important;
+            border-radius: 9999px !important;
+            font-weight: 800 !important;
+        }
+        html.dark .fc .fc-button-primary {
+            background-color: #6366f1 !important;
+            border-color: #4f46e5 !important;
+            color: #ffffff !important;
+        }
+        html.dark .fc .fc-button-primary:hover {
+            background-color: #4f46e5 !important;
+            border-color: #4338ca !important;
+        }
     </style>
 </head>
-<body class="h-full antialiased text-slate-800 bg-slate-100"
+<body class="h-full antialiased text-slate-800 bg-slate-100 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200"
       x-data="{
+          darkMode: localStorage.getItem('theme') !== 'light',
           sidebarOpen: true,
           mobileOpen: false,
           dataMasterOpen: {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') ? 'true' : 'false' }},
+          pendaftaranNavOpen: {{ request()->routeIs('pendaftaran.*') ? 'true' : 'false' }},
           dataOpen: {{ request()->routeIs('master.skripsi.*') || request()->routeIs('master.sempro.*') ? 'true' : 'false' }},
           penjadwalanOpen: {{ request()->routeIs('jadwal-ujian.*') || request()->routeIs('jadwal-sempro.*') ? 'true' : 'false' }},
           administrasiOpen: {{ request()->routeIs('administrasi.*') ? 'true' : 'false' }},
@@ -441,6 +721,53 @@
                         </div>
                     </div>
 
+                    <!-- PENDAFTARAN (with submenu) -->
+                    <div>
+                        <button @click="pendaftaranNavOpen = !pendaftaranNavOpen; if(!sidebarOpen) sidebarOpen = true"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                       {{ request()->routeIs('pendaftaran.*') ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                title="Pendaftaran">
+                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('pendaftaran.*') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Pendaftaran</span>
+                            <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
+                                 :class="{ 'rotate-180': pendaftaranNavOpen, 'opacity-0': !sidebarOpen }"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                            @if(!request()->routeIs('pendaftaran.*'))
+                            <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                            @endif
+                        </button>
+                        <div x-show="pendaftaranNavOpen && sidebarOpen"
+                             x-transition:enter="transition-all duration-200 ease-out"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition-all duration-150 ease-in"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
+                             x-cloak>
+                            <a href="{{ route('pendaftaran.sempro') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('pendaftaran.sempro') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('pendaftaran.sempro') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Sempro
+                            </a>
+                            <a href="{{ route('pendaftaran.skripsi') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('pendaftaran.skripsi') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('pendaftaran.skripsi') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                Skripsi
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- DATA (with submenu) -->
                     <div>
                         <button @click="dataOpen = !dataOpen; if(!sidebarOpen) sidebarOpen = true"
@@ -713,7 +1040,7 @@
             <div class="border-t border-white/[0.07] p-3 space-y-1 shrink-0">
 
                 <!-- Profile link -->
-                <a href="#"
+                <a href="{{ route('profile.edit') }}"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/[0.06] hover:text-white transition-all duration-200 group"
                    title="{{ Auth::user()->name }}">
                     <div class="w-7 h-7 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-bold flex items-center justify-center text-xs shadow-md">
@@ -744,12 +1071,12 @@
         <div class="flex-1 flex flex-col min-w-0 min-h-screen overflow-auto">
 
             <!-- ── TOP NAVBAR ── -->
-            <header class="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0">
+            <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-700 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0">
 
                 <div class="flex items-center gap-3">
                     <!-- Burger toggle (desktop: collapse sidebar) -->
                     <button @click="sidebarOpen = !sidebarOpen"
-                            class="hidden lg:flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            class="hidden lg:flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-400 transition-colors"
                             title="Toggle Sidebar">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -759,7 +1086,7 @@
 
                     <!-- Burger toggle (mobile: open drawer) -->
                     <button @click="mobileOpen = true"
-                            class="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            class="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors"
                             title="Buka Menu">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -768,9 +1095,9 @@
 
                     <!-- Page breadcrumb title -->
                     <div class="flex items-center gap-2 text-sm">
-                        <span class="text-slate-400 font-medium hidden sm:block">Skripsi TI</span>
-                        <span class="text-slate-300 hidden sm:block">/</span>
-                        <span class="font-bold text-slate-800">{{ $header ?? $title ?? 'Dashboard' }}</span>
+                        <span class="text-slate-400 dark:text-slate-500 font-medium hidden sm:block">Skripsi TI</span>
+                        <span class="text-slate-300 dark:text-slate-600 hidden sm:block">/</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-100">{{ $header ?? $title ?? 'Dashboard' }}</span>
                     </div>
                 </div>
 
@@ -826,19 +1153,34 @@
                     }
                 @endphp
 
-                <div class="flex items-center gap-2 sm:gap-3" x-data="{ open: false }" @click.away="open = false">
+                <div class="flex items-center gap-2 sm:gap-3 relative" x-data="{ open: false }" @click.away="open = false">
+
+                    <!-- Theme Toggle Switch Button (Light / Dark Mode) -->
+                    <button type="button" 
+                            @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); if(darkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); }"
+                            class="flex items-center justify-center w-10 h-10 rounded-2xl text-slate-600 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs group shrink-0"
+                            title="Ganti Mode Terang / Gelap">
+                        <template x-if="!darkMode">
+                            <span class="text-base" title="Aktifkan Mode Gelap">🌙</span>
+                        </template>
+                        <template x-if="darkMode">
+                            <span class="text-base" title="Aktifkan Mode Terang">☀️</span>
+                        </template>
+                    </button>
 
                     <!-- Notification Bell Dropdown -->
                     @if (Auth::user()->isDosen() || Auth::user()->isMahasiswa())
                     <div class="relative" x-data="{ notifOpen: false }" @click.away="notifOpen = false">
                         <button @click="notifOpen = !notifOpen" 
-                                class="relative flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-inner border border-slate-100"
+                                class="relative flex items-center justify-center w-10 h-10 rounded-2xl text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/80 transition-all duration-200 shadow-2xs border border-slate-200/80 bg-white group"
                                 title="Notifikasi Ujian H-1">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-slate-500 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                             </svg>
                             @if ($upcomingCount > 0)
-                            <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white animate-pulse"></span>
+                            <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold text-white ring-2 ring-white animate-bounce">
+                                {{ $upcomingCount }}
+                            </span>
                             @endif
                         </button>
 
@@ -850,11 +1192,11 @@
                              x-transition:leave="transition ease-in duration-100"
                              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                              x-transition:leave-end="opacity-0 scale-95 translate-y-1"
-                             class="absolute top-12 right-0 sm:-right-6 w-[320px] sm:w-[380px] bg-white border border-slate-200/90 rounded-2xl shadow-2xl shadow-slate-900/15 overflow-hidden z-50"
+                             class="absolute top-13 right-0 w-[340px] sm:w-[440px] bg-white border border-slate-200 rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden z-50"
                              x-cloak>
-                            <div class="px-4 py-3 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">🔔</span>
+                            <div class="px-5 py-3.5 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="text-lg">🔔</span>
                                     <span class="font-extrabold text-xs tracking-wider uppercase">Notifikasi Ujian H-1</span>
                                 </div>
                                 @if ($upcomingCount > 0)
@@ -943,13 +1285,13 @@
 
                     <!-- Profile Dropdown Trigger -->
                     <button @click="open = !open"
-                            class="flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-xl hover:bg-slate-100 transition-colors">
+                            class="flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                         <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center text-xs shadow-sm">
                             {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                         </div>
                         <div class="hidden sm:block text-left">
-                            <p class="text-xs font-bold text-slate-800 leading-tight">{{ Auth::user()->name }}</p>
-                            <p class="text-[10px] text-slate-500 leading-tight">{{ Auth::user()->role_label }}</p>
+                            <p class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-tight">{{ Auth::user()->name }}</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{{ Auth::user()->role_label }}</p>
                         </div>
                         <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 hidden sm:block" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -964,18 +1306,18 @@
                          x-transition:leave="transition ease-in duration-100"
                          x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                          x-transition:leave-end="opacity-0 scale-95 translate-y-1"
-                         class="absolute top-14 right-4 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/60 overflow-hidden z-50"
+                         class="absolute top-14 right-0 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-200/60 dark:shadow-slate-900/80 overflow-hidden z-50"
                          x-cloak>
 
                         <!-- Profile Card -->
-                        <div class="p-4 bg-gradient-to-br from-indigo-50 to-violet-50 border-b border-slate-100">
+                        <div class="p-4 bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/60 dark:to-violet-950/60 border-b border-slate-100 dark:border-slate-700">
                             <div class="flex items-center gap-3">
                                 <div class="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white font-extrabold flex items-center justify-center text-base shadow-md">
                                     {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="font-bold text-sm text-slate-900 truncate">{{ Auth::user()->name }}</p>
-                                    <p class="text-xs text-slate-500 truncate">{{ Auth::user()->email }}</p>
+                                    <p class="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">{{ Auth::user()->name }}</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ Auth::user()->email }}</p>
                                     <span class="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border {{ Auth::user()->role_badge_class }}">
                                         {{ Auth::user()->role_label }}
                                     </span>
@@ -984,28 +1326,21 @@
                         </div>
 
                         <!-- Dropdown Links -->
-                        <div class="p-2">
-                            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 font-medium transition-colors group">
-                                <svg class="w-4 h-4 text-slate-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-2 bg-white dark:bg-slate-900">
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors group">
+                                <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                 </svg>
                                 Profil Saya
                             </a>
-                            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 font-medium transition-colors group">
-                                <svg class="w-4 h-4 text-slate-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                </svg>
-                                Pengaturan
-                            </a>
                         </div>
 
                         <!-- Divider + Logout -->
-                        <div class="border-t border-slate-100 p-2">
+                        <div class="border-t border-slate-100 dark:border-slate-700 p-2 bg-white dark:bg-slate-900">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-rose-600 hover:bg-rose-50 font-semibold transition-colors group">
-                                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold transition-colors group">
+                                    <svg class="w-4 h-4 text-rose-500 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                                     </svg>
                                     Keluar dari Sistem
@@ -1014,6 +1349,7 @@
                         </div>
                     </div>
                 </div>
+
             </header>
 
             <!-- ── PAGE CONTENT ── -->

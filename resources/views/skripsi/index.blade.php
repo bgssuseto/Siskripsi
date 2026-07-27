@@ -45,8 +45,8 @@
         }
         .stat-icon.blue  { background: #eff6ff; }
         .stat-icon.green { background: #f0fdf4; }
-        .stat-value { font-size: 1.75rem; font-weight: 800; color: #0f172a; line-height: 1; }
-        .stat-label { font-size: .8rem; color: #64748b; margin-top: .2rem; }
+        .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; }
+        .stat-label { font-size: .8rem; font-weight: 600; margin-top: .2rem; }
 
         /* ── Toolbar ── */
         .toolbar {
@@ -108,6 +108,78 @@
         table.sidang-table tbody tr.conflict-rule:hover { background-color: #fed7aa !important; }
         table.sidang-table td { padding: .7rem .85rem; vertical-align: top; color: #334155; }
 
+        /* Dark Mode Overrides for Penjadwalan Skripsi */
+        html.dark .sidang-page h1 { color: #f8fafc !important; }
+        html.dark .sidang-page p { color: #cbd5e1 !important; }
+        html.dark .view-toggle { background: #334155 !important; }
+        html.dark .view-toggle-btn { color: #94a3b8 !important; }
+        html.dark .view-toggle-btn.active { background: #1e293b !important; color: #818cf8 !important; }
+        html.dark .stat-card, html.dark .toolbar, html.dark .table-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        html.dark .stat-value { color: #f8fafc !important; }
+        html.dark .stat-label { color: #94a3b8 !important; }
+        html.dark table.sidang-table tbody tr {
+            border-bottom-color: #334155 !important;
+        }
+        html.dark table.sidang-table tbody tr:hover {
+            background-color: #334155 !important;
+        }
+        html.dark table.sidang-table tbody tr.conflict-schedule {
+            background-color: rgba(159, 18, 57, 0.3) !important;
+        }
+        html.dark table.sidang-table tbody tr.conflict-schedule:hover {
+            background-color: rgba(159, 18, 57, 0.45) !important;
+        }
+        html.dark table.sidang-table tbody tr.conflict-rule {
+            background-color: rgba(180, 83, 9, 0.3) !important;
+        }
+        html.dark table.sidang-table tbody tr.conflict-rule:hover {
+            background-color: rgba(180, 83, 9, 0.45) !important;
+        }
+        html.dark table.sidang-table td {
+            color: #e2e8f0 !important;
+        }
+        html.dark .schedule-hari {
+            color: #f8fafc !important;
+        }
+        html.dark .schedule-jam {
+            color: #a5b4fc !important;
+        }
+        html.dark .schedule-ruang {
+            background-color: rgba(192, 38, 211, 0.2) !important;
+            border-color: rgba(192, 38, 211, 0.4) !important;
+            color: #f0abfc !important;
+        }
+        html.dark .filter-select, html.dark .toolbar-search input {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #475569 !important;
+        }
+        html.dark .modal-box {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border: 1px solid #334155 !important;
+        }
+        html.dark .modal-header, html.dark .modal-footer {
+            border-color: #334155 !important;
+            background-color: #0f172a !important;
+        }
+        html.dark .modal-title { color: #f8fafc !important; }
+        html.dark .form-control {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #475569 !important;
+        }
+        html.dark .form-group label { color: #cbd5e1 !important; }
+        html.dark .form-section-title { color: #94a3b8 !important; border-bottom-color: #334155 !important; }
+        html.dark .nim-pill { background-color: #334155 !important; color: #cbd5e1 !important; }
+        html.dark .dosen-chip { background-color: #334155 !important; border-color: #475569 !important; color: #cbd5e1 !important; }
+        html.dark .dosen-chip.utama { background-color: rgba(29, 78, 216, 0.25) !important; border-color: rgba(29, 78, 216, 0.5) !important; color: #93c5fd !important; }
+        html.dark .dosen-chip.ketua { background-color: rgba(180, 83, 9, 0.25) !important; border-color: rgba(180, 83, 9, 0.5) !important; color: #fde68a !important; }
+
         /* Badges */
         .badge { display: inline-flex; align-items: center; padding: .22rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
         .badge-sidang { background: #dbeafe; color: #1d4ed8; }
@@ -167,8 +239,14 @@
         }
 
         .alert { border-radius: 12px; padding: .85rem 1.1rem; display: flex; gap: .75rem; align-items: flex-start; font-size: .875rem; margin-bottom: 1rem; }
-        .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
-        .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+        .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d !important; }
+        .alert-error   { background: #fef2f2 !important; border: 1px solid #fecaca !important; color: #dc2626 !important; }
+        .alert-error strong, .alert-error em, .alert-error li { color: #dc2626 !important; }
+        .alert-error svg { stroke: #dc2626 !important; }
+        html.dark .alert-error { background: rgba(220,38,38,0.12) !important; border: 1px solid rgba(220,38,38,0.3) !important; color: #fca5a5 !important; }
+        html.dark .alert-error strong, html.dark .alert-error em, html.dark .alert-error li { color: #fca5a5 !important; }
+        html.dark .alert-error svg { stroke: #fca5a5 !important; }
+        html.dark .alert-error p { color: #fca5a5 !important; opacity: 0.85; }
 
         /* ── Calendar container ── */
         .calendar-container {
@@ -249,8 +327,8 @@
         {{-- Page header --}}
         <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Jadwal Sidang Skripsi</h1>
-                <p class="text-sm text-slate-500 mt-1">Plotting, kelola jadwal, dan visualisasikan sidang skripsi mahasiswa.</p>
+                <h1 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Jadwal Sidang Skripsi</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Plotting, kelola jadwal, dan visualisasikan sidang skripsi mahasiswa.</p>
             </div>
             
             <div class="flex items-center gap-3 flex-wrap">
@@ -352,7 +430,6 @@
                                 <th style="width:90px;">Tgl Daftar</th>
                                 <th>NIM</th>
                                 <th>Nama Mahasiswa</th>
-                                <th>Judul Skripsi</th>
                                 <th>Status</th>
                                 <th>Periode</th>
                                 <th>Dosbing Utama</th>
@@ -395,33 +472,32 @@
                                     </td>
                                     <td><span class="nim-pill">{{ $item->nim }}</span></td>
                                     <td style="font-weight:600; color:#1e293b; min-width:160px;">
-                                        <div>{{ $item->nama_mahasiswa }}</div>
+                                        <div class="text-slate-900 dark:text-slate-100 font-extrabold">{{ $item->nama_mahasiswa }}</div>
                                         @if($hasSchedule)
                                             <div class="mt-1">
-                                                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-2xs">
                                                     ⚠️ Jadwal Bentrok
                                                 </span>
                                             </div>
                                             <div class="mt-1 space-y-0.5">
                                                 @foreach($conflictMap[$item->id]['schedule'] as $msg)
-                                                    <div class="text-[10px] leading-snug text-red-700 pl-1">• {{ $msg }}</div>
+                                                    <div class="text-[10.5px] leading-snug text-rose-800 dark:text-rose-300 font-bold pl-1">• {{ $msg }}</div>
                                                 @endforeach
                                             </div>
                                         @endif
                                         @if($hasRuleViolation)
                                             <div class="mt-1">
-                                                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs">
                                                     ❌ Pelanggaran Aturan
                                                 </span>
                                             </div>
                                             <div class="mt-1 space-y-0.5">
                                                 @foreach($conflictMap[$item->id]['rules'] as $msg)
-                                                    <div class="text-[10px] leading-snug text-orange-700 pl-1">• {{ $msg }}</div>
+                                                    <div class="text-[10.5px] leading-snug text-amber-800 dark:text-amber-300 font-bold pl-1">• {{ $msg }}</div>
                                                 @endforeach
                                             </div>
                                         @endif
                                     </td>
-                                    <td><p class="judul-text">{{ $item->judul_skripsi }}</p></td>
                                     <td>
                                         {!! $item->getJadwalStatusHtml() !!}
                                     </td>
@@ -433,7 +509,7 @@
                                     <td><span class="dosen-chip">{{ $item->anggotaPenguji2 ? $item->anggotaPenguji2->nama_dosen : '—' }}</span></td>
                                     <td class="schedule-cell">
                                         @if($item->tanggal)
-                                            <div class="schedule-hari">{{ $item->tanggal->translatedFormat('d F Y') }}</div>
+                                            <div class="schedule-hari">{{ $item->tanggal->locale('id')->translatedFormat('l, d F Y') }}</div>
                                             <div class="schedule-jam">{{ $item->jam ?: '—' }}</div>
                                         @else
                                             <span style="color:#cbd5e1;">—</span>
@@ -1244,10 +1320,7 @@
                     closeModal('modal-tambah');
                     form.reset();
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
-                    if (document.querySelector('.sidang-page').__x?.$data?.currentView === 'calendar') {
-                        initCalendar();
-                    }
+                    setTimeout(() => location.reload(), 800);
                 } else {
                     if (response.status === 422) {
                         if (result.errors) {
@@ -1296,10 +1369,7 @@
                 if (response.ok) {
                     closeModal('modal-edit');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
-                    if (document.querySelector('.sidang-page').__x?.$data?.currentView === 'calendar') {
-                        initCalendar();
-                    }
+                    setTimeout(() => location.reload(), 800);
                 } else {
                     if (response.status === 422) {
                         if (result.errors) {
@@ -1346,10 +1416,7 @@
                 if (response.ok) {
                     closeModal('modal-hapus');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
-                    if (document.querySelector('.sidang-page').__x?.$data?.currentView === 'calendar') {
-                        initCalendar();
-                    }
+                    setTimeout(() => location.reload(), 800);
                 } else {
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menghapus.', type: 'error' } }));
                 }
@@ -1361,10 +1428,38 @@
             }
         });
 
+        document.getElementById('form-jadwalkan')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const origText  = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '⏳ Menyimpan…'; }
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    closeModal('modal-jadwalkan');
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || '✅ Jadwal berhasil disimpan!', type: 'success' } }));
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan saat menyimpan jadwal.', type: response.status === 422 ? 'warning' : 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Gagal terhubung ke server.', type: 'error' } }));
+            } finally {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origText; }
+            }
+        });
+
         // Escape key close
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                ['modal-tambah','modal-edit','modal-hapus','modal-detail'].forEach(closeModal);
+                ['modal-tambah','modal-edit','modal-hapus','modal-detail','modal-jadwalkan'].forEach(closeModal);
             }
         });
     </script>
