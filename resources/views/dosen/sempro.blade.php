@@ -56,7 +56,7 @@
 
         <!-- Buttons -->
         <div class="flex items-center gap-2">
-            <button type="submit" style="background-color: #4f46e5; color: #ffffff;" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer border border-indigo-500">
+            <button type="submit" style="background-color: #3251d4; color: #ffffff;" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer border border-indigo-500">
                 Filter
             </button>
             @if(request()->hasAny(['search','tanggal','status']))

@@ -44,17 +44,24 @@ class Sidang extends Model
     /**
      * Booted model events.
      * Default anggota_penguji_2_id to dosen_pembimbing_utama_id if empty.
+     * Only applies to skripsi/sidang, NOT sempro.
      */
     protected static function booted()
     {
         static::creating(function ($sidang) {
-            if (empty($sidang->anggota_penguji_2_id) && !empty($sidang->dosen_pembimbing_utama_id)) {
+            // Dosbing utama hanya wajib jadi penguji 2 pada skripsi, bukan sempro
+            if ($sidang->jenis_tugas_akhir !== 'sempro'
+                && empty($sidang->anggota_penguji_2_id)
+                && !empty($sidang->dosen_pembimbing_utama_id)) {
                 $sidang->anggota_penguji_2_id = $sidang->dosen_pembimbing_utama_id;
             }
         });
 
         static::updating(function ($sidang) {
-            if (empty($sidang->anggota_penguji_2_id) && !empty($sidang->dosen_pembimbing_utama_id)) {
+            // Dosbing utama hanya wajib jadi penguji 2 pada skripsi, bukan sempro
+            if ($sidang->jenis_tugas_akhir !== 'sempro'
+                && empty($sidang->anggota_penguji_2_id)
+                && !empty($sidang->dosen_pembimbing_utama_id)) {
                 $sidang->anggota_penguji_2_id = $sidang->dosen_pembimbing_utama_id;
             }
         });

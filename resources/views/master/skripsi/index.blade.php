@@ -30,7 +30,7 @@
             border: 1px solid #e2e8f0; border-radius: 10px; font-size: .875rem; color: #1e293b;
             transition: border-color .15s, box-shadow .15s;
         }
-        .toolbar-search input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+        .toolbar-search input:focus { outline: none; border-color: #4361ee; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
         .filter-select {
             padding: .55rem .85rem; border: 1px solid #e2e8f0; border-radius: 10px;
             font-size: .875rem; color: #1e293b; background: #fff; cursor: pointer;
@@ -38,8 +38,8 @@
 
         /* Buttons */
         .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1rem; border-radius: 10px; font-size: .875rem; font-weight: 600; cursor: pointer; transition: all .15s; border: none; }
-        .btn-primary { background: #6366f1; color: #fff; }
-        .btn-primary:hover { background: #4f46e5; box-shadow: 0 4px 12px rgba(99,102,241,.35); }
+        .btn-primary { background: #4361ee; color: #fff; }
+        .btn-primary:hover { background: #3251d4; box-shadow: 0 4px 12px rgba(99,102,241,.35); }
         .btn-success { background: #10b981; color: #fff; }
         .btn-success:hover { background: #059669; box-shadow: 0 4px 12px rgba(16,185,129,.35); }
         .btn-outline { background: #fff; color: #475569; border: 1px solid #e2e8f0; }
@@ -88,7 +88,7 @@
         .form-group { display: flex; flex-direction: column; gap: .35rem; }
         .form-group label { font-size: .78rem; font-weight: 600; color: #374151; }
         .form-control { padding: .55rem .75rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: .875rem; color: #1e293b; background: #fff; width: 100%; }
-        .form-control:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+        .form-control:focus { outline: none; border-color: #4361ee; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
         textarea.form-control { resize: vertical; min-height: 70px; }
         .form-section { margin-top: 1.1rem; }
         .form-section-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin-bottom: .6rem; padding-bottom: .35rem; border-bottom: 1px solid #f1f5f9; }
@@ -99,7 +99,7 @@
         .pagination-links { display: flex; gap: .35rem; flex-wrap: wrap; }
         .page-btn { padding: .35rem .7rem; border-radius: 8px; font-size: .8rem; font-weight: 600; text-decoration: none; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer; transition: all .15s; }
         .page-btn:hover { background: #e2e8f0; }
-        .page-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+        .page-btn.active { background: #4361ee; color: #fff; border-color: #4361ee; }
         .page-btn.disabled { opacity: .4; pointer-events: none; }
 
         /* Dark Mode Overrides */
@@ -145,7 +145,7 @@
         html.dark .pagination-info { color: #94a3b8; }
         html.dark .page-btn { background: #0f172a; border-color: #334155; color: #94a3b8; }
         html.dark .page-btn:hover { background: #334155; color: #f8fafc; }
-        html.dark .page-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+        html.dark .page-btn.active { background: #4361ee; color: #fff; border-color: #4361ee; }
 
         @media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
     </style>
@@ -653,7 +653,7 @@
                         <div style="margin-bottom: 0.4rem;"><strong>Pembimbing Pendamping:</strong> <span id="verif-detail-dosbing-pendamping"></span></div>
                         <div style="margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid #e2e8f0;" id="verif-detail-bukti-container">
                             <strong>Bukti Pembayaran:</strong> 
-                            <a id="verif-detail-bukti" href="#" target="_blank" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Lihat Bukti</a>
+                            <a id="verif-detail-bukti" href="#" target="_blank" style="color: #3251d4; font-weight: bold; text-decoration: underline;">Lihat Bukti</a>
                         </div>
                     </div>
 
@@ -693,7 +693,7 @@
             background: #fff; border-radius: 14px;
             box-shadow: 0 8px 30px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
             padding: .9rem 1.1rem; min-width: 300px; max-width: 400px;
-            border-left: 4px solid #6366f1;
+            border-left: 4px solid #4361ee;
             pointer-events: all;
             animation: toastIn .35s cubic-bezier(.34,1.56,.64,1);
         }
@@ -746,7 +746,7 @@
                     <div class="toast-msg">${message}</div>
                 </div>
                 <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>
-                <div class="toast-progress" style="color:${type==='success'?'#10b981':type==='error'?'#ef4444':type==='warning'?'#f59e0b':'#6366f1'}"></div>
+                <div class="toast-progress" style="color:${type==='success'?'#10b981':type==='error'?'#ef4444':type==='warning'?'#f59e0b':'#4361ee'}"></div>
             `;
             container.appendChild(toast);
             setTimeout(() => dismissToast(toast), duration);

@@ -130,7 +130,7 @@
     }
 
     .btn-print {
-      background: #4f46e5;
+      background: #3251d4;
       color: #fff;
       border: none;
       padding: 8px 16px;

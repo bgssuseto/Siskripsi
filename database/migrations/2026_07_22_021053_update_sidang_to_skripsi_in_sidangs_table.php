@@ -13,7 +13,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE sidangs MODIFY COLUMN jenis_tugas_akhir VARCHAR(50) NOT NULL DEFAULT 'skripsi'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE sidangs MODIFY COLUMN jenis_tugas_akhir VARCHAR(50) NOT NULL DEFAULT 'skripsi'");
+        }
         DB::table('sidangs')->where('jenis_tugas_akhir', 'sidang')->update(['jenis_tugas_akhir' => 'skripsi']);
     }
 

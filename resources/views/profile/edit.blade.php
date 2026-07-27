@@ -190,8 +190,8 @@
 
                     <div class="pt-3 border-t border-slate-100 flex justify-end">
                         <button type="submit" 
-                                style="background-color: #4f46e5; color: #ffffff;"
-                                class="px-6 py-2.5 bg-indigo-600 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md hover:bg-indigo-700 border border-indigo-500 cursor-pointer">
+                                style="background-color: #4361ee; color: #ffffff;"
+                                class="px-6 py-2.5 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md border cursor-pointer" style="background:#4361ee; border-color:#3251d4;">
                             Simpan Perubahan Profil
                         </button>
                     </div>

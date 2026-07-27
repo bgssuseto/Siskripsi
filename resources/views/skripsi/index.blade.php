@@ -28,7 +28,7 @@
         }
         .view-toggle-btn.active {
             background: #fff;
-            color: #4f46e5;
+            color: #3251d4;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
         }
 
@@ -65,7 +65,7 @@
             transition: border-color .15s, box-shadow .15s; color: #1e293b;
         }
         .toolbar-search input:focus {
-            outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+            outline: none; border-color: #4361ee; box-shadow: 0 0 0 3px rgba(99,102,241,.12);
         }
         .filter-select {
             padding: .55rem .85rem; border: 1px solid #e2e8f0; border-radius: 10px;
@@ -78,8 +78,8 @@
             padding: .55rem 1rem; border-radius: 10px; font-size: .875rem;
             font-weight: 600; cursor: pointer; transition: all .15s; border: none;
         }
-        .btn-primary { background: #6366f1; color: #fff; }
-        .btn-primary:hover { background: #4f46e5; box-shadow: 0 4px 12px rgba(99,102,241,.35); }
+        .btn-primary { background: #4361ee; color: #fff; }
+        .btn-primary:hover { background: #3251d4; box-shadow: 0 4px 12px rgba(99,102,241,.35); }
         .btn-success { background: #10b981; color: #fff; }
         .btn-success:hover { background: #059669; box-shadow: 0 4px 12px rgba(16,185,129,.35); }
         .btn-outline { background: #fff; color: #475569; border: 1px solid #e2e8f0; }
@@ -196,7 +196,7 @@
 
         .schedule-cell { min-width: 130px; }
         .schedule-hari { font-weight: 700; color: #1e293b; font-size: .78rem; }
-        .schedule-jam  { color: #6366f1; font-size: .75rem; font-weight: 600; margin-top: .1rem; }
+        .schedule-jam  { color: #4361ee; font-size: .75rem; font-weight: 600; margin-top: .1rem; }
         .schedule-ruang {
             display: inline-flex; align-items: center; gap: .3rem;
             background: #fdf4ff; border: 1px solid #e9d5ff; color: #7e22ce;
@@ -230,7 +230,7 @@
             padding: .55rem .75rem; border: 1px solid #e2e8f0; border-radius: 10px;
             font-size: .875rem; color: #1e293b; background: #fff; width: 100%;
         }
-        .form-control:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+        .form-control:focus { outline: none; border-color: #4361ee; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
         textarea.form-control { resize: vertical; min-height: 70px; }
         .form-section { margin-top: 1.1rem; }
         .form-section-title {
@@ -260,11 +260,11 @@
         .fc-event { border-radius: 6px !important; padding: .1rem .3rem !important; cursor: pointer !important; font-size: .75rem !important; font-weight: 600 !important; }
         .fc-header-toolbar { margin-bottom: 1.25rem !important; }
         .fc-button-primary {
-            background-color: #6366f1 !important; border-color: #6366f1 !important; border-radius: 8px !important;
+            background-color: #4361ee !important; border-color: #4361ee !important; border-radius: 8px !important;
             font-size: .85rem !important; font-weight: 600 !important;
         }
-        .fc-button-primary:hover { background-color: #4f46e5 !important; border-color: #4f46e5 !important; }
-        .fc-button-active { background-color: #4338ca !important; border-color: #4338ca !important; }
+        .fc-button-primary:hover { background-color: #3251d4 !important; border-color: #3251d4 !important; }
+        .fc-button-active { background-color: #2a43b0 !important; border-color: #2a43b0 !important; }
         .fc-daygrid-day-number { font-size: .82rem !important; font-weight: 700 !important; color: #334155 !important; }
 
         @media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
@@ -1025,7 +1025,7 @@
                                     <div class="flex items-center justify-between bg-white border border-emerald-100 rounded-xl p-2 text-[11px]">
                                         <div>
                                             <strong class="text-slate-800">{{ $kd->dosen->nama_dosen ?? 'Dosen' }}</strong>
-                                            <span class="text-slate-500 font-medium">({{ \Carbon\Carbon::parse($kd->tanggal)->format('d/m/Y') }})</span>
+                                            <span class="text-purple-700 font-bold ml-1">({{ \Carbon\Carbon::parse($kd->tanggal)->locale('id')->translatedFormat('l, d F Y') }})</span>
                                         </div>
                                         <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                                             ⏰ {{ $kd->jam_mulai }} - {{ $kd->jam_selesai }} WIB
@@ -1280,7 +1280,7 @@
                     
                     const jenisBadge = document.getElementById('detail-jenis');
                     jenisBadge.textContent = props.jenis;
-                    jenisBadge.className = 'badge ' + (info.event.backgroundColor === '#6366f1' ? 'badge-sidang' : 'badge-jurnal');
+                    jenisBadge.className = 'badge ' + (info.event.backgroundColor === '#4361ee' ? 'badge-sidang' : 'badge-jurnal');
 
                     const conflictBox = document.getElementById('detail-conflict-box');
                     const conflictText = document.getElementById('detail-conflict-text');

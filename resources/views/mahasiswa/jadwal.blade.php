@@ -119,7 +119,13 @@
                                 </div>
                                 <div class="flex justify-between items-center text-xs pt-1">
                                     <span class="text-slate-500 dark:text-slate-400 font-medium">Status Verifikasi Berkas:</span>
-                                    <span class="px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold rounded-lg border border-emerald-300 dark:border-emerald-800">Terverifikasi</span>
+                                    @if(($s->verifikasi_status ?? 'menunggu') === 'disetujui')
+                                        <span class="px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold rounded-lg border border-emerald-300 dark:border-emerald-800">Terverifikasi</span>
+                                    @elseif(($s->verifikasi_status ?? '') === 'ditolak')
+                                        <span class="px-2.5 py-0.5 bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 text-[11px] font-extrabold rounded-lg border border-rose-300 dark:border-rose-800">Ditolak</span>
+                                    @else
+                                        <span class="px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold rounded-lg border border-amber-300 dark:border-amber-800">Belum Diverifikasi</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
