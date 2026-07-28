@@ -99,7 +99,7 @@
                                         {{ $s->tanggal ? $s->tanggal->locale('id')->translatedFormat('l, d M Y') : 'Belum Terjadwal' }}
                                     </div>
                                     @if($s->tanggal)
-                                        <div class="text-indigo-600 dark:text-indigo-400 text-xs mt-0.5 font-semibold">
+                                        <div class="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200 text-xs mt-1 px-2 py-0.5 rounded font-extrabold inline-block">
                                             {{ $s->jam ?? '-' }}
                                         </div>
                                     @endif
@@ -108,7 +108,7 @@
                                 <!-- Mahasiswa -->
                                 <td class="py-4 px-6">
                                     <div class="text-slate-900 dark:text-slate-100 font-extrabold leading-snug">{{ $s->nama_mahasiswa }}</div>
-                                    <div class="text-xs text-indigo-600 dark:text-indigo-400 font-mono mt-0.5 font-bold">NIM: {{ $s->nim }}</div>
+                                    <div class="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200 text-xs mt-1 px-2 py-0.5 rounded font-mono font-extrabold inline-block">NIM: {{ $s->nim }}</div>
                                 </td>
 
                                 <!-- Judul -->

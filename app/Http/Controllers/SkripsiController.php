@@ -27,7 +27,7 @@ class SkripsiController extends Controller
             'anggotaPenguji2',
             'ruang',
             'periode'
-        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal'])
+        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])
           ->where('verifikasi_status', 'disetujui');
 
         // Search
@@ -48,7 +48,7 @@ class SkripsiController extends Controller
 
         // Filter Jenis
         if ($jenis = $request->get('jenis')) {
-            if (in_array($jenis, ['skripsi', 'jurnal'])) {
+            if (in_array($jenis, ['skripsi', 'jurnal', 'sidang'])) {
                 $query->where('jenis_tugas_akhir', $jenis);
             }
         }
@@ -138,8 +138,8 @@ class SkripsiController extends Controller
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
 
-        // Filter valid dates for calendar events (only skripsi and jurnal for this view)
-        $calendarEvents = $allSidangs->filter(fn($s) => !empty($s->tanggal) && in_array($s->jenis_tugas_akhir, ['skripsi', 'jurnal']))->map(function ($s) use ($conflictMap) {
+        // Filter valid dates for calendar events (only skripsi, sidang, and jurnal for this view)
+        $calendarEvents = $allSidangs->filter(fn($s) => !empty($s->tanggal) && in_array($s->jenis_tugas_akhir, ['skripsi', 'jurnal', 'sidang']))->map(function ($s) use ($conflictMap) {
             $conflictEntry   = $conflictMap[$s->id] ?? [];
             $hasSchedule     = !empty($conflictEntry['schedule']);
             $hasRuleViolation = !empty($conflictEntry['rules']);
@@ -298,7 +298,7 @@ class SkripsiController extends Controller
             'pembimbingUtama', 'pembimbingPendamping',
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'ruang', 'periode'
-        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal']);
+        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang']);
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
@@ -309,7 +309,7 @@ class SkripsiController extends Controller
         }
 
         if ($jenis = $request->get('jenis')) {
-            if (in_array($jenis, ['skripsi', 'jurnal'])) {
+            if (in_array($jenis, ['skripsi', 'jurnal', 'sidang'])) {
                 $query->where('jenis_tugas_akhir', $jenis);
             }
         }
@@ -331,7 +331,7 @@ class SkripsiController extends Controller
             }
         }
 
-        $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang', 'periode'])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal'])->get();
+        $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang', 'periode'])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->get();
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
 
         $conflictIds = [];
@@ -425,7 +425,7 @@ class SkripsiController extends Controller
         $ruangs = Ruang::orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
-        $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal'])->orderBy('tanggal')->pluck('tanggal');
+        $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->orderBy('tanggal')->pluck('tanggal');
         $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->count();
         $totalJurnal  = Sidang::where('jenis_tugas_akhir', 'jurnal')->count();
 

@@ -28,7 +28,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Left Side: Status Periode & Gelombang Cards -->
-        <div class="lg:col-span-1 space-y-6 flex flex-col justify-between">
+        <div class="lg:col-span-1 space-y-6 h-fit">
             <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-5 border border-slate-200/80 dark:border-slate-700">
                 <h2 class="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Periode Akademik Aktif</h2>
                 @if($activePeriode)
@@ -41,7 +41,7 @@
                 @endif
             </div>
 
-            <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-5 border border-slate-200/80 dark:border-slate-700 flex-1 flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-5 border border-slate-200/80 dark:border-slate-700">
                 <div>
                     <h2 class="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Status Gelombang Sempro</h2>
                     @if($activeWave)
@@ -70,7 +70,7 @@
                                 <span>✏️</span> Revisi Pendaftaran Sempro
                             </button>
                         @else
-                            <div class="bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800 rounded-xl p-3 text-xs text-indigo-800 dark:text-indigo-300 font-semibold flex items-center gap-2">
+                            <div class="bg-indigo-100 dark:bg-indigo-900/60 border border-indigo-300 dark:border-indigo-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white font-extrabold flex items-center gap-2">
                                 <span>ℹ️</span> Pendaftaran Anda telah terkirim dan sedang diproses.
                             </div>
                         @endif

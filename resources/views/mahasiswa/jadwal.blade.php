@@ -89,7 +89,7 @@
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-500 dark:text-slate-400 font-medium">Tanggal Ujian:</span>
                                     @if($s->tanggal)
-                                        <strong class="text-slate-900 dark:text-slate-100 font-extrabold">{{ $s->tanggal->format('d M Y') }}</strong>
+                                        <strong class="text-slate-900 dark:text-slate-100 font-extrabold">{{ $s->tanggal->translatedFormat('l, d/m/Y') }}</strong>
                                     @else
                                         <span class="px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold rounded-lg border border-amber-300 dark:border-amber-800">Belum di-Plotting</span>
                                     @endif
@@ -97,7 +97,7 @@
                                 <div class="flex justify-between items-center text-xs pt-1">
                                     <span class="text-slate-500 dark:text-slate-400 font-medium">Waktu / Jam:</span>
                                     @if($s->jam)
-                                        <strong class="text-indigo-600 dark:text-indigo-400 font-extrabold">{{ $s->jam }} WIB</strong>
+                                        <strong class="inline-block bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded font-extrabold">{{ $s->jam }} WIB</strong>
                                     @else
                                         <span class="px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold rounded-lg border border-amber-300 dark:border-amber-800">Belum di-Plotting</span>
                                     @endif
