@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Models\Dosen;
+use App\Models\User;
 
 class LoginRequest extends FormRequest
 {
@@ -43,18 +45,42 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         $loginInput = trim($this->input('email'));
-        $fieldType = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'nim';
+        $authenticated = false;
 
-        $credentials = [
-            $fieldType => $loginInput,
-            'password'  => $this->input('password'),
-        ];
+        // Coba login via email
+        if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
+            $authenticated = Auth::attempt([
+                'email'    => $loginInput,
+                'password' => $this->input('password'),
+            ], $this->boolean('remember'));
+        } else {
+            // Coba login via NIM (untuk Mahasiswa)
+            $authenticated = Auth::attempt([
+                'nim'      => $loginInput,
+                'password' => $this->input('password'),
+            ], $this->boolean('remember'));
 
-        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
+            // Jika gagal via NIM, coba via NIDN (untuk Dosen)
+            // NIDN disimpan di tabel dosens, bukan users, jadi perlu lookup dulu
+            if (!$authenticated) {
+                $dosen = Dosen::where('nidn', $loginInput)->first();
+                if ($dosen) {
+                    $dosenUser = User::where('dosen_id', $dosen->id)->first();
+                    if ($dosenUser) {
+                        $authenticated = Auth::attempt([
+                            'email'    => $dosenUser->email,
+                            'password' => $this->input('password'),
+                        ], $this->boolean('remember'));
+                    }
+                }
+            }
+        }
+
+        if (! $authenticated) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Kredensial yang Anda masukkan tidak valid. Silakan periksa kembali dan coba lagi.',
             ]);
         }
 
@@ -77,10 +103,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => 'Terlalu banyak percobaan login. Silakan coba lagi dalam ' . ceil($seconds / 60) . ' menit.',
         ]);
     }
 
