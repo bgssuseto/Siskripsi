@@ -21,76 +21,76 @@
     <!-- Status Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Active Period Card -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-2">
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Periode Akademik Aktif</p>
+        <div class="bg-white dark:bg-slate-800/80 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-2">
+            <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Periode Akademik Aktif</p>
             @if($activePeriode)
                 <div class="flex items-center gap-2 mt-1">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                    <p class="text-base font-extrabold text-slate-800">{{ $activePeriode->nama_periode }}</p>
+                    <p class="text-base font-extrabold text-slate-800 dark:text-slate-100">{{ $activePeriode->nama_periode }}</p>
                 </div>
-                <p class="text-xs text-indigo-600 font-semibold mt-1">Status: Periode Akademik Berjalan</p>
+                <p class="text-xs text-indigo-600 dark:text-indigo-400 font-extrabold mt-1">Status: Periode Akademik Berjalan</p>
             @else
-                <p class="text-xs text-slate-400 italic">Belum ada periode aktif.</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 italic">Belum ada periode aktif.</p>
             @endif
         </div>
 
         <!-- Sidang Skripsi Card -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-2">
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Status Sidang Skripsi</p>
+        <div class="bg-white dark:bg-slate-800/80 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-2">
+            <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status Sidang Skripsi</p>
             @if($sidangSkripsi)
                 <div class="flex items-center justify-between">
                     @php
                         $statusText = 'Belum Diverifikasi';
-                        $statusClass = 'bg-amber-100 text-amber-700 border border-amber-250';
+                        $statusClass = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-250 dark:border-amber-700/50';
                         if (($sidangSkripsi->verifikasi_status ?? 'menunggu') === 'disetujui') {
                             $statusText = 'Terverifikasi Koordinator';
-                            $statusClass = 'bg-emerald-100 text-emerald-700 border border-emerald-250';
+                            $statusClass = 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-250 dark:border-emerald-700/50';
                         } elseif (($sidangSkripsi->verifikasi_status ?? 'menunggu') === 'ditolak') {
                             $statusText = 'Ditolak';
-                            $statusClass = 'bg-rose-100 text-rose-700 border border-rose-250';
+                            $statusClass = 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-250 dark:border-rose-700/50';
                         }
                     @endphp
-                    <span class="px-2.5 py-1 {{ $statusClass }} text-xs font-bold rounded-full">
+                    <span class="px-2.5 py-1 {{ $statusClass }} text-[10px] font-extrabold rounded-full">
                         {{ $statusText }}
                     </span>
-                    <span class="text-xs text-slate-400">{{ optional($sidangSkripsi->tanggal)->format('d M Y') ?? '-' }}</span>
+                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ optional($sidangSkripsi->tanggal)->translatedFormat('l, d/m/Y') ?? '-' }}</span>
                 </div>
-                <p class="text-xs text-slate-600 truncate" title="{{ $sidangSkripsi->judul_skripsi }}">{{ $sidangSkripsi->judul_skripsi }}</p>
+                <p class="text-xs text-slate-600 dark:text-slate-300 truncate font-semibold" title="{{ $sidangSkripsi->judul_skripsi }}">{{ $sidangSkripsi->judul_skripsi }}</p>
                 @if(($sidangSkripsi->verifikasi_status ?? 'menunggu') === 'ditolak' && $sidangSkripsi->verifikasi_komentar)
-                    <p class="text-[10px] text-rose-500 font-medium">Catatan: {{ $sidangSkripsi->verifikasi_komentar }}</p>
+                    <p class="text-[10px] text-rose-500 dark:text-rose-400 font-medium">Catatan: {{ $sidangSkripsi->verifikasi_komentar }}</p>
                 @endif
             @else
-                <p class="text-xs text-slate-400 italic">Belum ada pendaftaran sidang skripsi.</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 italic">Belum ada pendaftaran sidang skripsi.</p>
             @endif
         </div>
 
         <!-- Sidang Jurnal Card -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-2">
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Status Sidang Jurnal</p>
+        <div class="bg-white dark:bg-slate-800/80 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-2">
+            <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status Sidang Jurnal</p>
             @if($sidangJurnal)
                 <div class="flex items-center justify-between">
                     @php
                         $statusText = 'Belum Diverifikasi';
-                        $statusClass = 'bg-amber-100 text-amber-700 border border-amber-250';
+                        $statusClass = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-250 dark:border-amber-700/50';
                         if (($sidangJurnal->verifikasi_status ?? 'menunggu') === 'disetujui') {
                             $statusText = 'Terverifikasi Koordinator';
-                            $statusClass = 'bg-emerald-100 text-emerald-700 border border-emerald-250';
+                            $statusClass = 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-250 dark:border-emerald-700/50';
                         } elseif (($sidangJurnal->verifikasi_status ?? 'menunggu') === 'ditolak') {
                             $statusText = 'Ditolak';
-                            $statusClass = 'bg-rose-100 text-rose-700 border border-rose-250';
+                            $statusClass = 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-250 dark:border-rose-700/50';
                         }
                     @endphp
-                    <span class="px-2.5 py-1 {{ $statusClass }} text-xs font-bold rounded-full">
+                    <span class="px-2.5 py-1 {{ $statusClass }} text-[10px] font-extrabold rounded-full">
                         {{ $statusText }}
                     </span>
-                    <span class="text-xs text-slate-400">{{ optional($sidangJurnal->tanggal)->format('d M Y') ?? '-' }}</span>
+                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ optional($sidangJurnal->tanggal)->translatedFormat('l, d/m/Y') ?? '-' }}</span>
                 </div>
-                <p class="text-xs text-slate-600 truncate" title="{{ $sidangJurnal->judul_skripsi }}">{{ $sidangJurnal->judul_skripsi }}</p>
+                <p class="text-xs text-slate-600 dark:text-slate-300 truncate font-semibold" title="{{ $sidangJurnal->judul_skripsi }}">{{ $sidangJurnal->judul_skripsi }}</p>
                 @if(($sidangJurnal->verifikasi_status ?? 'menunggu') === 'ditolak' && $sidangJurnal->verifikasi_komentar)
-                    <p class="text-[10px] text-rose-500 font-medium">Catatan: {{ $sidangJurnal->verifikasi_komentar }}</p>
+                    <p class="text-[10px] text-rose-500 dark:text-rose-400 font-medium">Catatan: {{ $sidangJurnal->verifikasi_komentar }}</p>
                 @endif
             @else
-                <p class="text-xs text-slate-400 italic">Belum ada pendaftaran sidang jurnal.</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 italic">Belum ada pendaftaran sidang jurnal.</p>
             @endif
         </div>
     </div>

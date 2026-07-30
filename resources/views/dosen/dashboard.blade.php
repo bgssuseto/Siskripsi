@@ -227,10 +227,14 @@
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
                                     <td class="py-4 px-6">
                                         <div class="text-slate-900 dark:text-slate-100 font-bold text-xs sm:text-sm">
-                                            {{ $s->tanggal ? \Carbon\Carbon::parse($s->tanggal)->translatedFormat('d M Y') : 'Belum diplotting' }}
+                                            {{ $s->tanggal ? \Carbon\Carbon::parse($s->tanggal)->translatedFormat('l, d/m/Y') : 'Belum diplotting' }}
                                         </div>
-                                        <div class="text-indigo-600 dark:text-indigo-400 text-xs mt-0.5 font-semibold">
-                                            {{ $s->jam ? $s->jam . ' WIB' : '-' }}
+                                        <div class="mt-1.5">
+                                            @if($s->jam)
+                                                <span class="inline-block bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 font-extrabold text-xs">{{ $s->jam }} WIB</span>
+                                            @else
+                                                <span class="text-slate-400 text-xs font-semibold">-</span>
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="py-4 px-6">

@@ -194,7 +194,7 @@
                             <!-- Mahasiswa -->
                             <td class="py-3.5 px-4">
                                 <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug">{{ $s->nama_mahasiswa }}</div>
-                                <div class="text-[10.5px] text-purple-600 dark:text-purple-400 font-mono font-bold mt-0.5">NIM: {{ $s->nim }}</div>
+                                <div class="mt-1.5"><span class="inline-block px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-mono font-bold text-[10px] border border-purple-200 dark:border-purple-800">NIM: {{ $s->nim }}</span></div>
                                 @if($s->no_wa_aktif)
                                     <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold mt-0.5">WA: {{ $s->no_wa_aktif }}</div>
                                 @endif
@@ -216,18 +216,22 @@
 
                             <!-- Dedicated Column: Dosen Pembimbing -->
                             <td class="py-3.5 px-4">
-                                <div class="font-extrabold text-slate-800 dark:text-slate-200 text-xs leading-snug">
+                                <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug">
                                     {{ $s->pembimbingUtama->nama_dosen ?? '-' }}
                                 </div>
-                                <div class="text-[10px] text-purple-600 dark:text-purple-400 font-semibold mt-0.5">
-                                    Pembimbing Utama
+                                <div class="mt-1">
+                                    <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                                        PEMBIMBING UTAMA
+                                    </span>
                                 </div>
                                 @if($s->pembimbingPendamping)
-                                    <div class="text-[10.5px] font-bold text-slate-700 dark:text-slate-300 mt-1">
+                                    <div class="text-[10.5px] font-extrabold text-slate-900 dark:text-slate-100 mt-2.5">
                                         {{ $s->pembimbingPendamping->nama_dosen }}
                                     </div>
-                                    <div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
-                                        Pembimbing Pendamping
+                                    <div class="mt-1">
+                                        <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                            PEMBIMBING PENDAMPING
+                                        </span>
                                     </div>
                                 @endif
                             </td>
@@ -237,8 +241,8 @@
                                 <div class="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
                                     {{ $s->periode->nama_periode ?? '-' }}
                                 </div>
-                                <div class="text-[10px] text-slate-400 font-medium mt-0.5">
-                                    Tgl Daftar: {{ $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->translatedFormat('l, d/m/Y') : '-' }}
+                                <div class="text-[10px] text-slate-600 dark:text-slate-300 font-semibold mt-1">
+                                    Tgl Daftar: {{ $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->translatedFormat('l, d/m/Y') : '-' }}
                                 </div>
                             </td>
 

@@ -450,7 +450,7 @@ Pesan validasi:
 | 5 | DataTables mendukung Light & Dark Mode | ✅ |
 | 6 | Form Input/Edit mengikuti tema | ✅ |
 | 7 | Super Admin dapat preview dan verifikasi pendaftaran | ✅ |
-| 8 | Mahasiswa mengisi form pendaftaran lengkap | ✅ |
+| 8 | Mahasiswa mengisi form pendaftaran lengkap | |
 | 9 | Upload hanya 1 file PDF maksimal 4 MB | ✅ |
 | 10 | Upload ulang menimpa file lama | ✅ |
 | 11 | Informasi syarat Sempro dan Skripsi tampil pada halaman pendaftaran | ✅ |

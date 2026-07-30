@@ -180,8 +180,8 @@
                             <td class="px-6 py-4 font-medium text-slate-400 dark:text-slate-500">
                                 {{ $dosens->firstItem() + $index }}
                             </td>
-                            <td class="px-6 py-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                                {{ $dosen->nidn }}
+                            <td class="px-6 py-4">
+                                <span class="font-mono font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800">{{ $dosen->nidn }}</span>
                             </td>
                             <td class="px-6 py-4 font-semibold text-slate-900 dark:text-slate-100">
                                 {{ $dosen->nama_dosen }}

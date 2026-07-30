@@ -124,8 +124,8 @@
             <tr>
                 <td class="center">{{ $idx + 1 }}</td>
                 <td><strong>{{ $s->nama_mahasiswa }}</strong></td>
-                <td>{{ $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-' }}</td>
-                <td>{{ $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-' }}</td>
+                <td>{{ $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : ($s->pembimbingUtama ? $s->pembimbingUtama->nama_dosen : '-') }}</td>
+                <td>{{ $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : ($s->pembimbingPendamping ? $s->pembimbingPendamping->nama_dosen : '-') }}</td>
                 <td>{{ $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-' }}</td>
                 <td>
                     @if($s->tanggal)

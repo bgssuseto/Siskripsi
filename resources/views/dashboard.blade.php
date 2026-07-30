@@ -18,7 +18,7 @@
                 <p class="text-slate-300 text-sm mt-1 max-w-xl">
                     Anda masuk sebagai <span class="font-bold text-white uppercase">{{ Auth::user()->role_label }}</span>. Berikut adalah ringkasan data pendaftaran, verifikasi, dan trend kelulusan terkini.
                 </p>
-            </div>
+            </div> 
             
             <div class="shrink-0 flex items-center gap-3 flex-wrap">
                 <span class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-extrabold border shadow-lg {{ Auth::user()->role_badge_class }}">

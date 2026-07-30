@@ -451,7 +451,7 @@
                         <tr class="hover:bg-slate-50/60 transition-colors">
                             <td class="py-4 px-6 text-center text-slate-400 text-xs font-semibold">{{ $m->sort_order ?? ($i + 1) }}</td>
                             <td class="py-4 px-6 font-bold text-slate-900">{{ $m->name }}</td>
-                            <td class="py-4 px-6 font-mono text-xs text-indigo-600">{{ $m->route ?? '-' }}</td>
+                            <td class="py-4 px-6 font-mono text-xs text-indigo-600 dark:text-indigo-400 font-bold">{{ $m->route ?? '-' }}</td>
                             <td class="py-4 px-6 text-xs">
                                 <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold capitalize">
                                     {{ $m->role_default ?? 'all' }}
@@ -539,7 +539,7 @@
                                                 <input type="hidden" name="menu_ids[]" value="{{ $menu->id }}">
                                                 <div class="min-w-0">
                                                     <p class="font-bold text-xs sm:text-sm text-indigo-950 truncate">{{ $menu->name }}</p>
-                                                    <p class="text-[11px] font-mono text-indigo-400 truncate mt-0.5">{{ $menu->route ?? 'Tanpa Route' }}</p>
+                                                    <p class="text-[11px] font-mono text-indigo-500 dark:text-indigo-300 font-bold truncate mt-0.5">{{ $menu->route ?? 'Tanpa Route' }}</p>
                                                 </div>
                                             </div>
                                             <span class="px-2.5 py-1 text-[10px] font-extrabold bg-indigo-600 text-white rounded-lg uppercase tracking-wider shrink-0">WAJIB</span>
@@ -560,7 +560,7 @@
                                                 
                                                 <div class="min-w-0">
                                                     <p class="font-bold text-xs sm:text-sm text-slate-900 truncate leading-snug">{{ $menu->name }}</p>
-                                                    <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5">{{ $menu->route ?? 'Tanpa Route' }}</p>
+                                                    <p class="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold truncate mt-0.5">{{ $menu->route ?? 'Tanpa Route' }}</p>
                                                 </div>
                                             </div>
 
