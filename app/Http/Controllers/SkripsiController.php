@@ -631,6 +631,16 @@ class SkripsiController extends Controller
         return back()->with('success', 'Data skripsi berhasil dihapus!');
     }
 
+    /**
+     * Hapus SELURUH data skripsi & jurnal dengan konfirmasi
+     */
+    public function destroyAll(Request $request): RedirectResponse
+    {
+        $count = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->delete();
+
+        return redirect()->route('master.skripsi.index')->with('success', "Berhasil menghapus seluruh data skripsi & jurnal ({$count} data berhasil dihapus).");
+    }
+
     // ─── Import Excel ─────────────────────────────────────────────────────────
 
     public function importForm(): View
@@ -664,7 +674,8 @@ class SkripsiController extends Controller
             ]);
         }
 
-        $imported = 0;
+        $created  = 0;
+        $updated  = 0;
         $skipped  = 0;
         $errors   = [];
 
@@ -777,16 +788,7 @@ class SkripsiController extends Controller
             };
 
             $resolveDosen = function (?string $namaDosen) {
-                if (empty($namaDosen)) return null;
-                $dosen = Dosen::where('nama_dosen', $namaDosen)->first();
-                if (!$dosen) {
-                    $dummyNidn = 'NIDN-' . strtoupper(substr(md5($namaDosen), 0, 8));
-                    $dosen = Dosen::create([
-                        'nama_dosen' => $namaDosen,
-                        'nidn'       => $dummyNidn,
-                    ]);
-                }
-                return $dosen;
+                return Dosen::resolveByName($namaDosen);
             };
 
             $startRow = $headerRow + 1;
@@ -825,7 +827,7 @@ class SkripsiController extends Controller
                 }
 
                 try {
-                    // Resolve Dosen IDs
+                    // Resolve Dosen IDs (auto-insert ke master dosen jika belum ada)
                     $dosenUtama = $resolveDosen($dosbing1);
                     $dosenPend  = $resolveDosen($dosbing2);
                     $ketua      = $resolveDosen($ketuaPeng);
@@ -838,13 +840,17 @@ class SkripsiController extends Controller
                         ['nama_ruangan' => 'Ruangan ' . $kodeRuang]
                     ) : null;
 
+                    $hariTglCell   = isset($colMap['hari_tgl']) ? $sheet->getCell($colMap['hari_tgl'] . $row) : null;
+                    $tglDaftarCell = isset($colMap['tgl_daftar']) ? $sheet->getCell($colMap['tgl_daftar'] . $row) : null;
+
                     // Parse Tanggal Ujian (Jadwal Sidang) from Excel
-                    $tanggalParsed = !empty($hariTgl) ? $this->parseIndonesianDate($hariTgl) : null;
+                    $tanggalParsed = !empty($hariTgl) ? $this->parseIndonesianDate($hariTgl, $hariTglCell) : null;
 
                     // Parse Tanggal Pendaftaran
-                    $tglDaftarParsed = !empty($tglDaftar) ? $this->parseIndonesianDate($tglDaftar) : null;
+                    $tglDaftarParsed = !empty($tglDaftar) ? $this->parseIndonesianDate($tglDaftar, $tglDaftarCell) : null;
 
-                    Sidang::updateOrCreate(
+                    // updateOrCreate: jika NIM + jenis sudah ada → timpa/update, jika belum → buat baru
+                    $sidang = Sidang::updateOrCreate(
                         [
                             'nim'               => $nim,
                             'jenis_tugas_akhir' => $jenisParsed,
@@ -857,7 +863,7 @@ class SkripsiController extends Controller
                             'ketua_penguji_id'               => $ketua?->id,
                             'anggota_penguji_1_id'           => $p1?->id,
                             'anggota_penguji_2_id'           => $p2?->id,
-                            'tanggal'                      => $tanggalParsed, // Jika ada di Excel -> Sudah Dijadwal, jika kosong -> Belum Dijadwalkan
+                            'tanggal'                      => $tanggalParsed,
                             'jam'                          => $waktuJam ?: null,
                             'ruang_id'                     => $ruang?->id,
                             'periode_id'                   => $activePeriode->id,
@@ -867,7 +873,11 @@ class SkripsiController extends Controller
                         ]
                     );
 
-                    $imported++;
+                    if ($sidang->wasRecentlyCreated) {
+                        $created++;
+                    } else {
+                        $updated++;
+                    }
                 } catch (\Exception $e) {
                     $skipped++;
                     $errors[] = "Baris {$row} ({$namaMhs}): " . $e->getMessage();
@@ -875,9 +885,10 @@ class SkripsiController extends Controller
             }
         }
 
-        $message = "Berhasil mengimpor {$imported} data skripsi!";
+        $total = $created + $updated;
+        $message = "Berhasil mengimpor {$total} data skripsi! ({$created} baru, {$updated} diperbarui/ditimpa)";
         if ($skipped > 0) {
-            $message .= " ({$skipped} baris dilewati/gagal)";
+            $message .= " — {$skipped} baris gagal diproses.";
         }
 
         return redirect()->route('master.skripsi.index')->with('success', $message);
@@ -886,9 +897,15 @@ class SkripsiController extends Controller
     /**
      * Helper to parse Indonesian date string like "Senin, 13 Juli 2026" or "13 Juli 2026" to Y-m-d.
      */
-    private function parseIndonesianDate(mixed $dateVal): ?string
+    private function parseIndonesianDate(mixed $dateVal, $cell = null): ?string
     {
         if (empty($dateVal)) return null;
+
+        if ($cell && is_numeric($cell->getValue())) {
+            try {
+                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($cell->getValue())->format('Y-m-d');
+            } catch (\Exception $e) {}
+        }
 
         if (is_numeric($dateVal)) {
             try {
@@ -902,11 +919,6 @@ class SkripsiController extends Controller
         // Standard Y-m-d
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
             return $dateStr;
-        }
-
-        // Standard d/m/Y or d-m-Y
-        if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $dateStr, $m)) {
-            return sprintf('%04d-%02d-%02d', $m[3], $m[2], $m[1]);
         }
 
         // Clean string
@@ -932,6 +944,18 @@ class SkripsiController extends Controller
         try {
             return Carbon::parse($dateStr)->format('Y-m-d');
         } catch (\Exception $e) {
+            if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $dateStr, $m)) {
+                $val1 = (int)$m[1];
+                $val2 = (int)$m[2];
+                $year = (int)$m[3];
+                if ($val1 > 12 && $val2 <= 12) {
+                    return sprintf('%04d-%02d-%02d', $year, $val2, $val1);
+                } elseif ($val2 > 12 && $val1 <= 12) {
+                    return sprintf('%04d-%02d-%02d', $year, $val1, $val2);
+                } else {
+                    return sprintf('%04d-%02d-%02d', $year, $val2, $val1);
+                }
+            }
             return null;
         }
     }

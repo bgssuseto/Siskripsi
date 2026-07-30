@@ -179,6 +179,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/master/skripsi', [SkripsiController::class, 'index'])->name('master.skripsi.index');
         Route::get('/master/skripsi/export', [SkripsiController::class, 'exportExcel'])->name('master.skripsi.export');
         Route::post('/master/skripsi', [SkripsiController::class, 'store'])->name('master.skripsi.store');
+        Route::delete('/master/skripsi/destroy-all', [SkripsiController::class, 'destroyAll'])->name('master.skripsi.destroy-all');
         Route::put('/master/skripsi/{sidang}', [SkripsiController::class, 'update'])->name('master.skripsi.update');
         Route::delete('/master/skripsi/{sidang}', [SkripsiController::class, 'destroy'])->name('master.skripsi.destroy');
         Route::get('/master/skripsi/import', [SkripsiController::class, 'importForm'])->name('master.skripsi.import.form');
@@ -188,6 +189,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/master/sempro', [SemproController::class, 'index'])->name('master.sempro.index');
         Route::get('/master/sempro/export', [SemproController::class, 'exportExcel'])->name('master.sempro.export');
         Route::post('/master/sempro', [SemproController::class, 'store'])->name('master.sempro.store');
+        Route::delete('/master/sempro/destroy-all', [SemproController::class, 'destroyAll'])->name('master.sempro.destroy-all');
         Route::put('/master/sempro/{sidang}', [SemproController::class, 'update'])->name('master.sempro.update');
         Route::delete('/master/sempro/{sidang}', [SemproController::class, 'destroy'])->name('master.sempro.destroy');
         Route::get('/master/sempro/import', [SemproController::class, 'importForm'])->name('master.sempro.import.form');

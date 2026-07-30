@@ -554,6 +554,16 @@ class SemproController extends Controller
         return back()->with('success', 'Data sempro berhasil dihapus!');
     }
 
+    /**
+     * Hapus SELURUH data sempro dengan konfirmasi
+     */
+    public function destroyAll(Request $request): RedirectResponse
+    {
+        $count = Sidang::where('jenis_tugas_akhir', 'sempro')->delete();
+
+        return redirect()->route('master.sempro.index')->with('success', "Berhasil menghapus seluruh data sempro ({$count} data berhasil dihapus).");
+    }
+
     // ─── Import Excel ─────────────────────────────────────────────────────────
 
     public function importForm(): View
@@ -587,7 +597,8 @@ class SemproController extends Controller
             ]);
         }
 
-        $imported = 0;
+        $created  = 0;
+        $updated  = 0;
         $skipped  = 0;
         $errors   = [];
 
@@ -694,50 +705,31 @@ class SemproController extends Controller
             };
 
             $resolveDosen = function (?string $namaDosen) {
-                if (empty($namaDosen)) return null;
-                $dosen = Dosen::where('nama_dosen', $namaDosen)->first();
-                if (!$dosen) {
-                    $dummyNidn = 'NIDN-' . strtoupper(substr(md5($namaDosen), 0, 8));
-                    $dosen = Dosen::create([
-                        'nama_dosen' => $namaDosen,
-                        'nidn'       => $dummyNidn,
-                    ]);
-                }
-                return $dosen;
+                return Dosen::resolveByName($namaDosen);
             };
 
             $startRow = $headerRow + 1;
 
             for ($row = $startRow; $row <= $maxRow; $row++) {
-                $nim       = $getVal($sheet, $colMap['nim'], $row);
-                $namaMhs   = $getVal($sheet, $colMap['nama'], $row);
-                $judul     = $getVal($sheet, $colMap['judul'], $row);
-                $dosbing1  = $getVal($sheet, $colMap['dosbing1'], $row);
-                $dosbing2  = $getVal($sheet, $colMap['dosbing2'], $row);
+                $nim       = $getVal($sheet, $colMap['nim'] ?? '', $row);
+                $namaMhs   = $getVal($sheet, $colMap['nama'] ?? '', $row);
+                $judul     = $getVal($sheet, $colMap['judul'] ?? '', $row);
+                $dosbing1  = $getVal($sheet, $colMap['dosbing1'] ?? '', $row);
+                $dosbing2  = $getVal($sheet, $colMap['dosbing2'] ?? '', $row);
                 $hariTgl   = isset($colMap['hari_tgl']) ? $getVal($sheet, $colMap['hari_tgl'], $row) : '';
                 $tglDaftar = isset($colMap['tgl_daftar']) ? $getVal($sheet, $colMap['tgl_daftar'], $row) : '';
-                $rawJenis  = isset($colMap['jenis']) ? $getVal($sheet, $colMap['jenis'], $row) : '';
-
                 $waktuJam  = isset($colMap['jam']) ? $getVal($sheet, $colMap['jam'], $row) : '';
                 $kodeRuang = isset($colMap['ruang']) ? $getVal($sheet, $colMap['ruang'], $row) : '';
+
+                $hariTglCell   = isset($colMap['hari_tgl']) ? $sheet->getCell($colMap['hari_tgl'] . $row) : null;
+                $tglDaftarCell = isset($colMap['tgl_daftar']) ? $sheet->getCell($colMap['tgl_daftar'] . $row) : null;
 
                 if (empty($nim) && empty($namaMhs)) {
                     continue; // Skip empty rows
                 }
 
-                // Resolve jenis tugas akhir
-                if (!empty($rawJenis)) {
-                    $jenisLower = strtolower($rawJenis);
-                    if (str_contains($jenisLower, 'jurnal') || str_contains($jenisLower, 'artikel')) {
-                        $jenisParsed = 'jurnal';
-                    } elseif (str_contains($jenisLower, 'skripsi') || str_contains($jenisLower, 'sidang')) {
-                        $jenisParsed = 'skripsi';
-                    } else {
-                        $jenisParsed = 'sempro';
-                    }
-                } else {
-                    $jenisParsed = $defaultJenis;
-                }
+                // In Sempro import, the jenis_tugas_akhir is always 'sempro'
+                $jenisParsed = 'sempro';
 
                 try {
                     // Resolve Dosen IDs
@@ -751,12 +743,12 @@ class SemproController extends Controller
                     ) : null;
 
                     // Parse Tanggal Ujian (Jadwal Sempro) from Excel
-                    $tanggalParsed = !empty($hariTgl) ? $this->parseIndonesianDate($hariTgl) : null;
+                    $tanggalParsed = !empty($hariTgl) ? $this->parseIndonesianDate($hariTgl, $hariTglCell) : null;
 
                     // Parse Tanggal Pendaftaran
-                    $tglDaftarParsed = !empty($tglDaftar) ? $this->parseIndonesianDate($tglDaftar) : null;
+                    $tglDaftarParsed = !empty($tglDaftar) ? $this->parseIndonesianDate($tglDaftar, $tglDaftarCell) : null;
 
-                    Sidang::updateOrCreate(
+                    $sidang = Sidang::updateOrCreate(
                         [
                             'nim'               => $nim,
                             'jenis_tugas_akhir' => $jenisParsed,
@@ -779,7 +771,11 @@ class SemproController extends Controller
                         ]
                     );
 
-                    $imported++;
+                    if ($sidang->wasRecentlyCreated) {
+                        $created++;
+                    } else {
+                        $updated++;
+                    }
                 } catch (\Exception $e) {
                     $skipped++;
                     $errors[] = "Baris {$row} ({$namaMhs}): " . $e->getMessage();
@@ -787,9 +783,10 @@ class SemproController extends Controller
             }
         }
 
-        $message = "Berhasil mengimpor {$imported} data sempro!";
+        $total = $created + $updated;
+        $message = "Berhasil mengimpor {$total} data sempro! ({$created} baru, {$updated} diperbarui/ditimpa)";
         if ($skipped > 0) {
-            $message .= " ({$skipped} baris dilewati/gagal)";
+            $message .= " — {$skipped} baris gagal diproses.";
         }
 
         return redirect()->route('master.sempro.index')->with('success', $message);
@@ -798,9 +795,15 @@ class SemproController extends Controller
     /**
      * Helper to parse Indonesian date string like "Senin, 13 Juli 2026" or "13 Juli 2026" to Y-m-d.
      */
-    private function parseIndonesianDate(mixed $dateVal): ?string
+    private function parseIndonesianDate(mixed $dateVal, $cell = null): ?string
     {
         if (empty($dateVal)) return null;
+
+        if ($cell && is_numeric($cell->getValue())) {
+            try {
+                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($cell->getValue())->format('Y-m-d');
+            } catch (\Exception $e) {}
+        }
 
         if (is_numeric($dateVal)) {
             try {
@@ -816,14 +819,8 @@ class SemproController extends Controller
             return $dateStr;
         }
 
-        // Standard d/m/Y or d-m-Y
-        if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $dateStr, $m)) {
-            return sprintf('%04d-%02d-%02d', $m[3], $m[2], $m[1]);
-        }
-
-        // Clean string
+        // Clean string for Indonesian word month
         $clean = preg_replace('/^[A-Za-z]+,\s*/u', '', $dateStr);
-
         $bulanIndo = [
             'Januari'   => '01', 'Februari' => '02', 'Maret'     => '03',
             'April'     => '04', 'Mei'      => '05', 'Juni'      => '06',
@@ -844,6 +841,18 @@ class SemproController extends Controller
         try {
             return Carbon::parse($dateStr)->format('Y-m-d');
         } catch (\Exception $e) {
+            if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $dateStr, $m)) {
+                $val1 = (int)$m[1];
+                $val2 = (int)$m[2];
+                $year = (int)$m[3];
+                if ($val1 > 12 && $val2 <= 12) {
+                    return sprintf('%04d-%02d-%02d', $year, $val2, $val1);
+                } elseif ($val2 > 12 && $val1 <= 12) {
+                    return sprintf('%04d-%02d-%02d', $year, $val1, $val2);
+                } else {
+                    return sprintf('%04d-%02d-%02d', $year, $val2, $val1);
+                }
+            }
             return null;
         }
     }

@@ -160,6 +160,13 @@
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Tambah Data
                 </button>
+                <form action="{{ route('master.sempro.destroy-all') }}" method="POST" onsubmit="return confirm('⚠️ KONFIRMASI HAPUS SEMUA DATA:\nApakah Anda yakin ingin menghapus SELURUH data sempro?\n\nTindakan ini tidak dapat dibatalkan!');" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 border border-rose-500 cursor-pointer">
+                        🗑️ Hapus Semua Data
+                    </button>
+                </form>
             </div>
         </div>
 
