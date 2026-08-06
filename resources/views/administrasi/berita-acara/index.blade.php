@@ -1,5 +1,11 @@
 <x-app-layout title="Administrasi - Berita Acara">
-    <x-slot:header>Administrasi Berita Acara</x-slot:header>
+    <x-slot:header>Administrasi Berita Acara
+        @if(($jenis ?? '') === 'sempro')
+            <span class="ml-2 px-2.5 py-0.5 text-xs font-bold bg-amber-100 text-amber-700 rounded-full border border-amber-200">Sempro</span>
+        @elseif(($jenis ?? '') === 'skripsi')
+            <span class="ml-2 px-2.5 py-0.5 text-xs font-bold bg-blue-100 text-blue-700 rounded-full border border-blue-200">Skripsi</span>
+        @endif
+    </x-slot:header>
 
     <div class="space-y-6">
 
@@ -12,10 +18,17 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </span>
-                    Generate Berita Acara Mahasiswa
+                    Generate Berita Acara
+                    @if(($jenis ?? '') === 'sempro')
+                        <span class="px-2.5 py-1 text-xs font-extrabold bg-amber-100 text-amber-700 rounded-full border border-amber-200">Seminar Proposal</span>
+                    @elseif(($jenis ?? '') === 'skripsi')
+                        <span class="px-2.5 py-1 text-xs font-extrabold bg-blue-100 text-blue-700 rounded-full border border-blue-200">Sidang Skripsi</span>
+                    @else
+                        <span class="px-2.5 py-1 text-xs font-extrabold bg-slate-100 text-slate-500 rounded-full border border-slate-200">Semua Jenis</span>
+                    @endif
                 </h1>
                 <p class="text-sm text-slate-500 mt-1">
-                    Generate berita acara sidang skripsi dan jurnal, baik per mahasiswa secara individual maupun cetak massal berdasarkan rentang tanggal pendaftaran.
+                    Generate berita acara sidang, baik per mahasiswa secara individual maupun cetak massal berdasarkan rentang tanggal pendaftaran.
                 </p>
             </div>
 
@@ -56,6 +69,9 @@
         <!-- Filter Range Tanggal Pendaftaran & Periode -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
             <form method="GET" action="{{ route('administrasi.berita-acara.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                @if(($jenis ?? '') !== '')
+                    <input type="hidden" name="jenis" value="{{ $jenis }}">
+                @endif
                 
                 <!-- Periode -->
                 <div>

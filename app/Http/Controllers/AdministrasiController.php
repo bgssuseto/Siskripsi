@@ -856,8 +856,9 @@ class AdministrasiController extends Controller
 
         $selectedPeriode = Periode::find($selectedPeriodeId);
 
-        $tglMulai = $request->get('tanggal_pendaftaran_mulai');
+        $tglMulai  = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $jenis     = $request->get('jenis'); // 'skripsi' | 'sempro' | null
 
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
@@ -877,6 +878,13 @@ class AdministrasiController extends Controller
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
         }
 
+        // Filter berdasarkan jenis tugas akhir
+        if ($jenis === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } elseif ($jenis === 'skripsi') {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
+
         $sidangs = $query->orderBy('tanggal', 'asc')
                          ->orderBy('jam', 'asc')
                          ->orderBy('nama_mahasiswa', 'asc')
@@ -884,7 +892,7 @@ class AdministrasiController extends Controller
 
         return view('administrasi.berita-acara.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId',
-            'tglMulai', 'tglSelesai', 'sidangs'
+            'tglMulai', 'tglSelesai', 'jenis', 'sidangs'
         ));
     }
 
@@ -1125,17 +1133,25 @@ class AdministrasiController extends Controller
         }
 
         $selectedPeriode = Periode::find($selectedPeriodeId);
+        $jenis = $request->get('jenis'); // 'skripsi' | 'sempro' | null
 
         $query = Sidang::query();
         if ($selectedPeriodeId) {
             $query->where('periode_id', $selectedPeriodeId);
         }
 
-        $totalSidangs = (clone $query)->count();
-        $totalSempro  = (clone $query)->where('jenis_tugas_akhir', 'sempro')->count();
-        $totalSkripsi = (clone $query)->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count();
+        // Filter berdasarkan jenis tugas akhir
+        if ($jenis === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } elseif ($jenis === 'skripsi') {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
 
-        // Unique lecturers count
+        $totalSidangs = (clone $query)->count();
+        $totalSempro  = ($jenis === 'skripsi') ? 0 : (clone $query)->where('jenis_tugas_akhir', 'sempro')->count();
+        $totalSkripsi = ($jenis === 'sempro') ? 0 : (clone $query)->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count();
+
+        // Unique lecturers count (sesuai jenis yang ditampilkan)
         $dosenPembimbingIds = (clone $query)->pluck('dosen_pembimbing_utama_id')
             ->merge((clone $query)->pluck('dosen_pembimbing_pendamping_id'))
             ->filter()->unique();
@@ -1148,7 +1164,7 @@ class AdministrasiController extends Controller
         return view('administrasi.sk.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId',
             'totalSidangs', 'totalSempro', 'totalSkripsi',
-            'dosenPembimbingIds', 'dosenPengujiIds'
+            'dosenPembimbingIds', 'dosenPengujiIds', 'jenis'
         ));
     }    /**
      * Helper to generate unique & valid Excel sheet title for a lecturer (Max 31 chars)

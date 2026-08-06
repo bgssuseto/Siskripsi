@@ -12,10 +12,15 @@
                     <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         Modul Administrasi Surat Keputusan (SK)
+                        @if(($jenis ?? '') === 'sempro')
+                            &nbsp;— <span class="text-amber-300">Seminar Proposal</span>
+                        @elseif(($jenis ?? '') === 'skripsi')
+                            &nbsp;— <span class="text-blue-300">Skripsi</span>
+                        @endif
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Generate SK Dekan (Excel Output)</h1>
                     <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                        Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian (Ketua, Anggota 1, & Anggota 2) dalam format Excel (.xlsx).
+                        Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian dalam format Excel (.xlsx).
                     </p>
                 </div>
 
@@ -43,6 +48,9 @@
             </h3>
 
             <form method="GET" action="{{ route('administrasi.sk.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                @if(($jenis ?? '') !== '')
+                    <input type="hidden" name="jenis" value="{{ $jenis }}">
+                @endif
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
                     <select name="periode_id" onchange="this.form.submit()" class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">

@@ -898,30 +898,95 @@
                              x-transition:leave-end="opacity-0 -translate-y-2"
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
-                            <a href="{{ route('administrasi.undangan.index') }}"
-                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
-                                      {{ request()->routeIs('administrasi.undangan.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
-                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('administrasi.undangan.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                </svg>
-                                Undangan
-                            </a>
-                            <a href="{{ route('administrasi.berita-acara.index') }}"
-                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
-                                      {{ request()->routeIs('administrasi.berita-acara.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
-                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('administrasi.berita-acara.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                Berita Acara
-                            </a>
-                            <a href="{{ route('administrasi.sk.index') }}"
-                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
-                                      {{ request()->routeIs('administrasi.sk.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
-                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('administrasi.sk.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Surat Keputusan (SK)
-                            </a>
+
+                            {{-- ── Sub-group: Skripsi ── --}}
+                            @php $isSkripsiAdminActive = request()->routeIs('administrasi.*') && request()->get('jenis') === 'skripsi'; @endphp
+                            <div x-data="{ open: {{ $isSkripsiAdminActive ? 'true' : 'false' }} }">
+                                <button @click="open = !open"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                               {{ $isSkripsiAdminActive ? 'bg-blue-600/20 text-blue-300' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                    <svg class="w-4 h-4 shrink-0 {{ $isSkripsiAdminActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-blue-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                    </svg>
+                                    <span class="flex-1 text-left">Skripsi</span>
+                                    <svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0"
+                                         :class="{ 'rotate-180': open }"
+                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                <div x-show="open"
+                                     x-transition:enter="transition-all duration-150 ease-out"
+                                     x-transition:enter-start="opacity-0 -translate-y-1"
+                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     class="mt-0.5 ml-3 pl-3 border-l border-white/[0.05] space-y-0.5"
+                                     x-cloak>
+                                    @php $jenisSkripsi = request()->get('jenis') === 'skripsi'; @endphp
+                                    <a href="{{ route('administrasi.undangan.index', ['jenis' => 'skripsi']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.undangan.*') && $jenisSkripsi ? 'bg-blue-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.undangan.*') && $jenisSkripsi ? 'bg-blue-300' : 'bg-slate-600 group-hover:bg-blue-400' }} transition-colors"></span>
+                                        Undangan
+                                    </a>
+                                    <a href="{{ route('administrasi.berita-acara.index', ['jenis' => 'skripsi']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.berita-acara.*') && $jenisSkripsi ? 'bg-blue-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.berita-acara.*') && $jenisSkripsi ? 'bg-blue-300' : 'bg-slate-600 group-hover:bg-blue-400' }} transition-colors"></span>
+                                        Berita Acara
+                                    </a>
+                                    <a href="{{ route('administrasi.sk.index', ['jenis' => 'skripsi']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.sk.*') && $jenisSkripsi ? 'bg-blue-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.sk.*') && $jenisSkripsi ? 'bg-blue-300' : 'bg-slate-600 group-hover:bg-blue-400' }} transition-colors"></span>
+                                        Surat Keputusan (SK)
+                                    </a>
+                                </div>
+                            </div>
+
+                            {{-- ── Sub-group: Sempro ── --}}
+                            @php $isSemproAdminActive = request()->routeIs('administrasi.*') && request()->get('jenis') === 'sempro'; @endphp
+                            <div x-data="{ open: {{ $isSemproAdminActive ? 'true' : 'false' }} }">
+                                <button @click="open = !open"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                               {{ $isSemproAdminActive ? 'bg-amber-600/20 text-amber-300' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                    <svg class="w-4 h-4 shrink-0 {{ $isSemproAdminActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-amber-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span class="flex-1 text-left">Sempro</span>
+                                    <svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 shrink-0"
+                                         :class="{ 'rotate-180': open }"
+                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                <div x-show="open"
+                                     x-transition:enter="transition-all duration-150 ease-out"
+                                     x-transition:enter-start="opacity-0 -translate-y-1"
+                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     class="mt-0.5 ml-3 pl-3 border-l border-white/[0.05] space-y-0.5"
+                                     x-cloak>
+                                    @php $jenisSempro = request()->get('jenis') === 'sempro'; @endphp
+                                    <a href="{{ route('administrasi.undangan.index', ['jenis' => 'sempro']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.undangan.*') && $jenisSempro ? 'bg-amber-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.undangan.*') && $jenisSempro ? 'bg-amber-300' : 'bg-slate-600 group-hover:bg-amber-400' }} transition-colors"></span>
+                                        Undangan
+                                    </a>
+                                    <a href="{{ route('administrasi.berita-acara.index', ['jenis' => 'sempro']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.berita-acara.*') && $jenisSempro ? 'bg-amber-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.berita-acara.*') && $jenisSempro ? 'bg-amber-300' : 'bg-slate-600 group-hover:bg-amber-400' }} transition-colors"></span>
+                                        Berita Acara
+                                    </a>
+                                    <a href="{{ route('administrasi.sk.index', ['jenis' => 'sempro']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.sk.*') && $jenisSempro ? 'bg-amber-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.sk.*') && $jenisSempro ? 'bg-amber-300' : 'bg-slate-600 group-hover:bg-amber-400' }} transition-colors"></span>
+                                        Surat Keputusan (SK)
+                                    </a>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
