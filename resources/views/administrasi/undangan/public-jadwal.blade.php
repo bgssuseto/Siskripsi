@@ -32,6 +32,74 @@
             <p class="text-xs text-indigo-200 mt-1 font-mono">NIDN: {{ $dosen->nidn ?? '-' }}</p>
         </div>
 
+        @if($mySidangs->isNotEmpty())
+        {{-- ══ RINGKASAN PER HARI ══ --}}
+        @php
+            // Group sidangs by date
+            $groupedByDate = $mySidangs->filter(fn($s) => $s->tanggal)->groupBy(fn($s) => $s->tanggal->format('Y-m-d'))->sortKeys();
+        @endphp
+        <div class="bg-slate-800/80 rounded-3xl p-5 sm:p-6 border border-slate-700/80 shadow-lg space-y-4">
+            <div class="flex items-center gap-3 pb-3 border-b border-slate-700/60">
+                <div class="w-9 h-9 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-lg shrink-0">
+                    📊
+                </div>
+                <div>
+                    <h2 class="text-sm font-extrabold text-white uppercase tracking-wider">Ringkasan Jadwal Per Hari</h2>
+                    <p class="text-[11px] text-slate-400">Total {{ $mySidangs->count() }} mahasiswa diuji dalam {{ $groupedByDate->count() }} hari</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                @foreach($groupedByDate as $dateKey => $sidangsInDay)
+                    @php
+                        $dateCarbon = \Carbon\Carbon::parse($dateKey)->locale('id');
+                        $hariNama = $dateCarbon->isoFormat('dddd, D MMMM Y');
+                        $totalMhs = $sidangsInDay->count();
+
+                        // Parse jam values to find earliest start and latest end
+                        $jamValues = $sidangsInDay->pluck('jam')->filter()->values();
+                        $jamMulai = '-';
+                        $jamSelesai = '-';
+                        if ($jamValues->isNotEmpty()) {
+                            $starts = [];
+                            $ends = [];
+                            foreach ($jamValues as $j) {
+                                // Format: "08.00 - 09.00" or "08:00 - 09:00"
+                                $parts = preg_split('/\s*[-–]\s*/', $j);
+                                if (count($parts) >= 1) $starts[] = trim($parts[0]);
+                                if (count($parts) >= 2) $ends[] = trim($parts[1]);
+                            }
+                            sort($starts);
+                            rsort($ends);
+                            $jamMulai = $starts[0] ?? '-';
+                            $jamSelesai = $ends[0] ?? '-';
+                        }
+                    @endphp
+                    <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-700/50 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <p class="text-xs font-extrabold text-white">📅 {{ $hariNama }}</p>
+                            <span class="px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 text-[11px] font-extrabold rounded-full border border-indigo-500/30">
+                                {{ $totalMhs }} Mahasiswa
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-4 text-[11px]">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-emerald-400 font-bold">▶</span>
+                                <span class="text-slate-400">Mulai:</span>
+                                <span class="font-extrabold text-emerald-400">{{ $jamMulai }} WIB</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-rose-400 font-bold">■</span>
+                                <span class="text-slate-400">Selesai:</span>
+                                <span class="font-extrabold text-rose-400">{{ $jamSelesai }} WIB</span>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         <!-- Schedule List -->
         <div class="space-y-4">
             <div class="flex items-center justify-between px-2">
@@ -103,7 +171,7 @@
                                     <div>
                                         <p class="text-[10px] text-slate-400 uppercase font-bold">Hari & Waktu</p>
                                         <p class="text-xs font-extrabold text-white">
-                                            {{ $s->tanggal ? $s->tanggal->translatedFormat('l, d F Y') : 'Belum di-plotting' }}
+                                            {{ $s->tanggal ? $s->tanggal->locale('id')->isoFormat('dddd, D MMMM Y') : 'Belum di-plotting' }}
                                         </p>
                                         <p class="text-xs font-bold text-indigo-400">
                                             {{ $s->jam ?? '-' }} WIB
