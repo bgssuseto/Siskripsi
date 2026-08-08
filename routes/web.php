@@ -28,6 +28,9 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Public Route (View Jadwal Dosen Tanpa Login)
+Route::get('/jadwal-dosen/{dosen}', [AdministrasiController::class, 'publicJadwalDosen'])->name('public.dosen.jadwal');
+
 // Guest routes
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -198,6 +201,7 @@ Route::middleware('auth')->group(function () {
 
         // Jadwal Sidang Skripsi
         Route::get('/jadwal-ujian', [SkripsiController::class, 'jadwalIndex'])->name('jadwal-ujian.index');
+        Route::get('/jadwal-ujian/export-bentrok', [SkripsiController::class, 'exportBentrok'])->name('jadwal-ujian.export-bentrok');
         Route::post('/jadwal/skripsi/{sidang}/jadwalkan', [SkripsiController::class, 'jadwalkan'])->name('jadwal.skripsi.jadwalkan');
 
         // Jadwal Sempro

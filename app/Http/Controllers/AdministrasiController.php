@@ -867,7 +867,7 @@ class AdministrasiController extends Controller
         $sheet->getStyle('A7')->getFont()->setBold(true);
 
         // ── Table Header Row ──
-        $headers = ['No', 'NIM', 'Nama Mahasiswa', 'Judul Skripsi / Artikel', 'Peran Penguji', 'Hari & Tanggal', 'Jam', 'Ruangan', 'Jenis Ujian'];
+        $headers = ['NIM', 'Nama Mahasiswa', 'Peran', 'Ketua Penguji', 'Penguji 1', 'Penguji 2', 'Hari', 'Jam', 'Ruangan'];
         $startRow = 9;
 
         foreach ($headers as $colIdx => $headerText) {
@@ -882,35 +882,37 @@ class AdministrasiController extends Controller
 
         // ── Populate Data Rows ──
         $currentRow = 10;
-        $no = 1;
 
         foreach ($mySidangs as $s) {
             $role = '-';
             if ($s->ketua_penguji_id == $dosen->id) {
                 $role = 'Ketua Penguji';
             } elseif ($s->anggota_penguji_1_id == $dosen->id) {
-                $role = 'Anggota Penguji 1';
+                $role = 'Penguji 1';
             } elseif ($s->anggota_penguji_2_id == $dosen->id) {
-                $role = 'Anggota Penguji 2';
+                $role = 'Penguji 2';
             } elseif ($s->dosen_pembimbing_utama_id == $dosen->id) {
-                $role = 'Dosen Pembimbing Utama';
+                $role = 'Pembimbing Utama';
             } elseif ($s->dosen_pembimbing_pendamping_id == $dosen->id) {
-                $role = 'Dosen Pembimbing Pendamping';
+                $role = 'Pembimbing Pendamping';
             }
+
+            $ketuaNama = $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-';
+            $penguji1Nama = $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-';
+            $penguji2Nama = $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-';
 
             $tglStr = $s->tanggal ? Carbon::parse($s->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y') : '-';
             $ruangKode = $s->ruang ? $s->ruang->kode_ruangan : '-';
-            $jenisStr = ($s->jenis_tugas_akhir == 'sidang' || $s->jenis_tugas_akhir == 'skripsi') ? 'Sidang Skripsi' : 'Sidang Jurnal';
 
-            $sheet->setCellValue("A{$currentRow}", $no++);
-            $sheet->setCellValue("B{$currentRow}", $s->nim);
-            $sheet->setCellValue("C{$currentRow}", $s->nama_mahasiswa);
-            $sheet->setCellValue("D{$currentRow}", $s->judul_skripsi);
-            $sheet->setCellValue("E{$currentRow}", $role);
-            $sheet->setCellValue("F{$currentRow}", $tglStr);
-            $sheet->setCellValue("G{$currentRow}", $s->jam ?? '-');
-            $sheet->setCellValue("H{$currentRow}", $ruangKode);
-            $sheet->setCellValue("I{$currentRow}", $jenisStr);
+            $sheet->setCellValue("A{$currentRow}", $s->nim);
+            $sheet->setCellValue("B{$currentRow}", $s->nama_mahasiswa);
+            $sheet->setCellValue("C{$currentRow}", $role);
+            $sheet->setCellValue("D{$currentRow}", $ketuaNama);
+            $sheet->setCellValue("E{$currentRow}", $penguji1Nama);
+            $sheet->setCellValue("F{$currentRow}", $penguji2Nama);
+            $sheet->setCellValue("G{$currentRow}", $tglStr);
+            $sheet->setCellValue("H{$currentRow}", $s->jam ?? '-');
+            $sheet->setCellValue("I{$currentRow}", $ruangKode);
 
             $currentRow++;
         }
@@ -1898,5 +1900,31 @@ class AdministrasiController extends Controller
             'Content-Type'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Cache-Control' => 'max-age=0',
         ]);
+    }
+
+    /**
+     * Public page for viewing lecturer examiner schedule without login
+     */
+    public function publicJadwalDosen(Request $request, Dosen $dosen): View
+    {
+        $activePeriode = Periode::where('aktif', true)->first();
+        
+        $mySidangs = Sidang::with([
+            'pembimbingUtama', 'pembimbingPendamping',
+            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
+            'ruang', 'periode'
+        ])
+        ->where(function ($q) use ($dosen) {
+            $q->where('ketua_penguji_id', $dosen->id)
+              ->orWhere('anggota_penguji_1_id', $dosen->id)
+              ->orWhere('anggota_penguji_2_id', $dosen->id)
+              ->orWhere('dosen_pembimbing_utama_id', $dosen->id)
+              ->orWhere('dosen_pembimbing_pendamping_id', $dosen->id);
+        })
+        ->orderBy('tanggal', 'asc')
+        ->orderBy('jam', 'asc')
+        ->get();
+
+        return view('administrasi.undangan.public-jadwal', compact('dosen', 'mySidangs', 'activePeriode'));
     }
 }

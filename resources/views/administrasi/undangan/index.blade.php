@@ -171,6 +171,14 @@
                                         </svg>
                                         PDF
                                     </a>
+                                     <a href="{{ route('public.dosen.jadwal', ['dosen' => $item['dosen']->id]) }}"
+                                        target="_blank"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs rounded-lg transition-all border border-sky-200" title="Buka Link Jadwal Tanpa Login">
+                                         <svg class="w-3.5 h-3.5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                         </svg>
+                                         Link Publik
+                                     </a>
                                     <a href="{{ route('administrasi.undangan.excel', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium text-xs rounded-lg transition-all border border-emerald-200" title="Export Excel">
                                         <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

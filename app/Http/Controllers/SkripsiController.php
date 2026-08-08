@@ -206,6 +206,88 @@ class SkripsiController extends Controller
         ));
     }
 
+    // ─── Export Jadwal Bentrok ────────────────────────────────────────────────
+    
+    public function exportBentrok(Request $request)
+    {
+        $allSidangs = Sidang::with([
+            'pembimbingUtama', 'pembimbingPendamping',
+            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
+            'ruang', 'periode'
+        ])->get();
+
+        $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
+        
+        $conflictIds = [];
+        foreach ($conflictMap as $sId => $cEntry) {
+            if (!empty($cEntry['schedule']) || !empty($cEntry['rules'])) {
+                $conflictIds[] = $sId;
+            }
+        }
+
+        if (empty($conflictIds)) {
+            return back()->with('success', 'Tidak ada jadwal yang bentrok.');
+        }
+
+        $data = $allSidangs->whereIn('id', $conflictIds)->sortBy('tanggal');
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Jadwal Bentrok');
+
+        // Header
+        $headers = ['No', 'NIM', 'Nama Mahasiswa', 'Tipe Bentrok', 'Keterangan Bentrok', 'Hari, Tanggal', 'Jam', 'Ruangan'];
+        foreach ($headers as $i => $h) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValue("{$col}1", $h);
+            $sheet->getStyle("{$col}1")->getFont()->setBold(true);
+            $sheet->getStyle("{$col}1")->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFDC2626');
+            $sheet->getStyle("{$col}1")->getFont()->getColor()->setARGB('FFFFFFFF');
+        }
+
+        $row = 2;
+        $no = 1;
+        foreach ($data as $s) {
+            $cEntry = $conflictMap[$s->id];
+            $hasSchedule = !empty($cEntry['schedule']);
+            $hasRules = !empty($cEntry['rules']);
+            
+            $tipe = [];
+            if ($hasSchedule) $tipe[] = 'Jadwal';
+            if ($hasRules) $tipe[] = 'Aturan';
+            
+            $keterangan = array_merge($cEntry['schedule'] ?? [], $cEntry['rules'] ?? []);
+            
+            $sheet->setCellValue("A{$row}", $no++);
+            $sheet->setCellValue("B{$row}", $s->nim);
+            $sheet->setCellValue("C{$row}", $s->nama_mahasiswa);
+            $sheet->setCellValue("D{$row}", implode(', ', $tipe));
+            $sheet->setCellValue("E{$row}", implode("\n", $keterangan));
+            $sheet->setCellValue("F{$row}", $s->tanggal ? $s->tanggal->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("G{$row}", $s->jam ?? '-');
+            $sheet->setCellValue("H{$row}", $s->ruang?->kode_ruangan ?? '-');
+            
+            $sheet->getStyle("E{$row}")->getAlignment()->setWrapText(true);
+            $row++;
+        }
+
+        foreach (range('A', 'H') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = "Jadwal_Bentrok_" . date('Ymd_His') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"{$filename}\"");
+        header('Cache-Control: max-age=0');
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit;
+    }
+
     // ─── Export Excel (Data Skripsi) ──────────────────────────────────────────
 
     public function exportExcel(Request $request)

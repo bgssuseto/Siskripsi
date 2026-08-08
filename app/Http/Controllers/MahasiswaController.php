@@ -176,20 +176,6 @@ class MahasiswaController extends Controller
             return back()->with('error', $msg);
         }
 
-        // Check if registering for skripsi, ensure student has registered sempro first
-        if ($request->input('jenis_tugas_akhir') === 'skripsi') {
-            $hasSempro = Sidang::where('nim', $request->input('nim'))
-                ->where('jenis_tugas_akhir', 'sempro')
-                ->exists();
-
-            if (!$hasSempro) {
-                $msg = 'Pendaftaran Skripsi gagal! Anda belum melakukan pendaftaran Seminar Proposal (Sempro). Silakan daftar Sempro terlebih dahulu.';
-                if ($request->expectsJson()) {
-                    return response()->json(['success' => false, 'message' => $msg], 422);
-                }
-                return back()->with('error', $msg);
-            }
-        }
 
         // Validate request
         $validated = $request->validate([

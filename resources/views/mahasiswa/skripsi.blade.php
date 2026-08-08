@@ -60,20 +60,7 @@
 
                 @if($activeWave)
                     <div class="mt-4">
-                        @if(!$hasSempro)
-                            <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-3.5 text-xs text-amber-800 dark:text-amber-300 font-semibold flex items-start gap-2.5">
-                                <span class="text-base shrink-0">⚠️</span>
-                                <div>
-                                    <p class="font-extrabold">Belum Mendaftar Sempro</p>
-                                    <p class="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5 leading-relaxed">
-                                        Anda belum mendaftar Seminar Proposal (Sempro). Pendaftaran Sidang Skripsi hanya dapat dilakukan setelah Anda mendaftar Sempro.
-                                    </p>
-                                    <a href="{{ route('mahasiswa.sempro.index') }}" class="inline-flex items-center gap-1 mt-2 text-[11px] font-extrabold text-amber-900 dark:text-amber-200 hover:underline">
-                                        <span>👉</span> Ke Halaman Pendaftaran Sempro ↗
-                                    </a>
-                                </div>
-                            </div>
-                        @elseif(!$mySidang)
+                        @if(!$mySidang)
                             <button @click="regModal = true" style="background-color: #9333ea; color: #ffffff;" class="w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer border border-purple-500">
                                 <span>📝</span> Ajukan Pendaftaran Sidang Skripsi
                             </button>

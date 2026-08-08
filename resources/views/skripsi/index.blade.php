@@ -318,6 +318,11 @@
                             @endif
                         </ul>
                         <p class="text-xs mt-1.5 opacity-75">Klik ✏️ pada baris tersebut untuk melihat detail dan memperbaiki.</p>
+                        <div class="mt-2">
+                            <a href="{{ route('jadwal-ujian.export-bentrok') }}" class="btn btn-danger btn-sm">
+                                📥 Download Data Jadwal Bentrok (Excel)
+                            </a>
+                        </div>
                     </div>
                 </div>
             @endif
@@ -332,6 +337,11 @@
             </div>
             
             <div class="flex items-center gap-3 flex-wrap">
+                @if(($scheduleConflictCount ?? 0) > 0 || ($ruleViolationCount ?? 0) > 0)
+                    <a href="{{ route('jadwal-ujian.export-bentrok') }}" class="btn btn-danger btn-sm">
+                        ⚠️ Export Jadwal Bentrok
+                    </a>
+                @endif
                 {{-- View Toggle --}}
                 <div class="view-toggle">
                     <button @click="currentView = 'table'" :class="currentView === 'table' ? 'active' : ''" class="view-toggle-btn">

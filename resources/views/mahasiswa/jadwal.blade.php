@@ -14,6 +14,9 @@
         </div>
     </div>
 
+    <!-- Informasi & Tata Tertib Persiapan Sidang -->
+    <x-info-persiapan-sidang />
+
     <!-- Main Schedule Section -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 p-6 space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">

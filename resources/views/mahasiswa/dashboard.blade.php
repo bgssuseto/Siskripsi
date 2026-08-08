@@ -18,6 +18,9 @@
         </div>
     </div>
 
+    <!-- Informasi & Tata Tertib Persiapan Sidang -->
+    <x-info-persiapan-sidang />
+
     <!-- Status Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Active Period Card -->

@@ -37,16 +37,22 @@ class DatabaseSeeder extends Seeder
         $d4 = Dosen::firstOrCreate(['nidn' => '0031107804'], ['nama_dosen' => 'Aditya Akbar Riadi, S.Kom., M.Kom']);
         $d5 = Dosen::firstOrCreate(['nidn' => '0022098905'], ['nama_dosen' => 'Dr. Anastasya Latubessy, S.Kom., M.Cs']);
 
-        // ── Dosen User Account ──────────────────────────────────────────
-        User::firstOrCreate(
-            ['email' => 'arief@skripsi.ac.id'],
-            [
-                'name' => 'Arief Susanto, ST., M.Kom',
-                'password' => bcrypt('password'),
-                'role' => User::ROLE_DOSEN,
-                'dosen_id' => $d1->id
-            ]
-        );
+        // ── Dosen User Accounts ─────────────────────────────────────────
+        foreach (Dosen::all() as $dosen) {
+            $cleanName = Dosen::cleanName($dosen->nama_dosen);
+            $parts = explode(' ', $cleanName);
+            $firstWord = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $parts[0] ?? 'dosen'));
+            $email = $firstWord . $dosen->id . '@skripsi.ac.id';
+            User::updateOrCreate(
+                ['dosen_id' => $dosen->id],
+                [
+                    'email' => $email,
+                    'name' => $dosen->nama_dosen,
+                    'password' => bcrypt('password'),
+                    'role' => User::ROLE_DOSEN,
+                ]
+            );
+        }
 
         // ── Sample Ruang ───────────────────────────────────────────────
         $r1 = Ruang::firstOrCreate(['kode_ruangan' => 'J.5.05'], ['nama_ruangan' => 'Ruang J.5.05 (Lt. 5 Gedung J)']);
