@@ -180,18 +180,21 @@
                                          Link Publik
                                      </a>
                                      @php
-                                         $pubLink = $item['dosen']->public_url;
-                                         $jenisStr = ($jenisUndangan === 'skripsi') ? 'Sidang Skripsi' : 'Seminar Proposal (Sempro)';
-                                         $waText = "Yth. Bapak/Ibu " . $item['dosen']->nama_dosen . ",\n\n" .
-                                                   "Berikut disampaikan informasi jadwal menguji " . $jenisStr . " Program Studi Teknik Informatika Universitas Muria Kudus.\n\n" .
-                                                   "Bapak/Ibu dapat mengakses rincian agenda jadwal menguji secara lengkap melalui tautan berikut:\n" .
-                                                   $pubLink . "\n\n" .
-                                                   "Demikian informasi ini kami sampaikan. Atas perhatian dan kesediaan Bapak/Ibu, kami ucapkan terima kasih.\n\n" .
-                                                   "--\nPanitia Ujian & Skripsi Prodi Teknik Informatika UMK";
-                                         $waLink = $item['dosen']->wa_formatted 
-                                                   ? 'https://wa.me/' . $item['dosen']->wa_formatted . '?text=' . rawurlencode($waText)
-                                                   : 'https://api.whatsapp.com/send?text=' . rawurlencode($waText);
-                                     @endphp
+                                          $pubLink = $item['dosen']->public_url;
+                                          $jenisTitle = ($jenisUndangan === 'skripsi') ? 'Ujian Skripsi' : 'Seminar Proposal (Sempro)';
+                                          $waText = "Yth. Bapak/Ibu Dosen Penguji " . ($jenisUndangan === 'skripsi' ? 'Skripsi' : 'Sempro') . "\n" .
+                                                    "Program Studi Teknik Informatika\n\n" .
+                                                    "Dengan hormat,\n\n" .
+                                                    "Berikut kami sampaikan undangan pelaksanaan " . $jenisTitle . " beserta lampiran jadwal dan surat undangan untuk masing-masing dosen penguji.\n\n" .
+                                                    "Link Jadwal Ujian:\n" .
+                                                    $pubLink . "\n\n" .
+                                                    "Mohon Bapak/Ibu berkenan untuk mencermati kembali jadwal dan lampiran undangan yang telah kami kirimkan. Apabila terdapat kesalahan data, bentrok jadwal, mohon segera menghubungi Koordinator Skripsi agar dapat segera ditindaklanjuti.\n\n" .
+                                                    "Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.\n\n" .
+                                                    "Wassalamu'alaikum warahmatullahi wabarakatuh.";
+                                          $waLink = $item['dosen']->wa_formatted 
+                                                    ? 'https://wa.me/' . $item['dosen']->wa_formatted . '?text=' . rawurlencode($waText)
+                                                    : 'https://api.whatsapp.com/send?text=' . rawurlencode($waText);
+                                      @endphp
                                      <a href="{{ $waLink }}"
                                         target="_blank"
                                         class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-lg transition-all border border-emerald-300 shadow-2xs" title="Kirim Jadwal via WhatsApp Broadcast">
