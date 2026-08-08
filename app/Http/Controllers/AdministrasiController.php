@@ -77,7 +77,6 @@ class AdministrasiController extends Controller
             if ($s->ketua_penguji_id) $dosenExaminerIds->push($s->ketua_penguji_id);
             if ($s->anggota_penguji_1_id) $dosenExaminerIds->push($s->anggota_penguji_1_id);
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
-            if ($s->dosen_pembimbing_utama_id) $dosenExaminerIds->push($s->dosen_pembimbing_utama_id);
         }
 
         $dosenExaminerIds = $dosenExaminerIds->unique();
@@ -90,8 +89,7 @@ class AdministrasiController extends Controller
                 $mySidangs = $sidangs->filter(function ($s) use ($dosen) {
                     return $s->ketua_penguji_id == $dosen->id ||
                            $s->anggota_penguji_1_id == $dosen->id ||
-                           $s->anggota_penguji_2_id == $dosen->id ||
-                           $s->dosen_pembimbing_utama_id == $dosen->id;
+                           $s->anggota_penguji_2_id == $dosen->id;
                 });
 
                 $sessions = $this->buildSimplifiedSessions($mySidangs);
@@ -132,8 +130,7 @@ class AdministrasiController extends Controller
         ->where(function ($q) use ($dosen) {
             $q->where('ketua_penguji_id', $dosen->id)
               ->orWhere('anggota_penguji_1_id', $dosen->id)
-              ->orWhere('anggota_penguji_2_id', $dosen->id)
-              ->orWhere('dosen_pembimbing_utama_id', $dosen->id);
+              ->orWhere('anggota_penguji_2_id', $dosen->id);
         });
 
         if ($jenisUndangan === 'sempro') {
@@ -201,8 +198,7 @@ class AdministrasiController extends Controller
         ->where(function ($q) use ($dosen) {
             $q->where('ketua_penguji_id', $dosen->id)
               ->orWhere('anggota_penguji_1_id', $dosen->id)
-              ->orWhere('anggota_penguji_2_id', $dosen->id)
-              ->orWhere('dosen_pembimbing_utama_id', $dosen->id);
+              ->orWhere('anggota_penguji_2_id', $dosen->id);
         });
 
         if ($jenisUndangan === 'sempro') {
@@ -279,8 +275,7 @@ class AdministrasiController extends Controller
         ->where(function ($q) use ($dosen) {
             $q->where('ketua_penguji_id', $dosen->id)
               ->orWhere('anggota_penguji_1_id', $dosen->id)
-              ->orWhere('anggota_penguji_2_id', $dosen->id)
-              ->orWhere('dosen_pembimbing_utama_id', $dosen->id);
+              ->orWhere('anggota_penguji_2_id', $dosen->id);
         });
 
         if ($jenisUndangan === 'sempro') {
@@ -437,7 +432,6 @@ class AdministrasiController extends Controller
             if ($s->ketua_penguji_id) $dosenExaminerIds->push($s->ketua_penguji_id);
             if ($s->anggota_penguji_1_id) $dosenExaminerIds->push($s->anggota_penguji_1_id);
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
-            if ($s->dosen_pembimbing_utama_id) $dosenExaminerIds->push($s->dosen_pembimbing_utama_id);
         }
 
         $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->get();
@@ -467,8 +461,7 @@ class AdministrasiController extends Controller
             $mySidangs = $sidangs->filter(function ($s) use ($dosen) {
                 return $s->ketua_penguji_id == $dosen->id ||
                        $s->anggota_penguji_1_id == $dosen->id ||
-                       $s->anggota_penguji_2_id == $dosen->id ||
-                       $s->dosen_pembimbing_utama_id == $dosen->id;
+                       $s->anggota_penguji_2_id == $dosen->id;
             })->sortBy('tanggal')->values();
 
             if ($mySidangs->isEmpty()) continue;
@@ -534,9 +527,7 @@ class AdministrasiController extends Controller
         $query->where(function ($q) use ($dosen) {
             $q->where('ketua_penguji_id', $dosen->id)
               ->orWhere('anggota_penguji_1_id', $dosen->id)
-              ->orWhere('anggota_penguji_2_id', $dosen->id)
-              ->orWhere('dosen_pembimbing_utama_id', $dosen->id)
-              ->orWhere('dosen_pembimbing_pendamping_id', $dosen->id);
+              ->orWhere('anggota_penguji_2_id', $dosen->id);
         });
 
         $mySidangs = $query->orderBy('tanggal')->get();
@@ -612,7 +603,6 @@ class AdministrasiController extends Controller
             if ($s->ketua_penguji_id) $dosenExaminerIds->push($s->ketua_penguji_id);
             if ($s->anggota_penguji_1_id) $dosenExaminerIds->push($s->anggota_penguji_1_id);
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
-            if ($s->dosen_pembimbing_utama_id) $dosenExaminerIds->push($s->dosen_pembimbing_utama_id);
         }
 
         $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->orderBy('nama_dosen')->get();
@@ -634,8 +624,7 @@ class AdministrasiController extends Controller
             $mySidangs = $sidangs->filter(function ($s) use ($dosen) {
                 return $s->ketua_penguji_id == $dosen->id ||
                        $s->anggota_penguji_1_id == $dosen->id ||
-                       $s->anggota_penguji_2_id == $dosen->id ||
-                       $s->dosen_pembimbing_utama_id == $dosen->id;
+                       $s->anggota_penguji_2_id == $dosen->id;
             })->sortBy('tanggal')->values();
 
             if ($mySidangs->isEmpty()) continue;
@@ -884,10 +873,6 @@ class AdministrasiController extends Controller
                 $role = 'Penguji 1';
             } elseif ($s->anggota_penguji_2_id == $dosen->id) {
                 $role = 'Penguji 2';
-            } elseif ($s->dosen_pembimbing_utama_id == $dosen->id) {
-                $role = 'Pembimbing Utama';
-            } elseif ($s->dosen_pembimbing_pendamping_id == $dosen->id) {
-                $role = 'Pembimbing Pendamping';
             }
 
             $ketuaNama = $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-';
@@ -1921,8 +1906,7 @@ class AdministrasiController extends Controller
         ->where(function ($q) use ($dosen) {
             $q->where('ketua_penguji_id', $dosen->id)
               ->orWhere('anggota_penguji_1_id', $dosen->id)
-              ->orWhere('anggota_penguji_2_id', $dosen->id)
-              ->orWhere('dosen_pembimbing_utama_id', $dosen->id);
+              ->orWhere('anggota_penguji_2_id', $dosen->id);
         })
         ->orderBy('tanggal', 'asc')
         ->orderBy('jam', 'asc')

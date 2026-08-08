@@ -156,12 +156,6 @@
                                     } elseif ($s->anggota_penguji_2_id == $dosen->id) {
                                         $role = 'Penguji 2';
                                         $roleBadgeClass = 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
-                                    } elseif ($s->dosen_pembimbing_utama_id == $dosen->id) {
-                                        $role = 'Pembimbing Utama';
-                                        $roleBadgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-                                    } elseif ($s->dosen_pembimbing_pendamping_id == $dosen->id) {
-                                        $role = 'Pembimbing Pendamping';
-                                        $roleBadgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
                                     }
                                 @endphp
                                 <div class="bg-slate-800/90 rounded-2xl p-5 border border-slate-700/80 shadow-md space-y-4 hover:border-indigo-500/50 transition-all">
