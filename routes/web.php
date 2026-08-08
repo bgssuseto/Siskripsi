@@ -28,9 +28,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Public Routes (View Jadwal Dosen Tanpa Login)
+// Public Routes (View & Download Jadwal Dosen Tanpa Login)
 Route::get('/jadwal-dosen/{token}', [AdministrasiController::class, 'publicJadwalDosen'])->name('public.dosen.jadwal');
+Route::get('/jadwal-dosen/{token}/pdf', [AdministrasiController::class, 'publicJadwalDosenPdf'])->name('public.dosen.jadwal.pdf');
 Route::get('/jadwal-dosen-penguji', [AdministrasiController::class, 'publicJadwalDosenPenguji'])->name('public.jadwal-dosen-penguji');
+Route::get('/jadwal-dosen-penguji/pdf', [AdministrasiController::class, 'publicJadwalDosenPengujiPdf'])->name('public.jadwal-dosen-penguji.pdf');
 
 // Guest routes
 Route::middleware('guest')->group(function () {

@@ -18,26 +18,38 @@
         <div class="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 p-6 rounded-3xl border border-indigo-500/30 shadow-2xl relative overflow-hidden">
             <div class="absolute -top-12 -right-12 w-44 h-44 bg-indigo-500/10 rounded-full blur-2xl"></div>
             
-            <div class="flex items-center gap-3 mb-3">
-                <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-bold rounded-full border border-indigo-400/30">
-                    Jadwal Menguji Publik
-                </span>
-                @if($activePeriode)
-                    <span class="text-xs text-slate-400">Periode: {{ $activePeriode->nama_periode }}</span>
-                @endif
-            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-bold rounded-full border border-indigo-400/30">
+                            Jadwal Menguji Publik
+                        </span>
+                        @if($activePeriode)
+                            <span class="text-xs text-slate-400">Periode: {{ $activePeriode->nama_periode }}</span>
+                        @endif
+                    </div>
 
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                {{ $dosen->nama_dosen }}
-            </h1>
-            <p class="text-xs text-indigo-200 mt-1 font-mono">NIDN: {{ $dosen->nidn ?? '-' }}</p>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                        {{ $dosen->nama_dosen }}
+                    </h1>
+                    <p class="text-xs text-indigo-200 mt-1 font-mono">NIDN: {{ $dosen->nidn ?? '-' }}</p>
+                </div>
+
+                <div class="shrink-0">
+                    <a href="{{ route('public.dosen.jadwal.pdf', ['token' => request()->route('token')]) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-2xl shadow-lg transition-all border border-indigo-500/50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Download PDF
+                    </a>
+                </div>
+            </div>
         </div>
 
         @if($mySidangs->isNotEmpty())
         {{-- ══ RINGKASAN PER HARI ══ --}}
         @php
             $groupedByDate = $mySidangs->filter(fn($s) => $s->tanggal)->groupBy(fn($s) => $s->tanggal->format('Y-m-d'))->sortKeys();
-            $unplottedSidangs = $mySidangs->filter(fn($s) => !$s->tanggal);
         @endphp
         <div class="bg-slate-800/80 rounded-3xl p-5 sm:p-6 border border-slate-700/80 shadow-lg space-y-4">
             <div class="flex items-center gap-3 pb-3 border-b border-slate-700/60">
@@ -56,6 +68,9 @@
                         $dateCarbon = \Carbon\Carbon::parse($dateKey)->locale('id');
                         $hariNama = $dateCarbon->isoFormat('dddd, D MMMM Y');
                         $totalMhs = $sidangsInDay->count();
+
+                        $ruangList = $sidangsInDay->map(fn($s) => $s->ruang ? $s->ruang->kode_ruangan : null)->filter()->unique()->values();
+                        $ruangText = $ruangList->isNotEmpty() ? $ruangList->join(', ') : 'Belum ditentukan';
 
                         $jamValues = $sidangsInDay->pluck('jam')->filter()->values();
                         $jamMulai = '-';
@@ -81,7 +96,12 @@
                                 {{ $totalMhs }} Mahasiswa
                             </span>
                         </div>
-                        <div class="flex items-center gap-4 text-[11px]">
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-amber-400 font-bold">📍</span>
+                                <span class="text-slate-400">Ruangan:</span>
+                                <span class="font-extrabold text-amber-300">{{ $ruangText }}</span>
+                            </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-emerald-400 font-bold">▶</span>
                                 <span class="text-slate-400">Mulai:</span>
@@ -232,37 +252,6 @@
                         </div>
                     </div>
                 @endforeach
-
-                {{-- Unplotted items if any --}}
-                @if(isset($unplottedSidangs) && $unplottedSidangs->isNotEmpty())
-                    <div x-data="{ open: true }" class="bg-slate-800/60 rounded-3xl border border-slate-700/80 overflow-hidden shadow-lg">
-                        <button @click="open = !open" type="button" class="w-full px-5 py-4 bg-slate-800 hover:bg-slate-750 flex items-center justify-between transition-colors text-left border-b border-slate-700/50">
-                            <div class="flex items-center gap-3">
-                                <span class="text-lg">⏳</span>
-                                <div>
-                                    <h3 class="text-sm font-extrabold text-amber-400">Belum Memiliki Tanggal (Belum Plotting)</h3>
-                                    <p class="text-[11px] text-slate-400">{{ $unplottedSidangs->count() }} Mahasiswa</p>
-                                </div>
-                            </div>
-                            <svg class="w-5 h-5 text-slate-400 transform transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-
-                        <div x-show="open" class="p-4 sm:p-5 space-y-4 bg-slate-900/40">
-                            @foreach($unplottedSidangs as $s)
-                                <div class="bg-slate-800/90 rounded-2xl p-5 border border-slate-700/80 shadow-md space-y-3">
-                                    <div class="flex justify-between items-center text-xs">
-                                        <span class="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Belum Di-Plotting</span>
-                                        <span class="text-slate-400 font-mono">NIM: {{ $s->nim }}</span>
-                                    </div>
-                                    <h4 class="text-sm font-bold text-white">{{ $s->nama_mahasiswa }}</h4>
-                                    <p class="text-xs text-slate-300 italic">"{{ $s->judul_skripsi }}"</p>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
             @endif
         </div>
     </div>

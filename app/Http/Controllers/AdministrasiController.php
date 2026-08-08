@@ -1881,6 +1881,67 @@ class AdministrasiController extends Controller
     }
 
     /**
+     * Helper to build rekap hari & ruang per dosen for PDF/View
+     */
+    protected function buildRekapPerHariRuang($sidangs): array
+    {
+        $rekap = [];
+        // Sort by tanggal then jam first for consistent grouping order
+        $sorted = $sidangs->sortBy([['tanggal', 'asc'], ['jam', 'asc']]);
+
+        $grouped = $sorted->groupBy(function ($s) {
+            $dateStr = $s->tanggal ? $s->tanggal->format('Y-m-d') : 'no-date';
+            $ruangStr = $s->ruang ? $s->ruang->kode_ruangan : 'no-room';
+            return $dateStr . '|' . $ruangStr;
+        });
+
+        foreach ($grouped as $key => $groupSidangs) {
+            [$dateStr, $ruangCode] = explode('|', $key);
+            if ($dateStr === 'no-date') continue;
+
+            $dateCarbon = \Carbon\Carbon::parse($dateStr)->locale('id');
+            $hariTanggal = $dateCarbon->isoFormat('dddd, D MMMM Y');
+
+            $jamValues = $groupSidangs->pluck('jam')->filter()->values();
+            $jamMulai = '-';
+            $jamSelesai = '-';
+            if ($jamValues->isNotEmpty()) {
+                $starts = [];
+                $ends = [];
+                foreach ($jamValues as $j) {
+                    $parts = preg_split('/\s*[-–]\s*/', $j);
+                    if (count($parts) >= 1 && trim($parts[0]) !== '') $starts[] = trim($parts[0]);
+                    if (count($parts) >= 2 && trim($parts[1]) !== '') $ends[] = trim($parts[1]);
+                }
+                if (!empty($starts)) {
+                    sort($starts);
+                    $jamMulai = $starts[0];
+                }
+                if (!empty($ends)) {
+                    rsort($ends);
+                    $jamSelesai = $ends[0];
+                } elseif (!empty($starts)) {
+                    rsort($starts);
+                    $jamSelesai = $starts[0];
+                }
+            }
+
+            $jamRange = ($jamMulai !== '-' && $jamSelesai !== '-')
+                ? "{$jamMulai}–{$jamSelesai}"
+                : ($jamMulai !== '-' ? $jamMulai : '-');
+
+            $rekap[] = [
+                'hari_tanggal' => $hariTanggal,
+                'ruang'        => $ruangCode !== 'no-room' ? $ruangCode : 'Belum ditentukan',
+                'jam'          => $jamRange,
+                'total'        => $groupSidangs->count(),
+            ];
+        }
+
+        return $rekap;
+    }
+
+    /**
      * Public page for viewing lecturer examiner schedule without login (Encrypted / Short Token)
      */
     public function publicJadwalDosen(Request $request, string $token): View
@@ -1923,6 +1984,7 @@ class AdministrasiController extends Controller
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'ruang', 'periode'
         ])
+        ->whereNotNull('tanggal')
         ->where(function ($q) use ($dosen) {
             $q->where('ketua_penguji_id', $dosen->id)
               ->orWhere('anggota_penguji_1_id', $dosen->id)
@@ -1933,6 +1995,72 @@ class AdministrasiController extends Controller
         ->get();
 
         return view('administrasi.undangan.public-jadwal', compact('dosen', 'mySidangs', 'activePeriode'));
+    }
+
+    /**
+     * Download PDF for lecturer examiner schedule (Public Token)
+     */
+    public function publicJadwalDosenPdf(Request $request, string $token): Response
+    {
+        $dosen = null;
+
+        // 1. Try short token base64url format
+        $decoded = @base64_decode(strtr($token, '-_', '+/'));
+        if ($decoded && str_contains($decoded, ':')) {
+            [$id, $hash] = explode(':', $decoded, 2);
+            $expectedHash = substr(hash('sha256', 'siskripsi_dosen_salt_' . $id), 0, 8);
+            if ($hash === $expectedHash) {
+                $dosen = Dosen::find($id);
+            }
+        }
+
+        // 2. Fallback: Crypt decrypt (for legacy long tokens)
+        if (!$dosen) {
+            try {
+                $dosenId = Crypt::decryptString($token);
+                $dosen = Dosen::find($dosenId);
+            } catch (\Exception $e) {
+                // Ignore failure
+            }
+        }
+
+        // 3. Fallback: direct numeric ID
+        if (!$dosen && is_numeric($token)) {
+            $dosen = Dosen::find($token);
+        }
+
+        if (!$dosen) {
+            abort(404, 'Link jadwal tidak valid atau tidak ditemukan.');
+        }
+
+        $activePeriode = Periode::where('aktif', true)->first();
+
+        $detailSidangs = Sidang::with([
+            'pembimbingUtama', 'pembimbingPendamping',
+            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
+            'ruang', 'periode'
+        ])
+        ->whereNotNull('tanggal')
+        ->where(function ($q) use ($dosen) {
+            $q->where('ketua_penguji_id', $dosen->id)
+              ->orWhere('anggota_penguji_1_id', $dosen->id)
+              ->orWhere('anggota_penguji_2_id', $dosen->id);
+        })
+        ->orderBy('tanggal', 'asc')
+        ->orderBy('jam', 'asc')
+        ->get();
+
+        $rekapPerHariRuang = $this->buildRekapPerHariRuang($detailSidangs);
+        $totalMahasiswa = $detailSidangs->count();
+        $namaPeriode = $activePeriode ? $activePeriode->nama_periode : '';
+
+        $pdf = Pdf::loadView('public.pdf-jadwal', compact(
+            'dosen', 'rekapPerHariRuang', 'detailSidangs', 'totalMahasiswa', 'namaPeriode'
+        ));
+        $pdf->setPaper('a4', 'portrait');
+
+        $safeDosenName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $dosen->nama_dosen);
+        return $pdf->download("Rekap_Jadwal_Sidang_{$safeDosenName}.pdf");
     }
 
     /**
@@ -1958,6 +2086,7 @@ class AdministrasiController extends Controller
                 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
                 'ruang', 'periode'
             ])
+            ->whereNotNull('tanggal')
             ->where(function ($q) use ($selectedDosen) {
                 $q->where('ketua_penguji_id', $selectedDosen->id)
                   ->orWhere('anggota_penguji_1_id', $selectedDosen->id)
@@ -1983,5 +2112,60 @@ class AdministrasiController extends Controller
             'dosens', 'periodes', 'selectedDosen', 'selectedDosenId',
             'selectedPeriode', 'selectedPeriodeId', 'selectedJenis', 'mySidangs'
         ));
+    }
+
+    /**
+     * Download PDF for public lecturer examiner schedule search
+     */
+    public function publicJadwalDosenPengujiPdf(Request $request): Response
+    {
+        $selectedDosenId = $request->get('dosen_id');
+        $selectedPeriodeId = $request->get('periode_id');
+        $selectedJenis = $request->get('jenis');
+
+        $dosen = $selectedDosenId ? Dosen::find($selectedDosenId) : null;
+        if (!$dosen) {
+            abort(404, 'Dosen tidak ditemukan.');
+        }
+
+        $selectedPeriode = $selectedPeriodeId ? Periode::find($selectedPeriodeId) : Periode::where('aktif', true)->first();
+
+        $query = Sidang::with([
+            'pembimbingUtama', 'pembimbingPendamping',
+            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
+            'ruang', 'periode'
+        ])
+        ->whereNotNull('tanggal')
+        ->where(function ($q) use ($dosen) {
+            $q->where('ketua_penguji_id', $dosen->id)
+              ->orWhere('anggota_penguji_1_id', $dosen->id)
+              ->orWhere('anggota_penguji_2_id', $dosen->id);
+        });
+
+        if ($selectedJenis === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } elseif ($selectedJenis === 'skripsi') {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
+
+        if ($selectedPeriodeId) {
+            $query->where('periode_id', $selectedPeriodeId);
+        }
+
+        $detailSidangs = $query->orderBy('tanggal', 'asc')
+                               ->orderBy('jam', 'asc')
+                               ->get();
+
+        $rekapPerHariRuang = $this->buildRekapPerHariRuang($detailSidangs);
+        $totalMahasiswa = $detailSidangs->count();
+        $namaPeriode = $selectedPeriode ? $selectedPeriode->nama_periode : '';
+
+        $pdf = Pdf::loadView('public.pdf-jadwal', compact(
+            'dosen', 'rekapPerHariRuang', 'detailSidangs', 'totalMahasiswa', 'namaPeriode'
+        ));
+        $pdf->setPaper('a4', 'portrait');
+
+        $safeDosenName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $dosen->nama_dosen);
+        return $pdf->download("Rekap_Jadwal_Sidang_{$safeDosenName}.pdf");
     }
 }

@@ -43,6 +43,11 @@ class Dosen extends Model
         return route('public.dosen.jadwal', ['token' => $this->public_token]);
     }
 
+    public function getPublicPdfUrlAttribute(): string
+    {
+        return route('public.dosen.jadwal.pdf', ['token' => $this->public_token]);
+    }
+
     public function sidangsSebagaiPembimbingUtama()
     {
         return $this->hasMany(Sidang::class, 'dosen_pembimbing_utama_id');
