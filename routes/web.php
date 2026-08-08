@@ -161,6 +161,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/master/dosen', [DosenController::class, 'store'])->name('master.dosen.store');
         Route::put('/master/dosen/{dosen}', [DosenController::class, 'update'])->name('master.dosen.update');
         Route::delete('/master/dosen/{dosen}', [DosenController::class, 'destroy'])->name('master.dosen.destroy');
+        Route::post('/master/dosen/import', [DosenController::class, 'importExcel'])->name('master.dosen.import');
+        Route::get('/master/dosen/template', [DosenController::class, 'downloadTemplate'])->name('master.dosen.template');
 
         // Data Master - Ruang
         Route::get('/master/ruang', [RuangController::class, 'index'])->name('master.ruang.index');

@@ -5,6 +5,7 @@
         createModal: false, 
         editModal: false, 
         deleteModal: false,
+        importModal: false,
         editDosen: { id: null, nidn: '', nama_dosen: '', no_wa: '' },
         deleteDosen: { id: null, nama_dosen: '' },
         errors: {},
@@ -125,6 +126,38 @@
             } finally {
                 this.isLoading = false;
             }
+        },
+        async submitImport(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.importModal = false;
+                    form.reset();
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#table-container', '#filter-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    }
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal meng-import data.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
         }
     }">
 
@@ -134,13 +167,22 @@
                 <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Master Dosen</h2>
                 <p class="text-sm text-slate-500 mt-1">Kelola data NIDN dan Nama Dosen pembimbing/penguji skripsi.</p>
             </div>
-            <button @click="createModal = true" 
-                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/25 transition-all">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Tambah Dosen
-            </button>
+            <div class="flex items-center gap-3">
+                <button @click="importModal = true" 
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-lg shadow-emerald-600/25 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Import Excel
+                </button>
+                <button @click="createModal = true" 
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/25 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Tambah Dosen
+                </button>
+            </div>
         </div>
 
         <!-- Search & Filter Bar -->
@@ -364,6 +406,63 @@
                             <span x-show="!isLoading">Hapus</span>
                             <span x-show="isLoading">Menghapus...</span>
                         </button>
+                    </form>
+                </div>
+            </div>
+        <!-- ================= MODAL IMPORT DOSEN ================= -->
+        <div x-show="importModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div @click="importModal = false" class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm"></div>
+
+                <div class="inline-block relative z-10 w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">Import Data Dosen</h3>
+                        <button @click="importModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form method="POST" action="{{ route('master.dosen.import') }}" enctype="multipart/form-data" @submit.prevent="submitImport($event)" class="p-6 space-y-4">
+                        @csrf
+                        <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl p-4 text-xs text-indigo-900 dark:text-indigo-200 space-y-2">
+                            <p class="font-bold flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Petunjuk Header File Excel:
+                            </p>
+                            <ul class="list-disc list-inside space-y-1 pl-1">
+                                <li>Header wajib memuat: <b>Nama & Gelar</b> (atau Nama Dosen), <b>NIDN</b>, dan <b>No WhatsApp</b>.</li>
+                                <li>Format file yang didukung: <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code>.</li>
+                            </ul>
+                            <div class="pt-1">
+                                <a href="{{ route('master.dosen.template') }}" class="inline-flex items-center gap-1 font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 underline">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    Download Template Excel
+                                </a>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Pilih File Excel <span class="text-rose-500">*</span></label>
+                            <input type="file" name="file" accept=".xlsx,.xls,.csv" required 
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                            <template x-if="errors.file">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.file[0]"></p>
+                            </template>
+                        </div>
+
+                        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-700">
+                            <button type="button" @click="importModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">Batal</button>
+                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md shadow-emerald-600/30 disabled:opacity-50">
+                                <span x-show="!isLoading">Import Data</span>
+                                <span x-show="isLoading">Meng-import...</span>
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

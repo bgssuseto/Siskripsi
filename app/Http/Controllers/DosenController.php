@@ -6,6 +6,11 @@ use App\Models\Dosen;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class DosenController extends Controller
 {
@@ -123,5 +128,168 @@ class DosenController extends Controller
         }
 
         return redirect()->route('master.dosen.index')->with('success', 'Data dosen berhasil dihapus!');
+    }
+
+    /**
+     * Import Master Dosen from Excel (.xlsx, .xls, .csv)
+     */
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
+        ], [
+            'file.required' => 'File Excel wajib diunggah.',
+            'file.mimes' => 'Format file harus .xlsx, .xls, atau .csv.',
+            'file.max' => 'Ukuran file maksimal 5MB.'
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray();
+
+            if (count($rows) < 2) {
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => 'File Excel kosong atau tidak memiliki data.'], 422);
+                }
+                return back()->with('error', 'File Excel kosong atau tidak memiliki data.');
+            }
+
+            // Detect Header Row
+            $headerRowIndex = 0;
+            $namaCol = 1;
+            $nidnCol = 2;
+            $waCol = 3;
+
+            foreach ($rows as $rIdx => $rData) {
+                if (!is_array($rData)) continue;
+                foreach ($rData as $cIdx => $cellVal) {
+                    $valLower = strtolower(trim((string)$cellVal));
+                    if (str_contains($valLower, 'nama')) {
+                        $headerRowIndex = $rIdx;
+                        $namaCol = $cIdx;
+                    } elseif (str_contains($valLower, 'nidn')) {
+                        $headerRowIndex = $rIdx;
+                        $nidnCol = $cIdx;
+                    } elseif (str_contains($valLower, 'wa') || str_contains($valLower, 'whatsapp') || str_contains($valLower, 'telepon') || str_contains($valLower, 'hp')) {
+                        $headerRowIndex = $rIdx;
+                        $waCol = $cIdx;
+                    }
+                }
+                if ($headerRowIndex > 0) break;
+            }
+
+            $importedCount = 0;
+            $updatedCount = 0;
+
+            for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                if (!is_array($row)) continue;
+
+                $namaDosen = trim((string)($row[$namaCol] ?? ''));
+                $nidn = trim((string)($row[$nidnCol] ?? ''));
+                $noWa = trim((string)($row[$waCol] ?? ''));
+
+                // Skip if both nama and nidn are empty
+                if (empty($namaDosen) && empty($nidn)) {
+                    continue;
+                }
+
+                // If nidn is empty, fallback to generated NIDN from slug
+                if (empty($nidn)) {
+                    $nidn = 'NIDN-' . \Illuminate\Support\Str::slug($namaDosen);
+                }
+
+                $existing = Dosen::where('nidn', $nidn)->first();
+
+                if ($existing) {
+                    $updateData = [];
+                    if (!empty($namaDosen)) $updateData['nama_dosen'] = $namaDosen;
+                    if (!empty($noWa)) $updateData['no_wa'] = $noWa;
+                    if (!empty($updateData)) {
+                        $existing->update($updateData);
+                        $updatedCount++;
+                    }
+                } else {
+                    Dosen::create([
+                        'nidn' => $nidn,
+                        'nama_dosen' => $namaDosen,
+                        'no_wa' => $noWa ?: null,
+                    ]);
+                    $importedCount++;
+                }
+            }
+
+            $msg = "Berhasil memproses data dosen! ({$importedCount} baru ditambahkan, {$updatedCount} diperbarui)";
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $msg
+                ]);
+            }
+
+            return redirect()->route('master.dosen.index')->with('success', $msg);
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Gagal membaca file Excel: ' . $e->getMessage()], 422);
+            }
+            return back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download Excel Import Template
+     */
+    public function downloadTemplate()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Import Dosen');
+
+        // Header
+        $headers = ['No', 'Nama & Gelar', 'NIDN', 'No WhatsApp'];
+        foreach ($headers as $colIdx => $text) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
+            $sheet->setCellValue("{$colLetter}1", $text);
+        }
+
+        $sheet->getStyle('A1:D1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
+        $sheet->getStyle('A1:D1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF4F46E5');
+        $sheet->getStyle('A1:D1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Sample Rows
+        $samples = [
+            [1, 'Dr. Budi Santoso, M.T.', '0012058501', '081234567890'],
+            [2, 'Siti Aminah, S.Kom., M.Cs.', '0015088802', '085712345678'],
+        ];
+
+        foreach ($samples as $rIdx => $sample) {
+            $rowNum = $rIdx + 2;
+            $sheet->setCellValue("A{$rowNum}", $sample[0]);
+            $sheet->setCellValue("B{$rowNum}", $sample[1]);
+            $sheet->setCellValueExplicit("C{$rowNum}", $sample[2], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("D{$rowNum}", $sample[3], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        }
+
+        $sheet->getStyle('A1:D3')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle('A2:A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C2:D3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        foreach (range('A', 'D') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Template_Import_Dosen.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
     }
 }
