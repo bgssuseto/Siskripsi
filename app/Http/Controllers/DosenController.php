@@ -31,6 +31,7 @@ class DosenController extends Controller
         $validated = $request->validate([
             'nidn' => ['required', 'string', 'max:50', 'unique:dosens,nidn'],
             'nama_dosen' => ['required', 'string', 'max:255'],
+            'no_wa' => ['nullable', 'string', 'max:30'],
         ], [
             'nidn.required' => 'NIDN wajib diisi.',
             'nidn.unique' => 'NIDN sudah terdaftar.',
@@ -55,6 +56,7 @@ class DosenController extends Controller
         $validated = $request->validate([
             'nidn' => ['required', 'string', 'max:50', 'unique:dosens,nidn,' . $dosen->id],
             'nama_dosen' => ['required', 'string', 'max:255'],
+            'no_wa' => ['nullable', 'string', 'max:30'],
         ], [
             'nidn.required' => 'NIDN wajib diisi.',
             'nidn.unique' => 'NIDN sudah terdaftar.',

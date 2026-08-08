@@ -121,7 +121,7 @@
                         $dateCarbon = \Carbon\Carbon::parse($dateKey)->locale('id');
                         $hariNama = $dateCarbon->isoFormat('dddd, D MMMM Y');
                     @endphp
-                    <div x-data="{ open: true }" class="bg-slate-800/60 rounded-3xl border border-slate-700/80 overflow-hidden shadow-lg">
+                    <div x-data="{ open: false }" class="bg-slate-800/60 rounded-3xl border border-slate-700/80 overflow-hidden shadow-lg">
                         <!-- Group Header (Clickable Accordion) -->
                         <button @click="open = !open" type="button" class="w-full px-5 py-4 bg-slate-800 hover:bg-slate-750 flex items-center justify-between transition-colors text-left border-b border-slate-700/50">
                             <div class="flex items-center gap-3">
@@ -213,27 +213,23 @@
                                         </div>
                                     </div>
 
-                                    <!-- Tim Penguji & Pembimbing -->
+                                    <!-- Tim Dewan Penguji (Ketua Penguji, Anggota Penguji 1, Anggota Penguji 2) -->
                                     <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/40 space-y-2">
                                         <p class="text-[10.5px] font-extrabold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
-                                            <span>👥</span> Tim Dewan Penguji & Pembimbing
+                                            <span>👥</span> Tim Dewan Penguji
                                         </p>
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                                            <div class="flex items-start gap-1.5">
-                                                <span class="text-amber-400 font-bold text-[10px] uppercase shrink-0">Ketua Penguji:</span>
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                                            <div class="flex flex-col gap-0.5">
+                                                <span class="text-amber-400 font-bold text-[10px] uppercase">Ketua Penguji:</span>
                                                 <span class="text-slate-200 font-medium">{{ $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-' }}</span>
                                             </div>
-                                            <div class="flex items-start gap-1.5">
-                                                <span class="text-indigo-400 font-bold text-[10px] uppercase shrink-0">Penguji 1:</span>
+                                            <div class="flex flex-col gap-0.5">
+                                                <span class="text-indigo-400 font-bold text-[10px] uppercase">Anggota Penguji 1:</span>
                                                 <span class="text-slate-200 font-medium">{{ $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-' }}</span>
                                             </div>
-                                            <div class="flex items-start gap-1.5">
-                                                <span class="text-indigo-400 font-bold text-[10px] uppercase shrink-0">Penguji 2:</span>
+                                            <div class="flex flex-col gap-0.5">
+                                                <span class="text-indigo-400 font-bold text-[10px] uppercase">Anggota Penguji 2:</span>
                                                 <span class="text-slate-200 font-medium">{{ $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-' }}</span>
-                                            </div>
-                                            <div class="flex items-start gap-1.5">
-                                                <span class="text-emerald-400 font-bold text-[10px] uppercase shrink-0">Pembimbing:</span>
-                                                <span class="text-slate-200 font-medium">{{ $s->pembimbingUtama ? $s->pembimbingUtama->nama_dosen : '-' }}</span>
                                             </div>
                                         </div>
                                     </div>

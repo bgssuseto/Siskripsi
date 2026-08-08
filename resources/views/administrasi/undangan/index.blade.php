@@ -179,9 +179,30 @@
                                          </svg>
                                          Link Publik
                                      </a>
+                                     @php
+                                         $pubLink = route('public.dosen.jadwal', ['dosen' => $item['dosen']->id]);
+                                         $jenisStr = ($jenisUndangan === 'skripsi') ? 'Sidang Skripsi' : 'Seminar Proposal (Sempro)';
+                                         $waText = "Yth. Bapak/Ibu " . $item['dosen']->nama_dosen . ",\n\n" .
+                                                   "Berikut disampaikan informasi jadwal menguji " . $jenisStr . " Program Studi Teknik Informatika Universitas Muria Kudus.\n\n" .
+                                                   "Bapak/Ibu dapat mengakses rincian agenda jadwal menguji secara lengkap melalui tautan berikut:\n" .
+                                                   $pubLink . "\n\n" .
+                                                   "Demikian informasi ini kami sampaikan. Atas perhatian dan kesediaan Bapak/Ibu, kami ucapkan terima kasih.\n\n" .
+                                                   "--\nPanitia Ujian & Skripsi Prodi Teknik Informatika UMK";
+                                         $waLink = $item['dosen']->wa_formatted 
+                                                   ? 'https://wa.me/' . $item['dosen']->wa_formatted . '?text=' . rawurlencode($waText)
+                                                   : 'https://api.whatsapp.com/send?text=' . rawurlencode($waText);
+                                     @endphp
+                                     <a href="{{ $waLink }}"
+                                        target="_blank"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-lg transition-all border border-emerald-300 shadow-2xs" title="Kirim Jadwal via WhatsApp Broadcast">
+                                         <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                                             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                                         </svg>
+                                         Kirim WA
+                                     </a>
                                     <a href="{{ route('administrasi.undangan.excel', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
-                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium text-xs rounded-lg transition-all border border-emerald-200" title="Export Excel">
-                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium text-xs rounded-lg transition-all border border-slate-200" title="Export Excel">
+                                        <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
                                         Excel

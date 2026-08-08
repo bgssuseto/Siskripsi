@@ -12,12 +12,23 @@ class Dosen extends Model
     protected $fillable = [
         'nidn',
         'nama_dosen',
+        'no_wa',
         'can_fill_kesediaan',
     ];
 
     protected $casts = [
         'can_fill_kesediaan' => 'boolean',
     ];
+
+    public function getWaFormattedAttribute(): ?string
+    {
+        if (empty($this->no_wa)) return null;
+        $num = preg_replace('/[^0-9]/', '', $this->no_wa);
+        if (str_starts_with($num, '0')) {
+            $num = '62' . substr($num, 1);
+        }
+        return $num;
+    }
 
     public function sidangsSebagaiPembimbingUtama()
     {
