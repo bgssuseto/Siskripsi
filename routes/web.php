@@ -28,8 +28,9 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Public Route (View Jadwal Dosen Tanpa Login - Token Terenkripsi)
+// Public Routes (View Jadwal Dosen Tanpa Login)
 Route::get('/jadwal-dosen/{token}', [AdministrasiController::class, 'publicJadwalDosen'])->name('public.dosen.jadwal');
+Route::get('/jadwal-dosen-penguji', [AdministrasiController::class, 'publicJadwalDosenPenguji'])->name('public.jadwal-dosen-penguji');
 
 // Guest routes
 Route::middleware('guest')->group(function () {

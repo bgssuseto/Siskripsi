@@ -34,7 +34,8 @@ class Dosen extends Model
 
     public function getPublicTokenAttribute(): string
     {
-        return Crypt::encryptString($this->id);
+        $hash = substr(hash('sha256', 'siskripsi_dosen_salt_' . $this->id), 0, 8);
+        return rtrim(strtr(base64_encode($this->id . ':' . $hash), '+/', '-_'), '=');
     }
 
     public function getPublicUrlAttribute(): string

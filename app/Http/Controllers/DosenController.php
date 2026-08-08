@@ -164,20 +164,24 @@ class DosenController extends Controller
 
             foreach ($rows as $rIdx => $rData) {
                 if (!is_array($rData)) continue;
+                $matchedInRow = false;
                 foreach ($rData as $cIdx => $cellVal) {
                     $valLower = strtolower(trim((string)$cellVal));
                     if (str_contains($valLower, 'nama')) {
-                        $headerRowIndex = $rIdx;
                         $namaCol = $cIdx;
+                        $matchedInRow = true;
                     } elseif (str_contains($valLower, 'nidn')) {
-                        $headerRowIndex = $rIdx;
                         $nidnCol = $cIdx;
+                        $matchedInRow = true;
                     } elseif (str_contains($valLower, 'wa') || str_contains($valLower, 'whatsapp') || str_contains($valLower, 'telepon') || str_contains($valLower, 'hp')) {
-                        $headerRowIndex = $rIdx;
                         $waCol = $cIdx;
+                        $matchedInRow = true;
                     }
                 }
-                if ($headerRowIndex > 0) break;
+                if ($matchedInRow) {
+                    $headerRowIndex = $rIdx;
+                    break;
+                }
             }
 
             $importedCount = 0;
@@ -196,22 +200,39 @@ class DosenController extends Controller
                     continue;
                 }
 
-                // If nidn is empty, fallback to generated NIDN from slug
-                if (empty($nidn)) {
-                    $nidn = 'NIDN-' . \Illuminate\Support\Str::slug($namaDosen);
+                // Format WhatsApp number
+                if (!empty($noWa)) {
+                    $noWaClean = preg_replace('/[^\d+]/', '', $noWa);
+                    if (str_starts_with($noWaClean, '8')) {
+                        $noWaClean = '0' . $noWaClean;
+                    }
+                    $noWa = $noWaClean;
                 }
 
-                $existing = Dosen::where('nidn', $nidn)->first();
+                // Match existing dosen by NIDN or Nama
+                $existing = null;
+                if (!empty($nidn)) {
+                    $existing = Dosen::where('nidn', $nidn)->first();
+                }
+                if (!$existing && !empty($namaDosen)) {
+                    $existing = Dosen::where('nama_dosen', $namaDosen)->first();
+                }
 
                 if ($existing) {
                     $updateData = [];
                     if (!empty($namaDosen)) $updateData['nama_dosen'] = $namaDosen;
+                    if (!empty($nidn) && str_starts_with($existing->nidn, 'NIDN-')) $updateData['nidn'] = $nidn;
                     if (!empty($noWa)) $updateData['no_wa'] = $noWa;
                     if (!empty($updateData)) {
                         $existing->update($updateData);
                         $updatedCount++;
                     }
                 } else {
+                    // If nidn is empty, fallback to generated NIDN from slug
+                    if (empty($nidn)) {
+                        $nidn = 'NIDN-' . \Illuminate\Support\Str::slug($namaDosen);
+                    }
+
                     Dosen::create([
                         'nidn' => $nidn,
                         'nama_dosen' => $namaDosen,

@@ -1881,19 +1881,39 @@ class AdministrasiController extends Controller
     }
 
     /**
-     * Public page for viewing lecturer examiner schedule without login (Encrypted Token)
+     * Public page for viewing lecturer examiner schedule without login (Encrypted / Short Token)
      */
     public function publicJadwalDosen(Request $request, string $token): View
     {
-        try {
-            $dosenId = Crypt::decryptString($token);
-            $dosen = Dosen::findOrFail($dosenId);
-        } catch (\Exception $e) {
-            if (is_numeric($token)) {
-                $dosen = Dosen::findOrFail($token);
-            } else {
-                abort(404, 'Link jadwal tidak valid atau tidak ditemukan.');
+        $dosen = null;
+
+        // 1. Try short token base64url format
+        $decoded = @base64_decode(strtr($token, '-_', '+/'));
+        if ($decoded && str_contains($decoded, ':')) {
+            [$id, $hash] = explode(':', $decoded, 2);
+            $expectedHash = substr(hash('sha256', 'siskripsi_dosen_salt_' . $id), 0, 8);
+            if ($hash === $expectedHash) {
+                $dosen = Dosen::find($id);
             }
+        }
+
+        // 2. Fallback: Crypt decrypt (for legacy long tokens)
+        if (!$dosen) {
+            try {
+                $dosenId = Crypt::decryptString($token);
+                $dosen = Dosen::find($dosenId);
+            } catch (\Exception $e) {
+                // Ignore failure
+            }
+        }
+
+        // 3. Fallback: direct numeric ID
+        if (!$dosen && is_numeric($token)) {
+            $dosen = Dosen::find($token);
+        }
+
+        if (!$dosen) {
+            abort(404, 'Link jadwal tidak valid atau tidak ditemukan.');
         }
 
         $activePeriode = Periode::where('aktif', true)->first();
@@ -1913,5 +1933,55 @@ class AdministrasiController extends Controller
         ->get();
 
         return view('administrasi.undangan.public-jadwal', compact('dosen', 'mySidangs', 'activePeriode'));
+    }
+
+    /**
+     * Public page for searching lecturer examiner schedule with filters (dosen_id, gelombang/periode, jenis sidang)
+     */
+    public function publicJadwalDosenPenguji(Request $request): View
+    {
+        $dosens = Dosen::orderBy('nama_dosen', 'asc')->get();
+        $periodes = Periode::orderBy('id', 'desc')->get();
+
+        $selectedDosenId = $request->get('dosen_id');
+        $selectedPeriodeId = $request->get('periode_id');
+        $selectedJenis = $request->get('jenis'); // 'sempro', 'skripsi', or null (all)
+
+        $selectedDosen = $selectedDosenId ? Dosen::find($selectedDosenId) : null;
+        $selectedPeriode = $selectedPeriodeId ? Periode::find($selectedPeriodeId) : null;
+
+        $mySidangs = collect();
+
+        if ($selectedDosen) {
+            $query = Sidang::with([
+                'pembimbingUtama', 'pembimbingPendamping',
+                'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
+                'ruang', 'periode'
+            ])
+            ->where(function ($q) use ($selectedDosen) {
+                $q->where('ketua_penguji_id', $selectedDosen->id)
+                  ->orWhere('anggota_penguji_1_id', $selectedDosen->id)
+                  ->orWhere('anggota_penguji_2_id', $selectedDosen->id);
+            });
+
+            if ($selectedJenis === 'sempro') {
+                $query->where('jenis_tugas_akhir', 'sempro');
+            } elseif ($selectedJenis === 'skripsi') {
+                $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+            }
+
+            if ($selectedPeriodeId) {
+                $query->where('periode_id', $selectedPeriodeId);
+            }
+
+            $mySidangs = $query->orderBy('tanggal', 'asc')
+                               ->orderBy('jam', 'asc')
+                               ->get();
+        }
+
+        return view('public.jadwal-dosen-penguji', compact(
+            'dosens', 'periodes', 'selectedDosen', 'selectedDosenId',
+            'selectedPeriode', 'selectedPeriodeId', 'selectedJenis', 'mySidangs'
+        ));
     }
 }
