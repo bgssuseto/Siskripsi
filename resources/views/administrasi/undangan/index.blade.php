@@ -171,7 +171,7 @@
                                         </svg>
                                         PDF
                                     </a>
-                                     <a href="{{ route('public.dosen.jadwal', ['dosen' => $item['dosen']->id]) }}"
+                                     <a href="{{ $item['dosen']->public_url }}"
                                         target="_blank"
                                         class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs rounded-lg transition-all border border-sky-200" title="Buka Link Jadwal Tanpa Login">
                                          <svg class="w-3.5 h-3.5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,7 +180,7 @@
                                          Link Publik
                                      </a>
                                      @php
-                                         $pubLink = route('public.dosen.jadwal', ['dosen' => $item['dosen']->id]);
+                                         $pubLink = $item['dosen']->public_url;
                                          $jenisStr = ($jenisUndangan === 'skripsi') ? 'Sidang Skripsi' : 'Seminar Proposal (Sempro)';
                                          $waText = "Yth. Bapak/Ibu " . $item['dosen']->nama_dosen . ",\n\n" .
                                                    "Berikut disampaikan informasi jadwal menguji " . $jenisStr . " Program Studi Teknik Informatika Universitas Muria Kudus.\n\n" .

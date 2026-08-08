@@ -20,6 +20,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use ZipArchive;
 
+use Illuminate\Support\Facades\Crypt;
+
 class AdministrasiController extends Controller
 {
     /**
@@ -1903,10 +1905,21 @@ class AdministrasiController extends Controller
     }
 
     /**
-     * Public page for viewing lecturer examiner schedule without login
+     * Public page for viewing lecturer examiner schedule without login (Encrypted Token)
      */
-    public function publicJadwalDosen(Request $request, Dosen $dosen): View
+    public function publicJadwalDosen(Request $request, string $token): View
     {
+        try {
+            $dosenId = Crypt::decryptString($token);
+            $dosen = Dosen::findOrFail($dosenId);
+        } catch (\Exception $e) {
+            if (is_numeric($token)) {
+                $dosen = Dosen::findOrFail($token);
+            } else {
+                abort(404, 'Link jadwal tidak valid atau tidak ditemukan.');
+            }
+        }
+
         $activePeriode = Periode::where('aktif', true)->first();
         
         $mySidangs = Sidang::with([

@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Support\Facades\Crypt;
+
 class Dosen extends Model
 {
     use HasFactory;
@@ -28,6 +30,16 @@ class Dosen extends Model
             $num = '62' . substr($num, 1);
         }
         return $num;
+    }
+
+    public function getPublicTokenAttribute(): string
+    {
+        return Crypt::encryptString($this->id);
+    }
+
+    public function getPublicUrlAttribute(): string
+    {
+        return route('public.dosen.jadwal', ['token' => $this->public_token]);
     }
 
     public function sidangsSebagaiPembimbingUtama()
