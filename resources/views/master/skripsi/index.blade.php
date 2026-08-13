@@ -239,8 +239,36 @@
                 @endforeach
             </select>
 
+            <select name="gelombang" class="filter-select">
+                <option value="">Semua Gelombang</option>
+                @foreach ($gelombangOptions ?? [] as $g)
+                    <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
+                @endforeach
+            </select>
+
+            <x-filter-popover :active="request()->hasAny(['dosen_pembimbing_id','dosen_penguji_id'])">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Pembimbing</label>
+                    <select name="dosen_pembimbing_id" class="filter-select w-full">
+                        <option value="">-- Semua Dosen --</option>
+                        @foreach ($dosens as $d)
+                            <option value="{{ $d->id }}" {{ (string) request('dosen_pembimbing_id') === (string) $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Penguji</label>
+                    <select name="dosen_penguji_id" class="filter-select w-full">
+                        <option value="">-- Semua Dosen --</option>
+                        @foreach ($dosens as $d)
+                            <option value="{{ $d->id }}" {{ (string) request('dosen_penguji_id') === (string) $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </x-filter-popover>
+
             <button type="submit" class="btn btn-primary">Filter</button>
-            @if(request()->hasAny(['search','jenis','status','periode_id','per_page']))
+            @if(request()->hasAny(['search','jenis','status','periode_id','gelombang','per_page','dosen_pembimbing_id','dosen_penguji_id']))
                 <a href="{{ route('master.skripsi.index') }}" class="btn btn-outline">✕ Reset</a>
             @endif
         </form>
@@ -472,8 +500,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Ketua Penguji <span style="color:red">*</span></label>
-                                <select name="ketua_penguji_id" class="form-control" required>
+                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <select name="ketua_penguji_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
@@ -481,8 +509,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span style="color:red">*</span></label>
-                                <select name="anggota_penguji_1_id" class="form-control" required>
+                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <select name="anggota_penguji_1_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
@@ -581,8 +609,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Ketua Penguji <span style="color:red">*</span></label>
-                                <select name="ketua_penguji_id" id="edit-ketua" class="form-control" required>
+                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <select name="ketua_penguji_id" id="edit-ketua" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
@@ -590,8 +618,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span style="color:red">*</span></label>
-                                <select name="anggota_penguji_1_id" id="edit-penguji1" class="form-control" required>
+                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <select name="anggota_penguji_1_id" id="edit-penguji1" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>

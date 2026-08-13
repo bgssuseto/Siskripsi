@@ -111,7 +111,7 @@
                 const firstDate = (eventsData.length > 0 && eventsData[0].start) ? eventsData[0].start.split('T')[0] : null;
 
                 const calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: 'dayGridMonth',
+                    initialView: 'timeGridWeek',
                     initialDate: firstDate || undefined,
                     locale: 'id',
                     headerToolbar: {
@@ -119,6 +119,11 @@
                         center: 'title',
                         right: 'dayGridMonth,timeGridWeek,timeGridDay'
                     },
+                    slotMinTime: '07:00:00',
+                    slotMaxTime: '17:00:00',
+                    slotDuration: '00:30:00',
+                    slotLabelInterval: '00:30:00',
+                    allDaySlot: false,
                     events: eventsData,
                     eventDidMount: function(info) {
                         if (info.event.backgroundColor) {

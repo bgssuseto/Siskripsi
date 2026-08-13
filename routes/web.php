@@ -208,10 +208,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/jadwal-ujian', [SkripsiController::class, 'jadwalIndex'])->name('jadwal-ujian.index');
         Route::get('/jadwal-ujian/export-bentrok', [SkripsiController::class, 'exportBentrok'])->name('jadwal-ujian.export-bentrok');
         Route::post('/jadwal/skripsi/{sidang}/jadwalkan', [SkripsiController::class, 'jadwalkan'])->name('jadwal.skripsi.jadwalkan');
+        Route::patch('/jadwal/skripsi/{sidang}/reschedule', [SkripsiController::class, 'reschedule'])->name('jadwal.skripsi.reschedule');
 
         // Jadwal Sempro
         Route::get('/jadwal-sempro', [SemproController::class, 'jadwalIndex'])->name('jadwal-sempro.index');
         Route::post('/jadwal/sempro/{sidang}/jadwalkan', [SemproController::class, 'jadwalkan'])->name('jadwal.sempro.jadwalkan');
+        Route::patch('/jadwal/sempro/{sidang}/reschedule', [SemproController::class, 'reschedule'])->name('jadwal.sempro.reschedule');
 
         // Administrasi
         Route::get('/administrasi/undangan', [AdministrasiController::class, 'undanganIndex'])->name('administrasi.undangan.index');
@@ -222,6 +224,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/administrasi/undangan/mass-excel', [AdministrasiController::class, 'generateUndanganMassExcel'])->name('administrasi.undangan.mass-excel');
         Route::get('/administrasi/undangan/rekap-dosen-penguji', [AdministrasiController::class, 'generateRekapDosenPengujiExcel'])->name('administrasi.undangan.rekap-dosen-penguji');
         Route::get('/administrasi/undangan/zip', [AdministrasiController::class, 'generateUndanganZip'])->name('administrasi.undangan.zip');
+        Route::get('/administrasi/undangan/mass-docx', [AdministrasiController::class, 'generateUndanganMassDocxZip'])->name('administrasi.undangan.mass-docx');
+        Route::get('/administrasi/rekap-pembimbing', [AdministrasiController::class, 'rekapPembimbingIndex'])->name('administrasi.rekap-pembimbing.index');
         Route::get('/administrasi/berita-acara', [AdministrasiController::class, 'beritaAcaraIndex'])->name('administrasi.berita-acara.index');
         Route::get('/administrasi/berita-acara/mass-pdf', [AdministrasiController::class, 'generateBeritaAcaraMassPdf'])->name('administrasi.berita-acara.mass-pdf');
         Route::get('/administrasi/berita-acara/mass-preview', [AdministrasiController::class, 'previewBeritaAcaraMassPdf'])->name('administrasi.berita-acara.mass-preview');

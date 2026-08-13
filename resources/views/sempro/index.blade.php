@@ -176,6 +176,17 @@
         .modal-title { font-size: 1.05rem; font-weight: 700; color: #0f172a; }
         .modal-close { width: 32px; height: 32px; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #64748b; }
         .modal-body { padding: 1.25rem 1.5rem; }
+        .modal-alert {
+            display: flex; align-items: flex-start; gap: .6rem;
+            background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+            border-radius: 12px; padding: .75rem .9rem; margin-bottom: 1rem;
+            font-size: .8rem; font-weight: 600; line-height: 1.4;
+        }
+        html.dark .modal-alert {
+            background: rgba(244, 63, 94, 0.12) !important;
+            border-color: rgba(244, 63, 94, 0.35) !important;
+            color: #fda4af !important;
+        }
         .modal-footer { display: flex; gap: .75rem; justify-content: flex-end; padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; }
 
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
@@ -259,8 +270,27 @@
                 @endforeach
             </select>
 
+            <select name="gelombang" class="filter-select">
+                <option value="">Semua Gelombang</option>
+                @foreach ($gelombangOptions ?? [] as $g)
+                    <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
+                @endforeach
+            </select>
+
+            <x-filter-popover :active="request()->hasAny(['dosen_pembimbing_id'])">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Pembimbing</label>
+                    <select name="dosen_pembimbing_id" class="filter-select w-full">
+                        <option value="">-- Semua Dosen --</option>
+                        @foreach ($dosens as $d)
+                            <option value="{{ $d->id }}" {{ (string) request('dosen_pembimbing_id') === (string) $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </x-filter-popover>
+
             <button type="submit" class="btn btn-primary">Filter</button>
-            @if(request()->hasAny(['search','status','periode_id']))
+            @if(request()->hasAny(['search','status','periode_id','gelombang','dosen_pembimbing_id']))
                 <a href="{{ route('jadwal-sempro.index') }}" class="btn btn-outline">✕ Reset</a>
             @endif
         </form>
@@ -415,6 +445,10 @@
             <form method="POST" id="form-jadwalkan" action="">
                 @csrf
                 <div class="modal-body">
+                    <div id="form-jadwalkan-alert" class="modal-alert" style="display:none;">
+                        <span>⚠️</span>
+                        <span id="form-jadwalkan-alert-text"></span>
+                    </div>
                     <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl mb-4 text-xs">
                         <div class="font-bold text-slate-800 text-sm" id="jadwalkan-mhs-nama"></div>
                         <div class="text-slate-500 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
@@ -422,12 +456,12 @@
 
                     {{-- Info Box Kesediaan Menguji Dosen --}}
                     @if(isset($kesediaanDosens) && $kesediaanDosens->count() > 0)
-                        <div class="mb-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3.5 text-xs">
-                            <div class="flex items-center justify-between font-extrabold text-emerald-900 mb-2">
+                        <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
+                            <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
                                 <span class="flex items-center gap-1.5">
                                     <span>📝</span> Data Ketersediaan Menguji Dosen (Sinkron)
                                 </span>
-                                <span class="bg-emerald-200 text-emerald-900 text-[10px] px-2 py-0.5 rounded-full font-extrabold">
+                                <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold">
                                     {{ $kesediaanDosens->count() }} Slot Terdaftar
                                 </span>
                             </div>
@@ -504,6 +538,10 @@
             <form method="POST" id="form-edit" action="">
                 @csrf @method('PUT')
                 <div class="modal-body">
+                    <div id="form-edit-alert" class="modal-alert" style="display:none;">
+                        <span>⚠️</span>
+                        <span id="form-edit-alert-text"></span>
+                    </div>
                     <div class="form-section">
                         <div class="form-section-title">Identitas Mahasiswa</div>
                         <div class="form-grid-2">
@@ -632,6 +670,8 @@
         function openModal(id) {
             document.getElementById(id).style.display = 'flex';
             document.body.style.overflow = 'hidden';
+            const alertBox = document.getElementById(id.replace('modal-', 'form-') + '-alert');
+            if (alertBox) alertBox.style.display = 'none';
         }
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
@@ -701,7 +741,7 @@
             const firstDate = (eventsData.length > 0 && eventsData[0].start) ? eventsData[0].start.split('T')[0] : null;
 
             calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
+                initialView: 'timeGridWeek',
                 initialDate: firstDate || undefined,
                 locale: 'id',
                 headerToolbar: {
@@ -709,7 +749,56 @@
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
+                slotMinTime: '07:00:00',
+                slotMaxTime: '17:00:00',
+                slotDuration: '00:30:00',
+                slotLabelInterval: '00:30:00',
+                allDaySlot: false,
+                editable: true,
+                eventStartEditable: true,
+                eventDurationEditable: false,
                 events: eventsData,
+                eventDrop: function(info) {
+                    const start = info.event.start;
+                    const y = start.getFullYear();
+                    const mo = String(start.getMonth() + 1).padStart(2, '0');
+                    const d = String(start.getDate()).padStart(2, '0');
+                    const tanggal = `${y}-${mo}-${d}`;
+
+                    let jam = info.event.extendedProps.jam;
+                    if (info.event.end) {
+                        const sh = String(start.getHours()).padStart(2, '0');
+                        const sm = String(start.getMinutes()).padStart(2, '0');
+                        const end = info.event.end;
+                        const eh = String(end.getHours()).padStart(2, '0');
+                        const em = String(end.getMinutes()).padStart(2, '0');
+                        jam = `${sh}.${sm} - ${eh}.${em}`;
+                    }
+
+                    fetch(`/jadwal/sempro/${info.event.id}/reschedule`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ tanggal, jam })
+                    })
+                    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                    .then(({ ok, data }) => {
+                        if (!ok) {
+                            info.revert();
+                            window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message || 'Gagal memindahkan jadwal.', type: 'error' } }));
+                        } else {
+                            info.event.setExtendedProp('jam', jam);
+                            window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
+                        }
+                    })
+                    .catch(() => {
+                        info.revert();
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Gagal terhubung ke server.', type: 'error' } }));
+                    });
+                },
             });
             calendar.render();
         }
@@ -724,6 +813,9 @@
                 const origText  = submitBtn ? submitBtn.innerHTML : '';
                 if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '⏳ Menyimpan…'; }
                 this.querySelectorAll('.error-feedback').forEach(el => el.remove());
+                const alertBox = document.getElementById(modalId.replace('modal-', 'form-') + '-alert');
+                const alertText = document.getElementById(modalId.replace('modal-', 'form-') + '-alert-text');
+                if (alertBox) alertBox.style.display = 'none';
                 try {
                     const response = await fetch(this.action, {
                         method: 'POST',
@@ -752,6 +844,10 @@
                                     input.parentNode.appendChild(errEl);
                                 }
                             });
+                        } else if (alertBox && alertText) {
+                            alertText.textContent = result.message || 'Terjadi kesalahan.';
+                            alertBox.style.display = 'flex';
+                            alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         } else {
                             const toastDiv = document.createElement('div');
                             toastDiv.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;background:#ef4444;color:#fff;padding:.75rem 1.25rem;border-radius:.75rem;font-size:.875rem;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.15);';
@@ -762,7 +858,12 @@
                     }
                 } catch (err) {
                     console.error(err);
-                    alert('Gagal terhubung ke server. Silakan coba lagi.');
+                    if (alertBox && alertText) {
+                        alertText.textContent = 'Gagal terhubung ke server. Silakan coba lagi.';
+                        alertBox.style.display = 'flex';
+                    } else {
+                        alert('Gagal terhubung ke server. Silakan coba lagi.');
+                    }
                 } finally {
                     if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origText; }
                 }

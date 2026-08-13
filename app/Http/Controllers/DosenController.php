@@ -83,6 +83,18 @@ class DosenController extends Controller
 
     public function destroy(Request $request, Dosen $dosen)
     {
+        // Refuse to delete a Dosen that still has a linked User login account —
+        // deleting it would silently orphan that account (dosen_id set to null
+        // via the FK's onDelete('set null')), locking them out of their own portal data.
+        $linkedUser = \App\Models\User::where('dosen_id', $dosen->id)->first();
+        if ($linkedUser) {
+            $message = "Tidak dapat menghapus data dosen ini karena masih terhubung dengan akun login \"{$linkedUser->name}\". Lepaskan tautan akun tersebut terlebih dahulu sebelum menghapus.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
         // Ensure Super Administrator Dosen exists
         $superAdminDosen = Dosen::firstOrCreate(
             ['nidn' => '0000000000'],
@@ -187,6 +199,8 @@ class DosenController extends Controller
             $importedCount = 0;
             $updatedCount = 0;
 
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
             for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
                 $row = $rows[$i];
                 if (!is_array($row)) continue;
@@ -242,6 +256,8 @@ class DosenController extends Controller
                 }
             }
 
+            \Illuminate\Support\Facades\DB::commit();
+
             $msg = "Berhasil memproses data dosen! ({$importedCount} baru ditambahkan, {$updatedCount} diperbarui)";
 
             if ($request->expectsJson()) {
@@ -254,6 +270,9 @@ class DosenController extends Controller
             return redirect()->route('master.dosen.index')->with('success', $msg);
 
         } catch (\Exception $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Gagal membaca file Excel: ' . $e->getMessage()], 422);
             }

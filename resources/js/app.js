@@ -27,4 +27,18 @@ window.refreshComponent = async function(selectors) {
     }
 };
 
+// Let the mouse wheel scroll wide tables horizontally instead of forcing users
+// to first scroll the page down to reach the scrollbar at the bottom of the table.
+// Only intercepts the wheel when the hovered container actually overflows horizontally,
+// so normal page scrolling is untouched everywhere else.
+document.addEventListener('wheel', function (event) {
+    const container = event.target.closest('.overflow-x-auto, .table-scroll');
+    if (!container) return;
+    if (container.scrollWidth <= container.clientWidth) return;
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return; // already a horizontal gesture (trackpad), let it through natively
+
+    container.scrollLeft += event.deltaY;
+    event.preventDefault();
+}, { passive: false });
+
 Alpine.start();

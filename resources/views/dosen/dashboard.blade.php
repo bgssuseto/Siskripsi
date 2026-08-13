@@ -197,6 +197,59 @@
             </div>
         </div>
 
+        <!-- Infografis Statistik Bimbingan -->
+        <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm p-6 mb-8">
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700 mb-5">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Statistik Peran Bimbingan</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Rincian mahasiswa yang Anda bimbing berdasarkan peran.</p>
+                </div>
+            </div>
+
+            @php
+                $bTotal = $stats['bimbingan_total'] ?? 0;
+                $bUtama = $stats['bimbingan_utama'] ?? 0;
+                $bPendamping = $stats['bimbingan_pendamping'] ?? 0;
+                $utamaPct = $bTotal > 0 ? round($bUtama / $bTotal * 100) : 0;
+                $pendampingPct = $bTotal > 0 ? round($bPendamping / $bTotal * 100) : 0;
+            @endphp
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                <div class="rounded-2xl p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-800">
+                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">Pembimbing Utama</p>
+                    <p class="text-2xl font-extrabold text-indigo-900 dark:text-indigo-200 mt-1.5">{{ $bUtama }} <span class="text-xs font-semibold text-indigo-500 dark:text-indigo-400">Mahasiswa</span></p>
+                </div>
+                <div class="rounded-2xl p-4 bg-sky-50 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-800">
+                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-300">Pembimbing Pendamping</p>
+                    <p class="text-2xl font-extrabold text-sky-900 dark:text-sky-200 mt-1.5">{{ $bPendamping }} <span class="text-xs font-semibold text-sky-500 dark:text-sky-400">Mahasiswa</span></p>
+                </div>
+                <div class="rounded-2xl p-4 bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700">
+                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Bimbingan</p>
+                    <p class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-1.5">{{ $bTotal }} <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Mahasiswa</span></p>
+                </div>
+            </div>
+
+            @if($bTotal > 0)
+            <div>
+                <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+                    <span>Proporsi Peran</span>
+                    <span>{{ $utamaPct }}% Utama &middot; {{ $pendampingPct }}% Pendamping</span>
+                </div>
+                <div class="w-full h-3 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden flex">
+                    <div class="h-full bg-indigo-500" style="width: {{ $utamaPct }}%" title="Pembimbing Utama: {{ $bUtama }}"></div>
+                    <div class="h-full bg-sky-400" style="width: {{ $pendampingPct }}%" title="Pembimbing Pendamping: {{ $bPendamping }}"></div>
+                </div>
+            </div>
+            @else
+            <p class="text-xs text-slate-400 dark:text-slate-500 italic">Belum ada mahasiswa bimbingan pada data saat ini.</p>
+            @endif
+        </div>
+
         <!-- Aktivitas Ujian & Bimbingan Terbaru -->
         <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden mb-8">
             <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">

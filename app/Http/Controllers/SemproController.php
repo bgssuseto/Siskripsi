@@ -6,6 +6,7 @@ use App\Models\Sidang;
 use App\Models\Dosen;
 use App\Models\Ruang;
 use App\Models\Periode;
+use App\Models\PendaftaranPeriode;
 use App\Services\SidangConflictService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -64,8 +65,30 @@ class SemproController extends Controller
             // Default to active period if exists
             $activePeriode = Periode::where('aktif', true)->first();
             if ($activePeriode) {
+                $periodeId = $activePeriode->id;
                 $query->where('periode_id', $activePeriode->id);
             }
+        }
+
+        // Filter Gelombang
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
+        $gelombangOptions = $periodeId
+            ? PendaftaranPeriode::where('periode_id', $periodeId)
+                ->where('jenis', 'sempro')
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
+
+        // Filter Dosen Pembimbing (Utama atau Pendamping) — Sempro tidak memiliki peran penguji
+        if ($dosenPembimbingId = $request->get('dosen_pembimbing_id')) {
+            $query->where(function ($q) use ($dosenPembimbingId) {
+                $q->where('dosen_pembimbing_utama_id', $dosenPembimbingId)
+                  ->orWhere('dosen_pembimbing_pendamping_id', $dosenPembimbingId);
+            });
         }
 
         // Fetch all records in DB to compute global conflict detection for table badges & calendar
@@ -177,8 +200,9 @@ class SemproController extends Controller
         $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->count();
 
         return view('master.sempro.index', compact(
-            'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode', 
-            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap'
+            'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
+            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap',
+            'selectedGelombang', 'gelombangOptions'
         ));
     }
 
@@ -284,8 +308,28 @@ class SemproController extends Controller
         } else {
             $activePeriode = Periode::where('aktif', true)->first();
             if ($activePeriode) {
+                $periodeId = $activePeriode->id;
                 $query->where('periode_id', $activePeriode->id);
             }
+        }
+
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
+        $gelombangOptions = $periodeId
+            ? PendaftaranPeriode::where('periode_id', $periodeId)
+                ->where('jenis', 'sempro')
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
+
+        if ($dosenPembimbingId = $request->get('dosen_pembimbing_id')) {
+            $query->where(function ($q) use ($dosenPembimbingId) {
+                $q->where('dosen_pembimbing_utama_id', $dosenPembimbingId)
+                  ->orWhere('dosen_pembimbing_pendamping_id', $dosenPembimbingId);
+            });
         }
 
         $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ruang', 'periode'])
@@ -347,15 +391,26 @@ class SemproController extends Controller
             $eventColor = $hasSchedule ? '#ef4444' : '#8b5cf6';
             $borderColor = $hasSchedule ? '#dc2626' : '#7c3aed';
 
+            $tglStr = $s->tanggal->format('Y-m-d');
+            $jamRange = SidangConflictService::parseJamRange($s->jam);
+            $startDt = $tglStr;
+            $endDt = null;
+            if ($jamRange) {
+                $startDt = $tglStr . 'T' . sprintf('%02d:%02d:00', intdiv($jamRange['start'], 60), $jamRange['start'] % 60);
+                $endDt = $tglStr . 'T' . sprintf('%02d:%02d:00', intdiv($jamRange['end'], 60), $jamRange['end'] % 60);
+            }
+
             return [
                 'id'              => $s->id,
                 'title'           => $title,
-                'start'           => $s->tanggal->format('Y-m-d'),
+                'start'           => $startDt,
+                'end'             => $endDt,
                 'description'     => $description,
                 'color'           => $eventColor,
                 'backgroundColor' => $eventColor,
                 'borderColor'     => $borderColor,
                 'textColor'       => '#ffffff',
+                'editable'        => !$s->tanggal->isPast() || $s->tanggal->isToday(),
                 'extendedProps'   => [
                     'nim'            => $s->nim,
                     'mahasiswa'      => $s->nama_mahasiswa,
@@ -382,7 +437,8 @@ class SemproController extends Controller
 
         return view('sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
-            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap', 'kesediaanDosens'
+            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap', 'kesediaanDosens',
+            'selectedGelombang', 'gelombangOptions'
         ));
     }
 
@@ -427,6 +483,36 @@ class SemproController extends Controller
             return response()->json(['success' => true, 'message' => '✅ Jadwal sempro berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!', 'sidang' => $sidang->fresh()]);
         }
         return back()->with('success', '✅ Jadwal sempro berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!');
+    }
+
+    // ─── Reschedule (Geser Jadwal via Drag & Drop di Kalender) ─────────────────
+
+    public function reschedule(Request $request, Sidang $sidang)
+    {
+        $validated = $request->validate([
+            'tanggal' => ['required', 'date'],
+            'jam'     => ['required', 'string', 'max:100'],
+        ], [
+            'tanggal.required' => 'Tanggal baru tidak valid.',
+            'jam.required'     => 'Jam baru tidak valid.',
+        ]);
+
+        // Only tanggal & jam move — ruang stays as it already was.
+        $checkData = array_merge($sidang->toArray(), $validated);
+        $scheduleConflicts = SidangConflictService::checkConflicts($checkData, $sidang->id);
+        if (!empty($scheduleConflicts)) {
+            return response()->json([
+                'success' => false,
+                'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+            ], 422);
+        }
+
+        $sidang->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => '✅ Jadwal ' . $sidang->nama_mahasiswa . ' berhasil dipindahkan.',
+        ]);
     }
 
     // ─── Store (manual input) ─────────────────────────────────────────────────

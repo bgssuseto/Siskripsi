@@ -41,9 +41,33 @@ class PendaftaranController extends Controller
         } else {
             $activePeriode = Periode::where('aktif', true)->first();
             if ($activePeriode) {
+                $periodeId = $activePeriode->id;
                 $query->where('periode_id', $activePeriode->id);
             }
         }
+
+        // Filter gelombang
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
+        $gelombangOptions = $periodeId
+            ? PendaftaranPeriode::where('periode_id', $periodeId)
+                ->where('jenis', 'sempro')
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
+
+        // Filter Dosen Pembimbing (Utama atau Pendamping) — Sempro tidak memiliki peran penguji
+        if ($dosenPembimbingId = $request->get('dosen_pembimbing_id')) {
+            $query->where(function ($q) use ($dosenPembimbingId) {
+                $q->where('dosen_pembimbing_utama_id', $dosenPembimbingId)
+                  ->orWhere('dosen_pembimbing_pendamping_id', $dosenPembimbingId);
+            });
+        }
+
+        $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
 
         $sidangs = $query->orderByRaw("CASE WHEN verifikasi_status = 'menunggu' THEN 1 WHEN verifikasi_status = 'ditolak' THEN 2 ELSE 3 END")
             ->orderByDesc('id')
@@ -60,7 +84,7 @@ class PendaftaranController extends Controller
             'ditolak'   => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'ditolak')->count(),
         ];
 
-        return view('pendaftaran.sempro', compact('sidangs', 'periodes', 'activePeriode', 'counts'));
+        return view('pendaftaran.sempro', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens'));
     }
 
     /**
@@ -94,9 +118,42 @@ class PendaftaranController extends Controller
         } else {
             $activePeriode = Periode::where('aktif', true)->first();
             if ($activePeriode) {
+                $periodeId = $activePeriode->id;
                 $query->where('periode_id', $activePeriode->id);
             }
         }
+
+        // Filter gelombang
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
+        $gelombangOptions = $periodeId
+            ? PendaftaranPeriode::where('periode_id', $periodeId)
+                ->where('jenis', 'skripsi')
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
+
+        // Filter Dosen Pembimbing (Utama atau Pendamping)
+        if ($dosenPembimbingId = $request->get('dosen_pembimbing_id')) {
+            $query->where(function ($q) use ($dosenPembimbingId) {
+                $q->where('dosen_pembimbing_utama_id', $dosenPembimbingId)
+                  ->orWhere('dosen_pembimbing_pendamping_id', $dosenPembimbingId);
+            });
+        }
+
+        // Filter Dosen Penguji (Ketua, Penguji 1, atau Penguji 2)
+        if ($dosenPengujiId = $request->get('dosen_penguji_id')) {
+            $query->where(function ($q) use ($dosenPengujiId) {
+                $q->where('ketua_penguji_id', $dosenPengujiId)
+                  ->orWhere('anggota_penguji_1_id', $dosenPengujiId)
+                  ->orWhere('anggota_penguji_2_id', $dosenPengujiId);
+            });
+        }
+
+        $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
 
         $sidangs = $query->orderByRaw("CASE WHEN verifikasi_status = 'menunggu' THEN 1 WHEN verifikasi_status = 'ditolak' THEN 2 ELSE 3 END")
             ->orderByDesc('id')
@@ -113,7 +170,7 @@ class PendaftaranController extends Controller
             'ditolak'   => Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->where('verifikasi_status', 'ditolak')->count(),
         ];
 
-        return view('pendaftaran.skripsi', compact('sidangs', 'periodes', 'activePeriode', 'counts'));
+        return view('pendaftaran.skripsi', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens'));
     }
 
     /**

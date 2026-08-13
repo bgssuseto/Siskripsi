@@ -34,7 +34,7 @@
             <div>
                 <h4 class="text-xs font-extrabold text-indigo-300 uppercase tracking-wider">Pakaian & Atribut</h4>
                 <p class="text-xs text-slate-200 mt-1 font-medium leading-relaxed">
-                    Jas almamater, dalaman baju putih berdasi, celana hitam panjang, dan sepatu pantofel.
+                    Jas almamater, dalaman baju putih berdasi hitam, celana hitam panjang, dan sepatu pantofel.
                 </p>
             </div>
         </div>

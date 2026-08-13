@@ -253,7 +253,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -396,6 +396,7 @@
                     <h3 class="text-base font-bold text-slate-900 mb-1">Hapus Data Dosen?</h3>
                     <p class="text-xs text-slate-500 mb-6">
                         Apakah Anda yakin ingin menghapus data dosen <span class="font-bold text-slate-800" x-text="deleteDosen.nama_dosen"></span>?
+                        Jika dosen ini pernah tercatat sebagai pembimbing/penguji pada data skripsi/sempro, riwayat tersebut akan dialihkan otomatis ke dosen "Super Administrator" agar data historis tetap utuh.
                     </p>
 
                     <form :action="'/master/dosen/' + deleteDosen.id" method="POST" @submit.prevent="submitDelete($event)" class="flex items-center justify-center gap-3">
@@ -409,6 +410,8 @@
                     </form>
                 </div>
             </div>
+        </div>
+
         <!-- ================= MODAL IMPORT DOSEN ================= -->
         <div x-show="importModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">

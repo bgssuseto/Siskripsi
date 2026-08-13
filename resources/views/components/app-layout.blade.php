@@ -129,6 +129,184 @@
             border-color: rgba(168, 85, 247, 0.35) !important;
         }
 
+        /* Extended Dark Mode Safety-Net — additional color families */
+        html.dark .bg-gray-50, html.dark .bg-gray-50\/40, html.dark .bg-gray-50\/50, html.dark .bg-gray-50\/60, html.dark .bg-gray-50\/80 {
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+            border-color: #1e293b !important;
+        }
+
+        html.dark .bg-gray-100 {
+            background-color: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+
+        html.dark .text-gray-900, html.dark .text-gray-800 {
+            color: #f8fafc !important;
+        }
+
+        html.dark .text-gray-700, html.dark .text-gray-600 {
+            color: #cbd5e1 !important;
+        }
+
+        html.dark .text-gray-500, html.dark .text-gray-400 {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .border-gray-200, html.dark .border-gray-200\/80, html.dark .border-gray-200\/90, html.dark .border-gray-100, html.dark .border-gray-300 {
+            border-color: #334155 !important;
+        }
+
+        html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+        html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+        html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+        html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+            border-color: #334155 !important;
+        }
+
+        html.dark .bg-violet-50, html.dark .bg-violet-100 {
+            background-color: rgba(139, 92, 246, 0.18) !important;
+            color: #c4b5fd !important;
+            border-color: rgba(139, 92, 246, 0.35) !important;
+        }
+
+        html.dark .bg-blue-50, html.dark .bg-blue-100 {
+            background-color: rgba(59, 130, 246, 0.18) !important;
+            color: #93c5fd !important;
+            border-color: rgba(59, 130, 246, 0.35) !important;
+        }
+
+        html.dark .bg-red-50, html.dark .bg-red-100 {
+            background-color: rgba(239, 68, 68, 0.18) !important;
+            color: #fca5a5 !important;
+            border-color: rgba(239, 68, 68, 0.35) !important;
+        }
+
+        html.dark .bg-green-50, html.dark .bg-green-100 {
+            background-color: rgba(34, 197, 94, 0.18) !important;
+            color: #86efac !important;
+            border-color: rgba(34, 197, 94, 0.35) !important;
+        }
+
+        html.dark .bg-teal-50, html.dark .bg-teal-100 {
+            background-color: rgba(20, 184, 166, 0.18) !important;
+            color: #5eead4 !important;
+            border-color: rgba(20, 184, 166, 0.35) !important;
+        }
+
+        html.dark .bg-cyan-50, html.dark .bg-cyan-100 {
+            background-color: rgba(6, 182, 212, 0.18) !important;
+            color: #67e8f9 !important;
+            border-color: rgba(6, 182, 212, 0.35) !important;
+        }
+
+        html.dark .bg-sky-50, html.dark .bg-sky-100 {
+            background-color: rgba(14, 165, 233, 0.18) !important;
+            color: #7dd3fc !important;
+            border-color: rgba(14, 165, 233, 0.35) !important;
+        }
+
+        html.dark .bg-orange-50, html.dark .bg-orange-100 {
+            background-color: rgba(249, 115, 22, 0.18) !important;
+            color: #fdba74 !important;
+            border-color: rgba(249, 115, 22, 0.35) !important;
+        }
+
+        html.dark .bg-yellow-50, html.dark .bg-yellow-100 {
+            background-color: rgba(234, 179, 8, 0.18) !important;
+            color: #fde047 !important;
+            border-color: rgba(234, 179, 8, 0.35) !important;
+        }
+
+        html.dark .text-violet-600, html.dark .text-violet-700, html.dark .text-violet-800 { color: #c4b5fd !important; }
+        html.dark .text-blue-600, html.dark .text-blue-700, html.dark .text-blue-800 { color: #93c5fd !important; }
+        html.dark .text-red-600, html.dark .text-red-700, html.dark .text-red-800 { color: #fca5a5 !important; }
+        html.dark .text-green-600, html.dark .text-green-700, html.dark .text-green-800 { color: #86efac !important; }
+        html.dark .text-teal-600, html.dark .text-teal-700, html.dark .text-teal-800 { color: #5eead4 !important; }
+        html.dark .text-cyan-600, html.dark .text-cyan-700, html.dark .text-cyan-800 { color: #67e8f9 !important; }
+        html.dark .text-sky-600, html.dark .text-sky-700, html.dark .text-sky-800 { color: #7dd3fc !important; }
+        html.dark .text-orange-600, html.dark .text-orange-700, html.dark .text-orange-800 { color: #fdba74 !important; }
+        html.dark .text-yellow-600, html.dark .text-yellow-700, html.dark .text-yellow-800 { color: #fde047 !important; }
+
+        html.dark .border-violet-200, html.dark .border-violet-300 { border-color: rgba(139, 92, 246, 0.35) !important; }
+        html.dark .border-blue-200, html.dark .border-blue-300 { border-color: rgba(59, 130, 246, 0.35) !important; }
+        html.dark .border-red-200, html.dark .border-red-300 { border-color: rgba(239, 68, 68, 0.35) !important; }
+        html.dark .border-green-200, html.dark .border-green-300 { border-color: rgba(34, 197, 94, 0.35) !important; }
+        html.dark .border-teal-200, html.dark .border-teal-300 { border-color: rgba(20, 184, 166, 0.35) !important; }
+        html.dark .border-cyan-200, html.dark .border-cyan-300 { border-color: rgba(6, 182, 212, 0.35) !important; }
+        html.dark .border-sky-200, html.dark .border-sky-300 { border-color: rgba(14, 165, 233, 0.35) !important; }
+        html.dark .border-orange-200, html.dark .border-orange-300 { border-color: rgba(249, 115, 22, 0.35) !important; }
+        html.dark .border-yellow-200, html.dark .border-yellow-300 { border-color: rgba(234, 179, 8, 0.35) !important; }
+
+        html.dark .hover\:bg-gray-50:hover, html.dark .hover\:bg-slate-50:hover {
+            background-color: #1e293b !important;
+        }
+
+        /* ===================== LIGHT-MODE SIDEBAR ===================== */
+        /* The sidebar is built dark-first (permanently dark gradient + white text). Give it
+           an explicit light theme when the app is NOT in dark mode, instead of leaving it
+           stuck looking "dark" regardless of the toggle. */
+        html:not(.dark) #app-sidebar {
+            background: #ffffff !important;
+            border-right: 1px solid #e2e8f0;
+            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.05);
+        }
+
+        html:not(.dark) #app-sidebar .border-white\/\[0\.07\],
+        html:not(.dark) #app-sidebar .border-white\/\[0\.05\] {
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) #app-sidebar .text-slate-400 { color: #64748b !important; }
+        html:not(.dark) #app-sidebar .text-slate-500 { color: #475569 !important; }
+        html:not(.dark) #app-sidebar .text-slate-200 { color: #334155 !important; }
+
+        html:not(.dark) #app-sidebar .hover\:bg-white\/\[0\.06\]:hover,
+        html:not(.dark) #app-sidebar .bg-white\/\[0\.08\] {
+            background-color: #eef1fe !important;
+        }
+
+        /* Base: any inherited/explicit white text turns dark on a light sidebar... */
+        html:not(.dark) #app-sidebar .text-white { color: #1e293b !important; }
+        html:not(.dark) #app-sidebar .hover\:text-white:hover { color: #1e293b !important; }
+
+        /* ...except where it sits on a strong/solid colored pill (active nav item),
+           where white text stays legible on any background theme. */
+        html:not(.dark) #app-sidebar .bg-indigo-600.text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600 .text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600\/70.text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600\/70 .text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600\/80.text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600\/80 .text-white,
+        html:not(.dark) #app-sidebar .bg-blue-600\/70.text-white,
+        html:not(.dark) #app-sidebar .bg-blue-600\/70 .text-white,
+        html:not(.dark) #app-sidebar .bg-amber-600\/70.text-white,
+        html:not(.dark) #app-sidebar .bg-amber-600\/70 .text-white,
+        html:not(.dark) #app-sidebar .bg-violet-600\/80.text-white,
+        html:not(.dark) #app-sidebar .bg-violet-600\/80 .text-white {
+            color: #ffffff !important;
+        }
+
+        /* Translucent "active group / active child" pills paired with light-tinted text
+           need both sides re-balanced for a light background (dark text on a soft tint). */
+        html:not(.dark) #app-sidebar .bg-indigo-600\/30 { background-color: #e0e7ff !important; }
+        html:not(.dark) #app-sidebar .text-indigo-300 { color: #3730a3 !important; }
+        html:not(.dark) #app-sidebar .bg-amber-600\/20 { background-color: #fef3c7 !important; }
+        html:not(.dark) #app-sidebar .text-amber-300 { color: #92400e !important; }
+        html:not(.dark) #app-sidebar .bg-blue-600\/20 { background-color: #dbeafe !important; }
+        html:not(.dark) #app-sidebar .text-blue-300 { color: #1d4ed8 !important; }
+
+        html:not(.dark) #app-sidebar .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(15, 23, 42, 0.15) !important;
+        }
+        html:not(.dark) #app-sidebar .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(15, 23, 42, 0.25) !important;
+        }
+
+        html.dark .shadow, html.dark .shadow-sm, html.dark .shadow-md, html.dark .shadow-lg, html.dark .shadow-xl {
+            --tw-shadow-color: rgba(0, 0, 0, 0.4);
+        }
+
         html.dark .nim-pill {
             background-color: #334155 !important;
             color: #cbd5e1 !important;
@@ -339,6 +517,7 @@
 
         <!-- ===================== SIDEBAR ===================== -->
         <aside
+            id="app-sidebar"
             class="fixed inset-y-0 left-0 z-50 flex flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white transition-all duration-300 ease-in-out shadow-2xl lg:relative lg:z-auto lg:translate-x-0"
             :class="{
                 'translate-x-0': mobileOpen,
@@ -928,6 +1107,12 @@
                                         <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.undangan.*') && $jenisSkripsi ? 'bg-blue-300' : 'bg-slate-600 group-hover:bg-blue-400' }} transition-colors"></span>
                                         Undangan
                                     </a>
+                                    <a href="{{ route('administrasi.rekap-pembimbing.index', ['jenis' => 'skripsi']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.rekap-pembimbing.*') && $jenisSkripsi ? 'bg-blue-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.rekap-pembimbing.*') && $jenisSkripsi ? 'bg-blue-300' : 'bg-slate-600 group-hover:bg-blue-400' }} transition-colors"></span>
+                                        Rekap Pembimbing
+                                    </a>
                                     <a href="{{ route('administrasi.berita-acara.index', ['jenis' => 'skripsi']) }}"
                                        class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
                                               {{ request()->routeIs('administrasi.berita-acara.*') && $jenisSkripsi ? 'bg-blue-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
@@ -971,6 +1156,12 @@
                                               {{ request()->routeIs('administrasi.undangan.*') && $jenisSempro ? 'bg-amber-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.undangan.*') && $jenisSempro ? 'bg-amber-300' : 'bg-slate-600 group-hover:bg-amber-400' }} transition-colors"></span>
                                         Undangan
+                                    </a>
+                                    <a href="{{ route('administrasi.rekap-pembimbing.index', ['jenis' => 'sempro']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.rekap-pembimbing.*') && $jenisSempro ? 'bg-amber-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.rekap-pembimbing.*') && $jenisSempro ? 'bg-amber-300' : 'bg-slate-600 group-hover:bg-amber-400' }} transition-colors"></span>
+                                        Rekap Pembimbing
                                     </a>
                                     <a href="{{ route('administrasi.berita-acara.index', ['jenis' => 'sempro']) }}"
                                        class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group

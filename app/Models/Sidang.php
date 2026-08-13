@@ -23,6 +23,7 @@ class Sidang extends Model
         'anggota_penguji_2_id',
         'ruang_id',
         'periode_id',
+        'gelombang',
         'tanggal',
         'tanggal_pendaftaran',
         'jam',
@@ -55,6 +56,8 @@ class Sidang extends Model
                 && !empty($sidang->dosen_pembimbing_utama_id)) {
                 $sidang->anggota_penguji_2_id = $sidang->dosen_pembimbing_utama_id;
             }
+
+            $sidang->gelombang = static::computeGelombang($sidang);
         });
 
         static::updating(function ($sidang) {
@@ -64,7 +67,34 @@ class Sidang extends Model
                 && !empty($sidang->dosen_pembimbing_utama_id)) {
                 $sidang->anggota_penguji_2_id = $sidang->dosen_pembimbing_utama_id;
             }
+
+            if ($sidang->isDirty(['periode_id', 'tanggal_pendaftaran', 'jenis_tugas_akhir'])) {
+                $sidang->gelombang = static::computeGelombang($sidang);
+            }
         });
+    }
+
+    /**
+     * Determine which gelombang (wave) a Sidang belongs to, by matching its
+     * periode_id + jenis bucket + tanggal_pendaftaran against the configured
+     * PendaftaranPeriode (Master Gelombang) date ranges.
+     */
+    protected static function computeGelombang($sidang): ?int
+    {
+        if (empty($sidang->periode_id) || empty($sidang->tanggal_pendaftaran)) {
+            return null;
+        }
+
+        $bucket = $sidang->jenis_tugas_akhir === 'sempro' ? 'sempro' : 'skripsi';
+        $tanggal = $sidang->tanggal_pendaftaran instanceof \Carbon\Carbon
+            ? $sidang->tanggal_pendaftaran->format('Y-m-d')
+            : \Carbon\Carbon::parse($sidang->tanggal_pendaftaran)->format('Y-m-d');
+
+        return PendaftaranPeriode::where('periode_id', $sidang->periode_id)
+            ->where('jenis', $bucket)
+            ->whereDate('tanggal_mulai', '<=', $tanggal)
+            ->whereDate('tanggal_selesai', '>=', $tanggal)
+            ->value('gelombang');
     }
 
     /**

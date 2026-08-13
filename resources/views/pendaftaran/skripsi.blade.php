@@ -148,22 +148,54 @@
                     </select>
                 </div>
 
+                <!-- Filter Gelombang Dropdown -->
+                <div class="min-w-[180px]">
+                    <select name="gelombang" onchange="this.form.submit()"
+                            class="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 focus:outline-none focus:border-purple-600 cursor-pointer shadow-2xs">
+                        <option value="">-- Semua Gelombang --</option>
+                        @foreach($gelombangOptions ?? [] as $g)
+                            <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <x-filter-popover :active="request()->hasAny(['dosen_pembimbing_id','dosen_penguji_id'])">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Pembimbing</label>
+                        <select name="dosen_pembimbing_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Dosen --</option>
+                            @foreach ($dosens as $d)
+                                <option value="{{ $d->id }}" {{ (string) request('dosen_pembimbing_id') === (string) $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Penguji</label>
+                        <select name="dosen_penguji_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Dosen --</option>
+                            @foreach ($dosens as $d)
+                                <option value="{{ $d->id }}" {{ (string) request('dosen_penguji_id') === (string) $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </x-filter-popover>
+
                 <!-- Action Buttons with Explicit High-Contrast Colors -->
                 <div class="flex items-center gap-2">
-                    <button type="submit" 
-                            style="background-color: #9333ea; color: #ffffff;" 
+                    <button type="submit"
+                            style="background-color: #9333ea; color: #ffffff;"
                             class="px-5 py-2.5 bg-purple-600 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md hover:bg-purple-700 border border-purple-500 cursor-pointer flex items-center justify-center gap-1.5">
                         🔍 Cari & Filter
                     </button>
-                    
-                    <a href="{{ route('pendaftaran.skripsi.export', request()->query()) }}" 
-                       style="background-color: #059669; color: #ffffff;" 
+
+                    <a href="{{ route('pendaftaran.skripsi.export', request()->query()) }}"
+                       style="background-color: #059669; color: #ffffff;"
                        class="px-4 py-2.5 bg-emerald-600 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md hover:bg-emerald-700 border border-emerald-500 cursor-pointer flex items-center justify-center gap-1.5">
                         📊 Export Excel
                     </a>
 
-                    @if(request('search') || request('verifikasi_status') || request('periode_id'))
-                        <a href="{{ route('pendaftaran.skripsi') }}" 
+                    @if(request('search') || request('verifikasi_status') || request('periode_id') || request('gelombang') || request('dosen_pembimbing_id') || request('dosen_penguji_id'))
+                        <a href="{{ route('pendaftaran.skripsi') }}"
                            style="background-color: #475569; color: #ffffff;"
                            class="px-4 py-2.5 bg-slate-600 text-white font-extrabold text-xs rounded-2xl hover:bg-slate-700 transition-colors border border-slate-500 cursor-pointer flex items-center justify-center gap-1">
                             ✕ Reset

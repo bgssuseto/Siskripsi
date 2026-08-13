@@ -42,14 +42,21 @@
                     </svg>
                     Unduh Semua PDF (ZIP)
                 </a>
+                <a href="{{ route('administrasi.undangan.mass-docx', request()->all()) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Unduh Semua DOCX (ZIP)
+                </a>
             </div>
             @endif
         </div>
 
         <!-- Filter Range Tanggal Pendaftaran & Periode -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-            <form method="GET" action="{{ route('administrasi.undangan.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                
+            <form method="GET" action="{{ route('administrasi.undangan.index') }}" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+
                 <!-- Periode -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Periode Akademik</label>
@@ -69,6 +76,19 @@
                     <select name="jenis" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                         <option value="sempro" {{ $jenisUndangan === 'sempro' ? 'selected' : '' }}>Seminar Proposal (Sempro)</option>
                         <option value="skripsi" {{ $jenisUndangan === 'skripsi' ? 'selected' : '' }}>Sidang Skripsi</option>
+                    </select>
+                </div>
+
+                <!-- Gelombang -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Gelombang</label>
+                    <select name="gelombang" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        <option value="">-- Semua Gelombang --</option>
+                        @foreach($gelombangOptions ?? [] as $g)
+                        <option value="{{ $g }}" {{ (string) $selectedGelombang === (string) $g ? 'selected' : '' }}>
+                            Gelombang {{ $g }}
+                        </option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -96,7 +116,7 @@
                         Filter Data
                     </button>
 
-                    @if($tglMulai || $tglSelesai || $selectedPeriodeId || request('jenis'))
+                    @if($tglMulai || $tglSelesai || $selectedPeriodeId || request('jenis') || $selectedGelombang)
                     <a href="{{ route('administrasi.undangan.index') }}"
                        class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-sm rounded-xl transition-all flex items-center justify-center" title="Reset Filter">
                         Reset

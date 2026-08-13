@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sidang;
 use App\Models\Dosen;
 use App\Models\Periode;
+use App\Models\PendaftaranPeriode;
 use Carbon\Carbon;
 use App\Services\SidangConflictService;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -42,6 +43,7 @@ class AdministrasiController extends Controller
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
         $jenisUndangan = $request->get('jenis', 'sempro');
+        $selectedGelombang = $request->get('gelombang');
 
         // Query sidangs for examiners
         $query = Sidang::with([
@@ -60,6 +62,10 @@ class AdministrasiController extends Controller
             $query->where('periode_id', $selectedPeriodeId);
         }
 
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
         if ($tglMulai) {
             $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
         }
@@ -67,6 +73,15 @@ class AdministrasiController extends Controller
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
         }
+
+        // Options for the Gelombang filter dropdown, scoped to the selected periode + jenis
+        $jenisBucket = $jenisUndangan === 'sempro' ? 'sempro' : 'skripsi';
+        $gelombangOptions = $selectedPeriodeId
+            ? PendaftaranPeriode::where('periode_id', $selectedPeriodeId)
+                ->where('jenis', $jenisBucket)
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
 
         $sidangs = $query->get();
 
@@ -104,7 +119,8 @@ class AdministrasiController extends Controller
 
         return view('administrasi.undangan.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId',
-            'tglMulai', 'tglSelesai', 'dosenList', 'sidangs', 'jenisUndangan'
+            'tglMulai', 'tglSelesai', 'dosenList', 'sidangs', 'jenisUndangan',
+            'selectedGelombang', 'gelombangOptions'
         ));
     }
 
@@ -149,6 +165,11 @@ class AdministrasiController extends Controller
 
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
         }
 
         $mySidangs = $query->orderBy('tanggal', 'asc')
@@ -219,6 +240,11 @@ class AdministrasiController extends Controller
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
         }
 
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
         $mySidangs = $query->orderBy('tanggal', 'asc')
                            ->orderBy('jam', 'asc')
                            ->get();
@@ -245,7 +271,7 @@ class AdministrasiController extends Controller
             'jenisUndangan' => $jenisUndangan,
         ]);
 
-        $pdf->setPaper('a4', 'landscape');
+        $pdf->setPaper('a4', 'portrait');
 
         $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $filename = "Undangan_{$invType}_{$dosen->nama_dosen}.pdf";
@@ -296,6 +322,11 @@ class AdministrasiController extends Controller
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
         }
 
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
         $mySidangs = $query->orderBy('tanggal', 'asc')
                            ->orderBy('jam', 'asc')
                            ->get();
@@ -304,6 +335,23 @@ class AdministrasiController extends Controller
             return back()->with('warning', 'Tidak ada jadwal menguji untuk dosen ini.');
         }
 
+        $phpWord = $this->buildUndanganDocxForDosen($dosen, $mySidangs, $namaPeriode, $jenisUndangan);
+
+        $filename = "{$dosen->nama_dosen}.docx";
+        $tempPath = storage_path('app/public/' . preg_replace('/[^\w\s\.,-]/', '_', $filename));
+
+        $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+        $objWriter->save($tempPath);
+
+        return response()->download($tempPath, $filename)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Helper: Build a PhpWord document (Rekap Undangan) for a single Dosen.
+     * Reused by both single-dosen DOCX download and mass DOCX ZIP export.
+     */
+    private function buildUndanganDocxForDosen(Dosen $dosen, $mySidangs, string $namaPeriode, string $jenisUndangan = 'sempro'): \PhpOffice\PhpWord\PhpWord
+    {
         $phpWord = new \PhpOffice\PhpWord\PhpWord();
         $section = $phpWord->addSection([
             'orientation'  => 'landscape',
@@ -312,6 +360,33 @@ class AdministrasiController extends Controller
             'marginLeft'   => 1134,
             'marginRight'  => 1134,
         ]);
+
+        // Kop Surat (University Letterhead) — sized to the image's real aspect ratio
+        // so it doesn't render squashed/distorted in the generated document.
+        $kopPath = public_path('images/kop_surat.png');
+        if (file_exists($kopPath)) {
+            $kopWidth = 480;
+            $kopHeight = $kopWidth;
+            $kopDimensions = @getimagesize($kopPath);
+            if ($kopDimensions && $kopDimensions[0] > 0 && $kopDimensions[1] > 0) {
+                $kopHeight = (int) round($kopWidth * ($kopDimensions[1] / $kopDimensions[0]));
+            }
+
+            $section->addImage($kopPath, [
+                'width'         => $kopWidth,
+                'height'        => $kopHeight,
+                'align'         => 'center',
+                'wrappingStyle' => 'inline',
+            ]);
+            $section->addTextBreak(1);
+        } else {
+            $section->addText('UNIVERSITAS MURIA KUDUS', [
+                'name' => 'Calibri', 'size' => 14, 'bold' => true,
+            ], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+            $section->addText('FAKULTAS TEKNIK - PROGRAM STUDI TEKNIK INFORMATIKA', [
+                'name' => 'Calibri', 'size' => 12, 'bold' => true,
+            ], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spaceAfter' => 120]);
+        }
 
         // Title Header
         $titleText = "REKAP HARI DAN RUANG SIDANG " . ($jenisUndangan === 'sempro' ? 'SEMPRO' : 'SKRIPSI') . " " . strtoupper($namaPeriode);
@@ -379,13 +454,108 @@ class AdministrasiController extends Controller
             $table2->addCell(1200)->addText($ruangKode, ['size' => 9]);
         }
 
-        $filename = "{$dosen->nama_dosen}.docx";
-        $tempPath = storage_path('app/public/' . preg_replace('/[^\w\s\.,-]/', '_', $filename));
+        return $phpWord;
+    }
 
-        $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
-        $objWriter->save($tempPath);
+    /**
+     * Mass Download Undangan DOCX (ZIP) untuk semua Dosen Penguji
+     */
+    public function generateUndanganMassDocxZip(Request $request): BinaryFileResponse|RedirectResponse
+    {
+        $periodeId = $request->get('periode_id');
+        $tglMulai = $request->get('tanggal_pendaftaran_mulai');
+        $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $jenisUndangan = $request->get('jenis', 'sempro');
+        $selectedGelombang = $request->get('gelombang');
 
-        return response()->download($tempPath, $filename)->deleteFileAfterSend(true);
+        $periode = $periodeId ? Periode::find($periodeId) : Periode::where('aktif', true)->first();
+        $namaPeriode = $periode ? $periode->nama_periode : 'Periode ' . date('Y');
+
+        $query = Sidang::with([
+            'pembimbingUtama', 'pembimbingPendamping',
+            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
+            'ruang', 'periode'
+        ]);
+
+        if ($jenisUndangan === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } else {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        }
+
+        if ($periode) {
+            $query->where('periode_id', $periode->id);
+        }
+
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
+        if ($tglMulai) {
+            $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
+        }
+
+        if ($tglSelesai) {
+            $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        $sidangs = $query->get();
+
+        $dosenExaminerIds = collect();
+        foreach ($sidangs as $s) {
+            if ($s->ketua_penguji_id) $dosenExaminerIds->push($s->ketua_penguji_id);
+            if ($s->anggota_penguji_1_id) $dosenExaminerIds->push($s->anggota_penguji_1_id);
+            if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
+        }
+
+        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->get();
+
+        if ($dosens->isEmpty()) {
+            return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
+        }
+
+        $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
+        $zipFilename = "Undangan_DOCX_{$invType}_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
+        $tempZipPath = storage_path('app/public/' . $zipFilename);
+
+        $zip = new ZipArchive();
+        if ($zip->open($tempZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
+            return back()->with('error', 'Gagal membuat file ZIP.');
+        }
+
+        $tempDocxDir = storage_path('app/public/tmp_undangan_docx');
+        if (!is_dir($tempDocxDir)) {
+            mkdir($tempDocxDir, 0777, true);
+        }
+
+        foreach ($dosens as $dosen) {
+            $mySidangs = $sidangs->filter(function ($s) use ($dosen) {
+                return $s->ketua_penguji_id == $dosen->id ||
+                       $s->anggota_penguji_1_id == $dosen->id ||
+                       $s->anggota_penguji_2_id == $dosen->id;
+            })->sortBy('tanggal')->values();
+
+            if ($mySidangs->isEmpty()) continue;
+
+            $phpWord = $this->buildUndanganDocxForDosen($dosen, $mySidangs, $namaPeriode, $jenisUndangan);
+
+            $safeName = preg_replace('/[^\w\s\.,-]/', '_', $dosen->nama_dosen);
+            $tempDocxPath = $tempDocxDir . '/' . $safeName . '.docx';
+
+            $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+            $objWriter->save($tempDocxPath);
+
+            $zip->addFile($tempDocxPath, "{$safeName}.docx");
+        }
+
+        $zip->close();
+
+        // Clean up temp docx files after they've been added to the zip
+        foreach (glob($tempDocxDir . '/*.docx') as $f) {
+            @unlink($f);
+        }
+
+        return response()->download($tempZipPath)->deleteFileAfterSend(true);
     }
 
     /**
@@ -419,6 +589,11 @@ class AdministrasiController extends Controller
 
         if ($tglMulai) {
             $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
+        }
+
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
         }
 
         if ($tglSelesai) {
@@ -478,7 +653,7 @@ class AdministrasiController extends Controller
                 'jenisUndangan' => $jenisUndangan,
             ]);
 
-            $pdf->setPaper('a4', 'landscape');
+            $pdf->setPaper('a4', 'portrait');
 
             $pdfContent = $pdf->output();
             $safeName = preg_replace('/[^\w\s\.,-]/', '_', $dosen->nama_dosen);
@@ -516,6 +691,11 @@ class AdministrasiController extends Controller
 
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
         }
 
         if ($jenisUndangan === 'sempro') {
@@ -594,6 +774,11 @@ class AdministrasiController extends Controller
 
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
         }
 
         $sidangs = $query->get();
@@ -693,6 +878,11 @@ class AdministrasiController extends Controller
 
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
         }
 
         $sidangs = $query->orderBy('tanggal')->orderBy('jam')->get();
@@ -810,6 +1000,83 @@ class AdministrasiController extends Controller
             'Content-Type'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Cache-Control' => 'max-age=0',
         ]);
+    }
+
+    /**
+     * Halaman Rekap Dosen Pembimbing — jumlah mahasiswa bimbingan per dosen,
+     * dipisah antara Pembimbing Utama dan Pembimbing Pendamping.
+     * Filter: Periode Akademik, Gelombang, Jenis TA.
+     */
+    public function rekapPembimbingIndex(Request $request): View
+    {
+        $periodes = Periode::orderBy('id', 'desc')->get();
+
+        $selectedPeriodeId = $request->get('periode_id');
+        if (!$selectedPeriodeId) {
+            $activePeriode = Periode::where('aktif', true)->first();
+            $selectedPeriodeId = $activePeriode ? $activePeriode->id : ($periodes->first()?->id);
+        }
+
+        $selectedPeriode = Periode::find($selectedPeriodeId);
+        $jenisTa = $request->get('jenis');
+        $selectedGelombang = $request->get('gelombang');
+
+        $query = Sidang::with(['pembimbingUtama', 'pembimbingPendamping']);
+
+        if ($selectedPeriodeId) {
+            $query->where('periode_id', $selectedPeriodeId);
+        }
+
+        if ($jenisTa) {
+            if ($jenisTa === 'sempro') {
+                $query->where('jenis_tugas_akhir', 'sempro');
+            } else {
+                $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+            }
+        }
+
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
+        $sidangs = $query->get();
+
+        $jenisBucket = $jenisTa === 'sempro' ? 'sempro' : 'skripsi';
+        $gelombangOptions = $selectedPeriodeId
+            ? PendaftaranPeriode::where('periode_id', $selectedPeriodeId)
+                ->where('jenis', $jenisBucket)
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
+
+        $dosenRows = Dosen::orderBy('nama_dosen')->get()->map(function ($d) use ($sidangs) {
+            $countUtama = $sidangs->where('dosen_pembimbing_utama_id', $d->id)->count();
+            $countPendamping = $sidangs->where('dosen_pembimbing_pendamping_id', $d->id)->count();
+
+            $mahasiswa = $sidangs->filter(function ($s) use ($d) {
+                return $s->dosen_pembimbing_utama_id == $d->id || $s->dosen_pembimbing_pendamping_id == $d->id;
+            })->map(function ($s) use ($d) {
+                return [
+                    'nim'   => $s->nim,
+                    'nama'  => $s->nama_mahasiswa,
+                    'judul' => $s->judul_skripsi,
+                    'peran' => $s->dosen_pembimbing_utama_id == $d->id ? 'Pembimbing Utama' : 'Pembimbing Pendamping',
+                ];
+            })->values();
+
+            return [
+                'dosen'      => $d,
+                'utama'      => $countUtama,
+                'pendamping' => $countPendamping,
+                'total'      => $countUtama + $countPendamping,
+                'mahasiswa'  => $mahasiswa,
+            ];
+        })->filter(fn ($row) => $row['total'] > 0)->values();
+
+        return view('administrasi.rekap-pembimbing.index', compact(
+            'periodes', 'selectedPeriode', 'selectedPeriodeId',
+            'jenisTa', 'selectedGelombang', 'gelombangOptions', 'dosenRows'
+        ));
     }
 
     /**
@@ -1346,6 +1613,11 @@ class AdministrasiController extends Controller
 
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
         }
 
         if ($jenisTa) {
