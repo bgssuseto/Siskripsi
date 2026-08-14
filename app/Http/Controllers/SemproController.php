@@ -8,6 +8,7 @@ use App\Models\Ruang;
 use App\Models\Periode;
 use App\Models\PendaftaranPeriode;
 use App\Services\SidangConflictService;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -477,7 +478,15 @@ class SemproController extends Controller
             return back()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
 
+        $before = $sidang->only(['tanggal', 'jam', 'ruang_id']);
         $sidang->update($validated);
+
+        ActivityLogger::log(
+            'jadwalkan',
+            $sidang,
+            "Menetapkan jadwal sempro untuk {$sidang->nama_mahasiswa} ({$sidang->nim}) pada {$validated['tanggal']} {$validated['jam']}.",
+            ['before' => $before, 'after' => $sidang->only(array_keys($before))]
+        );
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => '✅ Jadwal sempro berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!', 'sidang' => $sidang->fresh()]);
@@ -507,7 +516,15 @@ class SemproController extends Controller
             ], 422);
         }
 
+        $before = $sidang->only(['tanggal', 'jam']);
         $sidang->update($validated);
+
+        ActivityLogger::log(
+            'reschedule',
+            $sidang,
+            "Menggeser jadwal sempro {$sidang->nama_mahasiswa} ({$sidang->nim}) dari {$before['tanggal']} {$before['jam']} ke {$validated['tanggal']} {$validated['jam']}.",
+            ['before' => $before, 'after' => $validated]
+        );
 
         return response()->json([
             'success' => true,

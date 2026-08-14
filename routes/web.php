@@ -23,6 +23,9 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\DosenPortalController;
 use App\Http\Controllers\KesediaanDosenController;
 use App\Http\Controllers\PendaftaranController;
+use App\Http\Controllers\AnalitikController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\AutoScheduleController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -215,6 +218,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/jadwal/sempro/{sidang}/jadwalkan', [SemproController::class, 'jadwalkan'])->name('jadwal.sempro.jadwalkan');
         Route::patch('/jadwal/sempro/{sidang}/reschedule', [SemproController::class, 'reschedule'])->name('jadwal.sempro.reschedule');
 
+        // Asisten Plotting Jadwal Otomatis
+        Route::get('/jadwal/auto-plot', [AutoScheduleController::class, 'index'])->name('jadwal.auto-plot.index');
+        Route::post('/jadwal/auto-plot/terapkan', [AutoScheduleController::class, 'apply'])->name('jadwal.auto-plot.apply');
+
         // Administrasi
         Route::get('/administrasi/undangan', [AdministrasiController::class, 'undanganIndex'])->name('administrasi.undangan.index');
         Route::get('/administrasi/undangan/preview/{dosen}', [AdministrasiController::class, 'previewUndanganHtml'])->name('administrasi.undangan.preview');
@@ -235,6 +242,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/administrasi/sk', [AdministrasiController::class, 'skIndex'])->name('administrasi.sk.index');
         Route::get('/administrasi/sk/export-pembimbing', [AdministrasiController::class, 'exportSkPembimbingExcel'])->name('administrasi.sk.export-pembimbing');
         Route::get('/administrasi/sk/export-penguji', [AdministrasiController::class, 'exportSkPengujiExcel'])->name('administrasi.sk.export-penguji');
+        Route::get('/administrasi/audit-log', [AuditLogController::class, 'index'])->name('administrasi.audit-log.index');
 
     });
 
@@ -253,6 +261,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/master/kesediaan-dosen/settings', [KesediaanDosenController::class, 'updateSettings'])->name('master.kesediaan-dosen.settings');
         Route::post('/master/kesediaan-dosen/toggle-access/{dosen}', [KesediaanDosenController::class, 'toggleAccess'])->name('master.kesediaan-dosen.toggle-access');
         Route::post('/master/kesediaan-dosen/destroy-group', [KesediaanDosenController::class, 'destroyGroup'])->name('master.kesediaan-dosen.destroy-group');
+
+        Route::get('/administrasi/analitik', [AnalitikController::class, 'index'])->name('administrasi.analitik.index');
     });
     // Mahasiswa routes
     Route::middleware('role:mahasiswa')->group(function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Dosen;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -45,6 +46,8 @@ class DosenController extends Controller
 
         $dosen = Dosen::create($validated);
 
+        ActivityLogger::log('created', $dosen, "Menambahkan data dosen baru: {$dosen->nama_dosen} (NIDN: {$dosen->nidn}).");
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -68,7 +71,15 @@ class DosenController extends Controller
             'nama_dosen.required' => 'Nama dosen wajib diisi.',
         ]);
 
+        $before = $dosen->only(['nidn', 'nama_dosen', 'no_wa']);
         $dosen->update($validated);
+
+        ActivityLogger::log(
+            'updated',
+            $dosen,
+            "Memperbarui data dosen: {$dosen->nama_dosen} (NIDN: {$dosen->nidn}).",
+            ['before' => $before, 'after' => $dosen->only(['nidn', 'nama_dosen', 'no_wa'])]
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -130,7 +141,15 @@ class DosenController extends Controller
                 ->update(['anggota_penguji_2_id' => $superAdminDosen->id]);
         }
 
+        $namaDosenDihapus = $dosen->nama_dosen;
+        $nidnDosenDihapus = $dosen->nidn;
         $dosen->delete();
+
+        ActivityLogger::log(
+            'deleted',
+            $dosen,
+            "Menghapus data dosen: {$namaDosenDihapus} (NIDN: {$nidnDosenDihapus}). Riwayat bimbingan/penguji dialihkan ke Super Administrator."
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -147,12 +166,15 @@ class DosenController extends Controller
      */
     public function importExcel(Request $request)
     {
+        // Validate by file extension rather than sniffed MIME type — browsers/OS report
+        // wildly inconsistent MIME types for .xlsx/.csv exports (e.g. application/octet-stream),
+        // which caused legitimate Excel files to be rejected by the stricter `mimes:` rule.
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
+            'file' => ['required', 'file', 'extensions:xlsx,xls,csv', 'max:5120'],
         ], [
-            'file.required' => 'File Excel wajib diunggah.',
-            'file.mimes' => 'Format file harus .xlsx, .xls, atau .csv.',
-            'file.max' => 'Ukuran file maksimal 5MB.'
+            'file.required'   => 'File Excel wajib diunggah.',
+            'file.extensions' => 'Format file harus .xlsx, .xls, atau .csv.',
+            'file.max'        => 'Ukuran file maksimal 5MB.'
         ]);
 
         try {

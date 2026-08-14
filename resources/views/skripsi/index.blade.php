@@ -1380,16 +1380,18 @@
             
             const eventsData = JSON.parse(calendarEl.getAttribute('data-events') || '[]');
             const firstDate = (eventsData.length > 0 && eventsData[0].start) ? eventsData[0].start.split('T')[0] : null;
+            const isMobileScreen = window.innerWidth < 640;
 
             calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'timeGridWeek',
+                initialView: isMobileScreen ? 'listWeek' : 'timeGridWeek',
                 initialDate: firstDate || undefined,
                 locale: 'id',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                },
+                headerToolbar: isMobileScreen
+                    ? { left: 'prev,next', center: 'title', right: 'today' }
+                    : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+                footerToolbar: isMobileScreen
+                    ? { right: 'dayGridMonth,listWeek,timeGridDay' }
+                    : false,
                 slotMinTime: '07:00:00',
                 slotMaxTime: '17:00:00',
                 slotDuration: '00:30:00',

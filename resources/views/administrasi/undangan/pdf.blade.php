@@ -5,7 +5,7 @@
     <title>Undangan Sidang Skripsi - {{ $dosen->nama_dosen }}</title>
     <style>
         @page {
-            margin: 10mm 15mm 10mm 15mm;
+            margin: 20mm;
             size: a4 portrait;
         }
 

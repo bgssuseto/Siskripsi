@@ -8,6 +8,7 @@ use App\Models\Ruang;
 use App\Models\Periode;
 use App\Models\PendaftaranPeriode;
 use App\Services\SidangConflictService;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -634,7 +635,15 @@ class SkripsiController extends Controller
             return back()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
 
+        $before = $sidang->only(['tanggal', 'jam', 'ruang_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
         $sidang->update($validated);
+
+        ActivityLogger::log(
+            'jadwalkan',
+            $sidang,
+            "Menetapkan jadwal sidang skripsi untuk {$sidang->nama_mahasiswa} ({$sidang->nim}) pada {$validated['tanggal']} {$validated['jam']}.",
+            ['before' => $before, 'after' => $sidang->only(array_keys($before))]
+        );
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => '✅ Jadwal sidang berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!', 'sidang' => $sidang->fresh()]);
@@ -664,7 +673,15 @@ class SkripsiController extends Controller
             ], 422);
         }
 
+        $before = $sidang->only(['tanggal', 'jam']);
         $sidang->update($validated);
+
+        ActivityLogger::log(
+            'reschedule',
+            $sidang,
+            "Menggeser jadwal sidang skripsi {$sidang->nama_mahasiswa} ({$sidang->nim}) dari {$before['tanggal']} {$before['jam']} ke {$validated['tanggal']} {$validated['jam']}.",
+            ['before' => $before, 'after' => $validated]
+        );
 
         return response()->json([
             'success' => true,

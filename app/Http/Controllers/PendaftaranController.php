@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sidang;
 use App\Models\Periode;
 use App\Models\PendaftaranPeriode;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -183,11 +184,21 @@ class PendaftaranController extends Controller
             'verifikasi_komentar' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $statusBefore = $sidang->verifikasi_status;
+
         $sidang->update([
             'verifikasi_status'   => $validated['verifikasi_status'],
             'verifikasi_komentar' => $validated['verifikasi_status'] === 'ditolak' ? $validated['verifikasi_komentar'] : null,
             'verifikasi_tanggal'  => now(),
         ]);
+
+        ActivityLogger::log(
+            'verifikasi',
+            $sidang,
+            "Mengubah status verifikasi pendaftaran {$sidang->nama_mahasiswa} ({$sidang->nim}) dari \"{$statusBefore}\" menjadi \"{$validated['verifikasi_status']}\"." .
+                (!empty($validated['verifikasi_komentar']) ? " Catatan: {$validated['verifikasi_komentar']}" : ''),
+            ['before' => ['verifikasi_status' => $statusBefore], 'after' => ['verifikasi_status' => $validated['verifikasi_status']]]
+        );
 
         $statusMessage = match($validated['verifikasi_status']) {
             'disetujui' => "Pendaftaran mahasiswa {$sidang->nama_mahasiswa} ({$sidang->nim}) berhasil disetujui! Data kini muncul pada Master Data.",

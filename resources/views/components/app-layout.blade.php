@@ -1046,6 +1046,14 @@
                                 </svg>
                                 Kesediaan Dosen
                             </a>
+                            <a href="{{ route('jadwal.auto-plot.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('jadwal.auto-plot.*') ? 'bg-violet-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('jadwal.auto-plot.*') ? 'text-white' : 'text-slate-500 group-hover:text-violet-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Asisten Plotting Otomatis
+                            </a>
                         </div>
                     </div>
 
@@ -1177,6 +1185,26 @@
                                     </a>
                                 </div>
                             </div>
+
+                            {{-- ── Dashboard Analitik ── --}}
+                            <a href="{{ route('administrasi.analitik.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('administrasi.analitik.*') ? 'bg-indigo-600/70 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('administrasi.analitik.*') ? 'text-white' : 'text-slate-500 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                <span class="flex-1 text-left">Dashboard Analitik</span>
+                            </a>
+
+                            {{-- ── Riwayat Aktivitas (Audit Log) ── --}}
+                            <a href="{{ route('administrasi.audit-log.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('administrasi.audit-log.*') ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('administrasi.audit-log.*') ? 'text-white' : 'text-slate-500 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="flex-1 text-left">Riwayat Aktivitas</span>
+                            </a>
 
                         </div>
                     </div>
@@ -1329,7 +1357,7 @@
             <!-- ── TOP NAVBAR ── -->
             <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-700 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0">
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 min-w-0">
                     <!-- Burger toggle (desktop: collapse sidebar) -->
                     <button @click="sidebarOpen = !sidebarOpen"
                             class="hidden lg:flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-400 transition-colors"
@@ -1350,10 +1378,10 @@
                     </button>
 
                     <!-- Page breadcrumb title -->
-                    <div class="flex items-center gap-2 text-sm">
-                        <span class="text-slate-400 dark:text-slate-500 font-medium hidden sm:block">Skripsi TI</span>
-                        <span class="text-slate-300 dark:text-slate-600 hidden sm:block">/</span>
-                        <span class="font-bold text-slate-800 dark:text-slate-100">{{ $header ?? $title ?? 'Dashboard' }}</span>
+                    <div class="flex items-center gap-2 text-sm min-w-0">
+                        <span class="text-slate-400 dark:text-slate-500 font-medium hidden sm:block shrink-0">Skripsi TI</span>
+                        <span class="text-slate-300 dark:text-slate-600 hidden sm:block shrink-0">/</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-100 truncate">{{ $header ?? $title ?? 'Dashboard' }}</span>
                     </div>
                 </div>
 
@@ -1409,7 +1437,7 @@
                     }
                 @endphp
 
-                <div class="flex items-center gap-2 sm:gap-3 relative" x-data="{ open: false }" @click.away="open = false">
+                <div class="flex items-center gap-2 sm:gap-3 relative shrink-0" x-data="{ open: false }" @click.away="open = false">
 
                     <!-- Theme Toggle Switch Button (Light / Dark Mode) -->
                     <button type="button" 
@@ -1448,7 +1476,7 @@
                              x-transition:leave="transition ease-in duration-100"
                              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                              x-transition:leave-end="opacity-0 scale-95 translate-y-1"
-                             class="absolute top-13 right-0 w-[340px] sm:w-[440px] bg-white border border-slate-200 rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden z-50"
+                             class="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 w-auto sm:w-[440px] bg-white border border-slate-200 rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden z-50"
                              x-cloak>
                             <div class="px-5 py-3.5 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between">
                                 <div class="flex items-center gap-2.5">
