@@ -175,14 +175,14 @@
                             </td>
                             <td class="py-3.5 px-4 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <a href="{{ route('administrasi.undangan.preview', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
+                                    <a href="{{ route('administrasi.undangan.preview', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
                                        target="_blank"
                                        class="inline-flex items-center justify-center p-2 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition-all border border-amber-200" title="Cetak / Preview Undangan">
                                         <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                                         </svg>
                                     </a>
-                                    <a href="{{ route('administrasi.undangan.pdf', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
+                                    <a href="{{ route('administrasi.undangan.pdf', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
                                        target="_blank"
                                        class="inline-flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-all border border-indigo-200" title="Unduh PDF">
                                         <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -244,7 +244,7 @@
                                              </svg>
                                          </span>
                                      @endif
-                                    <a href="{{ route('administrasi.undangan.excel', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
+                                    <a href="{{ route('administrasi.undangan.excel', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
                                        class="inline-flex items-center justify-center p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg transition-all border border-slate-200" title="Export Excel">
                                         <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>

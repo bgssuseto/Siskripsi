@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Concerns\HasHashedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PendaftaranPeriode extends Model
 {
+    use HasHashedRouteKey;
+
     protected $table = 'pendaftaran_periodes';
 
     protected $fillable = [

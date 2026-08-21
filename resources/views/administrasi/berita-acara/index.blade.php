@@ -181,7 +181,7 @@
                             </td>
                             <td class="py-3.5 px-4 text-center flex items-center justify-center gap-1.5">
                                 <!-- Preview Button -->
-                                <a href="{{ route('administrasi.berita-acara.preview', $item->id) }}"
+                                <a href="{{ route('administrasi.berita-acara.preview', $item->hash_id) }}"
                                    target="_blank"
                                    class="inline-flex items-center justify-center p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg transition-all border border-slate-200" title="Pratinjau PDF">
                                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +191,7 @@
                                 </a>
 
                                 <!-- Download PDF Button -->
-                                <a href="{{ route('administrasi.berita-acara.pdf', $item->id) }}"
+                                <a href="{{ route('administrasi.berita-acara.pdf', $item->hash_id) }}"
                                    class="inline-flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-all border border-indigo-200" title="Unduh PDF">
                                     <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>

@@ -185,7 +185,7 @@
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('master.kesediaan-dosen.toggle-access', $d->id) }}" class="shrink-0">
+                        <form method="POST" action="{{ route('master.kesediaan-dosen.toggle-access', $d->hash_id) }}" class="shrink-0">
                             @csrf
                             <label class="relative inline-flex items-center cursor-pointer select-none">
                                 <input type="checkbox" class="sr-only peer" {{ $d->can_fill_kesediaan ? 'checked' : '' }} onchange="this.form.submit()">

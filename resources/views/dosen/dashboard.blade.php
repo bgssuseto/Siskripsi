@@ -113,7 +113,7 @@
                                         <div class="mt-1"><span class="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-700 px-2 py-0.5 rounded-lg">Gel. {{ $slot->wave->gelombang }} ({{ ucfirst($slot->wave->jenis) }})</span></div>
                                     @endif
                                 </div>
-                                <form method="POST" action="{{ route('dosen.kesediaan.destroy', $slot->id) }}" onsubmit="return confirm('Hapus slot ketersediaan ini?')">
+                                <form method="POST" action="{{ route('dosen.kesediaan.destroy', $slot->hash_id) }}" onsubmit="return confirm('Hapus slot ketersediaan ini?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 dark:hover:bg-rose-800/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs transition-colors cursor-pointer" title="Hapus Slot">

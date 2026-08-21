@@ -669,11 +669,11 @@
                                     </td>
                                     <td class="text-right space-x-1 whitespace-nowrap">
                                         <button class="btn btn-primary btn-sm" title="{{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}"
-                                            onclick="openJadwalkan({{ $item->id }}, '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->ketua_penguji_id ?? '' }}', '{{ $item->anggota_penguji_1_id ?? '' }}', '{{ $item->anggota_penguji_2_id ?? '' }}', '{{ $item->dosen_pembimbing_utama_id ?? '' }}', '{{ addslashes($item->pembimbingUtama->nama_dosen ?? '') }}')">
+                                            onclick="openJadwalkan({{ $item->id }}, '{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->ketua_penguji_id ?? '' }}', '{{ $item->anggota_penguji_1_id ?? '' }}', '{{ $item->anggota_penguji_2_id ?? '' }}', '{{ $item->dosen_pembimbing_utama_id ?? '' }}', '{{ addslashes($item->pembimbingUtama->nama_dosen ?? '') }}')">
                                             📅
                                         </button>
                                         <button class="btn btn-outline btn-sm" title="Edit Data"
-                                            onclick="openEdit({{ $item->id }}, {{ json_encode([
+                                            onclick="openEdit('{{ $item->hash_id }}', {{ json_encode([
                                                 'id' => $item->id,
                                                 'nim' => $item->nim,
                                                 'nama_mahasiswa' => $item->nama_mahasiswa,
@@ -695,7 +695,7 @@
                                             ✏️
                                         </button>
                                         <button class="btn btn-danger btn-sm" title="Hapus"
-                                            onclick="openDelete({{ $item->id }}, '{{ addslashes($item->nama_mahasiswa) }}')">
+                                            onclick="openDelete('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}')">
                                             🗑
                                         </button>
                                     </td>
@@ -1381,6 +1381,7 @@
             closeModal('modal-detail');
             openJadwalkan(
                 currentDetailEvent.id,
+                props.hash_id,
                 props.mahasiswa,
                 props.nim,
                 currentDetailEvent.startStr ? currentDetailEvent.startStr.split('T')[0] : '',
@@ -1651,9 +1652,9 @@
             }
         }
 
-        function openJadwalkan(id, nama, nim, tgl, jam, ruangId, ketuaId, p1Id, p2Id, pembimbingUtamaId, pembimbingUtamaNama) {
+        function openJadwalkan(id, hashId, nama, nim, tgl, jam, ruangId, ketuaId, p1Id, p2Id, pembimbingUtamaId, pembimbingUtamaNama) {
             const form = document.getElementById('form-jadwalkan');
-            form.action = '/jadwal/skripsi/' + id + '/jadwalkan';
+            form.action = '/jadwal/skripsi/' + hashId + '/jadwalkan';
             document.getElementById('jadwalkan-sidang-id').value = id;
             document.getElementById('jadwalkan-mhs-nama').textContent = nama;
             document.getElementById('jadwalkan-mhs-nim').textContent = 'NIM: ' + nim;
@@ -1674,8 +1675,8 @@
         }
 
 
-        function openEdit(id, data) {
-            document.getElementById('form-edit').action = '/master/skripsi/' + id;
+        function openEdit(hashId, data) {
+            document.getElementById('form-edit').action = '/master/skripsi/' + hashId;
             document.getElementById('edit-nim').value                             = data.nim || '';
             document.getElementById('edit-nama').value                            = data.nama_mahasiswa || '';
             document.getElementById('edit-judul').value                           = data.judul_skripsi || '';
@@ -1732,9 +1733,9 @@
             openModal('modal-edit');
         }
 
-        function openDelete(id, nama) {
+        function openDelete(hashId, nama) {
             document.getElementById('hapus-nama').textContent = nama;
-            document.getElementById('form-hapus').action = '/master/skripsi/' + id;
+            document.getElementById('form-hapus').action = '/master/skripsi/' + hashId;
             openModal('modal-hapus');
         }
 
@@ -1819,7 +1820,7 @@
                         jam = `${sh}.${sm} - ${eh}.${em}`;
                     }
 
-                    fetch(`/jadwal/skripsi/${info.event.id}/reschedule`, {
+                    fetch(`/jadwal/skripsi/${info.event.extendedProps.hash_id}/reschedule`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',

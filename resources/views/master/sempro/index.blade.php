@@ -273,7 +273,7 @@
                     </thead>
                     <tbody>
                         @forelse ($sidangs as $item)
-                            <tr id="row-sempro-{{ $item->id }}">
+                            <tr id="row-sempro-{{ $item->hash_id }}">
                                 <td style="text-align:center;">
                                     <input type="checkbox" class="row-checkbox" value="{{ $item->id }}" onchange="updateBulkBar()">
                                 </td>
@@ -330,7 +330,7 @@
                                 <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                 <td class="text-right space-x-1 whitespace-nowrap">
                                     <button class="btn btn-outline btn-sm" title="Edit Data"
-                                        onclick="openEdit({{ $item->id }}, {{ json_encode([
+                                        onclick="openEdit('{{ $item->hash_id }}', {{ json_encode([
                                             'id'                             => $item->id,
                                             'nim'                            => $item->nim,
                                             'nama_mahasiswa'                 => $item->nama_mahasiswa,
@@ -344,7 +344,7 @@
                                         ✏️
                                     </button>
                                     <button class="btn btn-danger btn-sm" title="Hapus"
-                                        onclick="confirmHapus({{ $item->id }}, {{ json_encode($item->nama_mahasiswa) }})">
+                                        onclick="confirmHapus('{{ $item->hash_id }}', {{ json_encode($item->nama_mahasiswa) }})">
                                         🗑️
                                     </button>
                                 </td>

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Concerns\HasHashedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Menu extends Model
 {
+    use HasHashedRouteKey;
+
     protected $fillable = [
         'name',
         'route',

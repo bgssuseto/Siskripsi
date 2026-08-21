@@ -419,7 +419,7 @@
                                 <!-- AKSI (Opens Pop Up Modal) -->
                                 <td class="py-4 px-6 text-center">
                                     <button type="button" 
-                                            @click="openUserAccessModal({ id: {{ $u->id }}, name: '{{ addslashes($u->name) }}', email: '{{ addslashes($u->email) }}', role: '{{ $u->role }}' }, {{ json_encode($userMenuIds) }})"
+                                            @click="openUserAccessModal({ id: '{{ $u->hash_id }}', name: '{{ addslashes($u->name) }}', email: '{{ addslashes($u->email) }}', role: '{{ $u->role }}' }, {{ json_encode($userMenuIds) }})"
                                             class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all shadow-sm">
                                         <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -476,7 +476,7 @@
                                 <div class="flex items-center justify-end gap-1">
                                     <!-- Edit Button -->
                                     <button type="button" 
-                                        @click="openEditMenu({ id: {{ $m->id }}, name: '{{ addslashes($m->name) }}', route: '{{ addslashes($m->route ?? '') }}', icon: '{{ addslashes($m->icon ?? '') }}', role_default: '{{ $m->role_default ?? 'all' }}', sort_order: {{ $m->sort_order ?? 0 }}, is_active: {{ $m->is_active ? 'true' : 'false' }} })"
+                                        @click="openEditMenu({ id: '{{ $m->hash_id }}', name: '{{ addslashes($m->name) }}', route: '{{ addslashes($m->route ?? '') }}', icon: '{{ addslashes($m->icon ?? '') }}', role_default: '{{ $m->role_default ?? 'all' }}', sort_order: {{ $m->sort_order ?? 0 }}, is_active: {{ $m->is_active ? 'true' : 'false' }} })"
                                         class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Edit Menu">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>

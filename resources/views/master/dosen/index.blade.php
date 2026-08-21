@@ -388,7 +388,7 @@
                         </button>
                     </div>
 
-                    <form :action="'/master/dosen/' + editDosen.id" method="POST" @submit.prevent="submitEdit($event)" class="p-6 space-y-4">
+                    <form :action="'/master/dosen/' + editDosen.hash_id" method="POST" @submit.prevent="submitEdit($event)" class="p-6 space-y-4">
                         @csrf
                         @method('PUT')
                         <div>
@@ -477,7 +477,7 @@
                         Jika dosen ini pernah tercatat sebagai pembimbing/penguji pada data skripsi/sempro, riwayat tersebut akan dialihkan otomatis ke dosen "Super Administrator" agar data historis tetap utuh.
                     </p>
 
-                    <form :action="'/master/dosen/' + deleteDosen.id" method="POST" @submit.prevent="submitDelete($event)" class="flex items-center justify-center gap-3">
+                    <form :action="'/master/dosen/' + deleteDosen.hash_id" method="POST" @submit.prevent="submitDelete($event)" class="flex items-center justify-center gap-3">
                         @csrf
                         @method('DELETE')
                         <button type="button" @click="deleteModal = false" class="w-1/2 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>

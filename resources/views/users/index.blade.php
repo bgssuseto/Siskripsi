@@ -327,7 +327,7 @@
                             <td class="py-4 px-6 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <!-- Edit Button -->
-                                    <button @click="openEdit({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'dosen_id' => $user->dosen_id, 'jadikan_koordinator' => $user->additionalRoles->contains('role', 'koordinator')]) }})"
+                                    <button @click="openEdit({{ json_encode(['id' => $user->hash_id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'dosen_id' => $user->dosen_id, 'jadikan_koordinator' => $user->additionalRoles->contains('role', 'koordinator')]) }})"
                                             class="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
                                             title="Edit User">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -337,7 +337,7 @@
 
                                     <!-- Delete Button -->
                                     @if(Auth::id() !== $user->id)
-                                    <button @click="openDelete({{ $user->id }}, '{{ addslashes($user->name) }}')" 
+                                    <button @click="openDelete('{{ $user->hash_id }}', '{{ addslashes($user->name) }}')"
                                             class="p-2 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-colors"
                                             title="Hapus User">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

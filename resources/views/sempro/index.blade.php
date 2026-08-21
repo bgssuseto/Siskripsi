@@ -458,11 +458,11 @@
                                     </td>
                                     <td class="text-right space-x-1 whitespace-nowrap">
                                         <button class="btn btn-primary btn-sm" title="{{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}"
-                                            onclick="openJadwalkanSempro({{ $item->id }}, '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}')">
+                                            onclick="openJadwalkanSempro('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}')">
                                             📅
                                         </button>
                                         <button class="btn btn-outline btn-sm" title="Edit Data"
-                                            onclick="openEdit({{ $item->id }}, {{ json_encode([
+                                            onclick="openEdit('{{ $item->hash_id }}', {{ json_encode([
                                                 'id' => $item->id,
                                                 'nim' => $item->nim,
                                                 'nama_mahasiswa' => $item->nama_mahasiswa,
@@ -479,7 +479,7 @@
                                             ✏️
                                         </button>
                                         <button class="btn btn-danger btn-sm" title="Hapus"
-                                            onclick="openDelete({{ $item->id }}, '{{ addslashes($item->nama_mahasiswa) }}')">
+                                            onclick="openDelete('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}')">
                                             🗑️
                                         </button>
                                     </td>
@@ -924,9 +924,9 @@
                 </div>`).join('');
         }
 
-        function openJadwalkanSempro(id, nama, nim, tgl, jam, ruangId) {
+        function openJadwalkanSempro(hashId, nama, nim, tgl, jam, ruangId) {
             const form = document.getElementById('form-jadwalkan');
-            form.action = '/jadwal/sempro/' + id + '/jadwalkan';
+            form.action = '/jadwal/sempro/' + hashId + '/jadwalkan';
             document.getElementById('jadwalkan-mhs-nama').textContent = nama;
             document.getElementById('jadwalkan-mhs-nim').textContent = 'NIM: ' + nim;
             document.getElementById('jadwalkan-tanggal').value = tgl || '';
@@ -938,8 +938,8 @@
             openModal('modal-jadwalkan');
         }
 
-        function openEdit(id, data) {
-            document.getElementById('form-edit').action = '/master/sempro/' + id;
+        function openEdit(hashId, data) {
+            document.getElementById('form-edit').action = '/master/sempro/' + hashId;
             document.getElementById('edit-nim').value                             = data.nim || '';
             document.getElementById('edit-nama').value                            = data.nama_mahasiswa || '';
             document.getElementById('edit-judul').value                           = data.judul_skripsi || '';
@@ -955,9 +955,9 @@
             openModal('modal-edit');
         }
 
-        function openDelete(id, nama) {
+        function openDelete(hashId, nama) {
             document.getElementById('hapus-nama').textContent = nama;
-            document.getElementById('form-hapus').action = '/master/sempro/' + id;
+            document.getElementById('form-hapus').action = '/master/sempro/' + hashId;
             openModal('modal-hapus');
         }
 
@@ -1028,7 +1028,7 @@
                         jam = `${sh}.${sm} - ${eh}.${em}`;
                     }
 
-                    fetch(`/jadwal/sempro/${info.event.id}/reschedule`, {
+                    fetch(`/jadwal/sempro/${info.event.extendedProps.hash_id}/reschedule`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1055,7 +1055,7 @@
                 eventClick: function(info) {
                     const props = info.event.extendedProps;
                     openJadwalkanSempro(
-                        info.event.id,
+                        props.hash_id,
                         props.mahasiswa,
                         props.nim,
                         info.event.startStr ? info.event.startStr.split('T')[0] : '',

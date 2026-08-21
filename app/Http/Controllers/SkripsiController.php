@@ -222,6 +222,7 @@ class SkripsiController extends Controller
                 'borderColor'     => $borderColor,
                 'textColor'       => '#ffffff',
                 'extendedProps'   => [
+                    'hash_id'              => $s->hash_id,
                     'nim'                  => $s->nim,
                     'mahasiswa'            => $s->nama_mahasiswa,
                     'judul'                => $s->judul_skripsi,
@@ -582,6 +583,7 @@ class SkripsiController extends Controller
                 'textColor'       => '#ffffff',
                 'editable'        => !$s->tanggal->isPast() || $s->tanggal->isToday(),
                 'extendedProps'   => [
+                    'hash_id'              => $s->hash_id,
                     'nim'                  => $s->nim,
                     'mahasiswa'            => $s->nama_mahasiswa,
                     'judul'                => $s->judul_skripsi,

@@ -6,6 +6,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Skripsi TI' }} - Skripsi TI</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicon-16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon-180.png') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,12 +32,10 @@
             <!-- Logo & Title -->
             <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-2">
-                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                        </svg>
+                    <div class="w-14 h-14 shrink-0 bg-white rounded-xl flex items-center justify-center p-2 shadow-lg">
+                        <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI-UMK" class="w-full h-full object-contain">
                     </div>
-                    <h1 class="text-3xl font-bold text-white tracking-tight">Skripsi TI</h1>
+                    <img src="{{ asset('images/logo-ti-umk-text-white.png') }}" alt="TI-UMK" class="h-8 w-auto object-contain">
                 </div>
                 <p class="text-lg" style="color: #b5c1fb;">Sistem Informasi Tugas Akhir</p>
             </div>
@@ -84,12 +87,7 @@
         <div class="flex-1 flex items-center justify-center p-6 lg:p-12 bg-gray-50">
             <!-- Mobile Logo -->
             <div class="lg:hidden absolute top-6 left-6 flex items-center gap-2">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #4361ee;">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
-                </div>
-                <span class="text-xl font-bold text-gray-900">Skripsi TI</span>
+                <img src="{{ asset('images/logo-ti-umk.png') }}" alt="TI-UMK" class="h-9 w-auto object-contain">
             </div>
 
             <div class="w-full max-w-md">

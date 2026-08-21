@@ -6,6 +6,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Dashboard' }} - Sistem Informasi Skripsi TI</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicon-16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon-180.png') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -572,14 +577,13 @@
             <!-- Brand / Logo -->
             <div class="flex items-center h-16 px-4 border-b border-white/[0.07] shrink-0">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
-                    <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #5472f0, #3251d4); box-shadow: 0 8px 20px rgba(67,97,238,0.35);">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                        </svg>
+                    <div class="w-9 h-9 shrink-0 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-lg" style="box-shadow: 0 8px 20px rgba(67,97,238,0.35);">
+                        <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI-UMK" class="w-full h-full object-contain">
                     </div>
                     <div class="overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-36 opacity-100' : 'w-0 opacity-0'">
-                        <p class="font-extrabold text-sm leading-tight text-white whitespace-nowrap">Skripsi TI</p>
-                        <p class="text-[10px] text-indigo-400 font-semibold uppercase tracking-widest whitespace-nowrap">Portal Akademik</p>
+                        <img x-show="darkMode" src="{{ asset('images/logo-ti-umk-text-white.png') }}" alt="TI-UMK" class="h-4 w-auto object-contain">
+                        <img x-show="!darkMode" src="{{ asset('images/logo-ti-umk-text.png') }}" alt="TI-UMK" class="h-4 w-auto object-contain">
+                        <p class="text-[10px] text-indigo-400 font-semibold uppercase tracking-widest whitespace-nowrap mt-1">Portal Akademik</p>
                     </div>
                 </a>
 

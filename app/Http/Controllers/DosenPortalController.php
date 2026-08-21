@@ -153,7 +153,7 @@ class DosenPortalController extends Controller
     /**
      * Delete Dosen Availability Slot
      */
-    public function destroyKesediaan($id)
+    public function destroyKesediaan($hashId)
     {
         $user = Auth::user();
         $dosen = $user->dosen;
@@ -161,6 +161,8 @@ class DosenPortalController extends Controller
         if (!$dosen) {
             return redirect()->back()->with('error', 'Akses ditolak.');
         }
+
+        $id = KesediaanDosen::decodeHashId($hashId);
 
         $kesediaan = KesediaanDosen::where('id', $id)->where('dosen_id', $dosen->id)->firstOrFail();
         $kesediaan->delete();
