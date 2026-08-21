@@ -68,6 +68,20 @@
                             <button @click="regModal = true" style="background-color: #e11d48; color: #ffffff;" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer border border-rose-500">
                                 <span>✏️</span> Revisi Pendaftaran Skripsi
                             </button>
+                        @elseif($mySidang->verifikasi_status === 'disetujui')
+                            @php $waLink = optional($mySidang->periode)->link_grup_wa_skripsi; @endphp
+                            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 space-y-2">
+                                <p class="text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
+                                    <span>✅</span> Pendaftaran Anda telah terverifikasi.
+                                </p>
+                                @if($waLink)
+                                    <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                                        <span>💬</span> Join Grup WhatsApp
+                                    </a>
+                                @else
+                                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-semibold italic">Link grup WA belum diatur oleh admin.</p>
+                                @endif
+                            </div>
                         @else
                             <div class="bg-purple-100 dark:bg-purple-900/60 border border-purple-300 dark:border-purple-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white font-extrabold flex items-center gap-2">
                                 <span>ℹ️</span> Pendaftaran Anda telah terkirim dan sedang diproses.

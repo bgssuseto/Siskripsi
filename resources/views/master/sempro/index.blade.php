@@ -329,7 +329,7 @@
                                 <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                 <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                 <td class="text-right space-x-1 whitespace-nowrap">
-                                    <button class="btn btn-outline btn-sm"
+                                    <button class="btn btn-outline btn-sm" title="Edit Data"
                                         onclick="openEdit({{ $item->id }}, {{ json_encode([
                                             'id'                             => $item->id,
                                             'nim'                            => $item->nim,
@@ -343,7 +343,7 @@
                                         ]) }})">
                                         ✏️
                                     </button>
-                                    <button class="btn btn-danger btn-sm"
+                                    <button class="btn btn-danger btn-sm" title="Hapus"
                                         onclick="confirmHapus({{ $item->id }}, {{ json_encode($item->nama_mahasiswa) }})">
                                         🗑️
                                     </button>

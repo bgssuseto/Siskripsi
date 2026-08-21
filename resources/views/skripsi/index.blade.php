@@ -334,9 +334,9 @@
                 });
                 const result = await response.json();
                 if (response.ok && result.success) {
-                    let html = `<div class="text-emerald-700 font-bold mb-1">✅ ${result.berhasil.length} mahasiswa berhasil dijadwalkan.</div>`;
+                    let html = `<div class='text-emerald-700 font-bold mb-1'>✅ ${result.berhasil.length} mahasiswa berhasil dijadwalkan.</div>`;
                     if (result.gagal && result.gagal.length > 0) {
-                        html += `<div class="text-rose-600 font-bold mb-1 mt-2">⚠️ ${result.gagal.length} gagal:</div><ul class="list-disc pl-4 space-y-0.5 text-slate-600">`;
+                        html += `<div class='text-rose-600 font-bold mb-1 mt-2'>⚠️ ${result.gagal.length} gagal:</div><ul class='list-disc pl-4 space-y-0.5 text-slate-600'>`;
                         result.gagal.forEach(g => { html += `<li><strong>${g.nama}</strong>: ${g.alasan}</li>`; });
                         html += '</ul>';
                     }
@@ -668,11 +668,11 @@
                                         </span>
                                     </td>
                                     <td class="text-right space-x-1 whitespace-nowrap">
-                                        <button class="btn btn-primary btn-sm"
+                                        <button class="btn btn-primary btn-sm" title="{{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}"
                                             onclick="openJadwalkan({{ $item->id }}, '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->ketua_penguji_id ?? '' }}', '{{ $item->anggota_penguji_1_id ?? '' }}', '{{ $item->anggota_penguji_2_id ?? '' }}', '{{ $item->dosen_pembimbing_utama_id ?? '' }}', '{{ addslashes($item->pembimbingUtama->nama_dosen ?? '') }}')">
-                                            📅 {{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}
+                                            📅
                                         </button>
-                                        <button class="btn btn-outline btn-sm"
+                                        <button class="btn btn-outline btn-sm" title="Edit Data"
                                             onclick="openEdit({{ $item->id }}, {{ json_encode([
                                                 'id' => $item->id,
                                                 'nim' => $item->nim,
@@ -694,7 +694,7 @@
                                             ]) }})">
                                             ✏️
                                         </button>
-                                        <button class="btn btn-danger btn-sm"
+                                        <button class="btn btn-danger btn-sm" title="Hapus"
                                             onclick="openDelete({{ $item->id }}, '{{ addslashes($item->nama_mahasiswa) }}')">
                                             🗑
                                         </button>

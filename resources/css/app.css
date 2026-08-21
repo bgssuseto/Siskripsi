@@ -96,6 +96,11 @@ html.dark {
 /* Dark mode text-indigo adjustments */
 html.dark .text-indigo-300 { color: var(--color-primary-300) !important; }
 html.dark .text-indigo-400 { color: var(--color-primary-400) !important; }
+/* text-indigo-700/800/900 are meant for light backgrounds; without this they render
+   near-black text on dark surfaces, making it unreadable in dark mode. */
+html.dark .text-indigo-700 { color: var(--color-primary-300) !important; }
+html.dark .text-indigo-800 { color: var(--color-primary-300) !important; }
+html.dark .text-indigo-900 { color: var(--color-primary-200) !important; }
 
 /* ── Dark Mode: override bg-indigo badge ── */
 html.dark .bg-indigo-50,

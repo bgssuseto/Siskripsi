@@ -148,7 +148,7 @@
                             <th class="py-3.5 px-4">NIDN</th>
                             <th class="py-3.5 px-4 text-center">Total Uji (Mahasiswa)</th>
                             <th class="py-3.5 px-4 text-center">Total Sesi Jadwal</th>
-                            <th class="py-3.5 px-4 text-center w-48">Aksi</th>
+                            <th class="py-3.5 px-4 text-center w-40">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-sm">
@@ -177,19 +177,17 @@
                                 <div class="flex items-center justify-center gap-1.5">
                                     <a href="{{ route('administrasi.undangan.preview', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
                                        target="_blank"
-                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-lg transition-all border border-amber-200" title="Cetak / Preview Undangan">
-                                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       class="inline-flex items-center justify-center p-2 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition-all border border-amber-200" title="Cetak / Preview Undangan">
+                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                                         </svg>
-                                        Cetak Undangan
                                     </a>
                                     <a href="{{ route('administrasi.undangan.pdf', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
                                        target="_blank"
-                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-xs rounded-lg transition-all border border-indigo-200" title="Unduh PDF">
-                                        <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       class="inline-flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-all border border-indigo-200" title="Unduh PDF">
+                                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
-                                        PDF
                                     </a>
                                      @php
                                           // Link publik WAJIB di-scope ke Periode + Gelombang (+ Jenis, sudah selalu
@@ -204,18 +202,16 @@
                                      @if($canGeneratePublicLink)
                                          <a href="{{ $pubLink }}"
                                             target="_blank"
-                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs rounded-lg transition-all border border-sky-200" title="Buka Link Jadwal Tanpa Login (khusus Periode &amp; Gelombang terpilih)">
-                                             <svg class="w-3.5 h-3.5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            class="inline-flex items-center justify-center p-2 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg transition-all border border-sky-200" title="Buka Link Jadwal Tanpa Login (khusus Periode &amp; Gelombang terpilih)">
+                                             <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                                              </svg>
-                                             Link Publik
                                          </a>
                                      @else
-                                         <span class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 text-slate-400 font-bold text-xs rounded-lg border border-slate-200 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk membuat link publik">
-                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         <span class="inline-flex items-center justify-center p-2 bg-slate-50 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk membuat link publik">
+                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                                              </svg>
-                                             Link Publik
                                          </span>
                                      @endif
                                      @if($canGeneratePublicLink)
@@ -236,26 +232,23 @@
                                           @endphp
                                          <a href="{{ $waLink }}"
                                             target="_blank"
-                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-lg transition-all border border-emerald-300 shadow-2xs" title="Kirim Jadwal via WhatsApp Broadcast">
-                                             <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                                            class="inline-flex items-center justify-center p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition-all border border-emerald-300 shadow-2xs" title="Kirim Jadwal via WhatsApp Broadcast">
+                                             <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
                                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
                                              </svg>
-                                             Kirim WA
                                          </a>
                                      @else
-                                         <span class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 text-slate-400 font-bold text-xs rounded-lg border border-slate-200 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk mengirim link">
-                                             <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                         <span class="inline-flex items-center justify-center p-2 bg-slate-50 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk mengirim link">
+                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
                                              </svg>
-                                             Kirim WA
                                          </span>
                                      @endif
                                     <a href="{{ route('administrasi.undangan.excel', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
-                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium text-xs rounded-lg transition-all border border-slate-200" title="Export Excel">
-                                        <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       class="inline-flex items-center justify-center p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg transition-all border border-slate-200" title="Export Excel">
+                                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
-                                        Excel
                                     </a>
                                 </div>
                             </td>
