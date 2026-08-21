@@ -44,6 +44,8 @@ class AutoScheduleController extends Controller
                 ->pluck('gelombang')
             : collect();
 
+        $sidangIds = array_filter(array_map('intval', (array) $request->get('ids', [])));
+
         $proposals = [];
         $unresolved = [];
         $generated = $request->boolean('generate') && $selectedPeriodeId;
@@ -53,14 +55,22 @@ class AutoScheduleController extends Controller
                 (int) $selectedPeriodeId,
                 $jenis,
                 $selectedGelombang !== null && $selectedGelombang !== '' ? (int) $selectedGelombang : null,
-                $slotMinutes
+                $slotMinutes,
+                !empty($sidangIds) ? $sidangIds : null
             );
 
             $dosenIds = collect($result['proposals'])->flatMap(fn ($p) => array_values($p['dosen']))->unique();
             $dosenNames = Dosen::whereIn('id', $dosenIds)->pluck('nama_dosen', 'id');
 
             $proposals = collect($result['proposals'])->map(function ($p) use ($dosenNames) {
-                $p['dosen_display'] = collect($p['dosen'])->map(fn ($id, $role) => "{$role}: " . ($dosenNames[$id] ?? '-'))->values()->all();
+                $beban = $p['beban'] ?? [];
+                $p['dosen_display'] = collect($p['dosen'])->map(function ($id, $role) use ($dosenNames, $beban) {
+                    $line = "{$role}: " . ($dosenNames[$id] ?? '-');
+                    if (isset($beban[$role])) {
+                        $line .= " (meluluskan {$beban[$role]['meluluskan']} · menguji {$beban[$role]['menguji']})";
+                    }
+                    return $line;
+                })->values()->all();
                 return $p;
             })->all();
 
@@ -68,10 +78,12 @@ class AutoScheduleController extends Controller
         }
 
         $ruangs = Ruang::orderBy('kode_ruangan')->get();
+        $dosens = Dosen::orderBy('nama_dosen')->get();
+        $jamOptions = ['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'];
 
         return view('penjadwalan.auto-schedule.index', compact(
             'periodes', 'selectedPeriodeId', 'jenis', 'selectedGelombang', 'gelombangOptions',
-            'slotMinutes', 'proposals', 'unresolved', 'generated', 'ruangs'
+            'slotMinutes', 'proposals', 'unresolved', 'generated', 'ruangs', 'sidangIds', 'dosens', 'jamOptions'
         ));
     }
 
@@ -85,6 +97,9 @@ class AutoScheduleController extends Controller
 
         foreach ($selected as $sidangId) {
             $row = $rows[$sidangId] ?? null;
+            if ($row && !empty($row['jam_mulai']) && !empty($row['jam_selesai'])) {
+                $row['jam'] = $row['jam_mulai'] . ' - ' . $row['jam_selesai'];
+            }
             if (!$row || empty($row['tanggal']) || empty($row['jam']) || empty($row['ruang_id'])) {
                 continue;
             }
@@ -95,11 +110,17 @@ class AutoScheduleController extends Controller
                 continue;
             }
 
-            $checkData = array_merge($sidang->toArray(), [
+            $update = [
                 'tanggal'  => $row['tanggal'],
                 'jam'      => $row['jam'],
                 'ruang_id' => $row['ruang_id'],
-            ]);
+            ];
+            if (!empty($row['ketua_penguji_id']) && !empty($row['anggota_penguji_1_id'])) {
+                $update['ketua_penguji_id'] = $row['ketua_penguji_id'];
+                $update['anggota_penguji_1_id'] = $row['anggota_penguji_1_id'];
+            }
+
+            $checkData = array_merge($sidang->toArray(), $update);
 
             $conflicts = SidangConflictService::checkConflicts($checkData, $sidang->id);
             if (!empty($conflicts)) {
@@ -107,12 +128,14 @@ class AutoScheduleController extends Controller
                 continue;
             }
 
-            $before = $sidang->only(['tanggal', 'jam', 'ruang_id']);
-            $sidang->update([
-                'tanggal'  => $row['tanggal'],
-                'jam'      => $row['jam'],
-                'ruang_id' => $row['ruang_id'],
-            ]);
+            $compositionErrors = SidangConflictService::checkPengujiCompositionRules($checkData);
+            if (!empty($compositionErrors)) {
+                $skipped[] = "{$sidang->nama_mahasiswa}: melanggar Rule Komposisi Dosen Penguji, dilewati (" . implode(' | ', $compositionErrors) . ').';
+                continue;
+            }
+
+            $before = $sidang->only(array_keys($update));
+            $sidang->update($update);
 
             ActivityLogger::log(
                 'jadwalkan',

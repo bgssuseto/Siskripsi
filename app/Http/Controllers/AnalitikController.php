@@ -68,8 +68,25 @@ class AnalitikController extends Controller
 
         // ── Keterpakaian Ruang ──
         $keterpakaianRuang = Ruang::orderBy('kode_ruangan')->get()->map(function ($r) use ($sidangs) {
-            $jumlah = $sidangs->where('ruang_id', $r->id)->whereNotNull('tanggal')->count();
-            return ['ruang' => $r, 'jumlah' => $jumlah];
+            $sidangDiRuang = $sidangs->where('ruang_id', $r->id)->whereNotNull('tanggal');
+
+            $jadwal = $sidangDiRuang
+                ->groupBy(fn ($s) => $s->tanggal->format('Y-m-d'))
+                ->map(function ($group, $tgl) {
+                    return [
+                        'tanggal'      => $tgl,
+                        'tanggal_label' => \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('l, d M Y'),
+                        'jumlah'       => $group->count(),
+                    ];
+                })
+                ->sortBy('tanggal')
+                ->values();
+
+            return [
+                'ruang'  => $r,
+                'jumlah' => $sidangDiRuang->count(),
+                'jadwal' => $jadwal,
+            ];
         })->filter(fn ($row) => $row['jumlah'] > 0)->sortByDesc('jumlah')->values();
 
         $maxRuang = (int) ($keterpakaianRuang->max('jumlah') ?? 0) ?: 1;

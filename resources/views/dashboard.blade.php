@@ -93,9 +93,9 @@
     </div>
 
     <!-- Charts Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
         {{-- Chart 1: Bar Chart Status Verifikasi --}}
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col">
             <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Status Verifikasi Pendaftaran</h3>
@@ -105,48 +105,53 @@
                     📊 Bar
                 </span>
             </div>
-            <div class="h-64 relative">
+            <div class="flex-1 min-h-[220px] relative">
                 <canvas id="verifikasiChart"></canvas>
             </div>
         </div>
 
-        {{-- Chart 2: Doughnut Chart Proporsi Jalur Skripsi Reguler vs Artikel Jurnal --}}
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        {{-- Chart 2: Grouped Bar Chart Proporsi Jalur — Sempro vs Skripsi, tiap tahap dipecah Reguler vs Jurnal --}}
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col">
             <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-3">
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Proporsi Jalur Tugas Akhir</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Perbandingan Sidang Skripsi vs Artikel Jurnal</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Sempro vs Skripsi, masing-masing Reguler vs Jurnal</p>
                 </div>
                 <span class="text-xs font-bold px-2.5 py-1 bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-300 rounded-lg border border-purple-200 dark:border-purple-800">
-                    🍩 Jalur
+                    📊 Jalur
                 </span>
             </div>
 
             {{-- Summary Badges --}}
-            <div class="flex items-center justify-around gap-2 mb-3 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px]">
+            <div class="grid grid-cols-2 gap-2 mb-3 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px]">
                 <div class="text-center">
-                    <span class="block font-semibold text-slate-500 dark:text-slate-400 text-[10px]">Sidang Reguler</span>
+                    <span class="block font-semibold text-slate-500 dark:text-slate-400 text-[10px]">Sempro Reguler</span>
+                    <strong class="text-indigo-600 dark:text-indigo-400 text-xs font-extrabold">{{ $semproRegulerCount }} Mhs</strong>
+                </div>
+                <div class="text-center">
+                    <span class="block font-semibold text-slate-500 dark:text-slate-400 text-[10px]">Sempro Jurnal</span>
+                    <strong class="text-emerald-600 dark:text-emerald-400 text-xs font-extrabold">{{ $semproJurnalCount }} Mhs</strong>
+                </div>
+                <div class="text-center">
+                    <span class="block font-semibold text-slate-500 dark:text-slate-400 text-[10px]">Skripsi Reguler</span>
                     <strong class="text-indigo-600 dark:text-indigo-400 text-xs font-extrabold">{{ $skripsiRegulerCount }} Mhs</strong>
                 </div>
-                <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
                 <div class="text-center">
-                    <span class="block font-semibold text-slate-500 dark:text-slate-400 text-[10px]">Artikel Jurnal</span>
+                    <span class="block font-semibold text-slate-500 dark:text-slate-400 text-[10px]">Skripsi Jurnal</span>
                     <strong class="text-emerald-600 dark:text-emerald-400 text-xs font-extrabold">{{ $artikelJurnalCount }} Mhs</strong>
                 </div>
-                <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-                <div class="text-center">
-                    <span class="block font-semibold text-slate-500 dark:text-slate-400 text-[10px]">Sempro</span>
-                    <strong class="text-purple-600 dark:text-purple-400 text-xs font-extrabold">{{ $semproCount }} Mhs</strong>
-                </div>
             </div>
+            @if($semproBelumJalurCount > 0)
+            <p class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mb-2">⚠️ {{ $semproBelumJalurCount }} data Sempro lama belum tercatat jalurnya.</p>
+            @endif
 
-            <div class="h-52 relative flex items-center justify-center">
+            <div class="flex-1 min-h-[160px] relative">
                 <canvas id="jenisChart"></canvas>
             </div>
         </div>
 
         {{-- Chart 3: Line Chart Lulusan Tiap Tahun --}}
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col">
             <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Grafik Line Lulusan Tiap Tahun</h3>
@@ -156,7 +161,7 @@
                     📈 Line Chart
                 </span>
             </div>
-            <div class="h-64 relative">
+            <div class="flex-1 min-h-[220px] relative">
                 <canvas id="lineLulusanChart"></canvas>
             </div>
         </div>
@@ -236,13 +241,14 @@
     <!-- Chart.js Script Initialization -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#f8fafc' : '#1e293b';
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
+            let isDark = document.documentElement.classList.contains('dark');
+            let textColor = isDark ? '#f8fafc' : '#1e293b';
+            let gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
+            const dashboardCharts = [];
 
             // 1. Chart Status Verifikasi (Bar)
             const ctxVerifikasi = document.getElementById('verifikasiChart').getContext('2d');
-            new Chart(ctxVerifikasi, {
+            dashboardCharts.push(new Chart(ctxVerifikasi, {
                 type: 'bar',
                 data: {
                     labels: ['Menunggu', 'Disetujui', 'Ditolak'],
@@ -252,6 +258,7 @@
                         backgroundColor: ['#f59e0b', '#10b981', '#f43f5e'],
                         borderRadius: 8,
                         borderWidth: 0,
+                        maxBarThickness: 56,
                     }]
                 },
                 options: {
@@ -271,20 +278,34 @@
                         }
                     }
                 }
-            });
+            }));
 
             // 2. Chart Proporsi Jalur Tugas Akhir (Doughnut)
             const ctxJenis = document.getElementById('jenisChart').getContext('2d');
-            new Chart(ctxJenis, {
-                type: 'doughnut',
+            dashboardCharts.push(new Chart(ctxJenis, {
+                type: 'bar',
                 data: {
-                    labels: ['Sidang Skripsi (Reguler)', 'Artikel Jurnal', 'Seminar Proposal'],
-                    datasets: [{
-                        data: [{{ $skripsiRegulerCount }}, {{ $artikelJurnalCount }}, {{ $semproCount }}],
-                        backgroundColor: ['#4361ee', '#10b981', '#a855f7'],
-                        borderWidth: 2,
-                        borderColor: isDark ? '#0f172a' : '#ffffff'
-                    }]
+                    labels: ['Sempro', 'Skripsi'],
+                    datasets: [
+                        {
+                            label: 'Reguler',
+                            data: [{{ $semproRegulerCount }}, {{ $skripsiRegulerCount }}],
+                            backgroundColor: '#4361ee',
+                            borderRadius: 6,
+                        },
+                        {
+                            label: 'Jurnal',
+                            data: [{{ $semproJurnalCount }}, {{ $artikelJurnalCount }}],
+                            backgroundColor: '#10b981',
+                            borderRadius: 6,
+                        },
+                        {
+                            label: 'Belum Ditentukan',
+                            data: [{{ $semproBelumJalurCount }}, 0],
+                            backgroundColor: '#94a3b8',
+                            borderRadius: 6,
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -295,16 +316,26 @@
                             labels: { color: textColor, font: { weight: 'bold', size: 10 } }
                         }
                     },
-                    cutout: '65%'
+                    scales: {
+                        x: {
+                            ticks: { color: textColor, font: { weight: 'bold' } },
+                            grid: { display: false }
+                        },
+                        y: {
+                            ticks: { color: textColor, stepSize: 1 },
+                            grid: { color: gridColor },
+                            beginAtZero: true
+                        }
+                    }
                 }
-            });
+            }));
 
             // 3. Line Chart Lulusan Tiap Tahun
             const ctxLine = document.getElementById('lineLulusanChart').getContext('2d');
             const tahunLabels = {!! json_encode($yearlyGraduates->pluck('tahun')->map(fn($y) => 'Tahun ' . $y)->toArray()) !!};
             const yearlyTotalData = {!! json_encode($yearlyGraduates->pluck('total')->toArray()) !!};
 
-            new Chart(ctxLine, {
+            dashboardCharts.push(new Chart(ctxLine, {
                 type: 'line',
                 data: {
                     labels: tahunLabels,
@@ -348,6 +379,24 @@
                         }
                     }
                 }
+            }));
+
+            // Redraw semua chart dengan warna yang sesuai saat tema terang/gelap di-toggle,
+            // karena Chart.js hanya membaca warna sekali saat instance dibuat.
+            window.addEventListener('theme-changed', function (e) {
+                isDark = !!e.detail.dark;
+                textColor = isDark ? '#f8fafc' : '#1e293b';
+                gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
+                const borderContrast = isDark ? '#0f172a' : '#ffffff';
+
+                dashboardCharts.forEach(function (chart) {
+                    if (chart.options.scales?.x?.ticks) chart.options.scales.x.ticks.color = textColor;
+                    if (chart.options.scales?.y?.ticks) chart.options.scales.y.ticks.color = textColor;
+                    if (chart.options.scales?.y?.grid) chart.options.scales.y.grid.color = gridColor;
+                    if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = textColor;
+                    if (chart.config.type === 'line') chart.data.datasets[0].pointBorderColor = borderContrast;
+                    chart.update();
+                });
             });
         });
     </script>

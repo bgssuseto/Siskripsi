@@ -14,7 +14,13 @@ class PendaftaranController extends Controller
     /**
      * Display Sempro registrations verification list
      */
-    public function semproIndex(Request $request): View
+    /**
+     * Shared filter-builder for the Sempro verification page (pendaftaran.sempro.*):
+     * used by both the index page and its Excel export, so export always matches
+     * whatever filters are currently applied on screen (or the full table when none
+     * are applied).
+     */
+    private function buildPendaftaranSemproQuery(Request $request): array
     {
         $query = Sidang::with([
             'pembimbingUtama',
@@ -53,13 +59,6 @@ class PendaftaranController extends Controller
             $query->where('gelombang', $selectedGelombang);
         }
 
-        $gelombangOptions = $periodeId
-            ? PendaftaranPeriode::where('periode_id', $periodeId)
-                ->where('jenis', 'sempro')
-                ->orderBy('gelombang')
-                ->pluck('gelombang')
-            : collect();
-
         // Filter Dosen Pembimbing (Utama atau Pendamping) — Sempro tidak memiliki peran penguji
         if ($dosenPembimbingId = $request->get('dosen_pembimbing_id')) {
             $query->where(function ($q) use ($dosenPembimbingId) {
@@ -67,6 +66,23 @@ class PendaftaranController extends Controller
                   ->orWhere('dosen_pembimbing_pendamping_id', $dosenPembimbingId);
             });
         }
+
+        return ['query' => $query, 'periode_id' => $periodeId, 'gelombang' => $selectedGelombang];
+    }
+
+    public function semproIndex(Request $request): View
+    {
+        $built = $this->buildPendaftaranSemproQuery($request);
+        $query = $built['query'];
+        $periodeId = $built['periode_id'];
+        $selectedGelombang = $built['gelombang'];
+
+        $gelombangOptions = $periodeId
+            ? PendaftaranPeriode::where('periode_id', $periodeId)
+                ->where('jenis', 'sempro')
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
 
         $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
 
@@ -91,7 +107,13 @@ class PendaftaranController extends Controller
     /**
      * Display Skripsi registrations verification list
      */
-    public function skripsiIndex(Request $request): View
+    /**
+     * Shared filter-builder for the Skripsi verification page (pendaftaran.skripsi.*):
+     * used by both the index page and its Excel export, so export always matches
+     * whatever filters are currently applied on screen (or the full table when none
+     * are applied).
+     */
+    private function buildPendaftaranSkripsiQuery(Request $request): array
     {
         $query = Sidang::with([
             'pembimbingUtama',
@@ -130,13 +152,6 @@ class PendaftaranController extends Controller
             $query->where('gelombang', $selectedGelombang);
         }
 
-        $gelombangOptions = $periodeId
-            ? PendaftaranPeriode::where('periode_id', $periodeId)
-                ->where('jenis', 'skripsi')
-                ->orderBy('gelombang')
-                ->pluck('gelombang')
-            : collect();
-
         // Filter Dosen Pembimbing (Utama atau Pendamping)
         if ($dosenPembimbingId = $request->get('dosen_pembimbing_id')) {
             $query->where(function ($q) use ($dosenPembimbingId) {
@@ -153,6 +168,23 @@ class PendaftaranController extends Controller
                   ->orWhere('anggota_penguji_2_id', $dosenPengujiId);
             });
         }
+
+        return ['query' => $query, 'periode_id' => $periodeId, 'gelombang' => $selectedGelombang];
+    }
+
+    public function skripsiIndex(Request $request): View
+    {
+        $built = $this->buildPendaftaranSkripsiQuery($request);
+        $query = $built['query'];
+        $periodeId = $built['periode_id'];
+        $selectedGelombang = $built['gelombang'];
+
+        $gelombangOptions = $periodeId
+            ? PendaftaranPeriode::where('periode_id', $periodeId)
+                ->where('jenis', 'skripsi')
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
 
         $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
 
@@ -241,23 +273,80 @@ class PendaftaranController extends Controller
     }
 
     /**
+     * Bulk verifikasi (setujui / tolak) beberapa pendaftaran sekaligus.
+     */
+    public function bulkVerifikasi(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'                 => ['required', 'array', 'min:1'],
+            'ids.*'                => ['integer', 'exists:sidangs,id'],
+            'verifikasi_status'   => ['required', 'string', 'in:disetujui,ditolak,menunggu'],
+            'verifikasi_komentar' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $sidangs = Sidang::whereIn('id', $validated['ids'])->get();
+        $count = 0;
+
+        foreach ($sidangs as $sidang) {
+            $statusBefore = $sidang->verifikasi_status;
+            $sidang->update([
+                'verifikasi_status'   => $validated['verifikasi_status'],
+                'verifikasi_komentar' => $validated['verifikasi_status'] === 'ditolak' ? ($validated['verifikasi_komentar'] ?? null) : null,
+                'verifikasi_tanggal'  => now(),
+            ]);
+
+            ActivityLogger::log(
+                'verifikasi',
+                $sidang,
+                "Mengubah status verifikasi pendaftaran {$sidang->nama_mahasiswa} ({$sidang->nim}) dari \"{$statusBefore}\" menjadi \"{$validated['verifikasi_status']}\" (bulk action)." .
+                    (!empty($validated['verifikasi_komentar']) ? " Catatan: {$validated['verifikasi_komentar']}" : ''),
+                ['before' => ['verifikasi_status' => $statusBefore], 'after' => ['verifikasi_status' => $validated['verifikasi_status']]]
+            );
+            $count++;
+        }
+
+        $statusLabel = match ($validated['verifikasi_status']) {
+            'disetujui' => 'disetujui',
+            'ditolak'   => 'ditolak',
+            default     => 'diubah menjadi menunggu verifikasi',
+        };
+
+        $message = "✅ {$count} pendaftaran berhasil {$statusLabel}.";
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Bulk hapus beberapa pendaftaran sekaligus, agar mahasiswa terkait dapat daftar ulang.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'    => ['required', 'array', 'min:1'],
+            'ids.*'  => ['integer', 'exists:sidangs,id'],
+        ]);
+
+        $count = Sidang::whereIn('id', $validated['ids'])->delete();
+
+        $message = "🗑️ {$count} data pendaftaran berhasil dihapus. Mahasiswa terkait kini dapat melakukan pendaftaran ulang.";
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
      * Export Pendaftaran Sempro to Excel
      */
     public function exportExcelSempro(Request $request)
     {
-        $query = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'periode'])
-            ->where('jenis_tugas_akhir', 'sempro');
-
-        if ($s = $request->get('search')) {
-            $query->where(fn($q) => $q->where('nama_mahasiswa', 'like', "%$s%")->orWhere('nim', 'like', "%$s%")->orWhere('judul_skripsi', 'like', "%$s%"));
-        }
-        if ($vs = $request->get('verifikasi_status')) $query->where('verifikasi_status', $vs);
-        if ($pid = $request->get('periode_id')) {
-            $query->where('periode_id', $pid);
-        } else {
-            $ap = \App\Models\Periode::where('aktif', true)->first();
-            if ($ap) $query->where('periode_id', $ap->id);
-        }
+        $query = $this->buildPendaftaranSemproQuery($request)['query'];
 
         $data = $query->orderByRaw("CASE WHEN verifikasi_status='menunggu' THEN 1 WHEN verifikasi_status='ditolak' THEN 2 ELSE 3 END")->orderByDesc('id')->get();
 
@@ -282,19 +371,7 @@ class PendaftaranController extends Controller
      */
     public function exportExcelSkripsi(Request $request)
     {
-        $query = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'periode'])
-            ->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
-
-        if ($s = $request->get('search')) {
-            $query->where(fn($q) => $q->where('nama_mahasiswa', 'like', "%$s%")->orWhere('nim', 'like', "%$s%")->orWhere('judul_skripsi', 'like', "%$s%"));
-        }
-        if ($vs = $request->get('verifikasi_status')) $query->where('verifikasi_status', $vs);
-        if ($pid = $request->get('periode_id')) {
-            $query->where('periode_id', $pid);
-        } else {
-            $ap = \App\Models\Periode::where('aktif', true)->first();
-            if ($ap) $query->where('periode_id', $ap->id);
-        }
+        $query = $this->buildPendaftaranSkripsiQuery($request)['query'];
 
         $data = $query->orderByRaw("CASE WHEN verifikasi_status='menunggu' THEN 1 WHEN verifikasi_status='ditolak' THEN 2 ELSE 3 END")->orderByDesc('id')->get();
 

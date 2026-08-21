@@ -60,13 +60,34 @@ class User extends Authenticatable
         return $this->belongsTo(Dosen::class, 'dosen_id');
     }
 
+    /**
+     * Additional roles held on top of the primary `role` column (e.g. a dosen who
+     * has also been designated koordinator). The `role` column stays the "primary"
+     * role — it drives which portal/dashboard the user lands on — while rows here
+     * grant extra menu access without changing that.
+     */
+    public function additionalRoles(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserRole::class);
+    }
+
+    /**
+     * All role names this user holds: the primary `role` column plus any additional
+     * roles granted via the `user_roles` table, deduplicated.
+     */
+    public function getRoleNames(): array
+    {
+        return array_values(array_unique(array_merge(
+            [$this->role],
+            $this->additionalRoles()->pluck('role')->all()
+        )));
+    }
+
     public function hasRole(string|array $roles): bool
     {
-        if (is_array($roles)) {
-            return in_array($this->role, $roles, true);
-        }
+        $roles = is_array($roles) ? $roles : [$roles];
 
-        return $this->role === $roles;
+        return !empty(array_intersect($this->getRoleNames(), $roles));
     }
 
     public function getRoleLabelAttribute(): string
@@ -131,9 +152,11 @@ class User extends Authenticatable
             return $menus;
         }
 
-        // For all other roles (Mahasiswa, Dosen, Koordinator):
+        // For all other roles (Mahasiswa, Dosen, Koordinator): union menus across
+        // every role this user holds (primary role + any additional ones), so a
+        // dosen also designated koordinator gets both sets of menu access.
         $roleMenuIds = \Illuminate\Support\Facades\DB::table('role_menu')
-            ->where('role', $this->role)
+            ->whereIn('role', $this->getRoleNames())
             ->pluck('menu_id')
             ->toArray();
 

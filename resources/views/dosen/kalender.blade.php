@@ -112,7 +112,7 @@
                 const isMobileScreen = window.innerWidth < 640;
 
                 const calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: isMobileScreen ? 'listWeek' : 'timeGridWeek',
+                    initialView: isMobileScreen ? 'listWeek' : 'dayGridMonth',
                     initialDate: firstDate || undefined,
                     locale: 'id',
                     headerToolbar: isMobileScreen
@@ -127,6 +127,25 @@
                     slotLabelInterval: '00:30:00',
                     allDaySlot: false,
                     events: eventsData,
+                    eventContent: function(arg) {
+                        const props = arg.event.extendedProps || {};
+                        const jam = props.jam && props.jam !== '-' ? props.jam : '';
+                        const ruang = props.ruang && props.ruang !== 'TBA' ? props.ruang : '';
+                        const meta = [jam, ruang].filter(Boolean).join(' · ');
+                        const wrap = document.createElement('div');
+                        wrap.style.cssText = 'overflow:hidden; line-height:1.25; padding:1px 3px; width:100%;';
+                        if (meta) {
+                            const metaLine = document.createElement('div');
+                            metaLine.style.cssText = 'font-size:9px; font-weight:800; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
+                            metaLine.textContent = meta;
+                            wrap.appendChild(metaLine);
+                        }
+                        const titleLine = document.createElement('div');
+                        titleLine.style.cssText = 'font-size:10px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
+                        titleLine.textContent = arg.event.title;
+                        wrap.appendChild(titleLine);
+                        return { domNodes: [wrap] };
+                    },
                     eventDidMount: function(info) {
                         if (info.event.backgroundColor) {
                             info.el.style.setProperty('background-color', info.event.backgroundColor, 'important');
@@ -225,7 +244,7 @@
                                 </select>
 
                                 <select name="status" class="px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 font-bold cursor-pointer">
-                                    <option value="">Semua Status</option>
+                                    <option value="">Akan Datang (Default)</option>
                                     <option value="terjadwal" {{ request('status') === 'terjadwal' ? 'selected' : '' }}>Terjadwal & Belum Sidang</option>
                                     <option value="proses" {{ request('status') === 'proses' ? 'selected' : '' }}>Proses Ujian</option>
                                     <option value="sudah" {{ request('status') === 'sudah' ? 'selected' : '' }}>Sudah Sidang</option>

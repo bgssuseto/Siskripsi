@@ -19,7 +19,12 @@ class SkripsiController extends Controller
 {
     // ─── Index ───────────────────────────────────────────────────────────────
 
-    public function index(Request $request): View
+    /**
+     * Shared filter-builder for "Data Skripsi" (master.skripsi.*): used by both the
+     * index page and its Excel export, so export always matches whatever filters are
+     * currently applied on screen (or the full table when none are applied).
+     */
+    private function buildDataSkripsiQuery(Request $request): array
     {
         $query = Sidang::with([
             'pembimbingUtama',
@@ -87,13 +92,6 @@ class SkripsiController extends Controller
             $query->where('gelombang', $selectedGelombang);
         }
 
-        $gelombangOptions = $periodeId
-            ? PendaftaranPeriode::where('periode_id', $periodeId)
-                ->where('jenis', 'skripsi')
-                ->orderBy('gelombang')
-                ->pluck('gelombang')
-            : collect();
-
         // Filter Dosen Pembimbing (Utama atau Pendamping)
         if ($dosenPembimbingId = $request->get('dosen_pembimbing_id')) {
             $query->where(function ($q) use ($dosenPembimbingId) {
@@ -110,6 +108,23 @@ class SkripsiController extends Controller
                   ->orWhere('anggota_penguji_2_id', $dosenPengujiId);
             });
         }
+
+        return ['query' => $query, 'periode_id' => $periodeId, 'gelombang' => $selectedGelombang];
+    }
+
+    public function index(Request $request): View
+    {
+        $built = $this->buildDataSkripsiQuery($request);
+        $query = $built['query'];
+        $periodeId = $built['periode_id'];
+
+        $gelombangOptions = $periodeId
+            ? PendaftaranPeriode::where('periode_id', $periodeId)
+                ->where('jenis', 'skripsi')
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
+        $selectedGelombang = $built['gelombang'];
 
         // 1. Fetch all records in DB to compute global conflict detection for table badges & calendar
         $allSidangs = Sidang::with([
@@ -207,18 +222,22 @@ class SkripsiController extends Controller
                 'borderColor'     => $borderColor,
                 'textColor'       => '#ffffff',
                 'extendedProps'   => [
-                    'nim'            => $s->nim,
-                    'mahasiswa'      => $s->nama_mahasiswa,
-                    'judul'          => $s->judul_skripsi,
-                    'dosbing'        => $dosbing,
-                    'ketua_penguji'  => $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-',
-                    'penguji_1'      => $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-',
-                    'penguji_2'      => $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-',
-                    'jam'            => $s->jam ?? '-',
-                    'ruang'          => $ruangName,
-                    'jenis'          => $s->jenis_label,
-                    'has_conflict'   => $hasConflict,
-                    'conflict_notes' => !empty($allNotes) ? implode('; ', $allNotes) : null,
+                    'nim'                  => $s->nim,
+                    'mahasiswa'            => $s->nama_mahasiswa,
+                    'judul'                => $s->judul_skripsi,
+                    'dosbing'              => $dosbing,
+                    'ketua_penguji'        => $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-',
+                    'penguji_1'            => $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-',
+                    'penguji_2'            => $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-',
+                    'jam'                  => $s->jam ?? '-',
+                    'ruang'                => $ruangName,
+                    'jenis'                => $s->jenis_label,
+                    'has_conflict'         => $hasConflict,
+                    'conflict_notes'       => !empty($allNotes) ? implode('; ', $allNotes) : null,
+                    'ruang_id'             => $s->ruang_id,
+                    'ketua_penguji_id'     => $s->ketua_penguji_id,
+                    'anggota_penguji_1_id' => $s->anggota_penguji_1_id,
+                    'anggota_penguji_2_id' => $s->anggota_penguji_2_id,
                 ]
             ];
         });
@@ -244,6 +263,11 @@ class SkripsiController extends Controller
     
     public function exportBentrok(Request $request)
     {
+        // Conflict detection needs the FULL dataset (a conflict is only visible by
+        // comparing against every other Sidang), so it's computed unfiltered here —
+        // but which conflicting rows actually get exported is scoped to whatever
+        // filter is currently applied on the Jadwal Sidang Skripsi page (or all of
+        // them, when no filter is applied), matching the on-screen filter exactly.
         $allSidangs = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
@@ -251,7 +275,7 @@ class SkripsiController extends Controller
         ])->get();
 
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
-        
+
         $conflictIds = [];
         foreach ($conflictMap as $sId => $cEntry) {
             if (!empty($cEntry['schedule']) || !empty($cEntry['rules'])) {
@@ -263,7 +287,13 @@ class SkripsiController extends Controller
             return back()->with('success', 'Tidak ada jadwal yang bentrok.');
         }
 
-        $data = $allSidangs->whereIn('id', $conflictIds)->sortBy('tanggal');
+        $filteredIds = $this->buildJadwalSkripsiQuery($request)['query']->pluck('id')->all();
+
+        $data = $allSidangs->whereIn('id', $conflictIds)->whereIn('id', $filteredIds)->sortBy('tanggal');
+
+        if ($data->isEmpty()) {
+            return back()->with('success', 'Tidak ada jadwal yang bentrok pada filter yang sedang diterapkan.');
+        }
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -326,31 +356,8 @@ class SkripsiController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $query = Sidang::with([
-            'pembimbingUtama', 'pembimbingPendamping',
-            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
-            'ruang', 'periode'
-        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])
-          ->where('verifikasi_status', 'disetujui');
-
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_mahasiswa', 'like', "%{$search}%")
-                  ->orWhere('nim', 'like', "%{$search}%")
-                  ->orWhere('judul_skripsi', 'like', "%{$search}%");
-            });
-        }
-        if ($jenis = $request->get('jenis')) {
-            $query->where('jenis_tugas_akhir', $jenis);
-        }
-        if ($periodeId = $request->get('periode_id')) {
-            $query->where('periode_id', $periodeId);
-        } else {
-            $activePeriode = Periode::where('aktif', true)->first();
-            if ($activePeriode) $query->where('periode_id', $activePeriode->id);
-        }
-
-        $data = $query->orderBy('nama_mahasiswa')->get();
+        $built = $this->buildDataSkripsiQuery($request);
+        $data = $built['query']->orderBy('nama_mahasiswa')->get();
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -408,7 +415,12 @@ class SkripsiController extends Controller
 
     // ─── Jadwal Index (Halaman Jadwal Sidang Skripsi) ─────────────────────────
 
-    public function jadwalIndex(Request $request): View
+    /**
+     * Shared filter-builder for "Jadwal Sidang Skripsi" (jadwal-ujian.*): used by both
+     * the jadwal page and its bentrok export, so export always matches whatever filters
+     * are currently applied on screen (or the full table when none are applied).
+     */
+    private function buildJadwalSkripsiQuery(Request $request): array
     {
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
@@ -453,13 +465,6 @@ class SkripsiController extends Controller
             $query->where('gelombang', $selectedGelombang);
         }
 
-        $gelombangOptions = $periodeId
-            ? PendaftaranPeriode::where('periode_id', $periodeId)
-                ->where('jenis', 'skripsi')
-                ->orderBy('gelombang')
-                ->pluck('gelombang')
-            : collect();
-
         if ($dosenPembimbingId = $request->get('dosen_pembimbing_id')) {
             $query->where(function ($q) use ($dosenPembimbingId) {
                 $q->where('dosen_pembimbing_utama_id', $dosenPembimbingId)
@@ -474,6 +479,23 @@ class SkripsiController extends Controller
                   ->orWhere('anggota_penguji_2_id', $dosenPengujiId);
             });
         }
+
+        return ['query' => $query, 'periode_id' => $periodeId, 'gelombang' => $selectedGelombang];
+    }
+
+    public function jadwalIndex(Request $request): View
+    {
+        $built = $this->buildJadwalSkripsiQuery($request);
+        $query = $built['query'];
+        $periodeId = $built['periode_id'];
+        $selectedGelombang = $built['gelombang'];
+
+        $gelombangOptions = $periodeId
+            ? PendaftaranPeriode::where('periode_id', $periodeId)
+                ->where('jenis', 'skripsi')
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+            : collect();
 
         $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang', 'periode'])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->get();
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
@@ -560,18 +582,24 @@ class SkripsiController extends Controller
                 'textColor'       => '#ffffff',
                 'editable'        => !$s->tanggal->isPast() || $s->tanggal->isToday(),
                 'extendedProps'   => [
-                    'nim'            => $s->nim,
-                    'mahasiswa'      => $s->nama_mahasiswa,
-                    'judul'          => $s->judul_skripsi,
-                    'dosbing'        => $dosbing,
-                    'ketua_penguji'  => $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-',
-                    'penguji_1'      => $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-',
-                    'penguji_2'      => $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-',
-                    'jam'            => $s->jam ?? '-',
-                    'ruang'          => $ruangName,
-                    'jenis'          => $s->jenis_label,
-                    'has_conflict'   => $hasConflict,
-                    'conflict_notes' => !empty($allNotes) ? implode('; ', $allNotes) : null,
+                    'nim'                  => $s->nim,
+                    'mahasiswa'            => $s->nama_mahasiswa,
+                    'judul'                => $s->judul_skripsi,
+                    'dosbing'              => $dosbing,
+                    'ketua_penguji'        => $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-',
+                    'penguji_1'            => $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-',
+                    'penguji_2'            => $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-',
+                    'jam'                  => $s->jam ?? '-',
+                    'ruang'                => $ruangName,
+                    'jenis'                => $s->jenis_label,
+                    'has_conflict'         => $hasConflict,
+                    'conflict_notes'       => !empty($allNotes) ? implode('; ', $allNotes) : null,
+                    'ruang_id'             => $s->ruang_id,
+                    'ketua_penguji_id'     => $s->ketua_penguji_id,
+                    'anggota_penguji_1_id' => $s->anggota_penguji_1_id,
+                    'anggota_penguji_2_id' => $s->anggota_penguji_2_id,
+                    'dosen_pembimbing_utama_id'      => $s->dosen_pembimbing_utama_id,
+                    'dosen_pembimbing_pendamping_id' => $s->dosen_pembimbing_pendamping_id,
                 ]
             ];
         });
@@ -635,6 +663,15 @@ class SkripsiController extends Controller
             return back()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
 
+        // Check Rule Komposisi Dosen Penguji (pasangan terlarang & jenjang jabatan fungsional)
+        $compositionErrors = SidangConflictService::checkPengujiCompositionRules($checkData);
+        if (!empty($compositionErrors)) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => implode(' | ', $compositionErrors)], 422);
+            }
+            return back()->with('warning', implode(' | ', $compositionErrors));
+        }
+
         $before = $sidang->only(['tanggal', 'jam', 'ruang_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
         $sidang->update($validated);
 
@@ -649,6 +686,107 @@ class SkripsiController extends Controller
             return response()->json(['success' => true, 'message' => '✅ Jadwal sidang berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!', 'sidang' => $sidang->fresh()]);
         }
         return back()->with('success', '✅ Jadwal sidang berhasil ditetapkan untuk ' . $sidang->nama_mahasiswa . '!');
+    }
+
+    // ─── Bulk Manual Jadwalkan (Plot beberapa mahasiswa sekaligus) ────────────
+
+    /**
+     * Schedule several selected sidang at once with ONE shared tanggal/ruang/tim
+     * penguji, auto-incrementing the jam slot per student (so they don't collide
+     * in the same room at the same time). Each row still runs through the exact
+     * same conflict/composition checks as the single jadwalkan() flow — a
+     * conflicting student is skipped and reported, the rest still get saved.
+     */
+    public function bulkJadwalkan(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'                  => ['required', 'array', 'min:1'],
+            'ids.*'                => ['integer', 'exists:sidangs,id'],
+            'tanggal'              => ['required', 'date'],
+            'jam_mulai'            => ['required', 'string'],
+            'durasi_menit'         => ['required', 'integer', 'min:15', 'max:240'],
+            'ruang_id'             => ['required', 'exists:ruangs,id'],
+            'ketua_penguji_id'     => ['required', 'exists:dosens,id'],
+            'anggota_penguji_1_id' => ['required', 'exists:dosens,id'],
+        ], [
+            'ids.required'                  => 'Pilih minimal satu mahasiswa.',
+            'tanggal.required'               => 'Tanggal sidang wajib diisi.',
+            'jam_mulai.required'             => 'Jam mulai sesi pertama wajib diisi.',
+            'durasi_menit.required'          => 'Durasi per sesi wajib diisi.',
+            'ruang_id.required'              => 'Ruangan sidang wajib dipilih.',
+            'ketua_penguji_id.required'      => 'Ketua Penguji wajib dipilih.',
+            'anggota_penguji_1_id.required'  => 'Penguji 1 wajib dipilih.',
+        ]);
+
+        $durasi = (int) $validated['durasi_menit'];
+        [$startH, $startM] = array_pad(array_map('intval', explode('.', $validated['jam_mulai'])), 2, 0);
+        $startMinutes = ($startH * 60) + $startM;
+
+        $sidangs = Sidang::whereIn('id', $validated['ids'])->get()->keyBy('id');
+
+        $berhasil = [];
+        $gagal = [];
+
+        foreach (array_values($validated['ids']) as $i => $id) {
+            $sidang = $sidangs->get($id);
+            if (!$sidang) {
+                $gagal[] = ['nama' => "ID {$id}", 'alasan' => 'Data tidak ditemukan.'];
+                continue;
+            }
+
+            $slotStart = $startMinutes + ($i * $durasi);
+            $slotEnd = $slotStart + $durasi;
+            $jam = sprintf('%02d.%02d', intdiv($slotStart, 60), $slotStart % 60)
+                . ' - ' . sprintf('%02d.%02d', intdiv($slotEnd, 60), $slotEnd % 60);
+
+            $penguji2Id = $sidang->dosen_pembimbing_utama_id;
+            if (!$penguji2Id) {
+                $gagal[] = ['nama' => $sidang->nama_mahasiswa, 'alasan' => 'Pembimbing Utama belum ditentukan, tidak bisa auto-isi Penguji 2.'];
+                continue;
+            }
+
+            $data = [
+                'tanggal'              => $validated['tanggal'],
+                'jam'                  => $jam,
+                'ruang_id'             => $validated['ruang_id'],
+                'ketua_penguji_id'     => $validated['ketua_penguji_id'],
+                'anggota_penguji_1_id' => $validated['anggota_penguji_1_id'],
+                'anggota_penguji_2_id' => $penguji2Id,
+            ];
+
+            $checkData = array_merge($sidang->toArray(), $data);
+
+            $scheduleConflicts = SidangConflictService::checkConflicts($checkData, $sidang->id);
+            if (!empty($scheduleConflicts)) {
+                $gagal[] = ['nama' => $sidang->nama_mahasiswa, 'alasan' => implode(' | ', $scheduleConflicts)];
+                continue;
+            }
+
+            $compositionErrors = SidangConflictService::checkPengujiCompositionRules($checkData);
+            if (!empty($compositionErrors)) {
+                $gagal[] = ['nama' => $sidang->nama_mahasiswa, 'alasan' => implode(' | ', $compositionErrors)];
+                continue;
+            }
+
+            $before = $sidang->only(array_keys($data));
+            $sidang->update($data);
+
+            ActivityLogger::log(
+                'jadwalkan',
+                $sidang,
+                "Menetapkan jadwal sidang skripsi (massal) untuk {$sidang->nama_mahasiswa} ({$sidang->nim}) pada {$validated['tanggal']} {$jam}.",
+                ['before' => $before, 'after' => $sidang->only(array_keys($data))]
+            );
+
+            $berhasil[] = $sidang->nama_mahasiswa;
+        }
+
+        return response()->json([
+            'success'  => true,
+            'message'  => count($berhasil) . ' dari ' . count($validated['ids']) . ' mahasiswa berhasil dijadwalkan.',
+            'berhasil' => $berhasil,
+            'gagal'    => $gagal,
+        ]);
     }
 
     // ─── Reschedule (Geser Jadwal via Drag & Drop di Kalender) ─────────────────
@@ -724,6 +862,18 @@ class SkripsiController extends Controller
                 ], 422);
             }
             return back()->withInput()->with('error', '❌ Pelanggaran Aturan: ' . implode(' | ', $ruleErrors));
+        }
+
+        // 1b. Check Rule Komposisi Dosen Penguji (pasangan terlarang & jenjang jabatan fungsional)
+        $compositionErrors = SidangConflictService::checkPengujiCompositionRules($validated);
+        if (!empty($compositionErrors)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => implode(' | ', $compositionErrors)
+                ], 422);
+            }
+            return back()->withInput()->with('error', '❌ ' . implode(' | ', $compositionErrors));
         }
 
         // 2. Check schedule conflicts (room, examiner overlap)
@@ -844,6 +994,27 @@ class SkripsiController extends Controller
         $count = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->delete();
 
         return redirect()->route('master.skripsi.index')->with('success', "Berhasil menghapus seluruh data skripsi & jurnal ({$count} data berhasil dihapus).");
+    }
+
+    /**
+     * Bulk hapus beberapa data skripsi/jurnal terpilih.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:sidangs,id'],
+        ]);
+
+        $count = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->whereIn('id', $validated['ids'])->delete();
+
+        $message = "🗑️ {$count} data skripsi/jurnal berhasil dihapus.";
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+
+        return back()->with('success', $message);
     }
 
     // ─── Import Excel ─────────────────────────────────────────────────────────

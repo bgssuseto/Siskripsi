@@ -204,7 +204,67 @@
         @media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
     </style>
 
-    <div class="sidang-page space-y-6" x-data="{ currentView: 'table' }">
+    <div class="sidang-page space-y-6" x-data="{
+        currentView: 'table',
+        selectedIds: [],
+        goToAutoPlot() {
+            if (this.selectedIds.length === 0) return;
+            const params = new URLSearchParams();
+            params.set('generate', '1');
+            params.set('periode_id', '{{ request('periode_id', $activePeriode->id ?? '') }}');
+            params.set('jenis', 'sempro');
+            this.selectedIds.forEach(id => params.append('ids[]', id));
+            window.location.href = '{{ route('jadwal.auto-plot.index') }}?' + params.toString();
+        },
+        openBulkManual() {
+            if (this.selectedIds.length === 0) return;
+            document.getElementById('bulk-jadwalkan-result').innerHTML = '';
+            hideModalAlert('form-bulk-jadwalkan-alert');
+            openModal('modal-bulk-jadwalkan');
+        },
+        async submitBulkJadwalkan() {
+            const tanggal = document.getElementById('bulk-tanggal').value;
+            const jamMulai = document.getElementById('bulk-jam-mulai').value;
+            const durasi = document.getElementById('bulk-durasi').value;
+            const ruangId = document.getElementById('bulk-ruang').value;
+
+            if (!tanggal || !jamMulai || !durasi || !ruangId) {
+                showModalAlert('form-bulk-jadwalkan-alert', 'form-bulk-jadwalkan-alert-text', 'Semua field wajib diisi.');
+                return;
+            }
+
+            const resultBox = document.getElementById('bulk-jadwalkan-result');
+            resultBox.innerHTML = '⏳ Memproses...';
+            hideModalAlert('form-bulk-jadwalkan-alert');
+
+            try {
+                const response = await fetch('{{ route('jadwal.sempro.bulk-jadwalkan') }}', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ ids: this.selectedIds, tanggal, jam_mulai: jamMulai, durasi_menit: durasi, ruang_id: ruangId })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    let html = `<div class="text-emerald-700 font-bold mb-1">✅ ${result.berhasil.length} mahasiswa berhasil dijadwalkan.</div>`;
+                    if (result.gagal && result.gagal.length > 0) {
+                        html += `<div class="text-rose-600 font-bold mb-1 mt-2">⚠️ ${result.gagal.length} gagal:</div><ul class="list-disc pl-4 space-y-0.5 text-slate-600">`;
+                        result.gagal.forEach(g => { html += `<li><strong>${g.nama}</strong>: ${g.alasan}</li>`; });
+                        html += '</ul>';
+                    }
+                    resultBox.innerHTML = html;
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    setTimeout(() => location.reload(), (result.gagal && result.gagal.length > 0) ? 3500 : 1200);
+                } else {
+                    resultBox.innerHTML = '';
+                    showModalAlert('form-bulk-jadwalkan-alert', 'form-bulk-jadwalkan-alert-text', result.message || 'Terjadi kesalahan.');
+                }
+            } catch (err) {
+                console.error(err);
+                resultBox.innerHTML = '';
+                showModalAlert('form-bulk-jadwalkan-alert', 'form-bulk-jadwalkan-alert-text', 'Gagal terhubung ke server.');
+            }
+        },
+    }">
 
         {{-- Top Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -296,12 +356,25 @@
         </form>
 
         {{-- TAMPILAN TABEL --}}
-        <div x-show="currentView === 'table'">
+        <div x-show="currentView === 'table'" class="space-y-4">
+            {{-- Bulk Action Bar --}}
+            <div x-show="selectedIds.length > 0" x-cloak class="flex items-center justify-between gap-3 bg-violet-50 border border-violet-200 rounded-2xl p-3.5">
+                <span class="text-xs font-bold text-violet-800" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm">📅 Jadwalkan Terpilih (Otomatis)</button>
+                    <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot Manual (Massal)</button>
+                    <button type="button" @click="selectedIds = []" class="btn btn-outline btn-sm">Batalkan Pilihan</button>
+                </div>
+            </div>
+
             <div id="table-container" class="table-card">
                 <div class="table-scroll">
                     <table class="sidang-table">
                         <thead>
                             <tr>
+                                <th style="width:32px; text-align:center;">
+                                    <input type="checkbox" @click="selectedIds = $event.target.checked ? {{ Js::from($sidangs->where('tanggal', null)->pluck('id')->map(fn($id) => (string) $id)->values()) }} : []">
+                                </th>
                                 <th style="width:42px; text-align:center;">No</th>
                                 <th style="width:90px;">Tgl Daftar</th>
                                 <th>NIM</th>
@@ -321,6 +394,11 @@
                                     $hasConflict = isset($conflictMap[$item->id]) && !empty($conflictMap[$item->id]['schedule']);
                                 @endphp
                                 <tr class="{{ $hasConflict ? 'conflict-schedule' : '' }}">
+                                    <td style="text-align:center; vertical-align: middle;">
+                                        @if(empty($item->tanggal))
+                                            <input type="checkbox" x-model="selectedIds" value="{{ $item->id }}">
+                                        @endif
+                                    </td>
                                     <td style="text-align:center; color:#475569; vertical-align: middle;">
                                         <div class="flex flex-col items-center justify-center">
                                             <span class="font-bold text-xs">{{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}</span>
@@ -408,7 +486,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="py-12 text-center text-slate-400">
+                                    <td colspan="13" class="py-12 text-center text-slate-400">
                                         <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                         <h3>Belum ada data sempro</h3>
                                         <p style="font-size:.85rem;">Import Excel di menu Data Sempro terlebih dahulu.</p>
@@ -454,18 +532,19 @@
                         <div class="text-slate-500 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
                     </div>
 
-                    {{-- Info Box Kesediaan Menguji Dosen --}}
+                    {{-- Info Box Kesediaan Menguji Dosen: awalnya tampilkan semua slot, otomatis
+                         difilter ke dosen yang siap pada tanggal terpilih begitu tanggal diklik --}}
                     @if(isset($kesediaanDosens) && $kesediaanDosens->count() > 0)
                         <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
                             <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
                                 <span class="flex items-center gap-1.5">
-                                    <span>📝</span> Data Ketersediaan Menguji Dosen (Sinkron)
+                                    <span>📝</span> Dosen Siap Menguji
                                 </span>
-                                <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold">
+                                <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="kesediaan-info-count">
                                     {{ $kesediaanDosens->count() }} Slot Terdaftar
                                 </span>
                             </div>
-                            <div class="max-h-32 overflow-y-auto space-y-1.5 pr-1">
+                            <div class="max-h-32 overflow-y-auto space-y-1.5 pr-1" id="kesediaan-info-list">
                                 @foreach($kesediaanDosens as $kd)
                                     <div class="flex items-center justify-between bg-white border border-emerald-100 rounded-xl p-2 text-[11px]">
                                         <div>
@@ -481,12 +560,25 @@
                         </div>
                     @endif
 
+                    {{-- NOTE: must be raw json_encode (not Js::from), since the JS below reads
+                         this tag's textContent and runs it through JSON.parse() itself; Js::from()
+                         wraps the value as `JSON.parse('...')`, which is a JS *expression* meant to
+                         be executed inline, not JSON text — using it here left this tag's content
+                         un-parseable and silently broke the kesediaan-menguji sync. --}}
+                    <script type="application/json" id="kesediaan-data">{!! json_encode(($kesediaanDosens ?? collect())->map(fn($kd) => [
+                        'dosen_id'   => $kd->dosen_id,
+                        'nama_dosen' => $kd->dosen->nama_dosen ?? 'Dosen',
+                        'tanggal'    => optional($kd->tanggal)->format('Y-m-d'),
+                        'mulai'      => $kd->jam_mulai,
+                        'selesai'    => $kd->jam_selesai,
+                    ])->values(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+
                     <div class="form-section mt-0">
                         <div class="form-section-title">Waktu & Tempat Sempro</div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
-                                <input type="date" name="tanggal" id="jadwalkan-tanggal" class="form-control text-xs p-2.5" required>
+                                <input type="date" name="tanggal" id="jadwalkan-tanggal" class="form-control text-xs p-2.5" required onchange="refreshKesediaanInfo()">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai *</label>
@@ -525,6 +617,65 @@
                     <button type="submit" class="btn btn-primary">💾 Simpan Jadwal</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    {{-- MODAL: PLOT MANUAL MASSAL (bulk-schedule beberapa mahasiswa) --}}
+    <div id="modal-bulk-jadwalkan" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-bulk-jadwalkan')">
+        <div class="modal-box modal-sm">
+            <div class="modal-header">
+                <span class="modal-title">🗓️ Plot Manual Massal</span>
+                <button class="modal-close" onclick="closeModal('modal-bulk-jadwalkan')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="form-bulk-jadwalkan-alert" class="modal-alert" style="display:none;">
+                    <span>⚠️</span>
+                    <span id="form-bulk-jadwalkan-alert-text"></span>
+                </div>
+                <p class="text-xs text-slate-500 mb-4"><strong x-text="selectedIds.length"></strong> mahasiswa terpilih akan dijadwalkan berurutan pada hari &amp; ruangan yang sama — sistem otomatis memberi slot jam berbeda per mahasiswa (mulai dari jam yang dipilih, berurutan sesuai durasi per sesi) supaya tidak bentrok ruangan.</p>
+
+                <div class="form-section mt-0">
+                    <div class="form-section-title">Waktu &amp; Tempat Sempro</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                            <input type="date" id="bulk-tanggal" class="form-control text-xs p-2.5" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai (Sesi 1) *</label>
+                            <select id="bulk-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
+                                @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00'] as $t)
+                                    <option value="{{ $t }}">{{ $t }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Durasi per Sesi *</label>
+                            <select id="bulk-durasi" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
+                                <option value="30">30 menit</option>
+                                <option value="60" selected>60 menit</option>
+                                <option value="90">90 menit</option>
+                                <option value="120">120 menit</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Ruangan Sidang <span style="color:red">*</span></label>
+                        <select id="bulk-ruang" class="form-control" required>
+                            <option value="">-- Pilih Ruangan --</option>
+                            @foreach ($ruangs as $r)
+                                <option value="{{ $r->id }}">{{ $r->kode_ruangan }} ({{ $r->nama_ruangan }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div id="bulk-jadwalkan-result" class="mt-2 text-xs"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modal-bulk-jadwalkan')">Batal</button>
+                <button type="button" class="btn btn-primary" @click="submitBulkJadwalkan()">💾 Terapkan ke Semua Terpilih</button>
+            </div>
         </div>
     </div>
 
@@ -681,6 +832,20 @@
             if (e.target === document.getElementById(id)) closeModal(id);
         }
 
+        function showModalAlert(alertId, textId, message) {
+            const box = document.getElementById(alertId);
+            const text = document.getElementById(textId);
+            if (box && text) {
+                text.textContent = message;
+                box.style.display = 'flex';
+                box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+        function hideModalAlert(alertId) {
+            const box = document.getElementById(alertId);
+            if (box) box.style.display = 'none';
+        }
+
         function parseJamRange(jamStr) {
             if (!jamStr) return { mulai: '08.00', selesai: '12.00' };
             const parts = jamStr.split('-');
@@ -694,6 +859,71 @@
             return { mulai: '08.00', selesai: '12.00' };
         }
 
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str ?? '';
+            return div.innerHTML;
+        }
+
+        const INDO_DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const INDO_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        function formatTanggalIndo(ymd) {
+            const parts = String(ymd || '').split('-');
+            if (parts.length !== 3) return ymd || '';
+            const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            if (isNaN(d.getTime())) return ymd;
+            return `${INDO_DAYS[d.getDay()]}, ${d.getDate()} ${INDO_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        // Shows the "Dosen Siap Menguji" info box. With no tanggal picked yet it
+        // shows every kesediaan slot (all dates); once a tanggal is picked it
+        // narrows down to just that date's dosen.
+        function refreshKesediaanInfo() {
+            const tanggal = document.getElementById('jadwalkan-tanggal').value;
+            const list = document.getElementById('kesediaan-info-list');
+            const countBadge = document.getElementById('kesediaan-info-count');
+            const dataEl = document.getElementById('kesediaan-data');
+            if (!list || !dataEl) return;
+
+            let kesediaan = [];
+            try { kesediaan = JSON.parse(dataEl.textContent || '[]'); } catch (e) { kesediaan = []; }
+
+            if (!tanggal) {
+                if (countBadge) countBadge.textContent = `${kesediaan.length} Slot Terdaftar`;
+                if (kesediaan.length === 0) {
+                    list.innerHTML = '<div class="text-slate-500 italic px-1 py-2">Belum ada dosen yang mengisi data kesediaan menguji.</div>';
+                    return;
+                }
+                list.innerHTML = kesediaan.map(kd => `
+                    <div class="flex items-center justify-between bg-white border border-emerald-100 rounded-xl p-2 text-[11px]">
+                        <div>
+                            <strong class="text-slate-800">${escapeHtml(kd.nama_dosen)}</strong>
+                            <span class="text-indigo-700 font-bold ml-1">(${formatTanggalIndo(kd.tanggal)})</span>
+                        </div>
+                        <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            ⏰ ${escapeHtml(kd.mulai)} - ${escapeHtml(kd.selesai)} WIB
+                        </div>
+                    </div>`).join('');
+                return;
+            }
+
+            const entries = kesediaan.filter(k => k.tanggal === tanggal);
+            if (countBadge) countBadge.textContent = `${entries.length} Dosen Siap`;
+
+            if (entries.length === 0) {
+                list.innerHTML = '<div class="text-slate-500 italic px-1 py-2">Belum ada dosen yang mengisi kesediaan pada tanggal ini.</div>';
+                return;
+            }
+
+            list.innerHTML = entries.map(kd => `
+                <div class="flex items-center justify-between bg-white border border-emerald-100 rounded-xl p-2 text-[11px]">
+                    <div><strong class="text-slate-800">${escapeHtml(kd.nama_dosen)}</strong></div>
+                    <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        ⏰ ${escapeHtml(kd.mulai)} - ${escapeHtml(kd.selesai)} WIB
+                    </div>
+                </div>`).join('');
+        }
+
         function openJadwalkanSempro(id, nama, nim, tgl, jam, ruangId) {
             const form = document.getElementById('form-jadwalkan');
             form.action = '/jadwal/sempro/' + id + '/jadwalkan';
@@ -704,6 +934,7 @@
             if (document.getElementById('jadwalkan-jam-mulai')) document.getElementById('jadwalkan-jam-mulai').value = parsed.mulai;
             if (document.getElementById('jadwalkan-jam-selesai')) document.getElementById('jadwalkan-jam-selesai').value = parsed.selesai;
             document.getElementById('jadwalkan-ruang').value = ruangId || '';
+            refreshKesediaanInfo();
             openModal('modal-jadwalkan');
         }
 
@@ -742,7 +973,7 @@
             const isMobileScreen = window.innerWidth < 640;
 
             calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: isMobileScreen ? 'listWeek' : 'timeGridWeek',
+                initialView: isMobileScreen ? 'listWeek' : 'dayGridMonth',
                 initialDate: firstDate || undefined,
                 locale: 'id',
                 headerToolbar: isMobileScreen
@@ -755,11 +986,31 @@
                 slotMaxTime: '17:00:00',
                 slotDuration: '00:30:00',
                 slotLabelInterval: '00:30:00',
+                slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
                 allDaySlot: false,
                 editable: true,
                 eventStartEditable: true,
                 eventDurationEditable: false,
                 events: eventsData,
+                eventContent: function(arg) {
+                    const props = arg.event.extendedProps || {};
+                    const jam = props.jam && props.jam !== '-' ? props.jam : '';
+                    const ruang = props.ruang && props.ruang !== 'TBA' ? props.ruang : '';
+                    const meta = [jam, ruang].filter(Boolean).join(' · ');
+                    const wrap = document.createElement('div');
+                    wrap.style.cssText = 'overflow:hidden; line-height:1.25; padding:1px 3px; width:100%;';
+                    if (meta) {
+                        const metaLine = document.createElement('div');
+                        metaLine.style.cssText = 'font-size:9px; font-weight:800; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
+                        metaLine.textContent = meta;
+                        wrap.appendChild(metaLine);
+                    }
+                    const titleLine = document.createElement('div');
+                    titleLine.style.cssText = 'font-size:10px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
+                    titleLine.textContent = arg.event.title;
+                    wrap.appendChild(titleLine);
+                    return { domNodes: [wrap] };
+                },
                 eventDrop: function(info) {
                     const start = info.event.start;
                     const y = start.getFullYear();
@@ -800,6 +1051,17 @@
                         info.revert();
                         window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Gagal terhubung ke server.', type: 'error' } }));
                     });
+                },
+                eventClick: function(info) {
+                    const props = info.event.extendedProps;
+                    openJadwalkanSempro(
+                        info.event.id,
+                        props.mahasiswa,
+                        props.nim,
+                        info.event.startStr ? info.event.startStr.split('T')[0] : '',
+                        props.jam,
+                        props.ruang_id
+                    );
                 },
             });
             calendar.render();

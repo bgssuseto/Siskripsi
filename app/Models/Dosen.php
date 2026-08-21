@@ -14,6 +14,9 @@ class Dosen extends Model
     protected $fillable = [
         'nidn',
         'nama_dosen',
+        'alias',
+        'kepakaran',
+        'jabatan_fungsional',
         'no_wa',
         'can_fill_kesediaan',
     ];
@@ -21,6 +24,23 @@ class Dosen extends Model
     protected $casts = [
         'can_fill_kesediaan' => 'boolean',
     ];
+
+    /**
+     * Urutan jabatan fungsional dosen dari yang terendah ke tertinggi.
+     * Dipakai untuk membandingkan pangkat pada aturan komposisi dewan penguji.
+     */
+    public const JABATAN_FUNGSIONAL_RANKS = [
+        'Tenaga Pengajar' => 1,
+        'Asisten Ahli'    => 2,
+        'Lektor'          => 3,
+        'Lektor Kepala'   => 4,
+        'Guru Besar'      => 5,
+    ];
+
+    public function getJabatanRankAttribute(): int
+    {
+        return self::JABATAN_FUNGSIONAL_RANKS[$this->jabatan_fungsional] ?? 0;
+    }
 
     public function getWaFormattedAttribute(): ?string
     {
@@ -46,6 +66,34 @@ class Dosen extends Model
     public function getPublicPdfUrlAttribute(): string
     {
         return route('public.dosen.jadwal.pdf', ['token' => $this->public_token]);
+    }
+
+    /**
+     * Build a public jadwal link, preferring the human-readable alias shortlink
+     * (/j/{alias}) when one is set, falling back to the opaque token link otherwise.
+     * Optionally scoped to a periode+gelombang+jenis via query params (p/g/j) so the
+     * link freezes to whatever was selected at share-time instead of floating with
+     * "whatever periode happens to be active" forever.
+     */
+    public function publicUrlFor(?int $periodeId = null, ?int $gelombang = null, ?string $jenis = null, bool $pdf = false): string
+    {
+        $routeName = $this->alias
+            ? ($pdf ? 'public.dosen.jadwal.alias.pdf' : 'public.dosen.jadwal.alias')
+            : ($pdf ? 'public.dosen.jadwal.pdf' : 'public.dosen.jadwal');
+
+        $params = $this->alias ? ['alias' => $this->alias] : ['token' => $this->public_token];
+
+        if ($periodeId) {
+            $params['p'] = $periodeId;
+        }
+        if ($gelombang !== null && $gelombang !== '') {
+            $params['g'] = $gelombang;
+        }
+        if ($jenis) {
+            $params['j'] = $jenis;
+        }
+
+        return route($routeName, $params);
     }
 
     public function sidangsSebagaiPembimbingUtama()

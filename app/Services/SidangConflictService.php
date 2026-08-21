@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Sidang;
 use App\Models\Dosen;
+use App\Models\DosenPengujiRule;
 use App\Models\Ruang;
 use Carbon\Carbon;
 
@@ -122,6 +123,56 @@ class SidangConflictService
             }
             if ($pembimbingPendampingId === $penguji2Id) {
                 $errors[] = "Aturan 2 – Pelanggaran: Dosen Pembimbing Pendamping ({$namaPendamping}) TIDAK BOLEH menjadi Anggota Penguji 2 untuk mahasiswa bimbingannya.";
+            }
+        }
+
+        return $errors;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // KOMPOSISI DOSEN PENGUJI (master data rule, dikelola admin)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Validasi Rule Komposisi Dosen Penguji (master data terpisah):
+     *   1. Pasangan dosen yang ditandai "tidak boleh" TIDAK BOLEH menjadi
+     *      Ketua Penguji dan Penguji 1 sekaligus pada sidang yang sama.
+     *      (Penguji 2 — yang otomatis diisi Pembimbing Utama — tidak ikut
+     *      diperiksa dalam aturan ini.)
+     *   2. Anggota Penguji 1 TIDAK BOLEH memiliki jabatan fungsional lebih
+     *      tinggi dari Ketua Penguji.
+     *
+     * @param array $data  Validated field array (atau atribut model)
+     * @return array       Daftar pesan error (kosong = tidak ada pelanggaran)
+     */
+    public static function checkPengujiCompositionRules(array $data): array
+    {
+        $errors = [];
+
+        if (($data['jenis_tugas_akhir'] ?? '') === 'sempro') {
+            return $errors;
+        }
+
+        $ketuaPengujiId = (int) ($data['ketua_penguji_id'] ?? 0);
+        $penguji1Id     = (int) ($data['anggota_penguji_1_id'] ?? 0);
+
+        // ── Rule: pasangan Ketua Penguji <-> Penguji 1 yang dilarang ────────────
+        if ($ketuaPengujiId && $penguji1Id && $ketuaPengujiId !== $penguji1Id) {
+            $blocked = DosenPengujiRule::blockedPartnersFor($ketuaPengujiId);
+            if (in_array($penguji1Id, $blocked)) {
+                $dosens = Dosen::whereIn('id', [$ketuaPengujiId, $penguji1Id])->get()->keyBy('id');
+                $namaKetua = $dosens[$ketuaPengujiId]->nama_dosen ?? 'Dosen';
+                $namaP1 = $dosens[$penguji1Id]->nama_dosen ?? 'Dosen';
+                $errors[] = "Komposisi Penguji – Pelanggaran: {$namaKetua} dan {$namaP1} tidak boleh menjadi Ketua Penguji dan Penguji 1 sekaligus (sesuai Rule Komposisi Dosen Penguji).";
+            }
+        }
+
+        // ── Rule: Penguji 1 tidak boleh berjabatan fungsional lebih tinggi dari Ketua Penguji ──
+        if ($ketuaPengujiId && $penguji1Id && $ketuaPengujiId !== $penguji1Id) {
+            $ketua = Dosen::find($ketuaPengujiId);
+            $p1 = Dosen::find($penguji1Id);
+            if ($ketua && $p1 && $ketua->jabatan_rank > 0 && $p1->jabatan_rank > 0 && $p1->jabatan_rank > $ketua->jabatan_rank) {
+                $errors[] = "Komposisi Penguji – Pelanggaran: Anggota Penguji 1 ({$p1->nama_dosen}, {$p1->jabatan_fungsional}) tidak boleh memiliki jabatan fungsional lebih tinggi dari Ketua Penguji ({$ketua->nama_dosen}, {$ketua->jabatan_fungsional}).";
             }
         }
 

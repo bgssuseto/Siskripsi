@@ -17,6 +17,8 @@ class Periode extends Model
         'aktif',
         'show_form_kesediaan',
         'lock_form_kesediaan',
+        'link_grup_wa_skripsi',
+        'link_grup_wa_sempro',
     ];
 
     protected $casts = [

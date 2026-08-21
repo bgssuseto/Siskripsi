@@ -244,6 +244,10 @@ class MahasiswaController extends Controller
             $actualJenis = $request->input('jenis_ta_pilihan', 'sidang') ?: 'sidang';
         }
 
+        // Jalur (sidang/jurnal) yang dipilih mahasiswa saat mendaftar Sempro —
+        // untuk skripsi, jalur otomatis mengikuti jenis_tugas_akhir via Sidang::booted().
+        $jalurTa = $validated['jenis_tugas_akhir'] === 'sempro' ? $request->input('jenis_ta_pilihan') : null;
+
         if ($isRevision) {
             // Overwrite existing record (revise)
             $existing->update([
@@ -254,6 +258,7 @@ class MahasiswaController extends Controller
                 'no_wa_aktif'                    => $validated['no_wa_aktif'],
                 'file_persyaratan'               => $filePath,
                 'jenis_tugas_akhir'              => $actualJenis,
+                'jalur_ta'                       => $jalurTa,
                 'verifikasi_status'              => 'menunggu',
                 'verifikasi_komentar'            => null,
                 'verifikasi_tanggal'             => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
@@ -268,6 +273,7 @@ class MahasiswaController extends Controller
                 'dosen_pembimbing_utama_id'      => $validated['dosen_pembimbing_utama_id'],
                 'dosen_pembimbing_pendamping_id' => $validated['dosen_pembimbing_pendamping_id'] ?? null,
                 'jenis_tugas_akhir'              => $actualJenis,
+                'jalur_ta'                       => $jalurTa,
                 'periode_id'                     => $activePeriode->id,
                 'tanggal_pendaftaran'            => now()->timezone('Asia/Jakarta')->format('Y-m-d'),
                 'no_wa_aktif'                    => $validated['no_wa_aktif'],

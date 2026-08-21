@@ -12,6 +12,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Illuminate\Validation\Rule;
 
 class DosenController extends Controller
 {
@@ -37,11 +38,16 @@ class DosenController extends Controller
         $validated = $request->validate([
             'nidn' => ['required', 'string', 'max:50', 'unique:dosens,nidn'],
             'nama_dosen' => ['required', 'string', 'max:255'],
+            'alias' => ['nullable', 'string', 'max:50', 'alpha_dash', 'unique:dosens,alias'],
+            'kepakaran' => ['nullable', 'string', 'max:255'],
+            'jabatan_fungsional' => ['nullable', 'string', Rule::in(array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS))],
             'no_wa' => ['nullable', 'string', 'max:30'],
         ], [
             'nidn.required' => 'NIDN wajib diisi.',
             'nidn.unique' => 'NIDN sudah terdaftar.',
             'nama_dosen.required' => 'Nama dosen wajib diisi.',
+            'alias.alpha_dash' => 'Alias hanya boleh huruf, angka, strip, dan underscore (tanpa spasi).',
+            'alias.unique' => 'Alias sudah dipakai dosen lain.',
         ]);
 
         $dosen = Dosen::create($validated);
@@ -64,21 +70,27 @@ class DosenController extends Controller
         $validated = $request->validate([
             'nidn' => ['required', 'string', 'max:50', 'unique:dosens,nidn,' . $dosen->id],
             'nama_dosen' => ['required', 'string', 'max:255'],
+            'alias' => ['nullable', 'string', 'max:50', 'alpha_dash', 'unique:dosens,alias,' . $dosen->id],
+            'kepakaran' => ['nullable', 'string', 'max:255'],
+            'jabatan_fungsional' => ['nullable', 'string', Rule::in(array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS))],
             'no_wa' => ['nullable', 'string', 'max:30'],
         ], [
             'nidn.required' => 'NIDN wajib diisi.',
             'nidn.unique' => 'NIDN sudah terdaftar.',
             'nama_dosen.required' => 'Nama dosen wajib diisi.',
+            'alias.alpha_dash' => 'Alias hanya boleh huruf, angka, strip, dan underscore (tanpa spasi).',
+            'alias.unique' => 'Alias sudah dipakai dosen lain.',
         ]);
 
-        $before = $dosen->only(['nidn', 'nama_dosen', 'no_wa']);
+        $trackedFields = ['nidn', 'nama_dosen', 'alias', 'kepakaran', 'jabatan_fungsional', 'no_wa'];
+        $before = $dosen->only($trackedFields);
         $dosen->update($validated);
 
         ActivityLogger::log(
             'updated',
             $dosen,
             "Memperbarui data dosen: {$dosen->nama_dosen} (NIDN: {$dosen->nidn}).",
-            ['before' => $before, 'after' => $dosen->only(['nidn', 'nama_dosen', 'no_wa'])]
+            ['before' => $before, 'after' => $dosen->only($trackedFields)]
         );
 
         if ($request->expectsJson()) {
@@ -195,13 +207,25 @@ class DosenController extends Controller
             $namaCol = 1;
             $nidnCol = 2;
             $waCol = 3;
+            $aliasCol = null;
+            $kepakaranCol = null;
+            $jabatanCol = null;
 
             foreach ($rows as $rIdx => $rData) {
                 if (!is_array($rData)) continue;
                 $matchedInRow = false;
                 foreach ($rData as $cIdx => $cellVal) {
                     $valLower = strtolower(trim((string)$cellVal));
-                    if (str_contains($valLower, 'nama')) {
+                    if (str_contains($valLower, 'jabatan')) {
+                        $jabatanCol = $cIdx;
+                        $matchedInRow = true;
+                    } elseif (str_contains($valLower, 'kepakaran')) {
+                        $kepakaranCol = $cIdx;
+                        $matchedInRow = true;
+                    } elseif (str_contains($valLower, 'alias') || str_contains($valLower, 'inisial')) {
+                        $aliasCol = $cIdx;
+                        $matchedInRow = true;
+                    } elseif (str_contains($valLower, 'nama')) {
                         $namaCol = $cIdx;
                         $matchedInRow = true;
                     } elseif (str_contains($valLower, 'nidn')) {
@@ -230,6 +254,9 @@ class DosenController extends Controller
                 $namaDosen = trim((string)($row[$namaCol] ?? ''));
                 $nidn = trim((string)($row[$nidnCol] ?? ''));
                 $noWa = trim((string)($row[$waCol] ?? ''));
+                $alias = $aliasCol !== null ? trim((string)($row[$aliasCol] ?? '')) : '';
+                $kepakaran = $kepakaranCol !== null ? trim((string)($row[$kepakaranCol] ?? '')) : '';
+                $jabatanRaw = $jabatanCol !== null ? trim((string)($row[$jabatanCol] ?? '')) : '';
 
                 // Skip if both nama and nidn are empty
                 if (empty($namaDosen) && empty($nidn)) {
@@ -243,6 +270,28 @@ class DosenController extends Controller
                         $noWaClean = '0' . $noWaClean;
                     }
                     $noWa = $noWaClean;
+                }
+
+                // Normalize alias: alphanumeric/dash/underscore only, matching the manual-entry validation rule.
+                if (!empty($alias)) {
+                    $alias = preg_replace('/[^A-Za-z0-9_-]/', '', $alias);
+                    if ($alias === '' || Dosen::where('alias', $alias)->exists()) {
+                        $alias = null;
+                    }
+                } else {
+                    $alias = null;
+                }
+
+                // Only accept jabatan fungsional values that match the known rank list (case-insensitive);
+                // anything else is left blank rather than silently stored as an invalid value.
+                $jabatanFungsional = null;
+                if (!empty($jabatanRaw)) {
+                    foreach (array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS) as $validJabatan) {
+                        if (strcasecmp($validJabatan, $jabatanRaw) === 0) {
+                            $jabatanFungsional = $validJabatan;
+                            break;
+                        }
+                    }
                 }
 
                 // Match existing dosen by NIDN or Nama
@@ -259,6 +308,9 @@ class DosenController extends Controller
                     if (!empty($namaDosen)) $updateData['nama_dosen'] = $namaDosen;
                     if (!empty($nidn) && str_starts_with($existing->nidn, 'NIDN-')) $updateData['nidn'] = $nidn;
                     if (!empty($noWa)) $updateData['no_wa'] = $noWa;
+                    if (!empty($alias) && empty($existing->alias)) $updateData['alias'] = $alias;
+                    if (!empty($kepakaran)) $updateData['kepakaran'] = $kepakaran;
+                    if ($jabatanFungsional) $updateData['jabatan_fungsional'] = $jabatanFungsional;
                     if (!empty($updateData)) {
                         $existing->update($updateData);
                         $updatedCount++;
@@ -273,6 +325,9 @@ class DosenController extends Controller
                         'nidn' => $nidn,
                         'nama_dosen' => $namaDosen,
                         'no_wa' => $noWa ?: null,
+                        'alias' => $alias,
+                        'kepakaran' => $kepakaran ?: null,
+                        'jabatan_fungsional' => $jabatanFungsional,
                     ]);
                     $importedCount++;
                 }
@@ -312,20 +367,20 @@ class DosenController extends Controller
         $sheet->setTitle('Template Import Dosen');
 
         // Header
-        $headers = ['No', 'Nama & Gelar', 'NIDN', 'No WhatsApp'];
+        $headers = ['No', 'Nama & Gelar', 'NIDN', 'No WhatsApp', 'Alias/Inisial', 'Kepakaran', 'Jabatan Fungsional'];
         foreach ($headers as $colIdx => $text) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
             $sheet->setCellValue("{$colLetter}1", $text);
         }
 
-        $sheet->getStyle('A1:D1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
-        $sheet->getStyle('A1:D1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF4F46E5');
-        $sheet->getStyle('A1:D1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
+        $sheet->getStyle('A1:G1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF4F46E5');
+        $sheet->getStyle('A1:G1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Sample Rows
         $samples = [
-            [1, 'Dr. Budi Santoso, M.T.', '0012058501', '081234567890'],
-            [2, 'Siti Aminah, S.Kom., M.Cs.', '0015088802', '085712345678'],
+            [1, 'Dr. Budi Santoso, M.T.', '0012058501', '081234567890', 'bds', 'Kecerdasan Buatan', 'Lektor'],
+            [2, 'Siti Aminah, S.Kom., M.Cs.', '0015088802', '085712345678', 'sam', 'Rekayasa Perangkat Lunak', 'Asisten Ahli'],
         ];
 
         foreach ($samples as $rIdx => $sample) {
@@ -334,13 +389,16 @@ class DosenController extends Controller
             $sheet->setCellValue("B{$rowNum}", $sample[1]);
             $sheet->setCellValueExplicit("C{$rowNum}", $sample[2], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit("D{$rowNum}", $sample[3], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue("E{$rowNum}", $sample[4]);
+            $sheet->setCellValue("F{$rowNum}", $sample[5]);
+            $sheet->setCellValue("G{$rowNum}", $sample[6]);
         }
 
-        $sheet->getStyle('A1:D3')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle('A1:G3')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet->getStyle('A2:A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('C2:D3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C2:E3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        foreach (range('A', 'D') as $col) {
+        foreach (range('A', 'G') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 

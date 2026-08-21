@@ -28,7 +28,7 @@ class UserController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->latest()->paginate(5)->withQueryString();
+        $users = $query->with('additionalRoles')->latest()->paginate(5)->withQueryString();
 
         $stats = [
             'total' => User::count(),
@@ -51,6 +51,7 @@ class UserController extends Controller
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', Rule::in([User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA, User::ROLE_DOSEN])],
             'dosen_id' => ['nullable', 'exists:dosens,id'],
+            'jadikan_koordinator' => ['nullable', 'boolean'],
         ]);
 
         $user = User::create([
@@ -60,6 +61,8 @@ class UserController extends Controller
             'role' => $validated['role'],
             'dosen_id' => $validated['role'] === User::ROLE_DOSEN ? ($validated['dosen_id'] ?? null) : null,
         ]);
+
+        $this->syncKoordinatorRole($user, $request->boolean('jadikan_koordinator'));
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -80,6 +83,7 @@ class UserController extends Controller
             'role' => ['required', Rule::in([User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA, User::ROLE_DOSEN])],
             'password' => ['nullable', 'string', 'min:8'],
             'dosen_id' => ['nullable', 'exists:dosens,id'],
+            'jadikan_koordinator' => ['nullable', 'boolean'],
         ]);
 
         // Prevent self role demotion if last super admin
@@ -109,6 +113,8 @@ class UserController extends Controller
 
         $user->update($userData);
 
+        $this->syncKoordinatorRole($user, $request->boolean('jadikan_koordinator'));
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -118,6 +124,27 @@ class UserController extends Controller
         }
 
         return redirect()->route('users.index')->with('success', 'Data user berhasil diperbarui!');
+    }
+
+    /**
+     * Grant or revoke the additional "koordinator" role on top of a user's primary
+     * role (e.g. a dosen who has also been designated koordinator). This does not
+     * touch the primary `role` column — it only adds/removes a row in `user_roles`,
+     * so the user's default portal/dashboard stays driven by their primary role
+     * while gaining koordinator's menu access on top.
+     */
+    private function syncKoordinatorRole(User $user, bool $jadikanKoordinator): void
+    {
+        if ($user->role === User::ROLE_KOORDINATOR) {
+            // Already koordinator as primary role — nothing extra to grant/revoke.
+            return;
+        }
+
+        if ($jadikanKoordinator) {
+            \App\Models\UserRole::firstOrCreate(['user_id' => $user->id, 'role' => User::ROLE_KOORDINATOR]);
+        } else {
+            \App\Models\UserRole::where('user_id', $user->id)->where('role', User::ROLE_KOORDINATOR)->delete();
+        }
     }
 
     public function destroy(Request $request, User $user)

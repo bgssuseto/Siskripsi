@@ -273,12 +273,24 @@
             @endif
         </form>
 
+        {{-- Bulk Action Bar --}}
+        <div id="bulk-bar" style="display:none; padding:.85rem 1rem; margin-bottom:1rem; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; background:#eef1fe; border:1px solid #c7d0fb; border-radius:14px;">
+            <span style="font-size:.8rem; font-weight:800; color:#3251d4;"><span id="bulk-count">0</span> data dipilih</span>
+            <div style="display:flex; gap:.5rem;">
+                <button type="button" class="btn btn-danger btn-sm" onclick="bulkDeleteSelected()">🗑️ Hapus Terpilih</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="toggleSelectAll(null, true)">Batalkan Pilihan</button>
+            </div>
+        </div>
+
         {{-- Table --}}
         <div class="table-card">
             <div class="table-scroll">
                 <table class="data-table" id="skripsi-table">
                     <thead>
                         <tr>
+                            <th style="width:32px; text-align:center;">
+                                <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this)">
+                            </th>
                             <th style="width:42px; text-align:center;">No</th>
                             <th style="width:90px;">Tgl Daftar</th>
                             <th>NIM</th>
@@ -298,6 +310,9 @@
                     <tbody>
                         @forelse ($sidangs as $item)
                             <tr id="row-skripsi-{{ $item->id }}">
+                                <td style="text-align:center;">
+                                    <input type="checkbox" class="row-checkbox" value="{{ $item->id }}" onchange="updateBulkBar()">
+                                </td>
                                 <td style="text-align:center; color:#475569; font-weight:700; font-size:.78rem;">
                                     {{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}
                                 </td>
@@ -385,7 +400,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="13" style="text-align:center; padding:3rem; color:#94a3b8;">
+                                <td colspan="14" style="text-align:center; padding:3rem; color:#94a3b8;">
                                     <div style="font-size:2.5rem; margin-bottom:.5rem;">📂</div>
                                     <div style="font-weight:700; color:#64748b;">Belum ada data skripsi</div>
                                     <div style="font-size:.82rem; margin-top:.25rem;">Import Excel atau tambah data secara manual.</div>
@@ -821,7 +836,49 @@
                 const newPag   = doc.querySelector('#skripsi-pagination');
                 if (newTbody) document.querySelector('#skripsi-table tbody').innerHTML = newTbody.innerHTML;
                 if (newPag)   document.getElementById('skripsi-pagination').innerHTML = newPag.innerHTML;
+                updateBulkBar();
             } catch(e) { location.reload(); }
+        }
+
+        // ── Bulk Actions ──────────────────────────────────────────────────────
+        function toggleSelectAll(sourceCheckbox, forceUncheck = false) {
+            const checked = forceUncheck ? false : sourceCheckbox.checked;
+            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = checked);
+            const selectAll = document.getElementById('select-all-checkbox');
+            if (selectAll) selectAll.checked = checked;
+            updateBulkBar();
+        }
+        function updateBulkBar() {
+            const checked = document.querySelectorAll('.row-checkbox:checked');
+            const bar = document.getElementById('bulk-bar');
+            document.getElementById('bulk-count').textContent = checked.length;
+            bar.style.display = checked.length > 0 ? 'flex' : 'none';
+        }
+        async function bulkDeleteSelected() {
+            const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            if (ids.length === 0) return;
+            if (!confirm('Hapus ' + ids.length + ' data skripsi/jurnal terpilih? Aksi ini permanen.')) return;
+
+            const params = new URLSearchParams();
+            ids.forEach(id => params.append('ids[]', id));
+            params.append('_method', 'DELETE');
+
+            try {
+                const res = await fetch('{{ route('master.skripsi.bulk-destroy') }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString(),
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('success', data.message || 'Data berhasil dihapus!');
+                    await refreshTableContent();
+                } else {
+                    showToast('error', data.message || 'Gagal menghapus data.');
+                }
+            } catch (err) {
+                showToast('error', 'Gagal terhubung ke server.');
+            }
         }
 
         // ── Tambah Data (AJAX) ────────────────────────────────────────────────

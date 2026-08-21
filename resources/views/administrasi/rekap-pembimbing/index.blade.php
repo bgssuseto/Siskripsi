@@ -182,7 +182,7 @@
     <div id="modal-detail-pembimbing" class="fixed inset-0 z-50 overflow-y-auto" style="display:none;" onclick="if (event.target === this) closeDetailPembimbing()">
         <div class="flex items-center justify-center min-h-screen px-4 py-8">
             <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-            <div class="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="relative z-10 w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
                     <div>
                         <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Mahasiswa Bimbingan</h3>
@@ -191,14 +191,14 @@
                     <button type="button" onclick="closeDetailPembimbing()" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">✕</button>
                 </div>
                 <div class="max-h-[60vh] overflow-y-auto">
-                    <table class="w-full text-left border-collapse text-sm">
+                    <table class="w-full text-left border-collapse text-sm table-fixed">
                         <thead>
                             <tr class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200/80 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider sticky top-0">
                                 <th class="py-2.5 px-4 text-center w-10">No</th>
-                                <th class="py-2.5 px-4">NIM</th>
-                                <th class="py-2.5 px-4">Nama Mahasiswa</th>
+                                <th class="py-2.5 px-4 w-[13%]">NIM</th>
+                                <th class="py-2.5 px-4 w-[20%]">Nama Mahasiswa</th>
                                 <th class="py-2.5 px-4">Judul Tugas Akhir</th>
-                                <th class="py-2.5 px-4">Peran</th>
+                                <th class="py-2.5 px-4 w-[15%]">Peran</th>
                             </tr>
                         </thead>
                         <tbody id="detail-pembimbing-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
@@ -233,11 +233,11 @@
                         ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
                         : 'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300';
                     tr.innerHTML = `
-                        <td class="py-2.5 px-4 text-center text-slate-400 dark:text-slate-500">${idx + 1}</td>
-                        <td class="py-2.5 px-4 font-mono text-xs text-slate-600 dark:text-slate-300">${escapeHtml(m.nim) || '-'}</td>
-                        <td class="py-2.5 px-4 font-semibold text-slate-800 dark:text-slate-100">${escapeHtml(m.nama) || '-'}</td>
-                        <td class="py-2.5 px-4 text-slate-600 dark:text-slate-300">${escapeHtml(m.judul) || '-'}</td>
-                        <td class="py-2.5 px-4"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${peranBadgeClass}">${escapeHtml(m.peran)}</span></td>
+                        <td class="py-2.5 px-4 text-center text-slate-400 dark:text-slate-500 align-top">${idx + 1}</td>
+                        <td class="py-2.5 px-4 font-mono text-xs text-slate-600 dark:text-slate-300 align-top break-words">${escapeHtml(m.nim) || '-'}</td>
+                        <td class="py-2.5 px-4 font-semibold text-slate-800 dark:text-slate-100 align-top"><span class="line-clamp-2" title="${escapeHtml(m.nama) || ''}">${escapeHtml(m.nama) || '-'}</span></td>
+                        <td class="py-2.5 px-4 text-slate-600 dark:text-slate-300 align-top"><span class="line-clamp-2" title="${escapeHtml(m.judul) || ''}">${escapeHtml(m.judul) || '-'}</span></td>
+                        <td class="py-2.5 px-4 align-top"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${peranBadgeClass}">${escapeHtml(m.peran)}</span></td>
                     `;
                     body.appendChild(tr);
                 });

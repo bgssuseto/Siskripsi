@@ -7,7 +7,7 @@
         createModal: false, 
         editModal: false,
         deleteModal: false,
-        selectedUser: { id: null, name: '', email: '', role: 'mahasiswa', dosen_id: null },
+        selectedUser: { id: null, name: '', email: '', role: 'mahasiswa', dosen_id: null, jadikan_koordinator: false },
         deleteUrl: '',
         errors: {},
         isLoading: false,
@@ -315,6 +315,11 @@
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border {{ $user->role_badge_class }}">
                                     {{ $user->role_label }}
                                 </span>
+                                @if($user->additionalRoles->contains('role', 'koordinator'))
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-blue-100 text-blue-700 border-blue-200 ml-1">
+                                        +Koordinator
+                                    </span>
+                                @endif
                             </td>
                             <td class="py-4 px-6 text-xs text-slate-500 font-medium">
                                 {{ $user->created_at ? $user->created_at->translatedFormat('d M Y, H:i') : '-' }}
@@ -322,7 +327,7 @@
                             <td class="py-4 px-6 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <!-- Edit Button -->
-                                    <button @click="openEdit({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'dosen_id' => $user->dosen_id]) }})" 
+                                    <button @click="openEdit({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'dosen_id' => $user->dosen_id, 'jadikan_koordinator' => $user->additionalRoles->contains('role', 'koordinator')]) }})"
                                             class="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
                                             title="Edit User">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -423,6 +428,11 @@
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.dosen_id[0]"></p>
                         </template>
                     </div>
+                    <!-- Extra role: dosen who is also designated koordinator -->
+                    <div x-show="selectedUser.role === 'dosen'" class="flex items-start gap-2.5 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                        <input type="checkbox" name="jadikan_koordinator" value="1" x-model="selectedUser.jadikan_koordinator" id="create-jadikan-koordinator" class="w-4 h-4 mt-0.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500/20">
+                        <label for="create-jadikan-koordinator" class="text-xs font-semibold text-blue-800 select-none cursor-pointer">Jadikan Koordinator juga (dapat akses menu Koordinator yang diatur Super Admin, tanpa mengubah role utama Dosen).</label>
+                    </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
                         <input type="password" name="password" required minlength="8" placeholder="Minimal 8 karakter" class="w-full text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 focus:bg-white px-4 py-2.5 transition-all duration-200">
@@ -496,6 +506,11 @@
                         <template x-if="errors.dosen_id">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.dosen_id[0]"></p>
                         </template>
+                    </div>
+                    <!-- Extra role: dosen who is also designated koordinator -->
+                    <div x-show="selectedUser.role === 'dosen'" class="flex items-start gap-2.5 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                        <input type="checkbox" name="jadikan_koordinator" value="1" x-model="selectedUser.jadikan_koordinator" id="edit-jadikan-koordinator" class="w-4 h-4 mt-0.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500/20">
+                        <label for="edit-jadikan-koordinator" class="text-xs font-semibold text-blue-800 select-none cursor-pointer">Jadikan Koordinator juga (dapat akses menu Koordinator yang diatur Super Admin, tanpa mengubah role utama Dosen).</label>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password Baru (Opsional)</label>

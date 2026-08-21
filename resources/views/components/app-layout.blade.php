@@ -416,6 +416,49 @@
             border-color: #2a43b0 !important;
         }
 
+        /* Nav Button Spacing - jarak antar tombol & antar grup toolbar agar tidak berdempetan */
+        .fc .fc-toolbar.fc-header-toolbar,
+        .fc .fc-toolbar.fc-footer-toolbar {
+            gap: 10px 16px !important;
+            flex-wrap: wrap !important;
+        }
+        .fc .fc-toolbar-chunk {
+            display: flex !important;
+            align-items: center !important;
+        }
+        .fc .fc-button-group {
+            gap: 5px !important;
+        }
+        .fc .fc-button-group .fc-button {
+            border-radius: 0.65rem !important;
+        }
+        .fc .fc-toolbar-chunk > .fc-button:not(:only-child) {
+            margin-left: 5px !important;
+        }
+        .fc .fc-toolbar-chunk > .fc-button:first-child {
+            margin-left: 0 !important;
+        }
+
+        /* Time-Axis Slot Labels - format & rapikan baris waktu */
+        .fc .fc-timegrid-slot-label-cushion {
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            color: #475569 !important;
+        }
+        .fc .fc-timegrid-slot-label {
+            vertical-align: middle !important;
+        }
+        .fc .fc-timegrid-slot.fc-timegrid-slot-minor {
+            border-top-style: dotted !important;
+        }
+        html.dark .fc .fc-timegrid-slot-label-cushion {
+            color: #cbd5e1 !important;
+        }
+        html.dark .fc .fc-timegrid-slot,
+        html.dark .fc .fc-timegrid-axis {
+            border-color: #334155 !important;
+        }
+
         /* FullCalendar Dark Mode Override - Dark Cell Background & White Date Numbers */
         html.dark .fc {
             --fc-page-bg-color: #0f172a;
@@ -492,7 +535,7 @@
           darkMode: localStorage.getItem('theme') !== 'light',
           sidebarOpen: true,
           mobileOpen: false,
-          dataMasterOpen: {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') ? 'true' : 'false' }},
+          dataMasterOpen: {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') || request()->routeIs('master.dosen-penguji-rule.*') ? 'true' : 'false' }},
           pendaftaranNavOpen: {{ request()->routeIs('pendaftaran.*') ? 'true' : 'false' }},
           dataOpen: {{ request()->routeIs('master.skripsi.*') || request()->routeIs('master.sempro.*') ? 'true' : 'false' }},
           penjadwalanOpen: {{ request()->routeIs('jadwal-ujian.*') || request()->routeIs('jadwal-sempro.*') ? 'true' : 'false' }},
@@ -860,7 +903,7 @@
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
-                            @if(!request()->routeIs('master.dosen.*') && !request()->routeIs('master.ruang.*') && !request()->routeIs('master.periode.*'))
+                            @if(!request()->routeIs('master.dosen.*') && !request()->routeIs('master.ruang.*') && !request()->routeIs('master.periode.*') && !request()->routeIs('master.dosen-penguji-rule.*'))
                             <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
                             @endif
                         </button>
@@ -896,6 +939,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                                 Master Periode
+                            </a>
+                            <a href="{{ route('master.dosen-penguji-rule.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('master.dosen-penguji-rule.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('master.dosen-penguji-rule.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Rule Komposisi Penguji
                             </a>
                         </div>
                     </div>
@@ -1441,7 +1492,7 @@
 
                     <!-- Theme Toggle Switch Button (Light / Dark Mode) -->
                     <button type="button" 
-                            @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); if(darkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); }"
+                            @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); if(darkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } window.dispatchEvent(new CustomEvent('theme-changed', { detail: { dark: darkMode } }));"
                             class="flex items-center justify-center w-10 h-10 rounded-2xl text-slate-600 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs group shrink-0"
                             title="Ganti Mode Terang / Gelap">
                         <template x-if="!darkMode">

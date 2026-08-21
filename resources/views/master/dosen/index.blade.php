@@ -6,7 +6,7 @@
         editModal: false, 
         deleteModal: false,
         importModal: false,
-        editDosen: { id: null, nidn: '', nama_dosen: '', no_wa: '' },
+        editDosen: { id: null, nidn: '', nama_dosen: '', alias: '', kepakaran: '', jabatan_fungsional: '', no_wa: '' },
         deleteDosen: { id: null, nama_dosen: '' },
         errors: {},
         isLoading: false,
@@ -213,6 +213,8 @@
                             <th class="px-6 py-4">No</th>
                             <th class="px-6 py-4">NIDN</th>
                             <th class="px-6 py-4">Nama Dosen</th>
+                            <th class="px-6 py-4">Kepakaran</th>
+                            <th class="px-6 py-4">Jabatan Fungsional</th>
                             <th class="px-6 py-4">No. WhatsApp</th>
                             <th class="px-6 py-4 text-right">Aksi</th>
                         </tr>
@@ -228,6 +230,18 @@
                             </td>
                             <td class="px-6 py-4 font-semibold text-slate-900 dark:text-slate-100">
                                 {{ $dosen->nama_dosen }}
+                            </td>
+                            <td class="px-6 py-4 text-slate-600 dark:text-slate-300">
+                                {{ $dosen->kepakaran ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($dosen->jabatan_fungsional)
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 whitespace-nowrap">
+                                        {{ $dosen->jabatan_fungsional }}
+                                    </span>
+                                @else
+                                    <span class="text-slate-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-300">
                                 {{ $dosen->no_wa ?? '-' }}
@@ -253,7 +267,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -310,8 +324,40 @@
                         </div>
 
                         <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Alias / Inisial (Opsional)</label>
+                            <input type="text" name="alias" placeholder="Contoh: budi (huruf/angka/strip, tanpa spasi)"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <p class="text-[11px] text-slate-400 mt-1">Dipakai untuk shortlink jadwal publik (mis. /j/{{ 'budi' }}).</p>
+                            <template x-if="errors.alias">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.alias[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Kepakaran (Opsional)</label>
+                            <input type="text" name="kepakaran" placeholder="Contoh: Kecerdasan Buatan, Jaringan Komputer"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.kepakaran">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.kepakaran[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Jabatan Fungsional (Opsional)</label>
+                            <select name="jabatan_fungsional" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer">
+                                <option value="">-- Pilih Jabatan Fungsional --</option>
+                                @foreach(array_keys(\App\Models\Dosen::JABATAN_FUNGSIONAL_RANKS) as $jf)
+                                    <option value="{{ $jf }}">{{ $jf }}</option>
+                                @endforeach
+                            </select>
+                            <template x-if="errors.jabatan_fungsional">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.jabatan_fungsional[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">No. WhatsApp (Opsional)</label>
-                            <input type="text" name="no_wa" placeholder="Contoh: 081234567890" 
+                            <input type="text" name="no_wa" placeholder="Contoh: 081234567890"
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
 
@@ -364,8 +410,40 @@
                         </div>
 
                         <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Alias / Inisial (Opsional)</label>
+                            <input type="text" name="alias" x-model="editDosen.alias" placeholder="Contoh: budi (huruf/angka/strip, tanpa spasi)"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <p class="text-[11px] text-slate-400 mt-1">Dipakai untuk shortlink jadwal publik.</p>
+                            <template x-if="errors.alias">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.alias[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Kepakaran (Opsional)</label>
+                            <input type="text" name="kepakaran" x-model="editDosen.kepakaran" placeholder="Contoh: Kecerdasan Buatan, Jaringan Komputer"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.kepakaran">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.kepakaran[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Jabatan Fungsional (Opsional)</label>
+                            <select name="jabatan_fungsional" x-model="editDosen.jabatan_fungsional" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer">
+                                <option value="">-- Pilih Jabatan Fungsional --</option>
+                                @foreach(array_keys(\App\Models\Dosen::JABATAN_FUNGSIONAL_RANKS) as $jf)
+                                    <option value="{{ $jf }}">{{ $jf }}</option>
+                                @endforeach
+                            </select>
+                            <template x-if="errors.jabatan_fungsional">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.jabatan_fungsional[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">No. WhatsApp (Opsional)</label>
-                            <input type="text" name="no_wa" x-model="editDosen.no_wa" placeholder="Contoh: 081234567890" 
+                            <input type="text" name="no_wa" x-model="editDosen.no_wa" placeholder="Contoh: 081234567890"
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
 

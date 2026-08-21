@@ -183,16 +183,24 @@
             </div>
             @php
                 $dosenMenuIds = \Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'dosen')->pluck('menu_id')->toArray();
+                $koordinatorMenuIds = \Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'koordinator')->pluck('menu_id')->toArray();
             @endphp
-            <div class="flex gap-2">
-                <button @click="openRoleAccessModal('dosen', {{ json_encode($dosenMenuIds) }})" 
+            <div class="flex gap-2 flex-wrap">
+                <button @click="openRoleAccessModal('koordinator', {{ json_encode($koordinatorMenuIds) }})"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm shadow-md shadow-blue-500/20 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-4.13a4 4 0 100-8 4 4 0 000 8zm-8 8a4 4 0 018 0"/>
+                    </svg>
+                    Atur Akses Role Koordinator
+                </button>
+                <button @click="openRoleAccessModal('dosen', {{ json_encode($dosenMenuIds) }})"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-sm shadow-md shadow-orange-500/20 hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                     Atur Akses Role Dosen
                 </button>
-                <button @click="createMenuModal = true" 
+                <button @click="createMenuModal = true"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -286,28 +294,28 @@
         <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <!-- Role Tabs Filter -->
             <div class="flex items-center gap-1 p-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
-                <button @click="activeTab = 'all'" 
-                        :class="activeTab === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'all'"
+                        :class="activeTab === 'all' ? 'bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-400 shadow-sm ring-2 ring-indigo-400 border border-indigo-300 dark:border-indigo-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Semua Role
                 </button>
-                <button @click="activeTab = 'super_admin'" 
-                        :class="activeTab === 'super_admin' ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'super_admin'"
+                        :class="activeTab === 'super_admin' ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-400 shadow-sm ring-2 ring-purple-400 border border-purple-300 dark:border-purple-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Super Admin
                 </button>
-                <button @click="activeTab = 'koordinator'" 
-                        :class="activeTab === 'koordinator' ? 'bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'koordinator'"
+                        :class="activeTab === 'koordinator' ? 'bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-400 shadow-sm ring-2 ring-blue-400 border border-blue-300 dark:border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Koordinator
                 </button>
-                <button @click="activeTab = 'dosen'" 
-                        :class="activeTab === 'dosen' ? 'bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'dosen'"
+                        :class="activeTab === 'dosen' ? 'bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-400 shadow-sm ring-2 ring-amber-400 border border-amber-300 dark:border-amber-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Dosen
                 </button>
-                <button @click="activeTab = 'mahasiswa'" 
-                        :class="activeTab === 'mahasiswa' ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'mahasiswa'"
+                        :class="activeTab === 'mahasiswa' ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-sm ring-2 ring-emerald-400 border border-emerald-300 dark:border-emerald-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Mahasiswa
                 </button>

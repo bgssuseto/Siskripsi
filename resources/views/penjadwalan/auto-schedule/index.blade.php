@@ -15,15 +15,31 @@
                     Asisten Plotting Jadwal Otomatis
                 </h1>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Usulan jadwal dibuat otomatis dari irisan kesediaan dosen yang terlibat & ruang yang masih kosong — tinjau dulu sebelum diterapkan.
+                    Usulan jadwal dibuat otomatis dari irisan kesediaan dosen yang terlibat & ruang Master Ruang yang masih kosong, dibatasi jam operasional <strong>09.00–17.00</strong>. Setiap baris bisa <strong>ditinjau dan diedit langsung</strong> — tanggal, jam, ruangan, maupun dewan penguji — sebelum diterapkan.
+                    Ketua/Penguji 1 yang belum diisi dipilihkan otomatis sesuai <strong>Rule Komposisi Dosen Penguji</strong> (pasangan terlarang tidak akan dipasangkan) dan <strong>jenjang jabatan fungsional</strong> (Asisten Ahli &lt; Lektor &lt; Lektor Kepala &lt; Guru Besar — Penguji 1 tidak akan melebihi jenjang Ketua Penguji), dengan prioritas dosen yang beban mengujinya masih di bawah jumlah mahasiswa yang ia luluskan. Ruang diusahakan tidak berpindah-pindah bagi dewan penguji yang sama dalam satu hari.
                 </p>
             </div>
         </div>
+
+        @if(!empty($sidangIds))
+        <div class="flex items-center justify-between gap-3 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-800 rounded-2xl p-4 text-sm">
+            <span class="font-semibold text-violet-800 dark:text-violet-300">
+                🎯 Mode Terpilih — hanya menjadwalkan {{ count($sidangIds) }} mahasiswa yang Anda pilih dari daftar, bukan seluruh gelombang.
+            </span>
+            <a href="{{ route('jadwal.auto-plot.index', ['generate' => 1, 'periode_id' => $selectedPeriodeId, 'jenis' => $jenis, 'gelombang' => $selectedGelombang, 'slot_menit' => $slotMinutes]) }}"
+               class="text-xs font-bold text-violet-700 dark:text-violet-300 underline hover:no-underline whitespace-nowrap">
+                Batalkan, tampilkan semua
+            </a>
+        </div>
+        @endif
 
         <!-- Filter -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
             <form method="GET" action="{{ route('jadwal.auto-plot.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                 <input type="hidden" name="generate" value="1">
+                @foreach($sidangIds as $sid)
+                    <input type="hidden" name="ids[]" value="{{ $sid }}">
+                @endforeach
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
@@ -93,8 +109,8 @@
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                    <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Usulan Jadwal</h2>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Centang baris yang ingin diterapkan, lalu klik "Terapkan Jadwal Terpilih".</p>
+                    <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Usulan Jadwal — Tinjau &amp; Edit</h2>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Ubah tanggal/jam/ruang/penguji jika perlu, centang baris yang sudah oke, lalu klik "Terapkan Jadwal Terpilih". Bentrok jadwal & pelanggaran Rule Komposisi Penguji tetap divalidasi ulang saat diterapkan.</p>
                 </div>
             </div>
 
@@ -113,33 +129,86 @@
                                            class="rounded border-slate-300 dark:border-slate-600 text-violet-600 focus:ring-violet-500">
                                 </th>
                                 <th class="py-3.5 px-4">Mahasiswa</th>
-                                <th class="py-3.5 px-4">Tanggal &amp; Jam Usulan</th>
-                                <th class="py-3.5 px-4">Ruang</th>
-                                <th class="py-3.5 px-4">Dosen Terlibat</th>
+                                <th class="py-3.5 px-4 min-w-[150px]">Tanggal</th>
+                                <th class="py-3.5 px-4 min-w-[180px]">Jam</th>
+                                <th class="py-3.5 px-4 min-w-[140px]">Ruang</th>
+                                <th class="py-3.5 px-4 min-w-[320px]">Dewan Penguji</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
                             @foreach($proposals as $p)
+                            @php
+                                $jamParts = array_map('trim', explode('-', $p['jam']));
+                                $jamMulai = $jamParts[0] ?? '';
+                                $jamSelesai = $jamParts[1] ?? '';
+                                $fieldPrefix = "proposals[{$p['sidang_id']}]";
+                            @endphp
                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition-colors align-top">
                                 <td class="py-3.5 px-4">
                                     <input type="checkbox" name="selected[]" value="{{ $p['sidang_id'] }}" checked class="proposal-checkbox rounded border-slate-300 dark:border-slate-600 text-violet-600 focus:ring-violet-500">
-                                    <input type="hidden" name="proposals[{{ $p['sidang_id'] }}][tanggal]" value="{{ $p['tanggal'] }}">
-                                    <input type="hidden" name="proposals[{{ $p['sidang_id'] }}][jam]" value="{{ $p['jam'] }}">
-                                    <input type="hidden" name="proposals[{{ $p['sidang_id'] }}][ruang_id]" value="{{ $p['ruang_id'] }}">
                                 </td>
                                 <td class="py-3.5 px-4">
                                     <div class="font-semibold text-slate-800 dark:text-slate-100">{{ $p['nama'] }}</div>
                                     <div class="text-[11px] text-slate-400 dark:text-slate-500">{{ $p['nim'] }} &middot; {{ $p['jenis_label'] }}</div>
+                                    @if(!empty($p['auto_penguji']))
+                                    <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300">⚡ Penguji Otomatis</span>
+                                    @endif
+                                    <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{{ $p['dosen_display'][0] ?? '' }}</div>
                                 </td>
-                                <td class="py-3.5 px-4 text-slate-700 dark:text-slate-300">
-                                    {{ \Carbon\Carbon::parse($p['tanggal'])->translatedFormat('d M Y') }}<br>
-                                    <span class="text-xs text-slate-400 dark:text-slate-500">{{ $p['jam'] }} WIB</span>
+                                <td class="py-3.5 px-4">
+                                    <input type="date" name="{{ $fieldPrefix }}[tanggal]" value="{{ $p['tanggal'] }}"
+                                           class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
                                 </td>
-                                <td class="py-3.5 px-4 text-slate-700 dark:text-slate-300">{{ $p['ruang_nama'] }}</td>
-                                <td class="py-3.5 px-4 text-xs text-slate-500 dark:text-slate-400">
-                                    @foreach($p['dosen_display'] as $line)
-                                    <div>{{ $line }}</div>
-                                    @endforeach
+                                <td class="py-3.5 px-4">
+                                    <div class="flex items-center gap-1">
+                                        <select name="{{ $fieldPrefix }}[jam_mulai]" class="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-violet-500">
+                                            @foreach($jamOptions as $j)
+                                            <option value="{{ $j }}" {{ $j === $jamMulai ? 'selected' : '' }}>{{ $j }}</option>
+                                            @endforeach
+                                        </select>
+                                        <span class="text-slate-400 text-xs">-</span>
+                                        <select name="{{ $fieldPrefix }}[jam_selesai]" class="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-violet-500">
+                                            @foreach($jamOptions as $j)
+                                            <option value="{{ $j }}" {{ $j === $jamSelesai ? 'selected' : '' }}>{{ $j }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <select name="{{ $fieldPrefix }}[ruang_id]" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-violet-500">
+                                        @foreach($ruangs as $r)
+                                        <option value="{{ $r->id }}" {{ (int) $r->id === (int) $p['ruang_id'] ? 'selected' : '' }}>{{ $r->kode_ruangan }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    @if(!$p['is_sempro'])
+                                    <div class="space-y-1.5">
+                                        <div>
+                                            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Ketua Penguji</label>
+                                            <select name="{{ $fieldPrefix }}[ketua_penguji_id]" class="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-violet-500">
+                                                @foreach($dosens as $d)
+                                                <option value="{{ $d->id }}" {{ (int) $d->id === (int) $p['ketua_penguji_id'] ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Penguji 1</label>
+                                            <select name="{{ $fieldPrefix }}[anggota_penguji_1_id]" class="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-violet-500">
+                                                @foreach($dosens as $d)
+                                                <option value="{{ $d->id }}" {{ (int) $d->id === (int) $p['anggota_penguji_1_id'] ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 dark:text-slate-500">Penguji 2 otomatis = Pembimbing Utama.</div>
+                                    </div>
+                                    @else
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                                        @foreach($p['dosen_display'] as $line)
+                                        <div>{{ $line }}</div>
+                                        @endforeach
+                                    </div>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach

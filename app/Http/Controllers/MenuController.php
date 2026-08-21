@@ -189,13 +189,6 @@ class MenuController extends Controller
                 'sort_order'   => 3,
             ],
             [
-                'name'         => 'Jadwal Sidang',
-                'route'        => 'sidang.index',
-                'icon'         => 'calendar',
-                'role_default' => 'all',
-                'sort_order'   => 4,
-            ],
-            [
                 'name'         => 'Administrasi Berita Acara',
                 'route'        => 'administrasi.berita-acara.index',
                 'icon'         => 'clipboard',
@@ -299,16 +292,13 @@ class MenuController extends Controller
             $oldJadwalSidang->delete();
         }
 
-        // Also clean up any user_menu mappings for Dosen users to administrative Jadwal Sidang (menu id 76 / route 'sidang.index')
-        $adminJadwalMenu = Menu::where('route', 'sidang.index')->first();
-        if ($adminJadwalMenu) {
-            $dosenUserIds = \App\Models\User::where('role', \App\Models\User::ROLE_DOSEN)->pluck('id')->toArray();
-            if (!empty($dosenUserIds)) {
-                \Illuminate\Support\Facades\DB::table('user_menu')
-                    ->whereIn('user_id', $dosenUserIds)
-                    ->where('menu_id', $adminJadwalMenu->id)
-                    ->delete();
-            }
+        // Remove the stale 'sidang.index' menu entirely — that route doesn't exist
+        // anywhere in routes/web.php, so this entry always rendered as a dead '#' link.
+        $staleJadwalMenu = Menu::where('route', 'sidang.index')->first();
+        if ($staleJadwalMenu) {
+            \Illuminate\Support\Facades\DB::table('role_menu')->where('menu_id', $staleJadwalMenu->id)->delete();
+            \Illuminate\Support\Facades\DB::table('user_menu')->where('menu_id', $staleJadwalMenu->id)->delete();
+            $staleJadwalMenu->delete();
         }
 
         // Seed Jadwal (parent) for Dosen
@@ -460,32 +450,119 @@ class MenuController extends Controller
             );
         }
 
-        // ── Seed Koordinator Default Menus ──
-        // Koordinator defaults: Dashboard, Data (Sempro, Skripsi), Penjadwalan (Sempro, Skripsi).
-        // Manajemen User & Manajemen Menu are NOT default for Koordinator.
-        $koordinatorRoutes = [
-            'dashboard',
-            'master.sempro.index',
-            'master.skripsi.index',
-            'jadwal-sempro.index',
-            'jadwal-ujian.index',
-            'master.kesediaan-dosen.index'
-        ];
+        // ── Seed Koordinator Menus (Dashboard, Data, Penjadwalan, Pendaftaran, with submenus) ──
+        Menu::firstOrCreate(
+            ['route' => 'dashboard'],
+            ['name' => 'Dashboard', 'icon' => 'home', 'role_default' => 'koordinator', 'sort_order' => 30]
+        );
 
-        $koordinatorMenus = Menu::whereIn('route', $koordinatorRoutes)
-            ->orWhere(function($q) {
-                $q->whereIn('name', ['Data', 'Penjadwalan'])->whereNull('parent_id');
-            })
-            ->get();
+        $koordDataParent = Menu::firstOrCreate(
+            ['name' => 'Data', 'role_default' => 'koordinator'],
+            ['route' => null, 'icon' => 'document', 'role_default' => 'koordinator', 'sort_order' => 31]
+        );
+        $koordDataSkripsi = Menu::firstOrCreate(
+            ['route' => 'master.skripsi.index'],
+            ['name' => 'Data Skripsi', 'parent_id' => $koordDataParent->id, 'icon' => 'academic', 'role_default' => 'koordinator', 'sort_order' => 32]
+        );
+        $koordDataSkripsi->update(['parent_id' => $koordDataParent->id]);
+        $koordDataSempro = Menu::firstOrCreate(
+            ['route' => 'master.sempro.index'],
+            ['name' => 'Data Sempro', 'parent_id' => $koordDataParent->id, 'icon' => 'document', 'role_default' => 'koordinator', 'sort_order' => 33]
+        );
+        $koordDataSempro->update(['parent_id' => $koordDataParent->id]);
 
-        \Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'koordinator')->delete();
-        foreach ($koordinatorMenus as $km) {
-            \Illuminate\Support\Facades\DB::table('role_menu')->insert([
-                'role'       => 'koordinator',
-                'menu_id'    => $km->id,
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+        $koordPenjadwalanParent = Menu::firstOrCreate(
+            ['name' => 'Penjadwalan', 'role_default' => 'koordinator'],
+            ['route' => null, 'icon' => 'calendar', 'role_default' => 'koordinator', 'sort_order' => 34]
+        );
+        $koordJadwalSkripsi = Menu::firstOrCreate(
+            ['route' => 'jadwal-ujian.index'],
+            ['name' => 'Jadwal Sidang Skripsi', 'parent_id' => $koordPenjadwalanParent->id, 'icon' => 'calendar', 'role_default' => 'koordinator', 'sort_order' => 35]
+        );
+        $koordJadwalSkripsi->update(['parent_id' => $koordPenjadwalanParent->id]);
+        $koordJadwalSempro = Menu::firstOrCreate(
+            ['route' => 'jadwal-sempro.index'],
+            ['name' => 'Jadwal Sempro', 'parent_id' => $koordPenjadwalanParent->id, 'icon' => 'calendar', 'role_default' => 'koordinator', 'sort_order' => 36]
+        );
+        $koordJadwalSempro->update(['parent_id' => $koordPenjadwalanParent->id]);
+        $koordKesediaan = Menu::firstOrCreate(
+            ['route' => 'master.kesediaan-dosen.index'],
+            ['name' => 'Kesediaan Dosen', 'parent_id' => $koordPenjadwalanParent->id, 'icon' => 'clipboard', 'role_default' => 'koordinator', 'sort_order' => 37]
+        );
+        $koordKesediaan->update(['parent_id' => $koordPenjadwalanParent->id]);
+        $koordAutoPlot = Menu::firstOrCreate(
+            ['route' => 'jadwal.auto-plot.index'],
+            ['name' => 'Asisten Plotting Otomatis', 'parent_id' => $koordPenjadwalanParent->id, 'icon' => 'calendar', 'role_default' => 'koordinator', 'sort_order' => 38]
+        );
+        $koordAutoPlot->update(['parent_id' => $koordPenjadwalanParent->id]);
+
+        $koordPendaftaranParent = Menu::firstOrCreate(
+            ['name' => 'Pendaftaran', 'role_default' => 'koordinator'],
+            ['route' => null, 'icon' => 'document', 'role_default' => 'koordinator', 'sort_order' => 39]
+        );
+        $koordVerifSkripsi = Menu::firstOrCreate(
+            ['route' => 'pendaftaran.skripsi'],
+            ['name' => 'Verifikasi Skripsi', 'parent_id' => $koordPendaftaranParent->id, 'icon' => 'academic', 'role_default' => 'koordinator', 'sort_order' => 40]
+        );
+        $koordVerifSkripsi->update(['parent_id' => $koordPendaftaranParent->id]);
+        $koordVerifSempro = Menu::firstOrCreate(
+            ['route' => 'pendaftaran.sempro'],
+            ['name' => 'Verifikasi Sempro', 'parent_id' => $koordPendaftaranParent->id, 'icon' => 'document', 'role_default' => 'koordinator', 'sort_order' => 41]
+        );
+        $koordVerifSempro->update(['parent_id' => $koordPendaftaranParent->id]);
+
+        // ── Extra pages made manageable via Manajemen Menu, but NOT part of the
+        //    koordinator default seed below — super_admin grants these explicitly
+        //    via "Atur Akses Role Koordinator" when needed. ──
+        Menu::firstOrCreate(
+            ['route' => 'administrasi.rekap-pembimbing.index'],
+            ['name' => 'Rekap Pembimbing', 'icon' => 'clipboard', 'role_default' => 'super_admin', 'sort_order' => 50]
+        );
+        Menu::firstOrCreate(
+            ['route' => 'administrasi.analitik.index'],
+            ['name' => 'Dashboard Analitik', 'icon' => 'chart', 'role_default' => 'super_admin', 'sort_order' => 51]
+        );
+        Menu::firstOrCreate(
+            ['route' => 'administrasi.audit-log.index'],
+            ['name' => 'Riwayat Aktivitas', 'icon' => 'clock', 'role_default' => 'super_admin', 'sort_order' => 52]
+        );
+        Menu::firstOrCreate(
+            ['route' => 'master.dosen-penguji-rule.index'],
+            ['name' => 'Rule Komposisi Penguji', 'icon' => 'cog', 'role_default' => 'super_admin', 'sort_order' => 53]
+        );
+
+        // Seed default role_menu mappings for koordinator — ONLY the core operational
+        // pages above (Dashboard/Data/Penjadwalan/Pendaftaran). This runs ONCE ONLY
+        // (guarded by the exists() check below): earlier this used to unconditionally
+        // DELETE + reinsert koordinator's role_menu rows on every single page load of
+        // Manajemen Menu, silently wiping out any manual access super_admin granted
+        // via "Atur Akses Role Koordinator" moments earlier. Guarding it lets manual
+        // customization persist across page loads like every other role already does.
+        if (!\Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'koordinator')->exists()) {
+            $koordinatorDefaultRoutes = [
+                'dashboard',
+                'master.skripsi.index',
+                'master.sempro.index',
+                'jadwal-ujian.index',
+                'jadwal-sempro.index',
+                'master.kesediaan-dosen.index',
+                'jadwal.auto-plot.index',
+                'pendaftaran.skripsi',
+                'pendaftaran.sempro',
+            ];
+
+            $koordinatorMenus = Menu::whereIn('route', $koordinatorDefaultRoutes)
+                ->orWhere(function ($q) {
+                    $q->whereIn('name', ['Data', 'Penjadwalan', 'Pendaftaran'])->where('role_default', 'koordinator');
+                })
+                ->get();
+
+            foreach ($koordinatorMenus as $km) {
+                \Illuminate\Support\Facades\DB::table('role_menu')->updateOrInsert(
+                    ['role' => 'koordinator', 'menu_id' => $km->id],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
+            }
         }
     }
 }

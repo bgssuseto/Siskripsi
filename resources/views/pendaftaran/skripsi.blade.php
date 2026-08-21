@@ -1,14 +1,18 @@
 <x-app-layout title="Verifikasi Pendaftaran Sidang Skripsi">
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6" 
-     x-data="{ 
-         verifikasiModal: false, 
+     x-data="{
+         verifikasiModal: false,
          previewModal: false,
          deleteModal: false,
          previewUrl: '',
          previewTitle: '',
-         selectedSidang: null, 
-         verifikasiStatus: 'disetujui', 
-         verifikasiKomentar: '' 
+         selectedSidang: null,
+         verifikasiStatus: 'disetujui',
+         verifikasiKomentar: '',
+         selectedIds: [],
+         bulkRejectModal: false,
+         bulkRejectKomentar: '',
+         bulkDeleteModal: false,
      }">
     
     <!-- Hero Header Banner -->
@@ -205,11 +209,39 @@
             </form>
         </div>
 
+        <!-- Bulk Action Bar -->
+        <div x-show="selectedIds.length > 0" x-cloak class="px-5 py-3.5 bg-indigo-50 dark:bg-indigo-950/40 border-b border-indigo-100 dark:border-indigo-900 flex items-center justify-between gap-3 flex-wrap">
+            <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300" x-text="selectedIds.length + ' pendaftaran dipilih'"></span>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" @click="if(confirm('Setujui ' + selectedIds.length + ' pendaftaran terpilih?')) $refs.bulkApproveForm.submit()"
+                        style="background-color: #059669; color: #ffffff;"
+                        class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
+                    ✓ Setujui Terpilih
+                </button>
+                <button type="button" @click="bulkRejectModal = true"
+                        style="background-color: #e11d48; color: #ffffff;"
+                        class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
+                    ✕ Tolak Terpilih
+                </button>
+                <button type="button" @click="bulkDeleteModal = true"
+                        style="background-color: #475569; color: #ffffff;"
+                        class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
+                    🗑️ Hapus Terpilih
+                </button>
+                <button type="button" @click="selectedIds = []" class="px-3.5 py-2 rounded-xl font-bold text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    Batalkan Pilihan
+                </button>
+            </div>
+        </div>
+
         <!-- Table Container with Dedicated DOSEN PEMBIMBING Column -->
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse min-w-[1100px]">
                 <thead>
                     <tr class="bg-slate-100/70 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800">
+                        <th class="py-3.5 px-3 w-10 text-center">
+                            <input type="checkbox" @click="selectedIds = $event.target.checked ? {{ Js::from($sidangs->pluck('id')->map(fn($id) => (string) $id)->values()) }} : []">
+                        </th>
                         <th class="py-3.5 px-4 w-44">MAHASISWA</th>
                         <th class="py-3.5 px-3 w-28">PRODI</th>
                         <th class="py-3.5 px-4 min-w-[200px]">JUDUL SKRIPSI</th>
@@ -223,6 +255,9 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium">
                     @forelse($sidangs as $s)
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="py-3.5 px-3 text-center">
+                                <input type="checkbox" x-model="selectedIds" value="{{ $s->id }}">
+                            </td>
                             <!-- Mahasiswa -->
                             <td class="py-3.5 px-4">
                                 <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug">{{ $s->nama_mahasiswa }}</div>
@@ -339,7 +374,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="py-14 px-6 text-center bg-slate-50/40 dark:bg-slate-900/40">
+                            <td colspan="9" class="py-14 px-6 text-center bg-slate-50/40 dark:bg-slate-900/40">
                                 <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl">
                                     🎓
                                 </div>
@@ -543,6 +578,55 @@
                     </button>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Hidden form: Bulk Setujui -->
+    <form x-ref="bulkApproveForm" method="POST" action="{{ route('pendaftaran.bulk-verifikasi') }}">
+        @csrf
+        <input type="hidden" name="verifikasi_status" value="disetujui">
+        <template x-for="id in selectedIds" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+    </form>
+
+    <!-- MODAL BULK TOLAK -->
+    <div x-show="bulkRejectModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div @click.away="bulkRejectModal = false" class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-4">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Tolak <span x-text="selectedIds.length"></span> Pendaftaran Terpilih?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Catatan penolakan berikut akan diterapkan ke seluruh pendaftaran yang dipilih.</p>
+            </div>
+            <form x-ref="bulkRejectForm" method="POST" action="{{ route('pendaftaran.bulk-verifikasi') }}" class="space-y-3">
+                @csrf
+                <input type="hidden" name="verifikasi_status" value="ditolak">
+                <template x-for="id in selectedIds" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Catatan Alasan Penolakan (Opsional)</label>
+                    <textarea name="verifikasi_komentar" x-model="bulkRejectKomentar" rows="3" placeholder="Misal: Berkas persyaratan belum lengkap..."
+                              class="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-medium focus:outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"></textarea>
+                </div>
+                <div class="flex gap-3 pt-1">
+                    <button type="button" @click="bulkRejectModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">Batal</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/30">Ya, Tolak Semua</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL BULK HAPUS -->
+    <div x-show="bulkDeleteModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div @click.away="bulkDeleteModal = false" class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 p-6 text-center space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto shadow-inner">🗑️</div>
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Hapus <span x-text="selectedIds.length"></span> Pendaftaran Terpilih?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Data akan dihapus permanen dan mahasiswa terkait dapat mendaftar ulang.</p>
+            </div>
+            <form x-ref="bulkDeleteForm" method="POST" action="{{ route('pendaftaran.bulk-destroy') }}" class="flex gap-3 pt-2">
+                @csrf
+                @method('DELETE')
+                <template x-for="id in selectedIds" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+                <button type="button" @click="bulkDeleteModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">Batal</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/30">Ya, Hapus Semua</button>
+            </form>
         </div>
     </div>
 </div>

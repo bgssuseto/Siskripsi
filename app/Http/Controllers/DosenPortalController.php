@@ -365,16 +365,23 @@ class DosenPortalController extends Controller
                 $query->whereDate('tanggal', $request->tanggal);
             }
 
+            $todayStr = now()->timezone('Asia/Jakarta')->format('Y-m-d');
+
             if ($request->filled('status')) {
-                $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
                 $status = $request->status;
                 if ($status === 'terjadwal') {
-                    $query->whereDate('tanggal', '>', $today);
+                    $query->whereDate('tanggal', '>', $todayStr);
                 } elseif ($status === 'proses') {
-                    $query->whereDate('tanggal', '=', $today);
+                    $query->whereDate('tanggal', '=', $todayStr);
                 } elseif ($status === 'sudah') {
-                    $query->whereDate('tanggal', '<', $today);
+                    $query->whereDate('tanggal', '<', $todayStr);
                 }
+            } elseif (!$request->filled('tanggal')) {
+                // Sembunyikan ujian yang sudah lewat tanggalnya secara default agar fokus
+                // dosen tidak terpecah, kecuali dia sengaja memilih status/tanggal spesifik.
+                $query->where(function ($q) use ($todayStr) {
+                    $q->whereNull('tanggal')->orWhereDate('tanggal', '>=', $todayStr);
+                });
             }
 
             $schedules = $query->orderBy('tanggal', 'desc')->orderBy('jam', 'asc')->get();

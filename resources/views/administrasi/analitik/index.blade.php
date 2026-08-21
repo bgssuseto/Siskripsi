@@ -114,17 +114,39 @@
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
                     <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Keterpakaian Ruang</h2>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Jumlah sidang terjadwal per ruang</p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Nama & kode ruang, jumlah sidang, klik untuk lihat hari/tanggal dipakai</p>
                 </div>
-                <div class="max-h-[420px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+                <div class="max-h-[460px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($keterpakaianRuang as $row)
-                    <div class="px-5 py-3">
-                        <div class="flex items-center justify-between gap-3 mb-1.5">
-                            <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{{ $row['ruang']->nama_ruangan ?? $row['ruang']->kode_ruangan }}</span>
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">{{ $row['jumlah'] }} sidang</span>
+                    <div class="px-5 py-3" x-data="{ open: false }">
+                        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-3 text-left cursor-pointer">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{{ $row['ruang']->nama_ruangan ?? $row['ruang']->kode_ruangan }}</span>
+                                    <span class="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded shrink-0">{{ $row['ruang']->kode_ruangan }}</span>
+                                </div>
+                                <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{{ $row['jadwal']->count() }} hari terpakai</div>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ $row['jumlah'] }} sidang</span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                        </button>
+                        <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
+                            <div class="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full" style="width: {{ round($row['jumlah'] / $maxRuang * 100) }}%"></div>
                         </div>
-                        <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-amber-500 dark:bg-amber-400 rounded-full" style="width: {{ round($row['jumlah'] / $maxRuang * 100) }}%"></div>
+                        <div x-show="open" x-cloak
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="mt-2.5 flex flex-wrap gap-1.5">
+                            @foreach($row['jadwal'] as $j)
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10.5px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                📅 {{ $j['tanggal_label'] }} <span class="text-slate-300 dark:text-slate-600">·</span> <span class="text-indigo-600 dark:text-indigo-300">{{ $j['jumlah'] }} sidang</span>
+                            </span>
+                            @endforeach
                         </div>
                     </div>
                     @empty
@@ -139,19 +161,36 @@
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
                 <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Timeline Sidang Terjadwal</h2>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Sebaran jumlah sidang per tanggal</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Sebaran jumlah sidang per tanggal &mdash; arahkan kursor ke batang untuk detail</p>
             </div>
             <div class="p-5">
                 @if($timeline->isEmpty())
                 <div class="py-10 text-center text-slate-400 dark:text-slate-500 text-sm">Belum ada sidang terjadwal untuk filter ini.</div>
                 @else
-                <div class="overflow-x-auto">
-                    <div class="flex items-end gap-1.5 min-w-max" style="height: 160px;">
+                <div class="overflow-x-auto pb-1">
+                    <div class="flex items-end gap-2 min-w-max border-b border-slate-200 dark:border-slate-700" style="height: 180px;">
                         @foreach($timeline as $tanggal => $jumlah)
-                        <div class="flex flex-col items-center justify-end h-full group relative" style="width: 26px;">
+                        @php $tglObj = \Carbon\Carbon::parse($tanggal); @endphp
+                        <div class="flex flex-col items-center justify-end h-full group relative" style="width: 30px;">
+                            <!-- Tooltip -->
+                            <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-10 pointer-events-none">
+                                <div class="bg-slate-900 dark:bg-slate-700 text-white text-[10.5px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-lg text-center">
+                                    {{ $tglObj->locale('id')->translatedFormat('l, d F Y') }}<br>
+                                    <span class="text-indigo-300 font-bold">{{ $jumlah }} sidang</span>
+                                </div>
+                                <div class="w-2 h-2 bg-slate-900 dark:bg-slate-700 rotate-45 -mt-1"></div>
+                            </div>
+
                             <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">{{ $jumlah }}</span>
-                            <div class="w-full bg-emerald-500 dark:bg-emerald-400 rounded-t-md" style="height: {{ max(4, round($jumlah / $maxTimeline * 110)) }}px" title="{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d M Y') }}: {{ $jumlah }} sidang"></div>
-                            <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-1.5 whitespace-nowrap" style="writing-mode: vertical-rl; transform: rotate(180deg);">{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d M') }}</span>
+                            <div class="w-full bg-indigo-500 dark:bg-indigo-400 group-hover:bg-indigo-600 dark:group-hover:bg-indigo-300 rounded-t-[4px] transition-colors duration-150"
+                                 style="height: {{ max(4, round($jumlah / $maxTimeline * 128)) }}px"></div>
+                        </div>
+                        @endforeach
+                    </div>
+                    <div class="flex items-start gap-2 min-w-max mt-1.5">
+                        @foreach($timeline as $tanggal => $jumlah)
+                        <div class="flex justify-center" style="width: 30px;">
+                            <span class="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap" style="writing-mode: vertical-rl; transform: rotate(180deg);">{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d M') }}</span>
                         </div>
                         @endforeach
                     </div>
