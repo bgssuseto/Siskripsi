@@ -38,7 +38,7 @@
                     </svg>
                 </div>
                 <input id="email" name="email" type="text" value="{{ old('email') }}" required autofocus autocomplete="username"
-                    class="block w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 @error('email') border-red-300 focus:border-red-500 focus:ring-red-500/20 @enderror"
+                    class="block w-full pl-12 pr-4 py-3.5 bg-slate-100 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-500 transition-all duration-200 @error('email') bg-red-50 focus:border-red-500 focus:ring-red-500/20 @enderror"
                     placeholder="Masukkan Email, NIM, atau NIDN (Dosen)">
             </div>
             @error('email')
@@ -60,7 +60,7 @@
                     </svg>
                 </div>
                 <input id="password" name="password" type="password" required autocomplete="current-password"
-                    class="block w-full pl-12 pr-12 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 @error('password') border-red-300 focus:border-red-500 focus:ring-red-500/20 @enderror"
+                    class="block w-full pl-12 pr-12 py-3.5 bg-slate-100 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-500 transition-all duration-200 @error('password') bg-red-50 focus:border-red-500 focus:ring-red-500/20 @enderror"
                     placeholder="••••••••">
                 <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center">
                     <svg id="eyeIcon" class="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">

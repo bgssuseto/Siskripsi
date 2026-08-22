@@ -16,7 +16,7 @@
                     </svg>
                 </div>
                 <input id="name" name="name" type="text" value="{{ old('name') }}" required autofocus autocomplete="name"
-                    class="block w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 @error('name') border-red-300 focus:border-red-500 focus:ring-red-500/20 @enderror"
+                    class="block w-full pl-12 pr-4 py-3.5 bg-slate-100 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-500 transition-all duration-200 @error('name') bg-red-50 focus:border-red-500 focus:ring-red-500/20 @enderror"
                     placeholder="Masukkan nama lengkap">
             </div>
             @error('name')
@@ -33,7 +33,7 @@
                     </svg>
                 </div>
                 <input id="nim" name="nim" type="text" value="{{ old('nim') }}" required autocomplete="off"
-                    class="block w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 @error('nim') border-red-300 focus:border-red-500 focus:ring-red-500/20 @enderror"
+                    class="block w-full pl-12 pr-4 py-3.5 bg-slate-100 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-500 transition-all duration-200 @error('nim') bg-red-50 focus:border-red-500 focus:ring-red-500/20 @enderror"
                     placeholder="Masukkan NIM Mahasiswa">
             </div>
             @error('nim')
@@ -50,7 +50,7 @@
                     </svg>
                 </div>
                 <input id="email" name="email" type="email" value="{{ old('email') }}" required autocomplete="username"
-                    class="block w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 @error('email') border-red-300 focus:border-red-500 focus:ring-red-500/20 @enderror"
+                    class="block w-full pl-12 pr-4 py-3.5 bg-slate-100 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-500 transition-all duration-200 @error('email') bg-red-50 focus:border-red-500 focus:ring-red-500/20 @enderror"
                     placeholder="nama@email.com">
             </div>
             @error('email')
@@ -67,7 +67,7 @@
                     </svg>
                 </div>
                 <input id="password" name="password" type="password" required autocomplete="new-password"
-                    class="block w-full pl-12 pr-12 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 @error('password') border-red-300 focus:border-red-500 focus:ring-red-500/20 @enderror"
+                    class="block w-full pl-12 pr-12 py-3.5 bg-slate-100 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-500 transition-all duration-200 @error('password') bg-red-50 focus:border-red-500 focus:ring-red-500/20 @enderror"
                     placeholder="Minimal 8 karakter">
                 <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center">
                     <svg id="eyeIcon" class="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +90,7 @@
                     </svg>
                 </div>
                 <input id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password"
-                    class="block w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200"
+                    class="block w-full pl-12 pr-4 py-3.5 bg-slate-100 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-500 transition-all duration-200"
                     placeholder="Ulangi password">
             </div>
         </div>
