@@ -20,7 +20,7 @@
 
     <!-- Graduation Celebration Banner -->
     @if($user->status_kelulusan === 'lulus')
-        <div class="relative overflow-hidden rounded-3xl p-7 sm:p-9 text-center shadow-2xl" style="background: linear-gradient(135deg, #4361ee 0%, #7c3aed 55%, #192355 100%);">
+        <div class="relative overflow-hidden rounded-3xl p-7 sm:p-9 text-center shadow-xl bg-emerald-600 dark:bg-emerald-700">
             <!-- Confetti particles -->
             <div class="confetti-layer" aria-hidden="true">
                 @foreach(['#fbbf24','#f472b6','#34d399','#60a5fa','#f87171','#a78bfa','#fbbf24','#34d399','#60a5fa','#f472b6','#fbbf24','#a78bfa'] as $i => $color)
@@ -36,7 +36,7 @@
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-3">
                     Selamat, {{ $user->name }}! Anda Telah Dinyatakan <span class="text-amber-300">LULUS</span> 🎉
                 </h2>
-                <p class="max-w-2xl mx-auto text-sm sm:text-[15px] text-indigo-100 leading-relaxed">
+                <p class="max-w-2xl mx-auto text-sm sm:text-[15px] text-emerald-50 leading-relaxed">
                     Perjalanan panjang menyusun proposal, penelitian, hingga mempertahankannya di meja sidang kini telah usai.
                     Terima kasih telah menjadi bagian dari keluarga besar <strong class="text-white">Program Studi Teknik Informatika, Universitas Muria Kudus</strong>.
                     Semoga ilmu dan pengalaman yang telah diperoleh menjadi bekal berharga untuk melangkah lebih jauh.

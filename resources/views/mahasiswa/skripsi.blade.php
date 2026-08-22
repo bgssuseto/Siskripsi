@@ -143,7 +143,7 @@
                     </div>
                 </div>
                 <span class="px-2.5 py-1 bg-purple-600 text-white font-extrabold text-[10px] rounded-lg shadow-2xs shrink-0">
-                    Rp 200.000
+                    Rp 700.000
                 </span>
             </div>
         </div>
@@ -374,8 +374,8 @@
                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30">
                                 <td class="py-3 px-4 text-slate-400 dark:text-slate-500 text-xs">{{ $i + 1 }}</td>
                                 <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-200 max-w-xs truncate" title="{{ $s->judul_skripsi }}">{{ $s->judul_skripsi }}</td>
-                                <td class="py-3 px-4">
-                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg {{ $s->jenis_tugas_akhir === 'jurnal' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' }}">
+                                <td class="py-3 px-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 text-[10px] font-bold rounded-lg {{ $s->jenis_tugas_akhir === 'jurnal' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' }}">
                                         {{ $s->jenis_tugas_akhir === 'jurnal' ? 'Jurnal' : 'Sidang Skripsi' }}
                                     </span>
                                 </td>

@@ -101,7 +101,10 @@ class PendaftaranController extends Controller
             'ditolak'   => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'ditolak')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
         ];
 
-        return view('pendaftaran.sempro', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens'));
+        $totalJalurSidang = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+
+        return view('pendaftaran.sempro', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens', 'totalJalurSidang', 'totalJalurJurnal'));
     }
 
     /**
@@ -203,7 +206,10 @@ class PendaftaranController extends Controller
             'ditolak'   => Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->where('verifikasi_status', 'ditolak')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
         ];
 
-        return view('pendaftaran.skripsi', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens'));
+        $totalJalurSidang = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang'])->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+
+        return view('pendaftaran.skripsi', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens', 'totalJalurSidang', 'totalJalurJurnal'));
     }
 
     /**

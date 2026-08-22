@@ -216,10 +216,12 @@ class SemproController extends Controller
             ->pluck('tanggal');
 
         $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurSidang = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         return view('master.sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
-            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap',
+            'daftarTanggal', 'totalSempro', 'totalJalurSidang', 'totalJalurJurnal', 'calendarEvents', 'conflictMap',
             'selectedGelombang', 'gelombangOptions'
         ));
     }
@@ -436,12 +438,14 @@ class SemproController extends Controller
         $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')
                                ->where('jenis_tugas_akhir', 'sempro')->orderBy('tanggal')->pluck('tanggal');
         $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurSidang = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
 
         return view('sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
-            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap', 'kesediaanDosens',
+            'daftarTanggal', 'totalSempro', 'totalJalurSidang', 'totalJalurJurnal', 'calendarEvents', 'conflictMap', 'kesediaanDosens',
             'selectedGelombang', 'gelombangOptions'
         ));
     }

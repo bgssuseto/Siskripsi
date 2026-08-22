@@ -113,6 +113,10 @@
         </a>
     </div>
 
+    <!-- Infografis Jalur -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$counts['total']" chart-id="jalurChartDaftarSempro" />
+
     <!-- Main Data Table Container -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
         
@@ -132,42 +136,36 @@
                            class="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-all">
                 </div>
 
-                <!-- Filter Status Dropdown -->
-                <div class="min-w-[200px]">
-                    <select name="verifikasi_status" onchange="this.form.submit()" 
-                            class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-600 cursor-pointer shadow-2xs">
-                        <option value="">-- Semua Status Verifikasi --</option>
-                        <option value="menunggu" {{ request('verifikasi_status') === 'menunggu' ? 'selected' : '' }}>⏳ Menunggu Verifikasi</option>
-                        <option value="disetujui" {{ request('verifikasi_status') === 'disetujui' ? 'selected' : '' }}>✓ Disetujui</option>
-                        <option value="ditolak" {{ request('verifikasi_status') === 'ditolak' ? 'selected' : '' }}>✕ Ditolak</option>
-                    </select>
-                </div>
-
-                <!-- Filter Periode Dropdown -->
-                <div class="min-w-[200px]">
-                    <select name="periode_id" onchange="this.form.submit()" 
-                            class="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-600 cursor-pointer shadow-2xs">
-                        <option value="">-- Semua Periode --</option>
-                        @foreach($periodes as $p)
-                            <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode?->id) == $p->id) ? 'selected' : '' }}>
-                                {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Filter Gelombang Dropdown -->
-                <div class="min-w-[180px]">
-                    <select name="gelombang" onchange="this.form.submit()"
-                            class="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-600 cursor-pointer shadow-2xs">
-                        <option value="">-- Semua Gelombang --</option>
-                        @foreach($gelombangOptions ?? [] as $g)
-                            <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <x-filter-popover :active="request()->hasAny(['dosen_pembimbing_id'])">
+                <x-filter-popover :active="request()->hasAny(['verifikasi_status','periode_id','gelombang','dosen_pembimbing_id'])">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status Verifikasi</label>
+                        <select name="verifikasi_status" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Status Verifikasi --</option>
+                            <option value="menunggu" {{ request('verifikasi_status') === 'menunggu' ? 'selected' : '' }}>⏳ Menunggu Verifikasi</option>
+                            <option value="disetujui" {{ request('verifikasi_status') === 'disetujui' ? 'selected' : '' }}>✓ Disetujui</option>
+                            <option value="ditolak" {{ request('verifikasi_status') === 'ditolak' ? 'selected' : '' }}>✕ Ditolak</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Periode</label>
+                        <select name="periode_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Periode --</option>
+                            @foreach($periodes as $p)
+                                <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode?->id) == $p->id) ? 'selected' : '' }}>
+                                    {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gelombang</label>
+                        <select name="gelombang" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Gelombang --</option>
+                            @foreach($gelombangOptions ?? [] as $g)
+                                <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Pembimbing</label>
                         <select name="dosen_pembimbing_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">

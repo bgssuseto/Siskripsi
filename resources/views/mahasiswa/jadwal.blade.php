@@ -144,8 +144,8 @@
                                 <div class="flex items-center gap-2.5">
                                     <span class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-lg shrink-0">✅</span>
                                     <div>
-                                        <p class="text-xs font-extrabold text-emerald-900 dark:text-emerald-300">Pendaftaran Diterima &amp; Terverifikasi</p>
-                                        <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-medium">Silakan bergabung ke grup WhatsApp untuk info & koordinasi lebih lanjut.</p>
+                                        <p class="text-xs font-extrabold text-emerald-900 dark:text-emerald-300">Bergabung ke Grup WhatsApp</p>
+                                        <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-medium">Untuk info & koordinasi lebih lanjut seputar pelaksanaan ujian.</p>
                                     </div>
                                 </div>
                                 @if($waLink)

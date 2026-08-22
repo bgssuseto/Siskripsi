@@ -40,6 +40,14 @@ class Dosen extends Model
         'Guru Besar'      => 5,
     ];
 
+    /**
+     * The login account (if any) linked to this dosen record.
+     */
+    public function user(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(User::class, 'dosen_id');
+    }
+
     public function getJabatanRankAttribute(): int
     {
         return self::JABATAN_FUNGSIONAL_RANKS[$this->jabatan_fungsional] ?? 0;

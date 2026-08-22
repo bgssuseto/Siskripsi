@@ -118,6 +118,7 @@ class DosenController extends Controller
 
             $trashed->restore();
             $trashed->update($validated);
+            $this->syncLinkedUserAccount($trashed);
 
             ActivityLogger::log('created', $trashed, "Memulihkan data dosen: {$trashed->nama_dosen} (NIDN: {$trashed->nidn}). Riwayat bimbingan/penguji sebelumnya otomatis terhubung kembali.");
 
@@ -182,6 +183,7 @@ class DosenController extends Controller
         $trackedFields = ['nidn', 'nama_dosen', 'email', 'alias', 'kepakaran', 'jabatan_fungsional', 'no_wa'];
         $before = $dosen->only($trackedFields);
         $dosen->update($validated);
+        $this->syncLinkedUserAccount($dosen);
 
         ActivityLogger::log(
             'updated',
@@ -199,6 +201,38 @@ class DosenController extends Controller
         }
 
         return redirect()->route('master.dosen.index')->with('success', 'Data dosen berhasil diperbarui!');
+    }
+
+    /**
+     * Keep a dosen's linked login account (User where dosen_id = X) in sync with
+     * the Master Dosen record's contact info — email and no. WhatsApp (User's
+     * no_hp) — so editing a dosen here doesn't leave their account showing stale
+     * contact details. Dosen is treated as the source of truth. The email sync
+     * is skipped if it would collide with a different user's login email.
+     */
+    private function syncLinkedUserAccount(Dosen $dosen): void
+    {
+        $user = \App\Models\User::where('dosen_id', $dosen->id)->first();
+        if (!$user) {
+            return;
+        }
+
+        $updates = [];
+
+        if (!empty($dosen->email) && $dosen->email !== $user->email) {
+            $emailTaken = \App\Models\User::where('email', $dosen->email)->where('id', '!=', $user->id)->exists();
+            if (!$emailTaken) {
+                $updates['email'] = $dosen->email;
+            }
+        }
+
+        if ($dosen->no_wa !== $user->no_hp) {
+            $updates['no_hp'] = $dosen->no_wa;
+        }
+
+        if (!empty($updates)) {
+            $user->update($updates);
+        }
     }
 
     /**
@@ -452,6 +486,7 @@ class DosenController extends Controller
                     if ($jabatanFungsional) $updateData['jabatan_fungsional'] = $jabatanFungsional;
                     if (!empty($updateData)) {
                         $existing->update($updateData);
+                        $this->syncLinkedUserAccount($existing);
                         $updatedCount++;
                     }
                 } else {

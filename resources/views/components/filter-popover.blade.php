@@ -17,7 +17,7 @@
          x-transition:enter="transition ease-out duration-150"
          x-transition:enter-start="opacity-0 -translate-y-1"
          x-transition:enter-end="opacity-100 translate-y-0"
-         class="absolute left-0 sm:left-auto sm:right-0 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-4 space-y-3">
+         class="absolute left-0 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-4 space-y-3">
         {{ $slot }}
         <div class="flex justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">
             @if($submitVia)

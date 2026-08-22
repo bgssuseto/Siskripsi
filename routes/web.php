@@ -20,6 +20,8 @@ use App\Http\Controllers\SemproController;
 use App\Http\Controllers\AdministrasiController;
 use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\BackupController;
+use App\Http\Controllers\SemuaJadwalController;
 use App\Http\Controllers\DosenPortalController;
 use App\Http\Controllers\KesediaanDosenController;
 use App\Http\Controllers\PendaftaranController;
@@ -310,6 +312,12 @@ Route::middleware('auth')->group(function () {
         // Hasil Ujian (shared by Jadwal Sidang Skripsi & Jadwal Sempro — both are Sidang records)
         Route::post('/jadwal/{sidang}/hasil-ujian', [SkripsiController::class, 'setHasilUjian'])->name('jadwal.hasil-ujian');
     });
+
+    // Semua Jadwal (combined sempro + skripsi view) — Super Admin only
+    Route::middleware('role:super_admin')->group(function () {
+        Route::get('/jadwal/semua', [SemuaJadwalController::class, 'index'])->name('jadwal.semua.index');
+    });
+
     // Mahasiswa routes
     Route::middleware('role:mahasiswa')->group(function () {
         Route::get('/mahasiswa/dashboard', [MahasiswaController::class, 'dashboard'])->name('mahasiswa.dashboard');
@@ -341,6 +349,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('/kelola-menu/{menu}', [MenuController::class, 'destroy'])->name('admin.menus.destroy');
         Route::post('/kelola-menu/user/{user}', [MenuController::class, 'assignUserMenus'])->name('admin.menus.assign');
         Route::post('/kelola-menu/role/{role}', [MenuController::class, 'assignRoleMenus'])->name('admin.menus.assign-role');
+
+        // Backup & Restore Database
+        Route::get('/backup-database', [BackupController::class, 'index'])->name('backup.index');
+        Route::post('/backup-database', [BackupController::class, 'create'])->name('backup.create');
+        Route::get('/backup-database/{filename}/download', [BackupController::class, 'download'])->name('backup.download');
+        Route::delete('/backup-database/{filename}', [BackupController::class, 'destroy'])->name('backup.destroy');
+        Route::post('/backup-database/restore', [BackupController::class, 'restore'])->name('backup.restore');
     });
 });
 

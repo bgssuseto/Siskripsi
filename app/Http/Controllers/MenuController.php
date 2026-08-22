@@ -251,6 +251,13 @@ class MenuController extends Controller
                 'role_default' => 'super_admin',
                 'sort_order'   => 13,
             ],
+            [
+                'name'         => 'Backup & Restore',
+                'route'        => 'backup.index',
+                'icon'         => 'database',
+                'role_default' => 'super_admin',
+                'sort_order'   => 14,
+            ],
             // ── Dosen menus ──
             [
                 'name'         => 'Dashboard',
