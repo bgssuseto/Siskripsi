@@ -22,32 +22,54 @@
             font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
             font-size: 10.5px;
             color: #1e293b;
-            line-height: 1.5;
+            line-height: 1.35;
         }
 
-        /* ===================== KOP SURAT ===================== */
+        /* ===================== KOP SURAT (CUSTOM, TEXT-BASED) ===================== */
         .kop-surat {
-            width: 100%;
-            display: block;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .kop-surat .kop-univ {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1e3a8a;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .kop-surat .kop-prodi {
+            font-size: 11px;
+            font-weight: bold;
+            color: #1e3a8a;
+            text-transform: uppercase;
+            margin-top: 1px;
+        }
+
+        .kop-surat .kop-alamat {
+            font-size: 8.5px;
+            color: #64748b;
+            margin-top: 2px;
         }
 
         .kop-rule-thick {
             border: none;
             border-top: 2.5px solid #1e3a8a;
-            margin: 6px 0 1.5px 0;
+            margin: 5px 0 1.5px 0;
         }
 
         .kop-rule-thin {
             border: none;
             border-top: 1px solid #1e3a8a;
-            margin: 0 0 14px 0;
+            margin: 0 0 6px 0;
         }
 
         /* ===================== LETTER META ===================== */
         .letter-meta {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 14px;
+            margin-bottom: 6px;
         }
 
         .letter-meta td {
@@ -72,25 +94,25 @@
 
         /* ===================== BODY TEXT ===================== */
         .letter-body p {
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-align: justify;
         }
 
         .letter-intro {
-            margin-bottom: 12px;
+            margin-bottom: 6px;
         }
 
         /* ===================== SUMMARY STRIP ===================== */
         table.summary-strip {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 14px;
+            margin-bottom: 6px;
             border: 1px solid #cbd5e1;
             background-color: #f8fafc;
         }
 
         table.summary-strip td {
-            padding: 7px 14px;
+            padding: 4px 12px;
             font-size: 10px;
             border: none;
             border-right: 1px solid #e2e8f0;
@@ -127,11 +149,11 @@
             color: #1e3a8a;
             text-transform: uppercase;
             letter-spacing: 0.4px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .section-block {
-            margin-bottom: 14px;
+            margin-bottom: 6px;
         }
 
         /* ===================== TABEL UMUM ===================== */
@@ -151,11 +173,11 @@
             font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
-            padding: 6px 7px;
+            padding: 4px 6px;
         }
 
         table.data-table tbody td {
-            padding: 6px 7px;
+            padding: 4px 6px;
             border-bottom: 1px solid #e2e8f0;
             vertical-align: top;
             word-wrap: break-word;
@@ -182,7 +204,7 @@
         table.signature-block {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 6px;
         }
 
         table.signature-block td {
@@ -198,7 +220,7 @@
         }
 
         .signature-space {
-            height: 55px;
+            height: 26px;
         }
 
         .signature-name {
@@ -208,8 +230,8 @@
 
         /* ===================== FOOTER ===================== */
         .doc-footer {
-            margin-top: 16px;
-            padding-top: 6px;
+            margin-top: 5px;
+            padding-top: 3px;
             border-top: 1px solid #e2e8f0;
             font-size: 8.5px;
             color: #94a3b8;
@@ -218,13 +240,12 @@
 </head>
 <body>
 
-    <!-- ============ KOP SURAT (OFFICIAL LETTERHEAD) ============ -->
-    @if($kopBase64)
-        <img src="{{ $kopBase64 }}" class="kop-surat">
-    @else
-        <div style="text-align:center; font-weight:bold; font-size:14px; color:#1e3a8a;">UNIVERSITAS MURIA KUDUS</div>
-        <div style="text-align:center; font-weight:bold; font-size:12px; color:#1e3a8a;">FAKULTAS TEKNIK — PROGRAM STUDI TEKNIK INFORMATIKA</div>
-    @endif
+    <!-- ============ KOP SURAT (CUSTOM, TEXT-BASED) ============ -->
+    <div class="kop-surat">
+        <div class="kop-univ">Universitas Muria Kudus</div>
+        <div class="kop-prodi">Fakultas Teknik &mdash; Program Studi Teknik Informatika</div>
+        <div class="kop-alamat">Jln. Gondangmanis Bae Kudus PO BOX 53, Telp: 0291-438229, Fax: 0291-437198 &mdash; www.umk.ac.id &mdash; ti@umk.ac.id</div>
+    </div>
     <hr class="kop-rule-thick">
     <hr class="kop-rule-thin">
 
@@ -242,7 +263,7 @@
     </table>
 
     <div class="letter-body">
-        <p style="margin-bottom: 14px;">
+        <p style="margin-bottom: 8px;">
             Kepada Yth.<br>
             Bapak/Ibu <strong>{{ $dosen->nama_dosen }}</strong><br>
             Dosen Program Studi Teknik Informatika<br>

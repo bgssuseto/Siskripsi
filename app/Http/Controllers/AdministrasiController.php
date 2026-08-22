@@ -252,15 +252,6 @@ class AdministrasiController extends Controller
         // Build simplified rekap sessions (merging consecutive time slots per day & room)
         $rekapSesi = $this->buildSimplifiedSessions($mySidangs);
 
-        // Prepare Kop Surat Image (Base64)
-        $kopPath = public_path('images/kop_surat.png');
-        $kopBase64 = '';
-        if (file_exists($kopPath)) {
-            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($kopPath);
-            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        }
-
         $koordinator = \App\Models\User::where('role', \App\Models\User::ROLE_KOORDINATOR)
             ->whereNotNull('dosen_id')
             ->with('dosen')
@@ -271,7 +262,6 @@ class AdministrasiController extends Controller
             'namaPeriode'   => $namaPeriode,
             'rekapSesi'     => $rekapSesi,
             'sidangs'       => $mySidangs,
-            'kopBase64'     => $kopBase64,
             'totalUji'      => $mySidangs->count(),
             'jenisUndangan' => $jenisUndangan,
             'koordinator'   => $koordinator,
