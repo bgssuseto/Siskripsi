@@ -22,7 +22,7 @@
             display: flex; flex-wrap: wrap; gap: .75rem; align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,.07); border: 1px solid #f1f5f9;
         }
-        .toolbar-search { position: relative; flex: 1; min-width: 200px; }
+        .toolbar-search { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
         .toolbar-search svg { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
         .toolbar-search input {
             width: 100%; padding: .55rem .75rem .55rem 2.25rem;
@@ -192,9 +192,8 @@
         </div>
 
         {{-- Infografis Jalur --}}
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
         <div class="mb-6">
-            <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$totalSempro" chart-id="jalurChartDataSempro" />
+            <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$totalSempro" />
         </div>
 
         {{-- Toolbar / Filter --}}
@@ -417,7 +416,7 @@
                 <span class="modal-title">➕ Tambah Data Sempro</span>
                 <button class="modal-close" onclick="closeModal('modal-tambah')">✕</button>
             </div>
-            <form method="POST" action="{{ route('master.sempro.store') }}">
+            <form method="POST" action="{{ route('master.sempro.store') }}" id="form-tambah">
                 @csrf
                 <input type="hidden" name="jenis_tugas_akhir" value="sempro">
                 <div class="modal-body">

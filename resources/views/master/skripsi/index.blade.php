@@ -23,7 +23,7 @@
             display: flex; flex-wrap: wrap; gap: .75rem; align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,.07); border: 1px solid #f1f5f9;
         }
-        .toolbar-search { position: relative; flex: 1; min-width: 200px; }
+        .toolbar-search { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
         .toolbar-search svg { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
         .toolbar-search input {
             width: 100%; padding: .55rem .75rem .55rem 2.25rem;
@@ -207,10 +207,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- Infografis Jalur --}}
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-        <x-jalur-infografis :sidang="$totalSkripsi" :jurnal="$totalJurnal" chart-id="jalurChartDataSkripsi" />
 
         {{-- Toolbar / Filter --}}
         <form method="GET" action="{{ route('master.skripsi.index') }}" class="toolbar">

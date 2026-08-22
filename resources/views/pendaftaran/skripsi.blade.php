@@ -114,8 +114,7 @@
     </div>
 
     <!-- Infografis Jalur -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$counts['total']" chart-id="jalurChartDaftarSkripsi" />
+    <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$counts['total']" />
 
     <!-- Main Data Table Container -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -125,7 +124,7 @@
             <form method="GET" action="{{ route('pendaftaran.skripsi') }}" class="flex flex-wrap items-center gap-3">
                 
                 <!-- Search Query Input -->
-                <div class="relative flex-1 min-w-[260px]">
+                <div class="relative flex-1 max-w-sm min-w-[220px]">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>

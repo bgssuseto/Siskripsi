@@ -31,7 +31,7 @@
     <!-- Filter -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-5">
         <form method="GET" action="{{ route('jadwal.semua.index') }}" class="flex flex-wrap items-center gap-3">
-            <div class="relative flex-1 min-w-[240px]">
+            <div class="relative flex-1 max-w-sm min-w-[200px]">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -117,22 +117,16 @@
                             </td>
                             <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400">
                                 @if($s->jenis_tugas_akhir === 'sempro')
-                                    @php
-                                        $namaDosen = array_filter([
-                                            $s->pembimbingUtama->nama_dosen ?? null,
-                                            $s->pembimbingPendamping->nama_dosen ?? null,
-                                        ]);
-                                    @endphp
-                                    <div><span class="text-slate-400">Pembimbing:</span> {{ $namaDosen ? implode(', ', $namaDosen) : '-' }}</div>
+                                    <div class="space-y-0.5 text-[11px]">
+                                        <div><span class="text-slate-400 dark:text-slate-500">Pembimbing Utama:</span> <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $s->pembimbingUtama->nama_dosen ?? '-' }}</span></div>
+                                        <div><span class="text-slate-400 dark:text-slate-500">Pembimbing Pendamping:</span> <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $s->pembimbingPendamping->nama_dosen ?? '-' }}</span></div>
+                                    </div>
                                 @else
-                                    @php
-                                        $namaDosen = array_filter([
-                                            $s->ketuaPenguji->nama_dosen ?? null,
-                                            $s->anggotaPenguji1->nama_dosen ?? null,
-                                            $s->anggotaPenguji2->nama_dosen ?? null,
-                                        ]);
-                                    @endphp
-                                    <div><span class="text-slate-400">Penguji:</span> {{ $namaDosen ? implode(', ', $namaDosen) : '-' }}</div>
+                                    <div class="space-y-0.5 text-[11px]">
+                                        <div><span class="text-slate-400 dark:text-slate-500">Ketua Penguji:</span> <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $s->ketuaPenguji->nama_dosen ?? '-' }}</span></div>
+                                        <div><span class="text-slate-400 dark:text-slate-500">Penguji 1:</span> <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $s->anggotaPenguji1->nama_dosen ?? '-' }}</span></div>
+                                        <div><span class="text-slate-400 dark:text-slate-500">Penguji 2:</span> <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $s->anggotaPenguji2->nama_dosen ?? '-' }}</span></div>
+                                    </div>
                                 @endif
                             </td>
                         </tr>
