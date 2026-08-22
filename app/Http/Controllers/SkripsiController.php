@@ -1349,11 +1349,21 @@ class SkripsiController extends Controller
             'verifikasi_komentar' => ['nullable', 'string'],
         ]);
 
+        $statusBefore = $sidang->verifikasi_status;
+
         $sidang->update([
             'verifikasi_status'   => $validated['verifikasi_status'],
             'verifikasi_komentar' => $validated['verifikasi_status'] === 'ditolak' ? $validated['verifikasi_komentar'] : null,
             'verifikasi_tanggal'  => now(),
         ]);
+
+        ActivityLogger::log(
+            'verifikasi',
+            $sidang,
+            "Mengubah status verifikasi {$sidang->nama_mahasiswa} ({$sidang->nim}) dari \"{$statusBefore}\" menjadi \"{$validated['verifikasi_status']}\"." .
+                (!empty($validated['verifikasi_komentar']) ? " Catatan: {$validated['verifikasi_komentar']}" : ''),
+            ['before' => ['verifikasi_status' => $statusBefore], 'after' => ['verifikasi_status' => $validated['verifikasi_status']]]
+        );
 
         if ($request->expectsJson()) {
             return response()->json([

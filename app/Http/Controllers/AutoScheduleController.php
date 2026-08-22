@@ -89,6 +89,18 @@ class AutoScheduleController extends Controller
 
     public function apply(Request $request): RedirectResponse
     {
+        $request->validate([
+            'selected'                          => ['nullable', 'array'],
+            'selected.*'                        => ['integer', 'exists:sidangs,id'],
+            'proposals'                          => ['nullable', 'array'],
+            'proposals.*.tanggal'                => ['nullable', 'date'],
+            'proposals.*.jam_mulai'              => ['nullable', 'string'],
+            'proposals.*.jam_selesai'            => ['nullable', 'string'],
+            'proposals.*.ruang_id'               => ['nullable', 'integer', 'exists:ruangs,id'],
+            'proposals.*.ketua_penguji_id'       => ['nullable', 'integer', 'exists:dosens,id'],
+            'proposals.*.anggota_penguji_1_id'  => ['nullable', 'integer', 'exists:dosens,id'],
+        ]);
+
         $selected = (array) $request->input('selected', []);
         $rows = (array) $request->input('proposals', []);
 

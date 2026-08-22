@@ -32,15 +32,13 @@ class MahasiswaController extends Controller
             'periode'
         ]);
 
-        if ($nim && $name) {
-            return $query->where(function ($q) use ($nim, $name) {
-                $q->where('nim', $nim)
-                  ->orWhere('nama_mahasiswa', 'LIKE', '%' . $name . '%');
-            })->orderByDesc('id')->get();
-        } elseif ($nim) {
+        if ($nim) {
+            // NIM is the reliable identifier — never widen this with a fuzzy name
+            // match, which could pull in another student's records if names overlap.
             return $query->where('nim', $nim)->orderByDesc('id')->get();
         } elseif ($name) {
-            return $query->where('nama_mahasiswa', 'LIKE', '%' . $name . '%')->orderByDesc('id')->get();
+            // No NIM on file yet: fall back to an exact (not substring) name match.
+            return $query->where('nama_mahasiswa', $name)->orderByDesc('id')->get();
         }
 
         return collect();
@@ -181,8 +179,11 @@ class MahasiswaController extends Controller
 
         $jenisTugasAkhir = $request->input('jenis_tugas_akhir') === 'skripsi' ? 'sidang' : $request->input('jenis_tugas_akhir');
 
-        // Check if student already has a registration record in this active period
-        $existing = Sidang::where('nim', $request->input('nim'))
+        // Check if student already has a registration record in this active period.
+        // Always key this off the authenticated user's own NIM — never the raw request
+        // input, which is only readonly client-side and could be tampered with to target
+        // another student's record.
+        $existing = Sidang::where('nim', $user->nim)
             ->where('jenis_tugas_akhir', $jenisTugasAkhir)
             ->where('periode_id', $activePeriode->id)
             ->first();
@@ -222,6 +223,16 @@ class MahasiswaController extends Controller
             'file_persyaratan.mimes'             => 'File persyaratan harus berformat PDF.',
             'file_persyaratan.max'               => 'Ukuran file persyaratan maksimal 4 MB.',
         ]);
+
+        // Guard against submitting another student's NIM (the form field is readonly
+        // client-side only) — never trust the client for whose record this is.
+        if ($validated['nim'] !== $user->nim) {
+            $msg = 'NIM tidak sesuai dengan akun Anda.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
 
         $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
         

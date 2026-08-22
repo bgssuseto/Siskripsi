@@ -29,10 +29,12 @@ class KesediaanDosenController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('dosen', function ($q) use ($search) {
-                $q->where('nama_dosen', 'like', "%{$search}%")
-                  ->orWhere('nidn', 'like', "%{$search}%");
-            })->orWhere('keterangan', 'like', "%{$search}%");
+            $query->where(function ($outer) use ($search) {
+                $outer->whereHas('dosen', function ($q) use ($search) {
+                    $q->where('nama_dosen', 'like', "%{$search}%")
+                      ->orWhere('nidn', 'like', "%{$search}%");
+                })->orWhere('keterangan', 'like', "%{$search}%");
+            });
         }
 
         $perPage = (int) $request->get('per_page', 10);
