@@ -1,27 +1,27 @@
 <x-guest-layout>
     <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Selamat Datang</h2>
-        <p class="mt-1.5 text-sm text-gray-500">Masuk ke akun Portal Skripsi Anda</p>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-slate-100 tracking-tight">Selamat Datang</h2>
+        <p class="mt-1.5 text-sm text-gray-500 dark:text-slate-400">Masuk ke akun Portal Skripsi Anda</p>
     </div>
 
     @if (session('status'))
-        <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+        <div class="mb-6 p-4 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl">
             <div class="flex items-center gap-3">
                 <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-sm text-green-700">{{ session('status') }}</p>
+                <p class="text-sm text-green-700 dark:text-green-400">{{ session('status') }}</p>
             </div>
         </div>
     @endif
 
     @if (session('success'))
-        <div class="mb-6 p-4 bg-emerald-50 border border-emerald-300 rounded-xl">
+        <div class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-xl">
             <div class="flex items-start gap-3">
                 <svg class="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-sm text-emerald-700 font-semibold">{{ session('success') }}</p>
+                <p class="text-sm text-emerald-700 dark:text-emerald-400 font-semibold">{{ session('success') }}</p>
             </div>
         </div>
     @endif
@@ -30,19 +30,19 @@
         @csrf
 
         <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email / NIM / NIDN</label>
+            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Email / NIM / NIDN</label>
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
                     </svg>
                 </div>
                 <input id="email" name="email" type="text" value="{{ old('email') }}" required autofocus autocomplete="username"
-                    class="block w-full pl-12 pr-4 py-3.5 bg-slate-100 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-500 transition-all duration-200 @error('email') bg-red-50 focus:border-red-500 focus:ring-red-500/20 @enderror"
+                    class="block w-full pl-12 pr-4 py-3.5 bg-slate-100 dark:bg-slate-800 border border-transparent rounded-xl text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 transition-all duration-200 @error('email') bg-red-50 dark:bg-red-950/40 focus:border-red-500 focus:ring-red-500/20 @enderror"
                     placeholder="Masukkan Email, NIM, atau NIDN (Dosen)">
             </div>
             @error('email')
-                <p class="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <p class="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -52,25 +52,25 @@
         </div>
 
         <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Password</label>
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                     </svg>
                 </div>
                 <input id="password" name="password" type="password" required autocomplete="current-password"
-                    class="block w-full pl-12 pr-12 py-3.5 bg-slate-100 border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-500 transition-all duration-200 @error('password') bg-red-50 focus:border-red-500 focus:ring-red-500/20 @enderror"
+                    class="block w-full pl-12 pr-12 py-3.5 bg-slate-100 dark:bg-slate-800 border border-transparent rounded-xl text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 transition-all duration-200 @error('password') bg-red-50 dark:bg-red-950/40 focus:border-red-500 focus:ring-red-500/20 @enderror"
                     placeholder="••••••••">
                 <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center">
-                    <svg id="eyeIcon" class="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="eyeIcon" class="w-5 h-5 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
                 </button>
             </div>
             @error('password')
-                <p class="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <p class="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -81,11 +81,11 @@
 
         <div class="flex items-center justify-between">
             <label class="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" name="remember" id="remember" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500/20 transition-colors">
-                <span class="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Ingat saya</span>
+                <input type="checkbox" name="remember" id="remember" class="w-4 h-4 rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800 text-indigo-600 focus:ring-indigo-500/20 transition-colors">
+                <span class="text-sm text-gray-600 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-slate-200 transition-colors">Ingat saya</span>
             </label>
             @if (Route::has('password.request'))
-                <a href="{{ route('password.request') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                <a href="{{ route('password.request') }}" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
                     Lupa password?
                 </a>
             @endif
@@ -101,16 +101,16 @@
 
     <div class="relative my-8">
         <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-200"></div>
+            <div class="w-full border-t border-gray-200 dark:border-slate-700"></div>
         </div>
         <div class="relative flex justify-center text-sm">
-            <span class="px-4 bg-white text-gray-500">atau</span>
+            <span class="px-4 bg-white dark:bg-slate-950 text-gray-500 dark:text-slate-400">atau</span>
         </div>
     </div>
 
-    <p class="text-center text-gray-600">
+    <p class="text-center text-gray-600 dark:text-slate-400">
         Belum punya akun?
-        <a href="{{ route('register') }}" class="font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+        <a href="{{ route('register') }}" class="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
             Daftar sekarang
         </a>
     </p>
