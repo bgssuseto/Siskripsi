@@ -190,7 +190,10 @@
                     <a href="{{ route('pendaftaran.sempro.export', request()->query()) }}"
                        style="background-color: #059669; color: #ffffff;"
                        class="px-4 py-2.5 bg-emerald-600 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md hover:bg-emerald-700 border border-emerald-500 cursor-pointer flex items-center justify-center gap-1.5">
-                        📊 Export Excel
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>Export Excel</span>
                     </a>
 
                     @if(request('search') || request('verifikasi_status') || request('periode_id') || request('gelombang') || request('dosen_pembimbing_id'))
@@ -238,9 +241,8 @@
                             <input type="checkbox" @click="selectedIds = $event.target.checked ? {{ Js::from($sidangs->pluck('id')->map(fn($id) => (string) $id)->values()) }} : []">
                         </th>
                         <th class="py-3.5 px-4 w-44">MAHASISWA</th>
-                        <th class="py-3.5 px-3 w-28">PRODI</th>
-                        <th class="py-3.5 px-4 min-w-[200px]">JUDUL PROPOSAL</th>
-                        <th class="py-3.5 px-4 w-48">DOSEN PEMBIMBING</th>
+                        <th class="py-3.5 px-4 w-40">PEMBIMBING UTAMA</th>
+                        <th class="py-3.5 px-4 w-40">PEMBIMBING PENDAMPING</th>
                         <th class="py-3.5 px-3 w-36">PERIODE & TANGGAL</th>
                         <th class="py-3.5 px-3 w-36 text-center">BERKAS / PERSYARATAN</th>
                         <th class="py-3.5 px-3 w-36 text-center">STATUS VERIFIKASI</th>
@@ -255,47 +257,25 @@
                             </td>
                             <!-- Mahasiswa -->
                             <td class="py-3.5 px-4">
-                                <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug">{{ $s->nama_mahasiswa }}</div>
+                                <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug" title="{{ $s->judul_skripsi }}">{{ $s->nama_mahasiswa }}</div>
                                 <div class="mt-1.5"><span class="inline-block px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-mono font-bold text-[10px] border border-indigo-200 dark:border-indigo-800">NIM: {{ $s->nim }}</span></div>
                                 @if($s->no_wa_aktif)
                                     <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold mt-0.5">WA: {{ $s->no_wa_aktif }}</div>
                                 @endif
                             </td>
 
-                            <!-- Prodi -->
-                            <td class="py-3.5 px-3">
-                                <span class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10.5px] border border-slate-200 dark:border-slate-700 inline-block">
-                                    Teknik Informatika
-                                </span>
-                            </td>
-
-                            <!-- Judul Proposal -->
-                            <td class="py-3.5 px-4">
-                                <p class="text-slate-800 dark:text-slate-200 font-bold leading-relaxed line-clamp-2" title="{{ $s->judul_skripsi }}">
-                                    "{{ $s->judul_skripsi }}"
-                                </p>
-                            </td>
-
-                            <!-- Dedicated Column: Dosen Pembimbing -->
+                            <!-- Pembimbing Utama -->
                             <td class="py-3.5 px-4">
                                 <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug">
                                     {{ $s->pembimbingUtama->nama_dosen ?? '-' }}
                                 </div>
-                                <div class="mt-1">
-                                    <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                                        PEMBIMBING UTAMA
-                                    </span>
+                            </td>
+
+                            <!-- Pembimbing Pendamping -->
+                            <td class="py-3.5 px-4">
+                                <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug">
+                                    {{ $s->pembimbingPendamping->nama_dosen ?? '-' }}
                                 </div>
-                                @if($s->pembimbingPendamping)
-                                    <div class="text-[10.5px] font-extrabold text-slate-900 dark:text-slate-100 mt-2.5">
-                                        {{ $s->pembimbingPendamping->nama_dosen }}
-                                    </div>
-                                    <div class="mt-1">
-                                        <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                                            PEMBIMBING PENDAMPING
-                                        </span>
-                                    </div>
-                                @endif
                             </td>
 
                             <!-- Gelombang & Tanggal -->
@@ -304,7 +284,7 @@
                                     {{ $s->periode->nama_periode ?? '-' }}
                                 </div>
                                 <div class="text-[10px] text-slate-600 dark:text-slate-300 font-semibold mt-1">
-                                    Tgl Daftar: {{ $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->translatedFormat('l, d/m/Y') : '-' }}
+                                    Tgl Daftar: {{ $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->isoFormat('dddd, D MMMM Y') : '-' }}
                                 </div>
                             </td>
 
@@ -314,12 +294,14 @@
                                     <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                         <button type="button"
                                                 @click="previewUrl = '{{ asset($s->file_persyaratan) }}'; previewTitle = 'Berkas Persyaratan - {{ addslashes($s->nama_mahasiswa) }}'; previewModal = true"
-                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900 text-[11px] font-extrabold transition-all shadow-2xs whitespace-nowrap cursor-pointer">
-                                            👁️ Preview
+                                                title="Preview Berkas"
+                                                class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900 transition-all shadow-2xs cursor-pointer">
+                                            👁️
                                         </button>
                                         <a href="{{ asset($s->file_persyaratan) }}" download
-                                           class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 text-[11px] font-extrabold transition-all shadow-2xs whitespace-nowrap">
-                                            📥 Download
+                                           title="Download Berkas"
+                                           class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 transition-all shadow-2xs">
+                                            📥
                                         </a>
                                     </div>
                                 @else
@@ -349,25 +331,28 @@
                                         ⏳ Menunggu
                                     </span>
                                 @endif
+                            </td>
+
                             <!-- Aksi Buttons -->
                             <td class="py-3.5 px-4 text-center whitespace-nowrap space-x-1.5">
-                                <button type="button" 
-                                        @click="selectedSidang = {{ json_encode($s) }}; verifikasiStatus = '{{ $s->verifikasi_status ?? 'disetujui' }}'; verifikasiKomentar = '{{ addslashes($s->verifikasi_komentar ?? '') }}'; verifikasiModal = true" 
+                                <button type="button"
+                                        @click="selectedSidang = {{ json_encode($s) }}; verifikasiStatus = '{{ $s->verifikasi_status ?? 'disetujui' }}'; verifikasiKomentar = '{{ addslashes($s->verifikasi_komentar ?? '') }}'; verifikasiModal = true"
                                         style="background-color: #3251d4; color: #ffffff;"
-                                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-extrabold text-xs transition-all shadow-md shadow-indigo-600/30 hover:bg-indigo-700 border border-indigo-500 whitespace-nowrap cursor-pointer">
-                                    <span>⚡ Verifikasi</span>
+                                        title="Verifikasi Pendaftaran"
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-600 text-white transition-all shadow-md shadow-indigo-600/30 hover:bg-indigo-700 border border-indigo-500 cursor-pointer">
+                                    ⚡
                                 </button>
-                                <button type="button" 
-                                        @click="selectedSidang = {{ json_encode($s) }}; deleteModal = true" 
-                                        class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-extrabold text-xs transition-all border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 whitespace-nowrap cursor-pointer"
+                                <button type="button"
+                                        @click="selectedSidang = {{ json_encode($s) }}; deleteModal = true"
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 transition-all border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 cursor-pointer"
                                         title="Hapus pendaftaran agar mahasiswa dapat daftar ulang">
-                                    <span>🗑️ Hapus</span>
+                                    🗑️
                                 </button>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="py-14 px-6 text-center bg-slate-50/40 dark:bg-slate-900/40">
+                            <td colspan="8" class="py-14 px-6 text-center bg-slate-50/40 dark:bg-slate-900/40">
                                 <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl">
                                     📋
                                 </div>

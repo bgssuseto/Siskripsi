@@ -100,6 +100,9 @@
             <p class="text-xs text-slate-400 dark:text-slate-500 relative z-10">
                 &copy; {{ date('Y') }} Portal Skripsi TI &mdash; Program Studi Teknik Informatika, Universitas Muria Kudus.
             </p>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500 relative z-10 mt-1">
+                Made with <span class="text-rose-500">&hearts;</span> by Tim Pengembang TI UMK
+            </p>
         </div>
 
         <!-- Right Panel: Form -->
