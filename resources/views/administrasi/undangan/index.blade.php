@@ -189,6 +189,23 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
                                     </a>
+                                    @if($item['dosen']->email)
+                                        <form method="POST" action="{{ route('administrasi.undangan.send-email', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
+                                              onsubmit="return confirm('Kirim undangan ini via email ke {{ addslashes($item['dosen']->email) }}?');" class="inline">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center justify-center p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition-all border border-rose-200 cursor-pointer" title="Kirim Undangan via Email ke {{ $item['dosen']->email }}">
+                                                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="inline-flex items-center justify-center p-2 bg-slate-50 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed" title="Dosen ini belum punya email terdaftar — lengkapi di Master Dosen">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                            </svg>
+                                        </span>
+                                    @endif
                                      @php
                                           // Link publik WAJIB di-scope ke Periode + Gelombang (+ Jenis, sudah selalu
                                           // terpilih di filter atas) yang sedang aktif dipilih admin — supaya link

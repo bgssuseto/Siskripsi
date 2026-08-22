@@ -44,6 +44,35 @@ class KelulusanService
     }
 
     /**
+     * Auto-finalize exam results: any sidang whose scheduled date has already
+     * passed but whose hasil ujian was never manually set is assumed passed
+     * ("Lulus") by default. A coordinator/admin can still edit it to
+     * "Tidak Lulus" afterwards — this only fills in the default, it never
+     * overwrites an existing status_ujian value.
+     */
+    public static function autoFinalizePastExams(): void
+    {
+        $affectedNims = Sidang::whereNull('status_ujian')
+            ->whereNotNull('tanggal')
+            ->where('tanggal', '<', now())
+            ->pluck('nim')
+            ->unique();
+
+        if ($affectedNims->isEmpty()) {
+            return;
+        }
+
+        Sidang::whereNull('status_ujian')
+            ->whereNotNull('tanggal')
+            ->where('tanggal', '<', now())
+            ->update(['status_ujian' => 'lulus']);
+
+        foreach ($affectedNims as $nim) {
+            self::syncStatus($nim);
+        }
+    }
+
+    /**
      * Whether a student (by NIM) has a 'tidak_lulus' (remidi) result for the
      * given jenis bucket ('sempro' or skripsi-track) with no registration yet
      * in the given active periode — meaning they need to be re-registered by

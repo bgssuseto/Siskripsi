@@ -281,6 +281,25 @@ class MenuController extends Controller
             Menu::firstOrCreate(['route' => $menu['route']], $menu);
         }
 
+        // Group 'Manajemen User' and 'Manajemen Menu' under a single 'Manajemen' parent
+        $manajemenParent = Menu::firstOrCreate(
+            ['name' => 'Manajemen', 'role_default' => 'super_admin'],
+            [
+                'route'        => null,
+                'icon'         => 'cog',
+                'role_default' => 'super_admin',
+                'sort_order'   => 8,
+            ]
+        );
+        $manajemenMenuItem = Menu::where('route', 'admin.menus.index')->first();
+        if ($manajemenMenuItem) {
+            $manajemenMenuItem->update(['parent_id' => $manajemenParent->id, 'sort_order' => 1]);
+        }
+        $manajemenUserItem = Menu::where('route', 'users.index')->first();
+        if ($manajemenUserItem) {
+            $manajemenUserItem->update(['parent_id' => $manajemenParent->id, 'sort_order' => 2]);
+        }
+
         // Remove any parent menu named 'Jadwal Sidang' for role_default = 'dosen' to prevent duplicate/incorrect menu
         $oldJadwalSidang = Menu::where('name', 'Jadwal Sidang')
             ->whereNull('parent_id')

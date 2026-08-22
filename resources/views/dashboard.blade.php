@@ -102,7 +102,7 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400">Ringkasan berkas disetujui, menunggu, & ditolak</p>
                 </div>
                 <span class="text-xs font-bold px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                    📊 Bar
+                    Bar
                 </span>
             </div>
             <div class="flex-1 min-h-[220px] relative">
@@ -118,7 +118,7 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400">Sempro vs Skripsi, masing-masing Reguler vs Jurnal</p>
                 </div>
                 <span class="text-xs font-bold px-2.5 py-1 bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-300 rounded-lg border border-purple-200 dark:border-purple-800">
-                    📊 Jalur
+                    Jalur
                 </span>
             </div>
 
@@ -158,7 +158,7 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400">Trend total mahasiswa lulus & selesai per tahun</p>
                 </div>
                 <span class="text-xs font-bold px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                    📈 Line Chart
+                    Line Chart
                 </span>
             </div>
             <div class="flex-1 min-h-[220px] relative">

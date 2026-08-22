@@ -292,6 +292,13 @@
                                 <div class="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
                                     {{ $s->periode->nama_periode ?? '-' }}
                                 </div>
+                                @if($s->gelombang)
+                                    <div class="mt-1">
+                                        <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                                            GELOMBANG {{ $s->gelombang }}
+                                        </span>
+                                    </div>
+                                @endif
                                 <div class="text-[10px] text-slate-600 dark:text-slate-300 font-semibold mt-1">
                                     Tgl Daftar: {{ $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->isoFormat('dddd, D MMMM Y') : '-' }}
                                 </div>

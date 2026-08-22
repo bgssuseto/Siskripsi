@@ -487,6 +487,8 @@ class SkripsiController extends Controller
 
     public function jadwalIndex(Request $request): View
     {
+        \App\Services\KelulusanService::autoFinalizePastExams();
+
         $built = $this->buildJadwalSkripsiQuery($request);
         $query = $built['query'];
         $periodeId = $built['periode_id'];

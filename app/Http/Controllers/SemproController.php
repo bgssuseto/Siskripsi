@@ -283,6 +283,8 @@ class SemproController extends Controller
 
     public function jadwalIndex(Request $request): View
     {
+        \App\Services\KelulusanService::autoFinalizePastExams();
+
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping', 'ruang', 'periode'
         ])->where('jenis_tugas_akhir', 'sempro');

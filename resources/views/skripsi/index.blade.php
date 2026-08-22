@@ -562,8 +562,7 @@
                                 <th style="width:90px;">Tgl Daftar</th>
                                 <th>NIM</th>
                                 <th>Nama Mahasiswa</th>
-                                <th>Status</th>
-                                <th>Hasil Ujian</th>
+                                <th>Status &amp; Hasil Ujian</th>
                                 <th>Periode</th>
                                 <th>Dosbing Utama</th>
                                 <th>Dosbing Pendamping</th>
@@ -637,10 +636,8 @@
                                         @endif
                                     </td>
                                     <td>
-                                        {!! $item->getJadwalStatusHtml() !!}
-                                    </td>
-                                    <td>
-                                        <div class="flex flex-col items-center gap-1">
+                                        <div class="flex flex-col items-start gap-1">
+                                            {!! $item->getJadwalStatusHtml() !!}
                                             {!! $item->hasil_ujian_html !!}
                                             @if($item->canSetHasilUjian())
                                                 <button type="button" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 underline" onclick="openHasilUjian('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->status_ujian }}')">{{ $item->status_ujian ? 'Ubah' : 'Set Hasil' }}</button>

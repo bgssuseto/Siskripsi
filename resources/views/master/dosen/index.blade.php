@@ -6,7 +6,7 @@
         editModal: false, 
         deleteModal: false,
         importModal: false,
-        editDosen: { id: null, nidn: '', nama_dosen: '', alias: '', kepakaran: '', jabatan_fungsional: '', no_wa: '' },
+        editDosen: { id: null, nidn: '', nama_dosen: '', email: '', alias: '', kepakaran: '', jabatan_fungsional: '', no_wa: '' },
         deleteDosen: { id: null, nama_dosen: '' },
         errors: {},
         isLoading: false,
@@ -168,7 +168,14 @@
                 <p class="text-sm text-slate-500 mt-1">Kelola data NIDN dan Nama Dosen pembimbing/penguji skripsi.</p>
             </div>
             <div class="flex items-center gap-3">
-                <button @click="importModal = true" 
+                <a href="{{ route('master.dosen.export', request()->query()) }}"
+                   class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold text-sm shadow-lg shadow-slate-600/25 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export Excel
+                </a>
+                <button @click="importModal = true"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-lg shadow-emerald-600/25 transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
@@ -225,6 +232,7 @@
                             <th class="px-6 py-4">No</th>
                             <th class="px-6 py-4">NIDN</th>
                             <th class="px-6 py-4">Nama Dosen</th>
+                            <th class="px-6 py-4">Email</th>
                             <th class="px-6 py-4">Inisial</th>
                             <th class="px-6 py-4">Kepakaran</th>
                             <th class="px-6 py-4">Jabatan Fungsional</th>
@@ -246,6 +254,9 @@
                             </td>
                             <td class="px-6 py-4 font-semibold text-slate-900 dark:text-slate-100">
                                 {{ $dosen->nama_dosen }}
+                            </td>
+                            <td class="px-6 py-4 text-slate-600 dark:text-slate-300">
+                                {{ $dosen->email ?? '-' }}
                             </td>
                             <td class="px-6 py-4">
                                 <span class="font-mono font-bold text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg uppercase">{{ $dosen->alias ?: $dosen->initials }}</span>
@@ -286,7 +297,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="10" class="px-6 py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -335,10 +346,19 @@
 
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Nama Dosen <span class="text-rose-500">*</span></label>
-                            <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Eng. Budi Santoso, M.T." 
+                            <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Eng. Budi Santoso, M.T."
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <template x-if="errors.nama_dosen">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_dosen[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Email (Opsional)</label>
+                            <input type="email" name="email" placeholder="Contoh: budi.santoso@umk.ac.id"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.email">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.email[0]"></p>
                             </template>
                         </div>
 
@@ -421,10 +441,19 @@
 
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Nama Dosen <span class="text-rose-500">*</span></label>
-                            <input type="text" name="nama_dosen" x-model="editDosen.nama_dosen" required 
+                            <input type="text" name="nama_dosen" x-model="editDosen.nama_dosen" required
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <template x-if="errors.nama_dosen">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_dosen[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Email (Opsional)</label>
+                            <input type="email" name="email" x-model="editDosen.email"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.email">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.email[0]"></p>
                             </template>
                         </div>
 

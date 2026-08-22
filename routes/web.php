@@ -47,7 +47,7 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::post('register', [RegisteredUserController::class, 'store'])->middleware('throttle:5,1');
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
@@ -176,6 +176,7 @@ Route::middleware('auth')->group(function () {
 
         // Data Master - Dosen
         Route::get('/master/dosen', [DosenController::class, 'index'])->name('master.dosen.index');
+        Route::get('/master/dosen/export', [DosenController::class, 'exportExcel'])->name('master.dosen.export');
         Route::post('/master/dosen', [DosenController::class, 'store'])->name('master.dosen.store');
         Route::delete('/master/dosen/bulk-destroy', [DosenController::class, 'bulkDestroy'])->name('master.dosen.bulk-destroy');
         Route::put('/master/dosen/{dosen}', [DosenController::class, 'update'])->name('master.dosen.update');
@@ -248,6 +249,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/administrasi/undangan', [AdministrasiController::class, 'undanganIndex'])->name('administrasi.undangan.index');
         Route::get('/administrasi/undangan/preview/{dosen}', [AdministrasiController::class, 'previewUndanganHtml'])->name('administrasi.undangan.preview');
         Route::get('/administrasi/undangan/pdf/{dosen}', [AdministrasiController::class, 'generateUndanganPdf'])->name('administrasi.undangan.pdf');
+        Route::post('/administrasi/undangan/kirim-email/{dosen}', [AdministrasiController::class, 'sendUndanganEmail'])->name('administrasi.undangan.send-email');
         Route::get('/administrasi/undangan/docx/{dosen}', [AdministrasiController::class, 'generateUndanganDocx'])->name('administrasi.undangan.docx');
         Route::get('/administrasi/undangan/excel/{dosen}', [AdministrasiController::class, 'generateUndanganExcel'])->name('administrasi.undangan.excel');
         Route::get('/administrasi/undangan/mass-excel', [AdministrasiController::class, 'generateUndanganMassExcel'])->name('administrasi.undangan.mass-excel');

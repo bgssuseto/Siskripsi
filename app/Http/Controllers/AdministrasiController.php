@@ -198,9 +198,12 @@ class AdministrasiController extends Controller
     }
 
     /**
-     * Generate & Download Undangan PDF untuk 1 Dosen
+     * Build the Undangan PDF (dompdf instance) plus its supporting context for
+     * one dosen, given the same filter query params used across preview/pdf/
+     * docx/email export. Shared by generateUndanganPdf() and the "kirim email"
+     * flow so both stay in sync with a single source of truth.
      */
-    public function generateUndanganPdf(Request $request, Dosen $dosen): Response
+    private function buildUndanganPdfForDosen(Request $request, Dosen $dosen): array
     {
         $periodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
@@ -269,10 +272,61 @@ class AdministrasiController extends Controller
 
         $pdf->setPaper('a4', 'landscape');
 
-        $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
+        return [
+            'pdf'           => $pdf,
+            'namaPeriode'   => $namaPeriode,
+            'jenisUndangan' => $jenisUndangan,
+            'totalUji'      => $mySidangs->count(),
+        ];
+    }
+
+    /**
+     * Generate & Download Undangan PDF untuk 1 Dosen
+     */
+    public function generateUndanganPdf(Request $request, Dosen $dosen): Response
+    {
+        $built = $this->buildUndanganPdfForDosen($request, $dosen);
+
+        $invType = $built['jenisUndangan'] === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $filename = "Undangan_{$invType}_{$dosen->nama_dosen}.pdf";
 
-        return $pdf->download($filename);
+        return $built['pdf']->download($filename);
+    }
+
+    /**
+     * Send the Undangan PDF for 1 dosen directly to their registered email,
+     * with an auto-generated subject and message body — an alternative to the
+     * manual "download then attach to your own email" flow.
+     */
+    public function sendUndanganEmail(Request $request, Dosen $dosen)
+    {
+        if (empty($dosen->email)) {
+            $message = "Dosen {$dosen->nama_dosen} belum memiliki alamat email. Silakan lengkapi email dosen ini di Master Dosen terlebih dahulu.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
+        $built = $this->buildUndanganPdfForDosen($request, $dosen);
+
+        $invType = $built['jenisUndangan'] === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
+        $filename = "Undangan_{$invType}_{$dosen->nama_dosen}.pdf";
+
+        \Illuminate\Support\Facades\Mail::to($dosen->email)->send(new \App\Mail\UndanganDosenMail(
+            $dosen,
+            $built['jenisUndangan'],
+            $built['namaPeriode'],
+            $built['totalUji'],
+            $built['pdf']->output(),
+            $filename,
+        ));
+
+        $message = "Undangan berhasil dikirim ke email {$dosen->email} ({$dosen->nama_dosen}).";
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+        return back()->with('success', $message);
     }
 
     /**

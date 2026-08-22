@@ -546,6 +546,7 @@
           sidebarOpen: true,
           mobileOpen: false,
           dataMasterOpen: {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') || request()->routeIs('master.dosen-penguji-rule.*') ? 'true' : 'false' }},
+          manajemenOpen: {{ request()->routeIs('users.*') || request()->routeIs('admin.menus.*') ? 'true' : 'false' }},
           pendaftaranNavOpen: {{ request()->routeIs('pendaftaran.*') ? 'true' : 'false' }},
           dataOpen: {{ request()->routeIs('master.skripsi.*') || request()->routeIs('master.sempro.*') ? 'true' : 'false' }},
           penjadwalanOpen: {{ request()->routeIs('jadwal-ujian.*') || request()->routeIs('jadwal-sempro.*') ? 'true' : 'false' }},
@@ -868,34 +869,54 @@
                     <p class="px-3 text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-500 mb-1 transition-all duration-300"
                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">Administrasi</p>
 
-                    <!-- Manajemen User -->
-                    <a href="{{ route('users.index') }}"
-                       class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                              {{ request()->routeIs('users.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
-                       title="Manajemen User">
-                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('users.*') ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                        <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Manajemen User</span>
-                        @if(!request()->routeIs('users.*'))
-                        <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                        @endif
-                    </a>
-
-                    <!-- Manajemen Menu -->
-                    <a href="{{ route('admin.menus.index') }}"
-                       class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                              {{ request()->routeIs('admin.menus.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
-                       title="Manajemen Menu">
-                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('admin.menus.*') ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Manajemen Menu</span>
-                        @if(!request()->routeIs('admin.menus.*'))
-                        <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                        @endif
-                    </a>
+                    <!-- MANAJEMEN (with submenu: Manajemen Menu, Manajemen User) -->
+                    <div x-data>
+                        <button @click="manajemenOpen = !manajemenOpen; if(!sidebarOpen) sidebarOpen = true"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                       {{ request()->routeIs('users.*') || request()->routeIs('admin.menus.*') ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                title="Manajemen">
+                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('users.*') || request()->routeIs('admin.menus.*') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Manajemen</span>
+                            <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
+                                 :class="{ 'rotate-180': manajemenOpen, 'opacity-0': !sidebarOpen }"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                            @if(!request()->routeIs('users.*') && !request()->routeIs('admin.menus.*'))
+                            <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                            @endif
+                        </button>
+                        <div x-show="manajemenOpen && sidebarOpen"
+                             x-transition:enter="transition-all duration-200 ease-out"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition-all duration-150 ease-in"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
+                             x-cloak>
+                            <a href="{{ route('admin.menus.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('admin.menus.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('admin.menus.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                Manajemen Menu
+                            </a>
+                            <a href="{{ route('users.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('users.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('users.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                                Manajemen User
+                            </a>
+                        </div>
+                    </div>
 
                     <!-- DATA MASTER (with submenu) -->
                     <div x-data>
@@ -1481,7 +1502,7 @@
                         } elseif (Auth::user()->isMahasiswa()) {
                             $nim = Auth::user()->nim ?? null;
                             $name = Auth::user()->name;
-                            
+
                             $upcomingSidangs = \App\Models\Sidang::with(['ruang', 'pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2'])
                                 ->whereDate('tanggal', $tomorrow)
                                 ->where(function ($q) use ($nim, $name) {
@@ -1494,6 +1515,28 @@
                                 ->get();
                             $upcomingCount = $upcomingSidangs->count();
                         }
+                    }
+
+                    // Admin/koordinator notifications: new pending registrations & schedule
+                    // conflicts. Both are derived live from current DB state — once a
+                    // registration is verified or a conflict is resolved by rescheduling,
+                    // it naturally drops out of these lists on the very next page load,
+                    // with no separate "mark as read"/dismiss bookkeeping needed.
+                    $adminPendingRegs = collect();
+                    $adminConflicts = collect();
+                    $adminNotifCount = 0;
+                    if (Auth::check() && (Auth::user()->isSuperAdmin() || Auth::user()->isKoordinator())) {
+                        $adminPendingRegs = \App\Models\Sidang::where('verifikasi_status', 'menunggu')
+                            ->orderByDesc('tanggal_pendaftaran')
+                            ->limit(10)
+                            ->get();
+
+                        $scheduledSidangs = \App\Models\Sidang::with(['ruang'])->whereNotNull('tanggal')->get();
+                        $conflictMapHeader = \App\Services\SidangConflictService::detectAllConflicts($scheduledSidangs);
+                        $conflictIds = collect($conflictMapHeader)->filter(fn ($c) => !empty($c['schedule']))->keys();
+                        $adminConflicts = $scheduledSidangs->whereIn('id', $conflictIds)->values();
+
+                        $adminNotifCount = $adminPendingRegs->count() + $adminConflicts->count();
                     }
                 @endphp
 
@@ -1609,6 +1652,87 @@
                                         <p class="text-xs font-semibold text-slate-500">Tidak ada jadwal ujian esok hari.</p>
                                     </div>
                                 @endforelse
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Admin/Koordinator Notification Bell: pendaftaran baru & bentrok jadwal -->
+                    @if (Auth::user()->isSuperAdmin() || Auth::user()->isKoordinator())
+                    <div class="relative" x-data="{ notifOpen: false }" @click.away="notifOpen = false">
+                        <button @click="notifOpen = !notifOpen"
+                                class="relative flex items-center justify-center w-10 h-10 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-slate-800 transition-all duration-200 shadow-2xs border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 group"
+                                title="Notifikasi Pendaftaran & Bentrok Jadwal">
+                            <svg class="w-6 h-6 text-slate-500 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            @if ($adminNotifCount > 0)
+                            <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold text-white ring-2 ring-white dark:ring-slate-900 animate-bounce">
+                                {{ $adminNotifCount > 99 ? '99+' : $adminNotifCount }}
+                            </span>
+                            @endif
+                        </button>
+
+                        <div x-show="notifOpen"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95 translate-y-1"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 translate-y-1"
+                             class="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 w-auto sm:w-[440px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden z-50"
+                             x-cloak>
+                            <div class="px-5 py-3.5 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="text-lg">🔔</span>
+                                    <span class="font-extrabold text-xs tracking-wider uppercase">Notifikasi</span>
+                                </div>
+                                @if ($adminNotifCount > 0)
+                                <span class="bg-indigo-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-indigo-400">
+                                    {{ $adminNotifCount }} Perlu Diproses
+                                </span>
+                                @endif
+                            </div>
+
+                            <div class="max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                                @forelse ($adminPendingRegs as $pr)
+                                    <a href="{{ route($pr->jenis_tugas_akhir === 'sempro' ? 'pendaftaran.sempro' : 'pendaftaran.skripsi', ['verifikasi_status' => 'menunggu']) }}"
+                                       class="block p-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition-colors">
+                                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                                            <span class="inline-flex px-2 py-0.5 text-[9px] font-bold rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                                ⏳ Pendaftaran Baru &mdash; {{ $pr->jenis_tugas_akhir === 'sempro' ? 'Sempro' : 'Skripsi' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug">{{ $pr->nama_mahasiswa }}</p>
+                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">NIM: {{ $pr->nim }}</p>
+                                    </a>
+                                @empty
+                                @endforelse
+
+                                @forelse ($adminConflicts as $cf)
+                                    <a href="{{ route($cf->jenis_tugas_akhir === 'sempro' ? 'jadwal-sempro.index' : 'jadwal-ujian.index') }}"
+                                       class="block p-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition-colors">
+                                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                                            <span class="inline-flex px-2 py-0.5 text-[9px] font-bold rounded bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                                ⚠️ Jadwal Bentrok
+                                            </span>
+                                        </div>
+                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug">{{ $cf->nama_mahasiswa }}</p>
+                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">NIM: {{ $cf->nim }} &middot; {{ $cf->tanggal?->locale('id')->isoFormat('D MMM Y') }}, {{ $cf->jam }}</p>
+                                    </a>
+                                @empty
+                                @endforelse
+
+                                @if ($adminNotifCount === 0)
+                                    <div class="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
+                                        <div class="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-full flex items-center justify-center mx-auto mb-2.5">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Tidak ada yang perlu diproses saat ini.</p>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
