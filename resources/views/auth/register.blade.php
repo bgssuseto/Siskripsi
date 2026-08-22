@@ -95,6 +95,29 @@
             </div>
         </div>
 
+        {{-- Custom Math CAPTCHA --}}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                Verifikasi: Berapa hasil dari
+                <span id="captcha-question" class="font-bold text-indigo-600 dark:text-indigo-400">
+                    {{ session('captcha_question') }}
+                </span> ?
+            </label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <input id="captcha_input" name="captcha_input" type="number" required autocomplete="off"
+                    class="block w-full pl-12 pr-4 py-3.5 bg-slate-100 dark:bg-slate-800 border border-transparent rounded-xl text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 transition-all duration-200 @error('captcha_input') bg-red-50 dark:bg-red-950/40 focus:border-red-500 focus:ring-red-500/20 @enderror"
+                    placeholder="Masukkan jawaban">
+            </div>
+            @error('captcha_input')
+                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+        </div>
+
         <button type="submit" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2">
             <span>Daftar</span>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,6 +125,8 @@
             </svg>
         </button>
     </form>
+
+
 
     <div class="relative my-8">
         <div class="absolute inset-0 flex items-center">
