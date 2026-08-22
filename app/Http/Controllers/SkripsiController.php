@@ -9,6 +9,7 @@ use App\Models\Periode;
 use App\Models\PendaftaranPeriode;
 use App\Services\SidangConflictService;
 use App\Services\ActivityLogger;
+use App\Services\KelulusanService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -250,8 +251,8 @@ class SkripsiController extends Controller
             ->orderBy('tanggal', 'asc')
             ->pluck('tanggal');
 
-        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->count();
-        $totalJurnal = Sidang::where('jenis_tugas_akhir', 'jurnal')->count();
+        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJurnal = Sidang::where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         return view('master.skripsi.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
@@ -611,8 +612,8 @@ class SkripsiController extends Controller
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
         $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->orderBy('tanggal')->pluck('tanggal');
-        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->count();
-        $totalJurnal  = Sidang::where('jenis_tugas_akhir', 'jurnal')->count();
+        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJurnal  = Sidang::where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
 
@@ -1364,5 +1365,42 @@ class SkripsiController extends Controller
         }
 
         return back()->with('success', 'Status verifikasi pendaftaran berhasil diperbarui!');
+    }
+
+    /**
+     * Set the exam result (hasil ujian) for a sidang record — lulus / tidak lulus (remidi).
+     * Only allowed once the exam has actually been scheduled and its date has passed.
+     * Automatically re-syncs the student's overall graduation status afterwards.
+     */
+    public function setHasilUjian(Request $request, Sidang $sidang)
+    {
+        $validated = $request->validate([
+            'status_ujian' => ['required', 'string', 'in:lulus,tidak_lulus'],
+        ]);
+
+        if (!$sidang->canSetHasilUjian()) {
+            $message = 'Hasil ujian hanya bisa diisi setelah tanggal ujian terlaksana.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
+        $sidang->update(['status_ujian' => $validated['status_ujian']]);
+
+        KelulusanService::syncStatus($sidang->nim);
+
+        ActivityLogger::log('hasil-ujian', $sidang, "Hasil ujian {$sidang->nama_mahasiswa} diset: {$validated['status_ujian']}");
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Hasil ujian berhasil disimpan!',
+                'status_ujian' => $validated['status_ujian'],
+                'hasil_ujian_html' => $sidang->fresh()->hasil_ujian_html,
+            ]);
+        }
+
+        return back()->with('success', 'Hasil ujian berhasil disimpan!');
     }
 }

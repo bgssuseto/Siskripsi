@@ -215,7 +215,7 @@ class SemproController extends Controller
             ->orderBy('tanggal', 'asc')
             ->pluck('tanggal');
 
-        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->count();
+        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         return view('master.sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
@@ -433,7 +433,7 @@ class SemproController extends Controller
         $activePeriode = Periode::where('aktif', true)->first();
         $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')
                                ->where('jenis_tugas_akhir', 'sempro')->orderBy('tanggal')->pluck('tanggal');
-        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->count();
+        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
 

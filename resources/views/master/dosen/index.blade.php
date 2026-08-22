@@ -204,15 +204,28 @@
             </div>
         </div>
 
+        <!-- Bulk Action Bar -->
+        <div id="bulk-bar" class="hidden items-center justify-between gap-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-2xl px-4 py-3 mb-4">
+            <span class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300"><span id="bulk-count">0</span> dosen dipilih</span>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="bulkDeleteDosen()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all">🗑️ Hapus Terpilih</button>
+                <button type="button" onclick="toggleSelectAllDosen(null, true)" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all">Batalkan Pilihan</button>
+            </div>
+        </div>
+
         <!-- Table Card -->
         <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                     <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         <tr>
+                            <th class="px-4 py-4 w-8 text-center">
+                                <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAllDosen(this)">
+                            </th>
                             <th class="px-6 py-4">No</th>
                             <th class="px-6 py-4">NIDN</th>
                             <th class="px-6 py-4">Nama Dosen</th>
+                            <th class="px-6 py-4">Inisial</th>
                             <th class="px-6 py-4">Kepakaran</th>
                             <th class="px-6 py-4">Jabatan Fungsional</th>
                             <th class="px-6 py-4">No. WhatsApp</th>
@@ -222,6 +235,9 @@
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                         @forelse ($dosens as $index => $dosen)
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors">
+                            <td class="px-4 py-4 text-center">
+                                <input type="checkbox" class="row-checkbox-dosen" value="{{ $dosen->id }}" onchange="updateBulkBarDosen()">
+                            </td>
                             <td class="px-6 py-4 font-medium text-slate-400 dark:text-slate-500">
                                 {{ $dosens->firstItem() + $index }}
                             </td>
@@ -230,6 +246,9 @@
                             </td>
                             <td class="px-6 py-4 font-semibold text-slate-900 dark:text-slate-100">
                                 {{ $dosen->nama_dosen }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="font-mono font-bold text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg uppercase">{{ $dosen->alias ?: $dosen->initials }}</span>
                             </td>
                             <td class="px-6 py-4 text-slate-600 dark:text-slate-300">
                                 {{ $dosen->kepakaran ?? '-' }}
@@ -267,7 +286,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="9" class="px-6 py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -474,7 +493,7 @@
                     <h3 class="text-base font-bold text-slate-900 mb-1">Hapus Data Dosen?</h3>
                     <p class="text-xs text-slate-500 mb-6">
                         Apakah Anda yakin ingin menghapus data dosen <span class="font-bold text-slate-800" x-text="deleteDosen.nama_dosen"></span>?
-                        Jika dosen ini pernah tercatat sebagai pembimbing/penguji pada data skripsi/sempro, riwayat tersebut akan dialihkan otomatis ke dosen "Super Administrator" agar data historis tetap utuh.
+                        Jika dosen ini pernah tercatat sebagai pembimbing/penguji pada data skripsi/sempro, kolom tersebut akan tampil sebagai "-" dan otomatis kembali seperti semula jika dosen ini ditambahkan lagi dengan NIDN yang sama.
                     </p>
 
                     <form :action="'/master/dosen/' + deleteDosen.hash_id" method="POST" @submit.prevent="submitDelete($event)" class="flex items-center justify-center gap-3">
@@ -550,4 +569,49 @@
         </div>
 
     </div>
+
+    <script>
+        function toggleSelectAllDosen(sourceCheckbox, forceUncheck = false) {
+            const checked = forceUncheck ? false : (sourceCheckbox ? sourceCheckbox.checked : false);
+            document.querySelectorAll('.row-checkbox-dosen').forEach(cb => cb.checked = checked);
+            const selectAll = document.getElementById('select-all-checkbox');
+            if (selectAll) selectAll.checked = checked;
+            updateBulkBarDosen();
+        }
+
+        function updateBulkBarDosen() {
+            const checked = document.querySelectorAll('.row-checkbox-dosen:checked');
+            const bar = document.getElementById('bulk-bar');
+            document.getElementById('bulk-count').textContent = checked.length;
+            bar.classList.toggle('hidden', checked.length === 0);
+            bar.classList.toggle('flex', checked.length > 0);
+        }
+
+        async function bulkDeleteDosen() {
+            const ids = Array.from(document.querySelectorAll('.row-checkbox-dosen:checked')).map(cb => cb.value);
+            if (ids.length === 0) return;
+            if (!confirm('Hapus ' + ids.length + ' data dosen terpilih? Kolom pembimbing/penguji terkait akan tampil sebagai "-" dan otomatis kembali jika dosen ditambahkan lagi dengan NIDN yang sama.')) return;
+
+            const params = new URLSearchParams();
+            ids.forEach(id => params.append('ids[]', id));
+            params.append('_method', 'DELETE');
+
+            try {
+                const res = await fetch('{{ route('master.dosen.bulk-destroy') }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString(),
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message || 'Gagal menghapus data.', type: 'error' } }));
+                }
+            } catch (err) {
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Gagal terhubung ke server.', type: 'error' } }));
+            }
+        }
+    </script>
 </x-app-layout>

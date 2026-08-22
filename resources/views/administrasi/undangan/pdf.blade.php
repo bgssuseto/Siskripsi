@@ -2,14 +2,13 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Undangan Sidang Skripsi - {{ $dosen->nama_dosen }}</title>
+    <title>Undangan {{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }} - {{ $dosen->nama_dosen }}</title>
     <style>
-        /* ===================== PAGE ===================== */
         @page {
-            margin-top: 15mm;
-            margin-right: 15mm;
-            margin-bottom: 15mm;
-            margin-left: 15mm;
+            margin-top: 12mm;
+            margin-right: 16mm;
+            margin-bottom: 14mm;
+            margin-left: 16mm;
             size: a4 landscape;
         }
 
@@ -21,124 +20,118 @@
 
         body {
             font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
-            font-size: 10px;
+            font-size: 10.5px;
             color: #1e293b;
-            line-height: 1.35;
+            line-height: 1.5;
         }
 
-        /* ===================== HEADER ===================== */
-        table.doc-header {
+        /* ===================== KOP SURAT ===================== */
+        .kop-surat {
+            width: 100%;
+            display: block;
+        }
+
+        .kop-rule-thick {
+            border: none;
+            border-top: 2.5px solid #1e3a8a;
+            margin: 6px 0 1.5px 0;
+        }
+
+        .kop-rule-thin {
+            border: none;
+            border-top: 1px solid #1e3a8a;
+            margin: 0 0 14px 0;
+        }
+
+        /* ===================== LETTER META ===================== */
+        .letter-meta {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 8px;
+            margin-bottom: 14px;
         }
 
-        table.doc-header td {
+        .letter-meta td {
             border: none;
             padding: 0;
-            vertical-align: middle;
+            vertical-align: top;
+            font-size: 10.5px;
         }
 
-        .brand-badge {
+        .letter-meta .field-label {
+            width: 62px;
             display: inline-block;
-            width: 36px;
-            height: 36px;
-            background-color: #4361ee;
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: bold;
-            text-align: center;
-            border-radius: 8px;
-            padding-top: 8px;
         }
 
-        .brand-name {
-            font-size: 20px;
+        .letter-date {
+            text-align: right;
+        }
+
+        .perihal-value {
+            font-weight: bold;
+        }
+
+        /* ===================== BODY TEXT ===================== */
+        .letter-body p {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        .letter-intro {
+            margin-bottom: 12px;
+        }
+
+        /* ===================== SUMMARY STRIP ===================== */
+        table.summary-strip {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            border: 1px solid #cbd5e1;
+            background-color: #f8fafc;
+        }
+
+        table.summary-strip td {
+            padding: 7px 14px;
+            font-size: 10px;
+            border: none;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        table.summary-strip td:last-child {
+            border-right: none;
+        }
+
+        .strip-label {
+            display: block;
+            color: #64748b;
+            font-size: 8.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 2px;
+        }
+
+        .strip-value {
+            display: block;
             font-weight: bold;
             color: #0f172a;
-            line-height: 1.15;
+            font-size: 10.5px;
         }
 
-        .brand-sub {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 2px;
-        }
-
-        .doc-meta {
-            text-align: right;
-            font-size: 9px;
-            color: #64748b;
-            line-height: 1.7;
-            white-space: nowrap;
-        }
-
-        .doc-meta strong {
-            color: #1e293b;
-            font-weight: bold;
-        }
-
-        .header-rule {
-            border: none;
-            border-top: 1.5px solid #4361ee;
-            margin: 0 0 14px 0;
+        .strip-value.accent {
+            color: #1e3a8a;
         }
 
         /* ===================== SECTION HEADING ===================== */
         .section-heading {
-            font-size: 10px;
+            font-size: 10.5px;
             font-weight: bold;
-            color: #4361ee;
+            color: #1e3a8a;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             margin-bottom: 6px;
-        }
-
-        .section-rule {
-            border: none;
-            border-top: 1px solid #e2e8f0;
-            margin: -3px 0 10px 0;
         }
 
         .section-block {
             margin-bottom: 14px;
-        }
-
-        /* ===================== DATA GRID (DOSEN) — 4 kolom sejajar ===================== */
-        table.data-grid {
-            width: 100%;
-            table-layout: fixed;
-            border-collapse: collapse;
-        }
-
-        table.data-grid td {
-            border: none;
-            padding: 0 12px 0 0;
-            font-size: 10px;
-            vertical-align: top;
-            width: 25%;
-        }
-
-        table.data-grid td:last-child {
-            padding-right: 0;
-        }
-
-        .grid-label {
-            display: block;
-            font-size: 9px;
-            color: #64748b;
-            margin-bottom: 2px;
-        }
-
-        .grid-value {
-            display: block;
-            font-weight: bold;
-            font-size: 10px;
-            color: #0f172a;
-        }
-
-        .grid-value.accent {
-            color: #4361ee;
         }
 
         /* ===================== TABEL UMUM ===================== */
@@ -146,28 +139,30 @@
             width: 100%;
             table-layout: fixed;
             border-collapse: collapse;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #94a3b8;
             font-size: 10px;
         }
 
         table.data-table thead th {
-            background-color: #f1f5f9;
+            background-color: #1e3a8a;
             font-weight: bold;
             text-align: left;
-            color: #64748b;
+            color: #ffffff;
             font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
-            padding: 6px 6px;
-            border-bottom: 1px solid #cbd5e1;
+            padding: 6px 7px;
         }
 
         table.data-table tbody td {
-            padding: 6px 6px;
+            padding: 6px 7px;
             border-bottom: 1px solid #e2e8f0;
             vertical-align: top;
-            word-break: normal;
             word-wrap: break-word;
+        }
+
+        table.data-table tbody tr:nth-child(even) {
+            background-color: #f8fafc;
         }
 
         table.data-table tbody tr:last-child td {
@@ -183,80 +178,118 @@
             font-weight: bold;
         }
 
-        /* ===================== TABEL: REKAP HARI & RUANG ===================== */
-        table.rekap-table th.col-jam, table.rekap-table td.col-jam,
-        table.rekap-table th.col-ruang, table.rekap-table td.col-ruang {
+        /* ===================== SIGNATURE BLOCK ===================== */
+        table.signature-block {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table.signature-block td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
+            font-size: 10.5px;
+        }
+
+        .signature-col {
+            width: 260px;
             text-align: center;
+        }
+
+        .signature-space {
+            height: 55px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            text-decoration: underline;
         }
 
         /* ===================== FOOTER ===================== */
         .doc-footer {
-            margin-top: 10px;
+            margin-top: 16px;
             padding-top: 6px;
             border-top: 1px solid #e2e8f0;
-            font-size: 9px;
+            font-size: 8.5px;
             color: #94a3b8;
         }
     </style>
 </head>
 <body>
 
-    <!-- ============ HEADER ============ -->
-    <table class="doc-header">
+    <!-- ============ KOP SURAT (OFFICIAL LETTERHEAD) ============ -->
+    @if($kopBase64)
+        <img src="{{ $kopBase64 }}" class="kop-surat">
+    @else
+        <div style="text-align:center; font-weight:bold; font-size:14px; color:#1e3a8a;">UNIVERSITAS MURIA KUDUS</div>
+        <div style="text-align:center; font-weight:bold; font-size:12px; color:#1e3a8a;">FAKULTAS TEKNIK — PROGRAM STUDI TEKNIK INFORMATIKA</div>
+    @endif
+    <hr class="kop-rule-thick">
+    <hr class="kop-rule-thin">
+
+    <!-- ============ LETTER META ============ -->
+    <table class="letter-meta">
         <tr>
-            <td style="width: 44px;">
-                <div class="brand-badge">TI</div>
+            <td style="width: 60%;">
+                <span class="field-label">Perihal</span>: <span class="perihal-value">Undangan Menjadi Dewan Penguji {{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }}</span><br>
+                <span class="field-label">Lampiran</span>: Jadwal Pelaksanaan ({{ $totalUji }} Mahasiswa)
             </td>
-            <td>
-                <div class="brand-name">Sistem Informasi Tugas Akhir</div>
-                <div class="brand-sub">Rekap Undangan {{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }} &mdash; Program Studi Teknik Informatika, Universitas Muria Kudus</div>
-            </td>
-            <td class="doc-meta" style="width: 210px;">
-                Dicetak: <strong>{{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMM Y, HH:mm') }} WIB</strong><br>
-                Periode: <strong>{{ strtoupper($namaPeriode) }}</strong>
+            <td class="letter-date">
+                Kudus, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
             </td>
         </tr>
     </table>
-    <hr class="header-rule">
 
-    <!-- ============ DATA DOSEN ============ -->
-    <div class="section-block">
-        <div class="section-heading">Data Dosen Penguji / Pembimbing</div>
-        <hr class="section-rule">
-        <table class="data-grid">
-            <tr>
-                <td>
-                    <span class="grid-label">Nama Lengkap</span>
-                    <span class="grid-value">{{ $dosen->nama_dosen }}</span>
-                </td>
-                <td>
-                    <span class="grid-label">NIDN</span>
-                    <span class="grid-value">{{ $dosen->nidn ?? '-' }}</span>
-                </td>
-                <td>
-                    <span class="grid-label">Jenis Kegiatan</span>
-                    <span class="grid-value">{{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }}</span>
-                </td>
-                <td>
-                    <span class="grid-label">Total Jumlah Uji</span>
-                    <span class="grid-value accent">{{ $totalUji }} Mahasiswa</span>
-                </td>
-            </tr>
-        </table>
+    <div class="letter-body">
+        <p style="margin-bottom: 14px;">
+            Kepada Yth.<br>
+            Bapak/Ibu <strong>{{ $dosen->nama_dosen }}</strong><br>
+            Dosen Program Studi Teknik Informatika<br>
+            Universitas Muria Kudus<br>
+            <em>di Tempat</em>
+        </p>
+
+        <p class="letter-intro">
+            Dengan hormat, sehubungan dengan akan dilaksanakannya kegiatan <strong>{{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }}</strong>
+            mahasiswa Program Studi Teknik Informatika, Fakultas Teknik, Universitas Muria Kudus pada <strong>{{ strtoupper($namaPeriode) }}</strong>,
+            kami mengundang Bapak/Ibu untuk berkenan hadir sebagai Dewan Penguji sesuai dengan jadwal yang telah kami susun sebagaimana terlampir pada surat ini.
+        </p>
     </div>
+
+    <!-- ============ SUMMARY STRIP ============ -->
+    <table class="summary-strip">
+        <tr>
+            <td style="width: 30%;">
+                <span class="strip-label">Nama Dosen</span>
+                <span class="strip-value">{{ $dosen->nama_dosen }}</span>
+            </td>
+            <td style="width: 18%;">
+                <span class="strip-label">NIDN</span>
+                <span class="strip-value">{{ $dosen->nidn ?? '-' }}</span>
+            </td>
+            <td style="width: 26%;">
+                <span class="strip-label">Periode Akademik</span>
+                <span class="strip-value">{{ $namaPeriode }}</span>
+            </td>
+            <td style="width: 26%;">
+                <span class="strip-label">Total Mahasiswa Diuji</span>
+                <span class="strip-value accent">{{ $totalUji }} Mahasiswa</span>
+            </td>
+        </tr>
+    </table>
 
     <!-- ============ TABEL 1: Rekap Hari & Ruang ============ -->
     <div class="section-block">
         <div class="section-heading">Rekap Hari &amp; Ruang</div>
-        <hr class="section-rule">
-        <table class="data-table rekap-table">
+        <table class="data-table">
             <thead>
                 <tr>
                     <th class="center" style="width: 5%;">No</th>
                     <th style="width: 35%;">Nama Dosen</th>
-                    <th style="width: 30%;">Hari</th>
-                    <th class="col-ruang" style="width: 15%;">Ruang</th>
-                    <th class="col-jam" style="width: 15%;">Jam</th>
+                    <th style="width: 30%;">Hari, Tanggal</th>
+                    <th class="center" style="width: 15%;">Ruang</th>
+                    <th class="center" style="width: 15%;">Jam</th>
                 </tr>
             </thead>
             <tbody>
@@ -265,8 +298,8 @@
                     <td class="center">{{ $idx + 1 }}</td>
                     <td>{{ $dosen->nama_dosen }}</td>
                     <td>{{ $sesi['hari_tanggal'] }}</td>
-                    <td class="col-ruang">{{ $sesi['ruang'] }}</td>
-                    <td class="col-jam">{{ $sesi['jam'] }}</td>
+                    <td class="center">{{ $sesi['ruang'] }}</td>
+                    <td class="center">{{ $sesi['jam'] }}</td>
                 </tr>
                 @empty
                 <tr>
@@ -280,17 +313,16 @@
     <!-- ============ TABEL 2: Daftar Mahasiswa Yang Diuji ============ -->
     <div class="section-block">
         <div class="section-heading">Daftar Mahasiswa yang Diuji</div>
-        <hr class="section-rule">
         <table class="data-table">
             <thead>
                 <tr>
                     <th class="center" style="width: 3%;">No</th>
-                    <th style="width: 14%;">Nama</th>
-                    <th style="width: 19%;">Ketua Penguji</th>
-                    <th style="width: 17%;">Penguji 1</th>
-                    <th style="width: 17%;">Penguji 2</th>
-                    <th style="width: 16%;">Hari</th>
-                    <th class="center" style="width: 6%;">Jam</th>
+                    <th style="width: 15%;">Nama</th>
+                    <th style="width: 18%;">Ketua Penguji</th>
+                    <th style="width: 16%;">Penguji 1</th>
+                    <th style="width: 16%;">Penguji 2</th>
+                    <th style="width: 16%;">Hari, Tanggal</th>
+                    <th class="center" style="width: 8%;">Jam</th>
                     <th class="center" style="width: 8%;">Ruang</th>
                 </tr>
             </thead>
@@ -321,9 +353,31 @@
         </table>
     </div>
 
+    <div class="letter-body">
+        <p style="margin-top: 6px;">
+            Demikian surat undangan ini kami sampaikan. Atas perhatian dan kesediaan Bapak/Ibu untuk hadir dan meluangkan waktu,
+            kami ucapkan terima kasih.
+        </p>
+    </div>
+
+    <!-- ============ SIGNATURE BLOCK ============ -->
+    <table class="signature-block">
+        <tr>
+            <td></td>
+            <td class="signature-col">
+                Mengetahui,<br>
+                Koordinator Skripsi/Tugas Akhir<br>
+                Program Studi Teknik Informatika
+                <div class="signature-space"></div>
+                <div class="signature-name">{{ $koordinator->nama_dosen ?? '.....................................' }}</div>
+                <div>NIDN. {{ $koordinator->nidn ?? '.....................................' }}</div>
+            </td>
+        </tr>
+    </table>
+
     <!-- ============ FOOTER ============ -->
     <div class="doc-footer">
-        Dokumen ini dihasilkan otomatis oleh Sistem Informasi Tugas Akhir &mdash; Program Studi Teknik Informatika, Universitas Muria Kudus.
+        Dokumen ini dihasilkan otomatis oleh Sistem Informasi Tugas Akhir &mdash; Program Studi Teknik Informatika, Universitas Muria Kudus. Dicetak: {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y, HH:mm') }} WIB.
     </div>
 
 </body>

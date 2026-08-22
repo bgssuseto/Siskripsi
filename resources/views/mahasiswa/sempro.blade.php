@@ -61,7 +61,15 @@
 
                 @if($activeWave)
                     <div class="mt-4">
-                        @if(!$mySidang)
+                        @if($user->status_kelulusan === 'lulus')
+                            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
+                                <span>🎓</span> Anda telah dinyatakan LULUS. Pendaftaran ditutup.
+                            </div>
+                        @elseif($needsCoordinator)
+                            <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 font-extrabold flex items-center gap-2">
+                                <span>⚠️</span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
+                            </div>
+                        @elseif(!$mySidang)
                             <button @click="regModal = true" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer">
                                 <span>📝</span> Ajukan Pendaftaran Sempro
                             </button>

@@ -60,7 +60,15 @@
 
                 @if($activeWave)
                     <div class="mt-4">
-                        @if(!$mySidang)
+                        @if($user->status_kelulusan === 'lulus')
+                            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
+                                <span>🎓</span> Anda telah dinyatakan LULUS. Pendaftaran ditutup.
+                            </div>
+                        @elseif($needsCoordinator)
+                            <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 font-extrabold flex items-center gap-2">
+                                <span>⚠️</span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
+                            </div>
+                        @elseif(!$mySidang)
                             <button @click="regModal = true" style="background-color: #9333ea; color: #ffffff;" class="w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer border border-purple-500">
                                 <span>📝</span> Ajukan Pendaftaran Sidang Skripsi
                             </button>
@@ -194,8 +202,8 @@
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Jenis Tugas Akhir <span class="text-rose-500">*</span></label>
                     <select name="jenis_ta_pilihan" required class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold cursor-pointer bg-white dark:bg-slate-700">
                         <option value="">-- Pilih Jenis Tugas Akhir --</option>
-                        <option value="sidang" {{ (($mySidang->jenis_tugas_akhir ?? '') == 'sidang') ? 'selected' : 'selected' }}>Sidang Skripsi</option>
-                        <option value="jurnal" {{ (($mySidang->jenis_tugas_akhir ?? '') == 'jurnal') ? 'selected' : '' }}>Jurnal</option>
+                        <option value="sidang" {{ ($mySidang && $mySidang->jenis_tugas_akhir == 'sidang') ? 'selected' : '' }}>Sidang Skripsi</option>
+                        <option value="jurnal" {{ ($mySidang && $mySidang->jenis_tugas_akhir == 'jurnal') ? 'selected' : '' }}>Jurnal / Artikel</option>
                     </select>
                 </div>
 

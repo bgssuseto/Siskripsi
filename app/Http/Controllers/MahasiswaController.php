@@ -6,6 +6,7 @@ use App\Models\Sidang;
 use App\Models\Periode;
 use App\Models\Dosen;
 use App\Models\PendaftaranPeriode;
+use App\Services\KelulusanService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -82,8 +83,12 @@ class MahasiswaController extends Controller
         // All student's registrations
         $sidangs = $this->getStudentSidangs($user);
 
+        $needsCoordinator = $user->nim
+            ? KelulusanService::needsCoordinatorForRemidi($user->nim, ['sempro'], $activePeriode?->id)
+            : false;
+
         return view('mahasiswa.sempro', compact(
-            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens'
+            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens', 'needsCoordinator'
         ));
     }
 
@@ -98,16 +103,20 @@ class MahasiswaController extends Controller
         $dosens = Dosen::orderBy('nama_dosen')->get();
 
         $allStudentSidangs = $this->getStudentSidangs($user);
-        // Filter student's sidang skripsi only
-        $sidangs = $allStudentSidangs->where('jenis_tugas_akhir', 'sidang');
+        // Filter student's skripsi-track records only (sidang reguler or jurnal)
+        $sidangs = $allStudentSidangs->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
 
         // Check if student has registered for Sempro
         $semproRecord = $allStudentSidangs->where('jenis_tugas_akhir', 'sempro')->first();
         $hasSempro = $semproRecord ? true : false;
         $isSemproApproved = $semproRecord && $semproRecord->verifikasi_status === 'disetujui';
 
+        $needsCoordinator = $user->nim
+            ? KelulusanService::needsCoordinatorForRemidi($user->nim, Sidang::SKRIPSI_BUCKET, $activePeriode?->id)
+            : false;
+
         return view('mahasiswa.skripsi', compact(
-            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens', 'hasSempro', 'isSemproApproved', 'semproRecord'
+            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens', 'hasSempro', 'isSemproApproved', 'semproRecord', 'needsCoordinator'
         ));
     }
 
@@ -147,10 +156,27 @@ class MahasiswaController extends Controller
     public function storeRegistration(Request $request)
     {
         $user = Auth::user();
-        
+
+        if ($user->status_kelulusan === 'lulus') {
+            $msg = 'Anda sudah dinyatakan LULUS dan tidak dapat mendaftar kembali.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
         $activePeriode = Periode::where('aktif', true)->first();
         if (!$activePeriode) {
             return back()->with('error', 'Tidak ada periode akademik yang aktif saat ini.');
+        }
+
+        $jenisBucket = $request->input('jenis_tugas_akhir') === 'sempro' ? ['sempro'] : Sidang::SKRIPSI_BUCKET;
+        if ($user->nim && KelulusanService::needsCoordinatorForRemidi($user->nim, $jenisBucket, $activePeriode->id)) {
+            $msg = 'Pendaftaran Anda pada periode sebelumnya belum lulus/remidi. Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
         }
 
         $jenisTugasAkhir = $request->input('jenis_tugas_akhir') === 'skripsi' ? 'sidang' : $request->input('jenis_tugas_akhir');

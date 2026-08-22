@@ -1,7 +1,7 @@
 <x-guest-layout>
-    <div class="text-center mb-8">
-        <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Selamat Datang</h2>
-        <p class="mt-2 text-gray-500">Masuk ke akun Skripsi TI Anda</p>
+    <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Selamat Datang</h2>
+        <p class="mt-1.5 text-sm text-gray-500">Masuk ke akun Portal Skripsi Anda</p>
     </div>
 
     @if (session('status'))
@@ -104,7 +104,7 @@
             <div class="w-full border-t border-gray-200"></div>
         </div>
         <div class="relative flex justify-center text-sm">
-            <span class="px-4 bg-gray-50 text-gray-500">atau</span>
+            <span class="px-4 bg-white text-gray-500">atau</span>
         </div>
     </div>
 

@@ -13,6 +13,7 @@
          bulkRejectModal: false,
          bulkRejectKomentar: '',
          bulkDeleteModal: false,
+         adminModal: false,
      }">
     
     <!-- Hero Header Banner -->
@@ -33,6 +34,9 @@
             </div>
             
             <div class="shrink-0 flex items-center gap-3">
+                <button type="button" @click="adminModal = true" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl shadow-md transition-all">
+                    <span>➕</span> Daftar Mahasiswa
+                </button>
                 <div class="px-4 py-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center shadow-md">
                     <p class="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Total Pendaftaran</p>
                     <p class="text-lg font-extrabold text-white mt-0.5">{{ $counts['total'] }} Berkas</p>
@@ -503,7 +507,7 @@
                 </div>
             </template>
 
-            <form :action="'{{ url('/pendaftaran') }}/' + (selectedSidang ? selectedSidang.id : '') + '/verifikasi'" method="POST" class="space-y-3">
+            <form :action="'{{ url('/pendaftaran') }}/' + (selectedSidang ? selectedSidang.hash_id : '') + '/verifikasi'" method="POST" class="space-y-3">
                 @csrf
                 
                 <div>
@@ -567,7 +571,7 @@
                     </p>
                 </div>
 
-                <form :action="'{{ url('/pendaftaran') }}/' + (selectedSidang ? selectedSidang.id : '')" method="POST" class="flex gap-3 pt-2">
+                <form :action="'{{ url('/pendaftaran') }}/' + (selectedSidang ? selectedSidang.hash_id : '')" method="POST" class="flex gap-3 pt-2">
                     @csrf
                     @method('DELETE')
                     <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">
@@ -626,6 +630,87 @@
                 <template x-for="id in selectedIds" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
                 <button type="button" @click="bulkDeleteModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">Batal</button>
                 <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/30">Ya, Hapus Semua</button>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL: DAFTAR MAHASISWA (Admin/Koordinator) --}}
+    <div x-show="adminModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100">
+        <div @click.away="adminModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 text-slate-800 dark:text-slate-100 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-3 max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">➕ Daftar Mahasiswa Skripsi</h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Untuk mahasiswa remidi/belum lulus periode sebelumnya, atau pendaftaran manual lainnya.</p>
+                </div>
+                <button type="button" @click="adminModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs transition-colors">✕</button>
+            </div>
+            <form method="POST" action="{{ route('pendaftaran.admin-store') }}" class="space-y-3">
+                @csrf
+                <input type="hidden" name="jenis_tugas_akhir" value="skripsi">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">NIM <span class="text-rose-500">*</span></label>
+                        <input type="text" name="nim" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Nama Mahasiswa <span class="text-rose-500">*</span></label>
+                        <input type="text" name="nama_mahasiswa" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Judul Skripsi <span class="text-rose-500">*</span></label>
+                    <textarea name="judul_skripsi" required rows="2" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800"></textarea>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Jenis Tugas Akhir <span class="text-rose-500">*</span></label>
+                    <select name="jenis_ta_pilihan" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                        <option value="sidang">Sidang Skripsi</option>
+                        <option value="jurnal">Jurnal / Artikel</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Dosbing Utama <span class="text-rose-500">*</span></label>
+                        <select name="dosen_pembimbing_utama_id" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                            <option value="">-- Pilih --</option>
+                            @foreach($dosens as $d)
+                                <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Dosbing Pendamping</label>
+                        <select name="dosen_pembimbing_pendamping_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                            <option value="">-- Tidak Ada --</option>
+                            @foreach($dosens as $d)
+                                <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">No. WhatsApp</label>
+                        <input type="text" name="no_wa_aktif" placeholder="0812xxxxxxxx" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Periode</label>
+                        <select name="periode_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                            @foreach($periodes as $p)
+                                <option value="{{ $p->id }}" {{ ($activePeriode && $activePeriode->id === $p->id) ? 'selected' : '' }}>{{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <p class="text-[10.5px] text-slate-400 leading-relaxed">Pendaftaran akan langsung berstatus <strong>Terverifikasi</strong>. Data boleh duplikat NIM asalkan periodenya berbeda dari pendaftaran sebelumnya.</p>
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" @click="adminModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md">Daftarkan</button>
+                </div>
             </form>
         </div>
     </div>

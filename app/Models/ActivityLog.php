@@ -41,9 +41,10 @@ class ActivityLog extends Model
     public static function actionLabel(?string $action): string
     {
         return match ($action) {
-            'jadwalkan'  => 'Plotting Jadwal',
-            'reschedule' => 'Geser Jadwal',
-            'verifikasi' => 'Verifikasi Pendaftaran',
+            'jadwalkan'    => 'Plotting Jadwal',
+            'reschedule'   => 'Geser Jadwal',
+            'verifikasi'   => 'Verifikasi Pendaftaran',
+            'hasil-ujian'  => 'Hasil Ujian',
             'created'    => 'Tambah Data',
             'updated'    => 'Ubah Data',
             'deleted'    => 'Hapus Data',

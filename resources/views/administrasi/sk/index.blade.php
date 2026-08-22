@@ -121,12 +121,18 @@
                     </div>
                 </div>
 
-                <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700">
-                    <a href="{{ route('administrasi.sk.export-pembimbing', request()->all()) }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-600/20 transition-all">
+                <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-2.5">
+                    <a href="{{ route('administrasi.sk.export-pembimbing', request()->all()) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-600/20 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <span>Download SK Pembimbing (.xlsx)</span>
+                        <span>Excel (.xlsx)</span>
+                    </a>
+                    <a href="{{ route('administrasi.sk.export-pembimbing-pdf', request()->all()) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs rounded-2xl border-2 border-indigo-200 dark:border-indigo-800 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>PDF</span>
                     </a>
                 </div>
             </div>
@@ -168,16 +174,130 @@
                     </div>
                 </div>
 
-                <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700">
-                    <a href="{{ route('administrasi.sk.export-penguji', request()->all()) }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-purple-600/20 transition-all">
+                <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-2.5">
+                    <a href="{{ route('administrasi.sk.export-penguji', request()->all()) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-purple-600/20 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <span>Download SK Tim Penguji (.xlsx)</span>
+                        <span>Excel (.xlsx)</span>
+                    </a>
+                    <a href="{{ route('administrasi.sk.export-penguji-pdf', request()->all()) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-purple-700 dark:text-purple-300 font-extrabold text-xs rounded-2xl border-2 border-purple-200 dark:border-purple-800 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>PDF</span>
                     </a>
                 </div>
             </div>
 
         </div>
+
+        <!-- Infografis / Statistik -->
+        <div class="bg-white dark:bg-slate-800/80 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                Infografis Beban Bimbingan &amp; Penguji
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">Mengikuti filter periode &amp; jenis TA yang sedang aktif di atas.</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div>
+                    <p class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">Proporsi Jalur Tugas Akhir</p>
+                    <div style="height: 220px;">
+                        <canvas id="chartJalur"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">Top Dosen Pembimbing (Beban Bimbingan)</p>
+                    <div style="height: 220px;">
+                        <canvas id="chartPembimbing"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">Top Dosen Penguji (Beban Menguji)</p>
+                    <div style="height: 220px;">
+                        <canvas id="chartPenguji"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#f8fafc' : '#1e293b';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)';
+
+            new Chart(document.getElementById('chartJalur').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sempro', 'Skripsi'],
+                    datasets: [{
+                        data: [{{ $totalSempro }}, {{ $totalSkripsi }}],
+                        backgroundColor: ['#f59e0b', '#7c3aed'],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: textColor, font: { weight: 'bold', size: 10 } } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('chartPembimbing').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($pembimbingChart->pluck('nama')) !!},
+                    datasets: [{
+                        label: 'Jumlah Bimbingan',
+                        data: {!! json_encode($pembimbingChart->pluck('total')) !!},
+                        backgroundColor: '#4361ee',
+                        borderRadius: 6,
+                        maxBarThickness: 22,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } },
+                        y: { ticks: { color: textColor, font: { size: 9.5 } }, grid: { display: false } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('chartPenguji').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($pengujiChart->pluck('nama')) !!},
+                    datasets: [{
+                        label: 'Jumlah Menguji',
+                        data: {!! json_encode($pengujiChart->pluck('total')) !!},
+                        backgroundColor: '#10b981',
+                        borderRadius: 6,
+                        maxBarThickness: 22,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } },
+                        y: { ticks: { color: textColor, font: { size: 9.5 } }, grid: { display: false } }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>

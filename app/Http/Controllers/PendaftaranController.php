@@ -95,10 +95,10 @@ class PendaftaranController extends Controller
         $activePeriode = Periode::where('aktif', true)->first();
 
         $counts = [
-            'total'     => Sidang::where('jenis_tugas_akhir', 'sempro')->count(),
-            'menunggu'  => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'menunggu')->count(),
-            'disetujui' => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'disetujui')->count(),
-            'ditolak'   => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'ditolak')->count(),
+            'total'     => Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'menunggu'  => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'menunggu')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'disetujui' => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'disetujui')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'ditolak'   => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'ditolak')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
         ];
 
         return view('pendaftaran.sempro', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens'));
@@ -197,10 +197,10 @@ class PendaftaranController extends Controller
         $activePeriode = Periode::where('aktif', true)->first();
 
         $counts = [
-            'total'     => Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count(),
-            'menunggu'  => Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->where('verifikasi_status', 'menunggu')->count(),
-            'disetujui' => Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->where('verifikasi_status', 'disetujui')->count(),
-            'ditolak'   => Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->where('verifikasi_status', 'ditolak')->count(),
+            'total'     => Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'menunggu'  => Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->where('verifikasi_status', 'menunggu')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'disetujui' => Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->where('verifikasi_status', 'disetujui')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'ditolak'   => Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->where('verifikasi_status', 'ditolak')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
         ];
 
         return view('pendaftaran.skripsi', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens'));
@@ -267,6 +267,100 @@ class PendaftaranController extends Controller
                 'success' => true,
                 'message' => $message
             ]);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Admin/koordinator directly registers a student (e.g. a remidi/retake student
+     * who can no longer self-register, or any manual entry). Unlike the student's
+     * own self-service registration, this is allowed to create a new record even if
+     * the student already has records in OTHER periods — a fresh attempt in a new
+     * period is legitimate. Duplicate registration within the SAME period+jenis is
+     * still blocked. The record is created as already 'disetujui' since an
+     * admin/koordinator is registering it directly.
+     */
+    public function adminStore(Request $request)
+    {
+        $validated = $request->validate([
+            'nim'                            => ['required', 'string', 'max:30'],
+            'nama_mahasiswa'                 => ['required', 'string', 'max:255'],
+            'jenis_tugas_akhir'               => ['required', 'string', 'in:sempro,skripsi'],
+            'jenis_ta_pilihan'                => ['nullable', 'string', 'in:sidang,jurnal'],
+            'judul_skripsi'                   => ['required', 'string'],
+            'dosen_pembimbing_utama_id'       => ['required', 'exists:dosens,id'],
+            'dosen_pembimbing_pendamping_id'  => ['nullable', 'exists:dosens,id'],
+            'no_wa_aktif'                     => ['nullable', 'string', 'max:20'],
+            'periode_id'                      => ['nullable', 'exists:periodes,id'],
+        ]);
+
+        $periode = $validated['periode_id']
+            ? Periode::find($validated['periode_id'])
+            : Periode::where('aktif', true)->first();
+
+        if (!$periode) {
+            $msg = 'Tidak ada periode akademik yang aktif/dipilih.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $jenisBucket = $validated['jenis_tugas_akhir'] === 'sempro' ? ['sempro'] : Sidang::SKRIPSI_BUCKET;
+
+        $user = \App\Models\User::where('nim', $validated['nim'])->first();
+        if ($user && $user->status_kelulusan === 'lulus') {
+            $msg = "Mahasiswa {$validated['nama_mahasiswa']} ({$validated['nim']}) sudah dinyatakan LULUS dan tidak dapat didaftarkan lagi.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $duplicate = Sidang::where('nim', $validated['nim'])
+            ->whereIn('jenis_tugas_akhir', $jenisBucket)
+            ->where('periode_id', $periode->id)
+            ->exists();
+
+        if ($duplicate) {
+            $msg = "Mahasiswa {$validated['nama_mahasiswa']} ({$validated['nim']}) sudah memiliki pendaftaran " .
+                ($validated['jenis_tugas_akhir'] === 'sempro' ? 'Sempro' : 'Skripsi') . " pada periode {$periode->nama_periode}.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $actualJenis = $validated['jenis_tugas_akhir'] === 'skripsi'
+            ? ($validated['jenis_ta_pilihan'] ?? 'sidang')
+            : 'sempro';
+
+        $sidang = Sidang::create([
+            'nim'                            => $validated['nim'],
+            'nama_mahasiswa'                 => $validated['nama_mahasiswa'],
+            'judul_skripsi'                  => $validated['judul_skripsi'],
+            'dosen_pembimbing_utama_id'      => $validated['dosen_pembimbing_utama_id'],
+            'dosen_pembimbing_pendamping_id' => $validated['dosen_pembimbing_pendamping_id'] ?? null,
+            'jenis_tugas_akhir'               => $actualJenis,
+            'jalur_ta'                        => $validated['jenis_tugas_akhir'] === 'sempro' ? ($validated['jenis_ta_pilihan'] ?? null) : null,
+            'periode_id'                      => $periode->id,
+            'tanggal_pendaftaran'             => now()->timezone('Asia/Jakarta')->format('Y-m-d'),
+            'no_wa_aktif'                     => $validated['no_wa_aktif'] ?? null,
+            'verifikasi_status'               => 'disetujui',
+            'verifikasi_tanggal'              => now(),
+        ]);
+
+        ActivityLogger::log(
+            'created',
+            $sidang,
+            "Mendaftarkan {$sidang->nama_mahasiswa} ({$sidang->nim}) secara manual untuk periode {$periode->nama_periode} (oleh admin/koordinator)."
+        );
+
+        $message = "Mahasiswa {$sidang->nama_mahasiswa} ({$sidang->nim}) berhasil didaftarkan.";
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
         }
 
         return back()->with('success', $message);

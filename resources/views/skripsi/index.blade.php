@@ -563,6 +563,7 @@
                                 <th>NIM</th>
                                 <th>Nama Mahasiswa</th>
                                 <th>Status</th>
+                                <th>Hasil Ujian</th>
                                 <th>Periode</th>
                                 <th>Dosbing Utama</th>
                                 <th>Dosbing Pendamping</th>
@@ -638,6 +639,14 @@
                                     <td>
                                         {!! $item->getJadwalStatusHtml() !!}
                                     </td>
+                                    <td>
+                                        <div class="flex flex-col items-center gap-1">
+                                            {!! $item->hasil_ujian_html !!}
+                                            @if($item->canSetHasilUjian())
+                                                <button type="button" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 underline" onclick="openHasilUjian('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->status_ujian }}')">{{ $item->status_ujian ? 'Ubah' : 'Set Hasil' }}</button>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td><span class="text-xs font-semibold text-slate-500">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                     <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                     <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
@@ -702,7 +711,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="16" class="py-12 text-center text-slate-400">
+                                    <td colspan="17" class="py-12 text-center text-slate-400">
                                         <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                         <h3>Belum ada data skripsi</h3>
                                         <p style="font-size:.85rem;">Import Excel atau tambah data secara manual.</p>
@@ -1067,6 +1076,29 @@
                     <button type="button" class="btn btn-outline" onclick="closeModal('modal-hapus')">Batal</button>
                     <button type="submit" class="btn btn-danger">Ya, Hapus</button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- ════════════════════════════════════════════════════════════════ --}}
+    {{-- MODAL: HASIL UJIAN                                                --}}
+    {{-- ════════════════════════════════════════════════════════════════ --}}
+    <div id="modal-hasil-ujian" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-hasil-ujian')">
+        <div class="modal-box modal-sm">
+            <div class="modal-header">
+                <span class="modal-title">🎓 Hasil Ujian</span>
+                <button class="modal-close" onclick="closeModal('modal-hasil-ujian')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>Hasil ujian sidang untuk <strong id="hasil-ujian-nama">?</strong></p>
+                <div id="form-hasil-ujian-alert" class="modal-alert" style="display:none;">
+                    <span>⚠️</span>
+                    <span id="form-hasil-ujian-alert-text"></span>
+                </div>
+                <div class="flex gap-3 mt-4">
+                    <button type="button" class="btn btn-success" style="flex:1;" onclick="submitHasilUjian('lulus')">🎓 Lulus</button>
+                    <button type="button" class="btn btn-danger" style="flex:1;" onclick="submitHasilUjian('tidak_lulus')">✕ Tidak Lulus / Remidi</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1737,6 +1769,36 @@
             document.getElementById('hapus-nama').textContent = nama;
             document.getElementById('form-hapus').action = '/master/skripsi/' + hashId;
             openModal('modal-hapus');
+        }
+
+        let _hasilUjianHashId = null;
+        function openHasilUjian(hashId, nama) {
+            _hasilUjianHashId = hashId;
+            document.getElementById('hasil-ujian-nama').textContent = nama;
+            hideModalAlert('form-hasil-ujian-alert');
+            openModal('modal-hasil-ujian');
+        }
+
+        async function submitHasilUjian(status) {
+            if (!_hasilUjianHashId) return;
+            hideModalAlert('form-hasil-ujian-alert');
+            try {
+                const res = await fetch('/jadwal/' + _hasilUjianHashId + '/hasil-ujian', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ status_ujian: status }),
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    closeModal('modal-hasil-ujian');
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
+                    setTimeout(() => location.reload(), 900);
+                } else {
+                    showModalAlert('form-hasil-ujian-alert', 'form-hasil-ujian-alert-text', data.message || 'Gagal menyimpan hasil ujian.');
+                }
+            } catch (err) {
+                showModalAlert('form-hasil-ujian-alert', 'form-hasil-ujian-alert-text', 'Gagal terhubung ke server.');
+            }
         }
 
         // Initialize FullCalendar

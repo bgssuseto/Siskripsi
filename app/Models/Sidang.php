@@ -11,6 +11,11 @@ class Sidang extends Model
 {
     use HasFactory, HasHashedRouteKey;
 
+    /**
+     * jenis_tugas_akhir values that represent the skripsi track (as opposed to sempro).
+     */
+    public const SKRIPSI_BUCKET = ['skripsi', 'sidang', 'jurnal'];
+
     protected $table = 'sidangs';
 
     protected $fillable = [
@@ -33,6 +38,7 @@ class Sidang extends Model
         'verifikasi_status',
         'verifikasi_komentar',
         'verifikasi_tanggal',
+        'status_ujian',
         'bukti_pembayaran',
         'no_wa_aktif',
         'file_persyaratan',
@@ -280,5 +286,42 @@ class Sidang extends Model
     public function getVerifikasiStatusHtmlAttribute(): string
     {
         return $this->getVerifikasiStatusHtml();
+    }
+
+    /**
+     * Whether the exam result (lulus/tidak lulus) can be set for this record yet
+     * — only once it has actually been scheduled and the exam date has passed.
+     */
+    public function canSetHasilUjian(): bool
+    {
+        return !empty($this->tanggal) && $this->tanggal->isPast();
+    }
+
+    /**
+     * Get the exam-result (hasil ujian) badge HTML.
+     */
+    public function getHasilUjianHtml(): string
+    {
+        if ($this->status_ujian === 'lulus') {
+            return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">🎓 Lulus</span>';
+        }
+
+        if ($this->status_ujian === 'tidak_lulus') {
+            return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">✕ Tidak Lulus / Remidi</span>';
+        }
+
+        if (!$this->canSetHasilUjian()) {
+            return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap">— Belum Ujian</span>';
+        }
+
+        return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">⏳ Menunggu Hasil</span>';
+    }
+
+    /**
+     * Accessor for hasil_ujian_html attribute.
+     */
+    public function getHasilUjianHtmlAttribute(): string
+    {
+        return $this->getHasilUjianHtml();
     }
 }

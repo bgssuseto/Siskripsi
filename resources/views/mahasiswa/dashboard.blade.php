@@ -18,6 +18,67 @@
         </div>
     </div>
 
+    <!-- Graduation Celebration Banner -->
+    @if($user->status_kelulusan === 'lulus')
+        <div class="relative overflow-hidden rounded-3xl p-7 sm:p-9 text-center shadow-2xl" style="background: linear-gradient(135deg, #4361ee 0%, #7c3aed 55%, #192355 100%);">
+            <!-- Confetti particles -->
+            <div class="confetti-layer" aria-hidden="true">
+                @foreach(['#fbbf24','#f472b6','#34d399','#60a5fa','#f87171','#a78bfa','#fbbf24','#34d399','#60a5fa','#f472b6','#fbbf24','#a78bfa'] as $i => $color)
+                    <span class="confetti-piece" style="left: {{ (($i + 1) * 8) - 2 }}%; background: {{ $color }}; animation-delay: {{ $i * 0.35 }}s;"></span>
+                @endforeach
+            </div>
+
+            <div class="relative z-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/15 border border-white/25 text-3xl mb-4 grad-cap-float">
+                    🎓
+                </div>
+                <p class="text-[11px] font-bold uppercase tracking-widest text-amber-300 mb-2">Selamat &amp; Sukses</p>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-3">
+                    Selamat, {{ $user->name }}! Anda Telah Dinyatakan <span class="text-amber-300">LULUS</span> 🎉
+                </h2>
+                <p class="max-w-2xl mx-auto text-sm sm:text-[15px] text-indigo-100 leading-relaxed">
+                    Perjalanan panjang menyusun proposal, penelitian, hingga mempertahankannya di meja sidang kini telah usai.
+                    Terima kasih telah menjadi bagian dari keluarga besar <strong class="text-white">Program Studi Teknik Informatika, Universitas Muria Kudus</strong>.
+                    Semoga ilmu dan pengalaman yang telah diperoleh menjadi bekal berharga untuk melangkah lebih jauh.
+                    Sukses selalu untuk langkah berikutnya — kami bangga pernah menjadi bagian dari perjalananmu. 🎓✨
+                </p>
+            </div>
+        </div>
+
+        <style>
+            .confetti-layer {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                overflow: hidden;
+            }
+            .confetti-piece {
+                position: absolute;
+                top: -12px;
+                width: 8px;
+                height: 8px;
+                border-radius: 2px;
+                opacity: 0.9;
+                animation: confetti-fall 4.5s linear infinite;
+            }
+            @keyframes confetti-fall {
+                0%   { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+                85%  { opacity: 0.9; }
+                100% { transform: translateY(220px) rotate(360deg); opacity: 0; }
+            }
+            .grad-cap-float {
+                animation: grad-cap-float 2.6s ease-in-out infinite;
+            }
+            @keyframes grad-cap-float {
+                0%, 100% { transform: translateY(0) rotate(-4deg); }
+                50%      { transform: translateY(-8px) rotate(4deg); }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .confetti-piece, .grad-cap-float { animation: none !important; }
+            }
+        </style>
+    @endif
+
     <!-- Informasi & Tata Tertib Persiapan Sidang -->
     <x-info-persiapan-sidang />
 

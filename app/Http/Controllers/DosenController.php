@@ -35,6 +35,40 @@ class DosenController extends Controller
 
     public function store(Request $request)
     {
+        // If a previously soft-deleted dosen already occupies this NIDN, this is a
+        // "re-add" — restore that same record instead of creating a new one, so any
+        // bimbingan/penguji history that referenced it (now showing as "-") reconnects
+        // automatically instead of ending up duplicated under a new id.
+        $trashed = Dosen::onlyTrashed()->where('nidn', $request->input('nidn'))->first();
+
+        if ($trashed) {
+            $validated = $request->validate([
+                'nidn' => ['required', 'string', 'max:50'],
+                'nama_dosen' => ['required', 'string', 'max:255'],
+                'alias' => ['nullable', 'string', 'max:50', 'alpha_dash', Rule::unique('dosens', 'alias')->ignore($trashed->id)],
+                'kepakaran' => ['nullable', 'string', 'max:255'],
+                'jabatan_fungsional' => ['nullable', 'string', Rule::in(array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS))],
+                'no_wa' => ['nullable', 'string', 'max:30'],
+            ], [
+                'nama_dosen.required' => 'Nama dosen wajib diisi.',
+                'alias.alpha_dash' => 'Alias hanya boleh huruf, angka, strip, dan underscore (tanpa spasi).',
+                'alias.unique' => 'Alias sudah dipakai dosen lain.',
+            ]);
+
+            $trashed->restore();
+            $trashed->update($validated);
+
+            ActivityLogger::log('created', $trashed, "Memulihkan data dosen: {$trashed->nama_dosen} (NIDN: {$trashed->nidn}). Riwayat bimbingan/penguji sebelumnya otomatis terhubung kembali.");
+
+            $message = "Data dosen dengan NIDN ini sebelumnya pernah dihapus — data berhasil dipulihkan, lengkap dengan riwayat bimbingan/penguji sebelumnya.";
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => $message, 'dosen' => $trashed]);
+            }
+
+            return redirect()->route('master.dosen.index')->with('success', $message);
+        }
+
         $validated = $request->validate([
             'nidn' => ['required', 'string', 'max:50', 'unique:dosens,nidn'],
             'nama_dosen' => ['required', 'string', 'max:255'],
@@ -104,53 +138,22 @@ class DosenController extends Controller
         return redirect()->route('master.dosen.index')->with('success', 'Data dosen berhasil diperbarui!');
     }
 
-    public function destroy(Request $request, Dosen $dosen)
+    /**
+     * Soft-delete a Dosen. Every Sidang/KesediaanDosen row that referenced this
+     * dosen keeps its original foreign key untouched — since Dosen uses
+     * SoftDeletes, those relations simply resolve to null (displayed as "-")
+     * while the dosen is trashed, and automatically resolve correctly again the
+     * moment the dosen is restored (re-added with the same NIDN via store()).
+     * Nothing is reassigned to a placeholder, so no history is ever lost.
+     */
+    private function attemptDeleteDosen(Dosen $dosen): ?string
     {
         // Refuse to delete a Dosen that still has a linked User login account —
-        // deleting it would silently orphan that account (dosen_id set to null
-        // via the FK's onDelete('set null')), locking them out of their own portal data.
+        // while trashed, relations to it resolve to null, which would break that
+        // person's own dosen-portal dashboard while they still have an active login.
         $linkedUser = \App\Models\User::where('dosen_id', $dosen->id)->first();
         if ($linkedUser) {
-            $message = "Tidak dapat menghapus data dosen ini karena masih terhubung dengan akun login \"{$linkedUser->name}\". Lepaskan tautan akun tersebut terlebih dahulu sebelum menghapus.";
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => $message], 422);
-            }
-            return back()->with('error', $message);
-        }
-
-        // Ensure Super Administrator Dosen exists
-        $superAdminDosen = Dosen::firstOrCreate(
-            ['nidn' => '0000000000'],
-            ['nama_dosen' => 'Super Administrator']
-        );
-
-        // Link the first super_admin User to this Super Administrator Dosen if they are not already linked
-        $superAdminUser = \App\Models\User::where('role', \App\Models\User::ROLE_SUPER_ADMIN)->first();
-        if ($superAdminUser && !$superAdminUser->dosen_id) {
-            $superAdminUser->update(['dosen_id' => $superAdminDosen->id]);
-        }
-
-        $dosenId = $dosen->id;
-        if ($dosenId !== $superAdminDosen->id) {
-            // Reassign kesediaan_dosens
-            \App\Models\KesediaanDosen::where('dosen_id', $dosenId)
-                ->update(['dosen_id' => $superAdminDosen->id]);
-
-            // Reassign sidang roles
-            \App\Models\Sidang::where('dosen_pembimbing_utama_id', $dosenId)
-                ->update(['dosen_pembimbing_utama_id' => $superAdminDosen->id]);
-
-            \App\Models\Sidang::where('dosen_pembimbing_pendamping_id', $dosenId)
-                ->update(['dosen_pembimbing_pendamping_id' => $superAdminDosen->id]);
-
-            \App\Models\Sidang::where('ketua_penguji_id', $dosenId)
-                ->update(['ketua_penguji_id' => $superAdminDosen->id]);
-
-            \App\Models\Sidang::where('anggota_penguji_1_id', $dosenId)
-                ->update(['anggota_penguji_1_id' => $superAdminDosen->id]);
-
-            \App\Models\Sidang::where('anggota_penguji_2_id', $dosenId)
-                ->update(['anggota_penguji_2_id' => $superAdminDosen->id]);
+            return "masih terhubung dengan akun login \"{$linkedUser->name}\"";
         }
 
         $namaDosenDihapus = $dosen->nama_dosen;
@@ -160,8 +163,23 @@ class DosenController extends Controller
         ActivityLogger::log(
             'deleted',
             $dosen,
-            "Menghapus data dosen: {$namaDosenDihapus} (NIDN: {$nidnDosenDihapus}). Riwayat bimbingan/penguji dialihkan ke Super Administrator."
+            "Menghapus data dosen: {$namaDosenDihapus} (NIDN: {$nidnDosenDihapus}). Data bimbingan/penguji terkait akan tampil sebagai \"-\" dan otomatis kembali seperti semula jika dosen ini ditambahkan lagi dengan NIDN yang sama."
         );
+
+        return null;
+    }
+
+    public function destroy(Request $request, Dosen $dosen)
+    {
+        $refusalReason = $this->attemptDeleteDosen($dosen);
+
+        if ($refusalReason !== null) {
+            $message = "Tidak dapat menghapus data dosen ini karena {$refusalReason}. Lepaskan tautan akun tersebut terlebih dahulu sebelum menghapus.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -171,6 +189,49 @@ class DosenController extends Controller
         }
 
         return redirect()->route('master.dosen.index')->with('success', 'Data dosen berhasil dihapus!');
+    }
+
+    /**
+     * Bulk-delete several Dosen records at once. Each is deleted via the same
+     * reassignment logic as a single delete; any that are refused (still linked
+     * to a login account) are skipped and reported back rather than failing the
+     * whole batch.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:dosens,id'],
+        ]);
+
+        $dosens = Dosen::whereIn('id', $validated['ids'])->get();
+
+        $deleted = 0;
+        $skipped = [];
+        foreach ($dosens as $dosen) {
+            $refusalReason = $this->attemptDeleteDosen($dosen);
+            if ($refusalReason === null) {
+                $deleted++;
+            } else {
+                $skipped[] = "{$dosen->nama_dosen} ({$refusalReason})";
+            }
+        }
+
+        $message = "{$deleted} data dosen berhasil dihapus.";
+        if (!empty($skipped)) {
+            $message .= ' Dilewati: ' . implode('; ', $skipped) . '.';
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'deleted' => $deleted,
+                'skipped' => $skipped,
+            ]);
+        }
+
+        return back()->with($deleted > 0 ? 'success' : 'error', $message);
     }
 
     /**
@@ -294,13 +355,19 @@ class DosenController extends Controller
                     }
                 }
 
-                // Match existing dosen by NIDN or Nama
+                // Match existing dosen by NIDN or Nama — including previously soft-deleted
+                // ones, which are restored here so a re-imported lecturer reconnects with
+                // their prior bimbingan/penguji history instead of colliding on the unique NIDN.
                 $existing = null;
                 if (!empty($nidn)) {
-                    $existing = Dosen::where('nidn', $nidn)->first();
+                    $existing = Dosen::withTrashed()->where('nidn', $nidn)->first();
                 }
                 if (!$existing && !empty($namaDosen)) {
-                    $existing = Dosen::where('nama_dosen', $namaDosen)->first();
+                    $existing = Dosen::withTrashed()->where('nama_dosen', $namaDosen)->first();
+                }
+
+                if ($existing && $existing->trashed()) {
+                    $existing->restore();
                 }
 
                 if ($existing) {

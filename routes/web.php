@@ -177,6 +177,7 @@ Route::middleware('auth')->group(function () {
         // Data Master - Dosen
         Route::get('/master/dosen', [DosenController::class, 'index'])->name('master.dosen.index');
         Route::post('/master/dosen', [DosenController::class, 'store'])->name('master.dosen.store');
+        Route::delete('/master/dosen/bulk-destroy', [DosenController::class, 'bulkDestroy'])->name('master.dosen.bulk-destroy');
         Route::put('/master/dosen/{dosen}', [DosenController::class, 'update'])->name('master.dosen.update');
         Route::delete('/master/dosen/{dosen}', [DosenController::class, 'destroy'])->name('master.dosen.destroy');
         Route::post('/master/dosen/import', [DosenController::class, 'importExcel'])->name('master.dosen.import');
@@ -263,6 +264,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/administrasi/sk', [AdministrasiController::class, 'skIndex'])->name('administrasi.sk.index');
         Route::get('/administrasi/sk/export-pembimbing', [AdministrasiController::class, 'exportSkPembimbingExcel'])->name('administrasi.sk.export-pembimbing');
         Route::get('/administrasi/sk/export-penguji', [AdministrasiController::class, 'exportSkPengujiExcel'])->name('administrasi.sk.export-penguji');
+        Route::get('/administrasi/sk/export-pembimbing-pdf', [AdministrasiController::class, 'exportSkPembimbingPdf'])->name('administrasi.sk.export-pembimbing-pdf');
+        Route::get('/administrasi/sk/export-penguji-pdf', [AdministrasiController::class, 'exportSkPengujiPdf'])->name('administrasi.sk.export-penguji-pdf');
         Route::get('/administrasi/audit-log', [AuditLogController::class, 'index'])->name('administrasi.audit-log.index');
     });
 
@@ -275,6 +278,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pendaftaran/skripsi/export', [PendaftaranController::class, 'exportExcelSkripsi'])->name('pendaftaran.skripsi.export');
         Route::post('/pendaftaran/bulk-verifikasi', [PendaftaranController::class, 'bulkVerifikasi'])->name('pendaftaran.bulk-verifikasi');
         Route::delete('/pendaftaran/bulk-destroy', [PendaftaranController::class, 'bulkDestroy'])->name('pendaftaran.bulk-destroy');
+        Route::post('/pendaftaran/admin-store', [PendaftaranController::class, 'adminStore'])->name('pendaftaran.admin-store');
         Route::post('/pendaftaran/{sidang}/verifikasi', [PendaftaranController::class, 'verifikasi'])->name('pendaftaran.verifikasi');
         Route::delete('/pendaftaran/{sidang}', [PendaftaranController::class, 'destroy'])->name('pendaftaran.destroy');
 
@@ -300,6 +304,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/jadwal/sempro/{sidang}/jadwalkan', [SemproController::class, 'jadwalkan'])->name('jadwal.sempro.jadwalkan');
         Route::patch('/jadwal/sempro/{sidang}/reschedule', [SemproController::class, 'reschedule'])->name('jadwal.sempro.reschedule');
         Route::post('/jadwal/sempro/bulk-jadwalkan', [SemproController::class, 'bulkJadwalkan'])->name('jadwal.sempro.bulk-jadwalkan');
+
+        // Hasil Ujian (shared by Jadwal Sidang Skripsi & Jadwal Sempro — both are Sidang records)
+        Route::post('/jadwal/{sidang}/hasil-ujian', [SkripsiController::class, 'setHasilUjian'])->name('jadwal.hasil-ujian');
     });
     // Mahasiswa routes
     Route::middleware('role:mahasiswa')->group(function () {

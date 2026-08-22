@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Concerns\HasHashedRouteKey;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Support\Facades\Crypt;
 
 class Dosen extends Model
 {
-    use HasFactory, HasHashedRouteKey;
+    use HasFactory, HasHashedRouteKey, SoftDeletes;
 
     protected $fillable = [
         'nidn',
@@ -122,6 +123,18 @@ class Dosen extends Model
         }
         $n = preg_replace('/[^\w\s]/u', ' ', $n);
         return trim(preg_replace('/\s+/', ' ', $n));
+    }
+
+    /**
+     * Fallback initials derived from nama_dosen (titles/degrees stripped) when
+     * no explicit alias has been set — e.g. "Dr. Budi Santoso, M.T." -> "BS".
+     */
+    public function getInitialsAttribute(): string
+    {
+        $words = array_filter(explode(' ', static::cleanName($this->nama_dosen ?? '')));
+        $letters = array_map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)), $words);
+
+        return implode('', array_slice($letters, 0, 3)) ?: '-';
     }
 
     /**
