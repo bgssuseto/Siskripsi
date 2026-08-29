@@ -22,11 +22,14 @@ class PeriodeController extends Controller
         }
 
         $periodes = $query->orderBy('id', 'desc')->paginate(5)->withQueryString();
-        
+
         // Fetch all registration waves/periods
         $pendaftaranPeriodes = PendaftaranPeriode::with('periode')->orderBy('id', 'desc')->get();
 
-        return view('master.periode.index', compact('periodes', 'pendaftaranPeriodes'));
+        // Most recently created periode, used to offer "reuse the same WA group link" on the Tambah Periode form.
+        $latestPeriode = Periode::orderBy('id', 'desc')->first();
+
+        return view('master.periode.index', compact('periodes', 'pendaftaranPeriodes', 'latestPeriode'));
     }
 
     /**
@@ -34,12 +37,16 @@ class PeriodeController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'nama_periode' => ['required', 'string', 'max:255', 'unique:periodes,nama_periode'],
-            'aktif'        => ['nullable', 'boolean'],
+        $validated = $request->validate([
+            'nama_periode'         => ['required', 'string', 'max:255', 'unique:periodes,nama_periode'],
+            'aktif'                => ['nullable', 'boolean'],
+            'link_grup_wa_skripsi' => ['nullable', 'url', 'max:500'],
+            'link_grup_wa_sempro'  => ['nullable', 'url', 'max:500'],
         ], [
-            'nama_periode.required' => 'Nama Periode wajib diisi.',
-            'nama_periode.unique'   => 'Nama Periode sudah terdaftar.',
+            'nama_periode.required'         => 'Nama Periode wajib diisi.',
+            'nama_periode.unique'           => 'Nama Periode sudah terdaftar.',
+            'link_grup_wa_skripsi.url'      => 'Link Grup WhatsApp Skripsi harus berupa URL yang valid.',
+            'link_grup_wa_sempro.url'       => 'Link Grup WhatsApp Sempro harus berupa URL yang valid.',
         ]);
 
         $aktif = $request->has('aktif');
@@ -50,8 +57,10 @@ class PeriodeController extends Controller
         }
 
         $periode = Periode::create([
-            'nama_periode' => $request->nama_periode,
-            'aktif'        => $aktif,
+            'nama_periode'         => $request->nama_periode,
+            'aktif'                => $aktif,
+            'link_grup_wa_skripsi' => $validated['link_grup_wa_skripsi'] ?? null,
+            'link_grup_wa_sempro'  => $validated['link_grup_wa_sempro'] ?? null,
         ]);
 
         if ($request->expectsJson()) {
@@ -70,12 +79,16 @@ class PeriodeController extends Controller
      */
     public function update(Request $request, Periode $periode)
     {
-        $request->validate([
-            'nama_periode' => ['required', 'string', 'max:255', 'unique:periodes,nama_periode,' . $periode->id],
-            'aktif'        => ['nullable', 'boolean'],
+        $validated = $request->validate([
+            'nama_periode'         => ['required', 'string', 'max:255', 'unique:periodes,nama_periode,' . $periode->id],
+            'aktif'                => ['nullable', 'boolean'],
+            'link_grup_wa_skripsi' => ['nullable', 'url', 'max:500'],
+            'link_grup_wa_sempro'  => ['nullable', 'url', 'max:500'],
         ], [
-            'nama_periode.required' => 'Nama Periode wajib diisi.',
-            'nama_periode.unique'   => 'Nama Periode sudah terdaftar.',
+            'nama_periode.required'         => 'Nama Periode wajib diisi.',
+            'nama_periode.unique'           => 'Nama Periode sudah terdaftar.',
+            'link_grup_wa_skripsi.url'      => 'Link Grup WhatsApp Skripsi harus berupa URL yang valid.',
+            'link_grup_wa_sempro.url'       => 'Link Grup WhatsApp Sempro harus berupa URL yang valid.',
         ]);
 
         $aktif = $request->has('aktif');
@@ -86,8 +99,10 @@ class PeriodeController extends Controller
         }
 
         $periode->update([
-            'nama_periode' => $request->nama_periode,
-            'aktif'        => $aktif,
+            'nama_periode'         => $request->nama_periode,
+            'aktif'                => $aktif,
+            'link_grup_wa_skripsi' => $validated['link_grup_wa_skripsi'] ?? null,
+            'link_grup_wa_sempro'  => $validated['link_grup_wa_sempro'] ?? null,
         ]);
 
         if ($request->expectsJson()) {

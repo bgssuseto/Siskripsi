@@ -6,7 +6,7 @@
         editModal: false, 
         deleteModal: false,
         importModal: false,
-        editDosen: { id: null, nidn: '', nama_dosen: '', no_wa: '' },
+        editDosen: { id: null, nidn: '', nama_dosen: '', email: '', alias: '', kepakaran: '', jabatan_fungsional: '', no_wa: '' },
         deleteDosen: { id: null, nama_dosen: '' },
         errors: {},
         isLoading: false,
@@ -168,7 +168,14 @@
                 <p class="text-sm text-slate-500 mt-1">Kelola data NIDN dan Nama Dosen pembimbing/penguji skripsi.</p>
             </div>
             <div class="flex items-center gap-3">
-                <button @click="importModal = true" 
+                <a href="{{ route('master.dosen.export', request()->query()) }}"
+                   class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold text-sm shadow-lg shadow-slate-600/25 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export Excel
+                </a>
+                <button @click="importModal = true"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-lg shadow-emerald-600/25 transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
@@ -204,15 +211,31 @@
             </div>
         </div>
 
+        <!-- Bulk Action Bar -->
+        <div id="bulk-bar" class="hidden items-center justify-between gap-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-2xl px-4 py-3 mb-4">
+            <span class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300"><span id="bulk-count">0</span> dosen dipilih</span>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="bulkDeleteDosen()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all">🗑️ Hapus Terpilih</button>
+                <button type="button" onclick="toggleSelectAllDosen(null, true)" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all">Batalkan Pilihan</button>
+            </div>
+        </div>
+
         <!-- Table Card -->
         <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                     <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         <tr>
+                            <th class="px-4 py-4 w-8 text-center">
+                                <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAllDosen(this)">
+                            </th>
                             <th class="px-6 py-4">No</th>
                             <th class="px-6 py-4">NIDN</th>
                             <th class="px-6 py-4">Nama Dosen</th>
+                            <th class="px-6 py-4">Email</th>
+                            <th class="px-6 py-4">Inisial</th>
+                            <th class="px-6 py-4">Kepakaran</th>
+                            <th class="px-6 py-4">Jabatan Fungsional</th>
                             <th class="px-6 py-4">No. WhatsApp</th>
                             <th class="px-6 py-4 text-right">Aksi</th>
                         </tr>
@@ -220,6 +243,9 @@
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                         @forelse ($dosens as $index => $dosen)
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors">
+                            <td class="px-4 py-4 text-center">
+                                <input type="checkbox" class="row-checkbox-dosen" value="{{ $dosen->id }}" onchange="updateBulkBarDosen()">
+                            </td>
                             <td class="px-6 py-4 font-medium text-slate-400 dark:text-slate-500">
                                 {{ $dosens->firstItem() + $index }}
                             </td>
@@ -228,6 +254,24 @@
                             </td>
                             <td class="px-6 py-4 font-semibold text-slate-900 dark:text-slate-100">
                                 {{ $dosen->nama_dosen }}
+                            </td>
+                            <td class="px-6 py-4 text-slate-600 dark:text-slate-300">
+                                {{ $dosen->email ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="font-mono font-bold text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg uppercase">{{ $dosen->alias ?: $dosen->initials }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-slate-600 dark:text-slate-300">
+                                {{ $dosen->kepakaran ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($dosen->jabatan_fungsional)
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 whitespace-nowrap">
+                                        {{ $dosen->jabatan_fungsional }}
+                                    </span>
+                                @else
+                                    <span class="text-slate-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-300">
                                 {{ $dosen->no_wa ?? '-' }}
@@ -253,7 +297,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="10" class="px-6 py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -302,7 +346,7 @@
 
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Nama Dosen <span class="text-rose-500">*</span></label>
-                            <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Eng. Budi Santoso, M.T." 
+                            <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Eng. Budi Santoso, M.T."
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <template x-if="errors.nama_dosen">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_dosen[0]"></p>
@@ -310,8 +354,49 @@
                         </div>
 
                         <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Email (Opsional)</label>
+                            <input type="email" name="email" placeholder="Contoh: budi.santoso@umk.ac.id"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.email">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.email[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Alias / Inisial (Opsional)</label>
+                            <input type="text" name="alias" placeholder="Contoh: budi (huruf/angka/strip, tanpa spasi)"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <p class="text-[11px] text-slate-400 mt-1">Dipakai untuk shortlink jadwal publik (mis. /j/{{ 'budi' }}).</p>
+                            <template x-if="errors.alias">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.alias[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Kepakaran (Opsional)</label>
+                            <input type="text" name="kepakaran" placeholder="Contoh: Kecerdasan Buatan, Jaringan Komputer"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.kepakaran">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.kepakaran[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Jabatan Fungsional (Opsional)</label>
+                            <select name="jabatan_fungsional" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer">
+                                <option value="">-- Pilih Jabatan Fungsional --</option>
+                                @foreach(array_keys(\App\Models\Dosen::JABATAN_FUNGSIONAL_RANKS) as $jf)
+                                    <option value="{{ $jf }}">{{ $jf }}</option>
+                                @endforeach
+                            </select>
+                            <template x-if="errors.jabatan_fungsional">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.jabatan_fungsional[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">No. WhatsApp (Opsional)</label>
-                            <input type="text" name="no_wa" placeholder="Contoh: 081234567890" 
+                            <input type="text" name="no_wa" placeholder="Contoh: 081234567890"
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
 
@@ -342,7 +427,7 @@
                         </button>
                     </div>
 
-                    <form :action="'/master/dosen/' + editDosen.id" method="POST" @submit.prevent="submitEdit($event)" class="p-6 space-y-4">
+                    <form :action="'/master/dosen/' + editDosen.hash_id" method="POST" @submit.prevent="submitEdit($event)" class="p-6 space-y-4">
                         @csrf
                         @method('PUT')
                         <div>
@@ -356,7 +441,7 @@
 
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Nama Dosen <span class="text-rose-500">*</span></label>
-                            <input type="text" name="nama_dosen" x-model="editDosen.nama_dosen" required 
+                            <input type="text" name="nama_dosen" x-model="editDosen.nama_dosen" required
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <template x-if="errors.nama_dosen">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_dosen[0]"></p>
@@ -364,8 +449,49 @@
                         </div>
 
                         <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Email (Opsional)</label>
+                            <input type="email" name="email" x-model="editDosen.email"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.email">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.email[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Alias / Inisial (Opsional)</label>
+                            <input type="text" name="alias" x-model="editDosen.alias" placeholder="Contoh: budi (huruf/angka/strip, tanpa spasi)"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <p class="text-[11px] text-slate-400 mt-1">Dipakai untuk shortlink jadwal publik.</p>
+                            <template x-if="errors.alias">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.alias[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Kepakaran (Opsional)</label>
+                            <input type="text" name="kepakaran" x-model="editDosen.kepakaran" placeholder="Contoh: Kecerdasan Buatan, Jaringan Komputer"
+                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <template x-if="errors.kepakaran">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.kepakaran[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Jabatan Fungsional (Opsional)</label>
+                            <select name="jabatan_fungsional" x-model="editDosen.jabatan_fungsional" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer">
+                                <option value="">-- Pilih Jabatan Fungsional --</option>
+                                @foreach(array_keys(\App\Models\Dosen::JABATAN_FUNGSIONAL_RANKS) as $jf)
+                                    <option value="{{ $jf }}">{{ $jf }}</option>
+                                @endforeach
+                            </select>
+                            <template x-if="errors.jabatan_fungsional">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.jabatan_fungsional[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">No. WhatsApp (Opsional)</label>
-                            <input type="text" name="no_wa" x-model="editDosen.no_wa" placeholder="Contoh: 081234567890" 
+                            <input type="text" name="no_wa" x-model="editDosen.no_wa" placeholder="Contoh: 081234567890"
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
 
@@ -396,9 +522,10 @@
                     <h3 class="text-base font-bold text-slate-900 mb-1">Hapus Data Dosen?</h3>
                     <p class="text-xs text-slate-500 mb-6">
                         Apakah Anda yakin ingin menghapus data dosen <span class="font-bold text-slate-800" x-text="deleteDosen.nama_dosen"></span>?
+                        Jika dosen ini pernah tercatat sebagai pembimbing/penguji pada data skripsi/sempro, kolom tersebut akan tampil sebagai "-" dan otomatis kembali seperti semula jika dosen ini ditambahkan lagi dengan NIDN yang sama.
                     </p>
 
-                    <form :action="'/master/dosen/' + deleteDosen.id" method="POST" @submit.prevent="submitDelete($event)" class="flex items-center justify-center gap-3">
+                    <form :action="'/master/dosen/' + deleteDosen.hash_id" method="POST" @submit.prevent="submitDelete($event)" class="flex items-center justify-center gap-3">
                         @csrf
                         @method('DELETE')
                         <button type="button" @click="deleteModal = false" class="w-1/2 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
@@ -409,6 +536,8 @@
                     </form>
                 </div>
             </div>
+        </div>
+
         <!-- ================= MODAL IMPORT DOSEN ================= -->
         <div x-show="importModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -469,4 +598,49 @@
         </div>
 
     </div>
+
+    <script>
+        function toggleSelectAllDosen(sourceCheckbox, forceUncheck = false) {
+            const checked = forceUncheck ? false : (sourceCheckbox ? sourceCheckbox.checked : false);
+            document.querySelectorAll('.row-checkbox-dosen').forEach(cb => cb.checked = checked);
+            const selectAll = document.getElementById('select-all-checkbox');
+            if (selectAll) selectAll.checked = checked;
+            updateBulkBarDosen();
+        }
+
+        function updateBulkBarDosen() {
+            const checked = document.querySelectorAll('.row-checkbox-dosen:checked');
+            const bar = document.getElementById('bulk-bar');
+            document.getElementById('bulk-count').textContent = checked.length;
+            bar.classList.toggle('hidden', checked.length === 0);
+            bar.classList.toggle('flex', checked.length > 0);
+        }
+
+        async function bulkDeleteDosen() {
+            const ids = Array.from(document.querySelectorAll('.row-checkbox-dosen:checked')).map(cb => cb.value);
+            if (ids.length === 0) return;
+            if (!confirm('Hapus ' + ids.length + ' data dosen terpilih? Kolom pembimbing/penguji terkait akan tampil sebagai "-" dan otomatis kembali jika dosen ditambahkan lagi dengan NIDN yang sama.')) return;
+
+            const params = new URLSearchParams();
+            ids.forEach(id => params.append('ids[]', id));
+            params.append('_method', 'DELETE');
+
+            try {
+                const res = await fetch('{{ route('master.dosen.bulk-destroy') }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString(),
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message || 'Gagal menghapus data.', type: 'error' } }));
+                }
+            } catch (err) {
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Gagal terhubung ke server.', type: 'error' } }));
+            }
+        }
+    </script>
 </x-app-layout>

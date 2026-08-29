@@ -183,16 +183,24 @@
             </div>
             @php
                 $dosenMenuIds = \Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'dosen')->pluck('menu_id')->toArray();
+                $koordinatorMenuIds = \Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'koordinator')->pluck('menu_id')->toArray();
             @endphp
-            <div class="flex gap-2">
-                <button @click="openRoleAccessModal('dosen', {{ json_encode($dosenMenuIds) }})" 
+            <div class="flex gap-2 flex-wrap">
+                <button @click="openRoleAccessModal('koordinator', {{ json_encode($koordinatorMenuIds) }})"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm shadow-md shadow-blue-500/20 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-4.13a4 4 0 100-8 4 4 0 000 8zm-8 8a4 4 0 018 0"/>
+                    </svg>
+                    Atur Akses Role Koordinator
+                </button>
+                <button @click="openRoleAccessModal('dosen', {{ json_encode($dosenMenuIds) }})"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-sm shadow-md shadow-orange-500/20 hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                     Atur Akses Role Dosen
                 </button>
-                <button @click="createMenuModal = true" 
+                <button @click="createMenuModal = true"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -286,28 +294,28 @@
         <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <!-- Role Tabs Filter -->
             <div class="flex items-center gap-1 p-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
-                <button @click="activeTab = 'all'" 
-                        :class="activeTab === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'all'"
+                        :class="activeTab === 'all' ? 'bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-400 shadow-sm ring-2 ring-indigo-400 border border-indigo-300 dark:border-indigo-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Semua Role
                 </button>
-                <button @click="activeTab = 'super_admin'" 
-                        :class="activeTab === 'super_admin' ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'super_admin'"
+                        :class="activeTab === 'super_admin' ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-400 shadow-sm ring-2 ring-purple-400 border border-purple-300 dark:border-purple-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Super Admin
                 </button>
-                <button @click="activeTab = 'koordinator'" 
-                        :class="activeTab === 'koordinator' ? 'bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'koordinator'"
+                        :class="activeTab === 'koordinator' ? 'bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-400 shadow-sm ring-2 ring-blue-400 border border-blue-300 dark:border-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Koordinator
                 </button>
-                <button @click="activeTab = 'dosen'" 
-                        :class="activeTab === 'dosen' ? 'bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'dosen'"
+                        :class="activeTab === 'dosen' ? 'bg-white dark:bg-slate-700 text-amber-700 dark:text-amber-400 shadow-sm ring-2 ring-amber-400 border border-amber-300 dark:border-amber-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Dosen
                 </button>
-                <button @click="activeTab = 'mahasiswa'" 
-                        :class="activeTab === 'mahasiswa' ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                <button @click="activeTab = 'mahasiswa'"
+                        :class="activeTab === 'mahasiswa' ? 'bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-sm ring-2 ring-emerald-400 border border-emerald-300 dark:border-emerald-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'"
                         class="px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0">
                     Mahasiswa
                 </button>
@@ -411,7 +419,7 @@
                                 <!-- AKSI (Opens Pop Up Modal) -->
                                 <td class="py-4 px-6 text-center">
                                     <button type="button" 
-                                            @click="openUserAccessModal({ id: {{ $u->id }}, name: '{{ addslashes($u->name) }}', email: '{{ addslashes($u->email) }}', role: '{{ $u->role }}' }, {{ json_encode($userMenuIds) }})"
+                                            @click="openUserAccessModal({ id: '{{ $u->hash_id }}', name: '{{ addslashes($u->name) }}', email: '{{ addslashes($u->email) }}', role: '{{ $u->role }}' }, {{ json_encode($userMenuIds) }})"
                                             class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all shadow-sm">
                                         <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -468,7 +476,7 @@
                                 <div class="flex items-center justify-end gap-1">
                                     <!-- Edit Button -->
                                     <button type="button" 
-                                        @click="openEditMenu({ id: {{ $m->id }}, name: '{{ addslashes($m->name) }}', route: '{{ addslashes($m->route ?? '') }}', icon: '{{ addslashes($m->icon ?? '') }}', role_default: '{{ $m->role_default ?? 'all' }}', sort_order: {{ $m->sort_order ?? 0 }}, is_active: {{ $m->is_active ? 'true' : 'false' }} })"
+                                        @click="openEditMenu({ id: '{{ $m->hash_id }}', name: '{{ addslashes($m->name) }}', route: '{{ addslashes($m->route ?? '') }}', icon: '{{ addslashes($m->icon ?? '') }}', role_default: '{{ $m->role_default ?? 'all' }}', sort_order: {{ $m->sort_order ?? 0 }}, is_active: {{ $m->is_active ? 'true' : 'false' }} })"
                                         class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Edit Menu">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>

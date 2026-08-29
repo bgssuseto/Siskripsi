@@ -21,6 +21,7 @@
 
     <!-- Filters & Search Toolbar -->
     <form method="GET" action="{{ route('dosen.jadwal.sempro') }}" class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm mb-6">
+        <input type="hidden" name="riwayat" value="{{ request('riwayat') }}">
         <!-- Search bar -->
         <div class="relative flex-1 min-w-[240px]">
             <input type="text" 
@@ -59,7 +60,11 @@
             <button type="submit" style="background-color: #3251d4; color: #ffffff;" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm cursor-pointer border border-indigo-500">
                 Filter
             </button>
-            @if(request()->hasAny(['search','tanggal','status']))
+            <a href="{{ request()->fullUrlWithQuery(['riwayat' => request('riwayat') ? null : 1]) }}"
+               class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
+                {{ request('riwayat') ? 'Sembunyikan Riwayat' : 'Tampilkan Riwayat / Selesai' }}
+            </a>
+            @if(request()->hasAny(['search','tanggal','status','riwayat']))
                 <a href="{{ route('dosen.jadwal.sempro') }}" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition-all">
                     Reset
                 </a>

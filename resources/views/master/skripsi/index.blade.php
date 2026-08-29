@@ -23,7 +23,7 @@
             display: flex; flex-wrap: wrap; gap: .75rem; align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,.07); border: 1px solid #f1f5f9;
         }
-        .toolbar-search { position: relative; flex: 1; min-width: 200px; }
+        .toolbar-search { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
         .toolbar-search svg { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
         .toolbar-search input {
             width: 100%; padding: .55rem .75rem .55rem 2.25rem;
@@ -159,8 +159,11 @@
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola data mahasiswa sidang skripsi dan jurnal.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
-                <a href="{{ route('master.skripsi.export', request()->query()) }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 border border-emerald-500 cursor-pointer">
-                    📊 Export Excel
+                <a href="{{ route('master.skripsi.export', request()->query()) }}" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-1.5 border border-emerald-500 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Export Excel</span>
                 </a>
                 <a href="{{ route('master.skripsi.import.form') }}" class="btn btn-success">
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
@@ -212,38 +215,85 @@
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIM, nama, judul…">
             </div>
 
-            <select name="per_page" class="filter-select" onchange="this.form.submit()">
-                <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
-                <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>Tampilkan 10 data</option>
-                <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
-                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Tampilkan 100 data</option>
-            </select>
-
-            <select name="jenis" class="filter-select">
-                <option value="">Semua Jenis</option>
-                <option value="skripsi" {{ request('jenis') == 'skripsi' ? 'selected' : '' }}>Skripsi</option>
-                <option value="jurnal" {{ request('jenis') == 'jurnal' ? 'selected' : '' }}>Jurnal / Artikel</option>
-            </select>
-
-            <select name="status" class="filter-select">
-                <option value="">Semua Status</option>
-                <option value="belum" {{ request('status') == 'belum' ? 'selected' : '' }}>Belum Dijadwalkan</option>
-                <option value="sudah" {{ request('status') == 'sudah' ? 'selected' : '' }}>Sudah Dijadwal</option>
-            </select>
-
-            <select name="periode_id" class="filter-select">
-                @foreach ($periodes as $p)
-                    <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode->id ?? null) == $p->id) ? 'selected' : '' }}>
-                        {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
-                    </option>
-                @endforeach
-            </select>
+            <x-filter-popover :active="request()->hasAny(['jenis','status','periode_id','gelombang','per_page','dosen_pembimbing_id','dosen_penguji_id'])">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tampilkan</label>
+                    <select name="per_page" class="filter-select w-full">
+                        <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
+                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>Tampilkan 10 data</option>
+                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Tampilkan 100 data</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Jenis</label>
+                    <select name="jenis" class="filter-select w-full">
+                        <option value="">Semua Jenis</option>
+                        <option value="skripsi" {{ request('jenis') == 'skripsi' ? 'selected' : '' }}>Skripsi</option>
+                        <option value="jurnal" {{ request('jenis') == 'jurnal' ? 'selected' : '' }}>Jurnal / Artikel</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status Jadwal</label>
+                    <select name="status" class="filter-select w-full">
+                        <option value="">Semua Status</option>
+                        <option value="belum" {{ request('status') == 'belum' ? 'selected' : '' }}>Belum Dijadwalkan</option>
+                        <option value="sudah" {{ request('status') == 'sudah' ? 'selected' : '' }}>Sudah Dijadwal</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Periode</label>
+                    <select name="periode_id" class="filter-select w-full">
+                        @foreach ($periodes as $p)
+                            <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode->id ?? null) == $p->id) ? 'selected' : '' }}>
+                                {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gelombang</label>
+                    <select name="gelombang" class="filter-select w-full">
+                        <option value="">Semua Gelombang</option>
+                        @foreach ($gelombangOptions ?? [] as $g)
+                            <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Pembimbing</label>
+                    <select name="dosen_pembimbing_id" class="filter-select w-full">
+                        <option value="">-- Semua Dosen --</option>
+                        @foreach ($dosens as $d)
+                            <option value="{{ $d->id }}" {{ (string) request('dosen_pembimbing_id') === (string) $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Penguji</label>
+                    <select name="dosen_penguji_id" class="filter-select w-full">
+                        <option value="">-- Semua Dosen --</option>
+                        @foreach ($dosens as $d)
+                            <option value="{{ $d->id }}" {{ (string) request('dosen_penguji_id') === (string) $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </x-filter-popover>
 
             <button type="submit" class="btn btn-primary">Filter</button>
-            @if(request()->hasAny(['search','jenis','status','periode_id','per_page']))
+            @if(request()->hasAny(['search','jenis','status','periode_id','gelombang','per_page','dosen_pembimbing_id','dosen_penguji_id']))
                 <a href="{{ route('master.skripsi.index') }}" class="btn btn-outline">✕ Reset</a>
             @endif
         </form>
+
+        {{-- Bulk Action Bar --}}
+        <div id="bulk-bar" style="display:none; padding:.85rem 1rem; margin-bottom:1rem; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; background:#eef1fe; border:1px solid #c7d0fb; border-radius:14px;">
+            <span style="font-size:.8rem; font-weight:800; color:#3251d4;"><span id="bulk-count">0</span> data dipilih</span>
+            <div style="display:flex; gap:.5rem;">
+                <button type="button" class="btn btn-danger btn-sm" onclick="bulkDeleteSelected()">🗑️ Hapus Terpilih</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="toggleSelectAll(null, true)">Batalkan Pilihan</button>
+            </div>
+        </div>
 
         {{-- Table --}}
         <div class="table-card">
@@ -251,6 +301,9 @@
                 <table class="data-table" id="skripsi-table">
                     <thead>
                         <tr>
+                            <th style="width:32px; text-align:center;">
+                                <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this)">
+                            </th>
                             <th style="width:42px; text-align:center;">No</th>
                             <th style="width:90px;">Tgl Daftar</th>
                             <th>NIM</th>
@@ -270,6 +323,9 @@
                     <tbody>
                         @forelse ($sidangs as $item)
                             <tr id="row-skripsi-{{ $item->id }}">
+                                <td style="text-align:center;">
+                                    <input type="checkbox" class="row-checkbox" value="{{ $item->id }}" onchange="updateBulkBar()">
+                                </td>
                                 <td style="text-align:center; color:#475569; font-weight:700; font-size:.78rem;">
                                     {{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}
                                 </td>
@@ -332,8 +388,8 @@
                                     @endif
                                 </td>
                                 <td class="text-right space-x-1 whitespace-nowrap">
-                                    <button class="btn btn-outline btn-sm"
-                                        onclick="openEdit({{ $item->id }}, {{ json_encode([
+                                    <button class="btn btn-outline btn-sm" title="Edit Data"
+                                        onclick="openEdit('{{ $item->hash_id }}', {{ json_encode([
                                             'id'                             => $item->id,
                                             'nim'                            => $item->nim,
                                             'nama_mahasiswa'                 => $item->nama_mahasiswa,
@@ -349,15 +405,15 @@
                                         ]) }})">
                                         ✏️
                                     </button>
-                                    <button class="btn btn-danger btn-sm"
-                                        onclick="confirmHapus({{ $item->id }}, {{ json_encode($item->nama_mahasiswa) }})">
+                                    <button class="btn btn-danger btn-sm" title="Hapus"
+                                        onclick="confirmHapus('{{ $item->hash_id }}', {{ json_encode($item->nama_mahasiswa) }})">
                                         🗑️
                                     </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="13" style="text-align:center; padding:3rem; color:#94a3b8;">
+                                <td colspan="14" style="text-align:center; padding:3rem; color:#94a3b8;">
                                     <div style="font-size:2.5rem; margin-bottom:.5rem;">📂</div>
                                     <div style="font-weight:700; color:#64748b;">Belum ada data skripsi</div>
                                     <div style="font-size:.82rem; margin-top:.25rem;">Import Excel atau tambah data secara manual.</div>
@@ -472,8 +528,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Ketua Penguji <span style="color:red">*</span></label>
-                                <select name="ketua_penguji_id" class="form-control" required>
+                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <select name="ketua_penguji_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
@@ -481,8 +537,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span style="color:red">*</span></label>
-                                <select name="anggota_penguji_1_id" class="form-control" required>
+                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <select name="anggota_penguji_1_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
@@ -581,8 +637,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Ketua Penguji <span style="color:red">*</span></label>
-                                <select name="ketua_penguji_id" id="edit-ketua" class="form-control" required>
+                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <select name="ketua_penguji_id" id="edit-ketua" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
@@ -590,8 +646,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span style="color:red">*</span></label>
-                                <select name="anggota_penguji_1_id" id="edit-penguji1" class="form-control" required>
+                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <select name="anggota_penguji_1_id" id="edit-penguji1" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
@@ -793,7 +849,49 @@
                 const newPag   = doc.querySelector('#skripsi-pagination');
                 if (newTbody) document.querySelector('#skripsi-table tbody').innerHTML = newTbody.innerHTML;
                 if (newPag)   document.getElementById('skripsi-pagination').innerHTML = newPag.innerHTML;
+                updateBulkBar();
             } catch(e) { location.reload(); }
+        }
+
+        // ── Bulk Actions ──────────────────────────────────────────────────────
+        function toggleSelectAll(sourceCheckbox, forceUncheck = false) {
+            const checked = forceUncheck ? false : sourceCheckbox.checked;
+            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = checked);
+            const selectAll = document.getElementById('select-all-checkbox');
+            if (selectAll) selectAll.checked = checked;
+            updateBulkBar();
+        }
+        function updateBulkBar() {
+            const checked = document.querySelectorAll('.row-checkbox:checked');
+            const bar = document.getElementById('bulk-bar');
+            document.getElementById('bulk-count').textContent = checked.length;
+            bar.style.display = checked.length > 0 ? 'flex' : 'none';
+        }
+        async function bulkDeleteSelected() {
+            const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            if (ids.length === 0) return;
+            if (!confirm('Hapus ' + ids.length + ' data skripsi/jurnal terpilih? Aksi ini permanen.')) return;
+
+            const params = new URLSearchParams();
+            ids.forEach(id => params.append('ids[]', id));
+            params.append('_method', 'DELETE');
+
+            try {
+                const res = await fetch('{{ route('master.skripsi.bulk-destroy') }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString(),
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast('success', data.message || 'Data berhasil dihapus!');
+                    await refreshTableContent();
+                } else {
+                    showToast('error', data.message || 'Gagal menghapus data.');
+                }
+            } catch (err) {
+                showToast('error', 'Gagal terhubung ke server.');
+            }
         }
 
         // ── Tambah Data (AJAX) ────────────────────────────────────────────────

@@ -12,8 +12,8 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Item 1: Waktu -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Item 1: Kehadiran -->
         <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-start gap-3">
             <div class="p-2 bg-amber-500/20 text-amber-300 rounded-xl text-lg shrink-0">
                 ⏰
@@ -21,7 +21,7 @@
             <div>
                 <h4 class="text-xs font-extrabold text-amber-300 uppercase tracking-wider">Kehadiran</h4>
                 <p class="text-xs text-slate-200 mt-1 font-medium leading-relaxed">
-                    Hadir tepat waktu di lokasi pada <strong class="text-white">pukul 07.00 WIB</strong> (30 menit sebelum sidang dimulai).
+                    Datang ke ruangan ujian pada <strong class="text-white">pukul 07.00 WIB</strong> untuk mengecek kesiapan ruangan, proyektor, dan peralatan ujian lainnya sebelum sidang dimulai agar pelaksanaan berjalan lancar.
                 </p>
             </div>
         </div>
@@ -34,7 +34,7 @@
             <div>
                 <h4 class="text-xs font-extrabold text-indigo-300 uppercase tracking-wider">Pakaian & Atribut</h4>
                 <p class="text-xs text-slate-200 mt-1 font-medium leading-relaxed">
-                    Jas almamater, dalaman baju putih berdasi, celana hitam panjang, dan sepatu pantofel.
+                    Berpakaian rapi: jas almamater UMK, dalaman baju putih berkerah, dasi hitam, dan sepatu pantofel hitam.
                 </p>
             </div>
         </div>
@@ -45,9 +45,22 @@
                 📄
             </div>
             <div>
-                <h4 class="text-xs font-extrabold text-emerald-300 uppercase tracking-wider">Naskah Skripsi</h4>
+                <h4 class="text-xs font-extrabold text-emerald-300 uppercase tracking-wider">Manuskrip Skripsi</h4>
                 <p class="text-xs text-slate-200 mt-1 font-medium leading-relaxed">
-                    Membawa cetak naskah/lembar skripsi sebanyak <strong class="text-white">4 eksemplar</strong>.
+                    Membawa cetak manuskrip skripsi sebanyak <strong class="text-white">4 eksemplar</strong>.
+                </p>
+            </div>
+        </div>
+
+        <!-- Item 4: Fleksibilitas Jadwal -->
+        <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-start gap-3">
+            <div class="p-2 bg-sky-500/20 text-sky-300 rounded-xl text-lg shrink-0">
+                🔄
+            </div>
+            <div>
+                <h4 class="text-xs font-extrabold text-sky-300 uppercase tracking-wider">Waktu Pelaksanaan</h4>
+                <p class="text-xs text-slate-200 mt-1 font-medium leading-relaxed">
+                    Jadwal sidang <strong class="text-white">dapat maju atau mundur</strong> dari jam yang ditetapkan, tergantung kondisi masing-masing penguji.
                 </p>
             </div>
         </div>

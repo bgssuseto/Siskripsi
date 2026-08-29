@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* Tailwind v4 defaults dark: to prefers-color-scheme (OS setting). This app
+   toggles dark mode manually via a `dark` class on <html> (see app-layout.blade.php),
+   so dark: utilities must be re-bound to that class instead of the media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
@@ -91,6 +96,11 @@ html.dark {
 /* Dark mode text-indigo adjustments */
 html.dark .text-indigo-300 { color: var(--color-primary-300) !important; }
 html.dark .text-indigo-400 { color: var(--color-primary-400) !important; }
+/* text-indigo-700/800/900 are meant for light backgrounds; without this they render
+   near-black text on dark surfaces, making it unreadable in dark mode. */
+html.dark .text-indigo-700 { color: var(--color-primary-300) !important; }
+html.dark .text-indigo-800 { color: var(--color-primary-300) !important; }
+html.dark .text-indigo-900 { color: var(--color-primary-200) !important; }
 
 /* ── Dark Mode: override bg-indigo badge ── */
 html.dark .bg-indigo-50,

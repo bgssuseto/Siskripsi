@@ -29,6 +29,9 @@ class DosenPortalController extends Controller
             'total_jurnal' => 0,
             'recent_schedules' => collect(),
             'is_linked' => $dosen !== null,
+            'bimbingan_utama' => 0,
+            'bimbingan_pendamping' => 0,
+            'bimbingan_total' => 0,
         ];
 
         $todayStr = now()->timezone('Asia/Jakarta')->format('Y-m-d');
@@ -60,6 +63,11 @@ class DosenPortalController extends Controller
                   ->orWhere('dosen_pembimbing_pendamping_id', $dosenId);
             })->count();
 
+            // Rincian peran bimbingan: Pembimbing Utama vs Pembimbing Pendamping
+            $stats['bimbingan_utama'] = Sidang::where('dosen_pembimbing_utama_id', $dosenId)->count();
+            $stats['bimbingan_pendamping'] = Sidang::where('dosen_pembimbing_pendamping_id', $dosenId)->count();
+            $stats['bimbingan_total'] = $totalBimbingan;
+
             // Total Menguji Sempro
             $stats['total_sempro'] = Sidang::where('jenis_tugas_akhir', 'sempro')
                 ->where(function ($q) use ($dosenId) {
@@ -87,6 +95,11 @@ class DosenPortalController extends Controller
                       ->orWhere('ketua_penguji_id', $dosenId)
                       ->orWhere('anggota_penguji_1_id', $dosenId)
                       ->orWhere('anggota_penguji_2_id', $dosenId);
+                })
+                // Sembunyikan ujian yang sudah lewat tanggalnya agar tidak membingungkan
+                // saat gelombang ujian berikutnya dibuka.
+                ->where(function ($q) use ($todayStr) {
+                    $q->whereNull('tanggal')->orWhereDate('tanggal', '>=', $todayStr);
                 })
                 ->with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang', 'periode'])
                 ->orderBy('tanggal', 'desc')
@@ -140,7 +153,7 @@ class DosenPortalController extends Controller
     /**
      * Delete Dosen Availability Slot
      */
-    public function destroyKesediaan($id)
+    public function destroyKesediaan($hashId)
     {
         $user = Auth::user();
         $dosen = $user->dosen;
@@ -148,6 +161,8 @@ class DosenPortalController extends Controller
         if (!$dosen) {
             return redirect()->back()->with('error', 'Akses ditolak.');
         }
+
+        $id = KesediaanDosen::decodeHashId($hashId);
 
         $kesediaan = KesediaanDosen::where('id', $id)->where('dosen_id', $dosen->id)->firstOrFail();
         $kesediaan->delete();
@@ -204,6 +219,16 @@ class DosenPortalController extends Controller
                 } elseif ($status === 'belum_plotting') {
                     $query->whereNull('tanggal');
                 }
+            }
+
+            // Sembunyikan ujian yang sudah selesai (tanggal < hari ini) secara default,
+            // kecuali dosen memilih filter status secara eksplisit atau menampilkan riwayat.
+            $showRiwayat = $request->boolean('riwayat') || $request->get('status') === 'sudah';
+            if (!$request->filled('status') && !$showRiwayat) {
+                $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
+                $query->where(function ($q) use ($today) {
+                    $q->whereNull('tanggal')->orWhereDate('tanggal', '>=', $today);
+                });
             }
 
             $schedules = $query->orderBy('tanggal', 'desc')->orderBy('jam', 'asc')->paginate(10)->withQueryString();
@@ -264,6 +289,16 @@ class DosenPortalController extends Controller
                 } elseif ($status === 'belum_plotting') {
                     $query->whereNull('tanggal');
                 }
+            }
+
+            // Sembunyikan ujian yang sudah selesai (tanggal < hari ini) secara default,
+            // kecuali dosen memilih filter status secara eksplisit atau menampilkan riwayat.
+            $showRiwayat = $request->boolean('riwayat') || $request->get('status') === 'sudah';
+            if (!$request->filled('status') && !$showRiwayat) {
+                $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
+                $query->where(function ($q) use ($today) {
+                    $q->whereNull('tanggal')->orWhereDate('tanggal', '>=', $today);
+                });
             }
 
             $schedules = $query->orderBy('tanggal', 'desc')->orderBy('jam', 'asc')->paginate(10)->withQueryString();
@@ -332,16 +367,23 @@ class DosenPortalController extends Controller
                 $query->whereDate('tanggal', $request->tanggal);
             }
 
+            $todayStr = now()->timezone('Asia/Jakarta')->format('Y-m-d');
+
             if ($request->filled('status')) {
-                $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
                 $status = $request->status;
                 if ($status === 'terjadwal') {
-                    $query->whereDate('tanggal', '>', $today);
+                    $query->whereDate('tanggal', '>', $todayStr);
                 } elseif ($status === 'proses') {
-                    $query->whereDate('tanggal', '=', $today);
+                    $query->whereDate('tanggal', '=', $todayStr);
                 } elseif ($status === 'sudah') {
-                    $query->whereDate('tanggal', '<', $today);
+                    $query->whereDate('tanggal', '<', $todayStr);
                 }
+            } elseif (!$request->filled('tanggal')) {
+                // Sembunyikan ujian yang sudah lewat tanggalnya secara default agar fokus
+                // dosen tidak terpecah, kecuali dia sengaja memilih status/tanggal spesifik.
+                $query->where(function ($q) use ($todayStr) {
+                    $q->whereNull('tanggal')->orWhereDate('tanggal', '>=', $todayStr);
+                });
             }
 
             $schedules = $query->orderBy('tanggal', 'desc')->orderBy('jam', 'asc')->get();

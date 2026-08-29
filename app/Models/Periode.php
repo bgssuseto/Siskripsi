@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Concerns\HasHashedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Periode extends Model
 {
-    use HasFactory;
+    use HasFactory, HasHashedRouteKey;
 
     protected $table = 'periodes';
 
@@ -17,6 +18,8 @@ class Periode extends Model
         'aktif',
         'show_form_kesediaan',
         'lock_form_kesediaan',
+        'link_grup_wa_skripsi',
+        'link_grup_wa_sempro',
     ];
 
     protected $casts = [

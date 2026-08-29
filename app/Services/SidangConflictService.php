@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Sidang;
 use App\Models\Dosen;
+use App\Models\DosenPengujiRule;
 use App\Models\Ruang;
 use Carbon\Carbon;
 
@@ -129,6 +130,56 @@ class SidangConflictService
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // KOMPOSISI DOSEN PENGUJI (master data rule, dikelola admin)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Validasi Rule Komposisi Dosen Penguji (master data terpisah):
+     *   1. Pasangan dosen yang ditandai "tidak boleh" TIDAK BOLEH menjadi
+     *      Ketua Penguji dan Penguji 1 sekaligus pada sidang yang sama.
+     *      (Penguji 2 — yang otomatis diisi Pembimbing Utama — tidak ikut
+     *      diperiksa dalam aturan ini.)
+     *   2. Anggota Penguji 1 TIDAK BOLEH memiliki jabatan fungsional lebih
+     *      tinggi dari Ketua Penguji.
+     *
+     * @param array $data  Validated field array (atau atribut model)
+     * @return array       Daftar pesan error (kosong = tidak ada pelanggaran)
+     */
+    public static function checkPengujiCompositionRules(array $data): array
+    {
+        $errors = [];
+
+        if (($data['jenis_tugas_akhir'] ?? '') === 'sempro') {
+            return $errors;
+        }
+
+        $ketuaPengujiId = (int) ($data['ketua_penguji_id'] ?? 0);
+        $penguji1Id     = (int) ($data['anggota_penguji_1_id'] ?? 0);
+
+        // ── Rule: pasangan Ketua Penguji <-> Penguji 1 yang dilarang ────────────
+        if ($ketuaPengujiId && $penguji1Id && $ketuaPengujiId !== $penguji1Id) {
+            $blocked = DosenPengujiRule::blockedPartnersFor($ketuaPengujiId);
+            if (in_array($penguji1Id, $blocked)) {
+                $dosens = Dosen::whereIn('id', [$ketuaPengujiId, $penguji1Id])->get()->keyBy('id');
+                $namaKetua = $dosens[$ketuaPengujiId]->nama_dosen ?? 'Dosen';
+                $namaP1 = $dosens[$penguji1Id]->nama_dosen ?? 'Dosen';
+                $errors[] = "Komposisi Penguji – Pelanggaran: {$namaKetua} dan {$namaP1} tidak boleh menjadi Ketua Penguji dan Penguji 1 sekaligus (sesuai Rule Komposisi Dosen Penguji).";
+            }
+        }
+
+        // ── Rule: Penguji 1 tidak boleh berjabatan fungsional lebih tinggi dari Ketua Penguji ──
+        if ($ketuaPengujiId && $penguji1Id && $ketuaPengujiId !== $penguji1Id) {
+            $ketua = Dosen::find($ketuaPengujiId);
+            $p1 = Dosen::find($penguji1Id);
+            if ($ketua && $p1 && $ketua->jabatan_rank > 0 && $p1->jabatan_rank > 0 && $p1->jabatan_rank > $ketua->jabatan_rank) {
+                $errors[] = "Komposisi Penguji – Pelanggaran: Anggota Penguji 1 ({$p1->nama_dosen}, {$p1->jabatan_fungsional}) tidak boleh memiliki jabatan fungsional lebih tinggi dari Ketua Penguji ({$ketua->nama_dosen}, {$ketua->jabatan_fungsional}).";
+            }
+        }
+
+        return $errors;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // SCHEDULE CONFLICT DETECTION (single record, for Store/Update validation)
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -221,7 +272,6 @@ class SidangConflictService
     {
         $conflictMap = [];
         $sidangList  = $sidangs->values();
-        $count       = count($sidangList);
 
         // ── Pass 1: Business Rule violations (per-record, no comparison needed) ──
         foreach ($sidangList as $s) {
@@ -241,59 +291,79 @@ class SidangConflictService
             }
         }
 
-        // ── Pass 2: Schedule overlaps (pairwise comparison) ───────────────────
-        for ($i = 0; $i < $count; $i++) {
-            $a = $sidangList[$i];
-            if (!$a->tanggal || !$a->jam) continue;
+        // ── Pass 2: Schedule overlaps (pairwise comparison, scoped per date) ──
+        // Bucketing by tanggal first turns the comparison from O(n²) over the
+        // whole dataset into O(n²) only within each day's (small) sidang count.
+        $byDate = [];
+        foreach ($sidangList as $s) {
+            if (!$s->tanggal || !$s->jam) continue;
+            $key = $s->tanggal instanceof Carbon
+                ? $s->tanggal->format('Y-m-d')
+                : Carbon::parse($s->tanggal)->format('Y-m-d');
+            $byDate[$key][] = $s;
+        }
 
-            $aTanggal = $a->tanggal instanceof Carbon
-                ? $a->tanggal->format('Y-m-d')
-                : Carbon::parse($a->tanggal)->format('Y-m-d');
+        // Batch-load every dosen name referenced across all sidangs once, instead
+        // of querying per conflicting pair inside the loop below.
+        $dosenIds = [];
+        foreach ($sidangList as $s) {
+            foreach ([
+                $s->dosen_pembimbing_utama_id,
+                $s->dosen_pembimbing_pendamping_id,
+                $s->ketua_penguji_id,
+                $s->anggota_penguji_1_id,
+                $s->anggota_penguji_2_id,
+            ] as $id) {
+                if ($id) $dosenIds[$id] = true;
+            }
+        }
+        $dosenNames = empty($dosenIds)
+            ? collect()
+            : Dosen::withTrashed()->whereIn('id', array_keys($dosenIds))->pluck('nama_dosen', 'id');
 
-            $tglIndo = Carbon::parse($aTanggal)->locale('id')->isoFormat('D MMMM Y');
+        foreach ($byDate as $dateKey => $dayList) {
+            $tglIndo = Carbon::parse($dateKey)->locale('id')->isoFormat('D MMMM Y');
+            $dayCount = count($dayList);
 
-            for ($j = $i + 1; $j < $count; $j++) {
-                $b = $sidangList[$j];
-                if (!$b->tanggal || !$b->jam) continue;
+            for ($i = 0; $i < $dayCount; $i++) {
+                $a = $dayList[$i];
 
-                $bTanggal = $b->tanggal instanceof Carbon
-                    ? $b->tanggal->format('Y-m-d')
-                    : Carbon::parse($b->tanggal)->format('Y-m-d');
+                for ($j = $i + 1; $j < $dayCount; $j++) {
+                    $b = $dayList[$j];
 
-                if ($aTanggal !== $bTanggal)            continue;
-                if (!self::isTimeOverlap($a->jam, $b->jam)) continue;
+                    if (!self::isTimeOverlap($a->jam, $b->jam)) continue;
 
-                // Room conflict
-                if ($a->ruang_id && $a->ruang_id == $b->ruang_id) {
-                    $ruangKode = $a->ruang?->kode_ruangan ?? 'Ruang';
-                    $conflictMap[$a->id]['schedule'][] = "Bentrok Ruangan '{$ruangKode}': Bersamaan dengan ujian '{$b->nama_mahasiswa}' ({$tglIndo}, {$b->jam})";
-                    $conflictMap[$b->id]['schedule'][] = "Bentrok Ruangan '{$ruangKode}': Bersamaan dengan ujian '{$a->nama_mahasiswa}' ({$tglIndo}, {$a->jam})";
-                }
+                    // Room conflict
+                    if ($a->ruang_id && $a->ruang_id == $b->ruang_id) {
+                        $ruangKode = $a->ruang?->kode_ruangan ?? 'Ruang';
+                        $conflictMap[$a->id]['schedule'][] = "Bentrok Ruangan '{$ruangKode}': Bersamaan dengan ujian '{$b->nama_mahasiswa}' ({$tglIndo}, {$b->jam})";
+                        $conflictMap[$b->id]['schedule'][] = "Bentrok Ruangan '{$ruangKode}': Bersamaan dengan ujian '{$a->nama_mahasiswa}' ({$tglIndo}, {$a->jam})";
+                    }
 
-                // Dosen conflicts (Pembimbing Pendamping only tests in Sempro)
-                $examinersA = array_filter([
-                    'Pembimbing Utama'      => $a->dosen_pembimbing_utama_id,
-                    'Pembimbing Pendamping' => $a->jenis_tugas_akhir === 'sempro' ? $a->dosen_pembimbing_pendamping_id : null,
-                    'Ketua Penguji'         => $a->ketua_penguji_id,
-                    'Penguji 1'             => $a->anggota_penguji_1_id,
-                    'Penguji 2'             => $a->anggota_penguji_2_id,
-                ]);
+                    // Dosen conflicts (Pembimbing Pendamping only tests in Sempro)
+                    $examinersA = array_filter([
+                        'Pembimbing Utama'      => $a->dosen_pembimbing_utama_id,
+                        'Pembimbing Pendamping' => $a->jenis_tugas_akhir === 'sempro' ? $a->dosen_pembimbing_pendamping_id : null,
+                        'Ketua Penguji'         => $a->ketua_penguji_id,
+                        'Penguji 1'             => $a->anggota_penguji_1_id,
+                        'Penguji 2'             => $a->anggota_penguji_2_id,
+                    ]);
 
-                $examinersB = array_filter([
-                    'Pembimbing Utama'      => $b->dosen_pembimbing_utama_id,
-                    'Pembimbing Pendamping' => $b->jenis_tugas_akhir === 'sempro' ? $b->dosen_pembimbing_pendamping_id : null,
-                    'Ketua Penguji'         => $b->ketua_penguji_id,
-                    'Penguji 1'             => $b->anggota_penguji_1_id,
-                    'Penguji 2'             => $b->anggota_penguji_2_id,
-                ]);
+                    $examinersB = array_filter([
+                        'Pembimbing Utama'      => $b->dosen_pembimbing_utama_id,
+                        'Pembimbing Pendamping' => $b->jenis_tugas_akhir === 'sempro' ? $b->dosen_pembimbing_pendamping_id : null,
+                        'Ketua Penguji'         => $b->ketua_penguji_id,
+                        'Penguji 1'             => $b->anggota_penguji_1_id,
+                        'Penguji 2'             => $b->anggota_penguji_2_id,
+                    ]);
 
-                foreach ($examinersA as $roleA => $dosenIdA) {
-                    foreach ($examinersB as $roleB => $dosenIdB) {
-                        if ((int) $dosenIdA === (int) $dosenIdB) {
-                            $dosen     = Dosen::find($dosenIdA);
-                            $dosenNama = $dosen?->nama_dosen ?? 'Dosen';
-                            $conflictMap[$a->id]['schedule'][] = "Bentrok Dosen '{$dosenNama}' (sebagai {$roleA}): Sudah bertugas sebagai {$roleB} di ujian '{$b->nama_mahasiswa}' ({$tglIndo}, {$b->jam})";
-                            $conflictMap[$b->id]['schedule'][] = "Bentrok Dosen '{$dosenNama}' (sebagai {$roleB}): Sudah bertugas sebagai {$roleA} di ujian '{$a->nama_mahasiswa}' ({$tglIndo}, {$a->jam})";
+                    foreach ($examinersA as $roleA => $dosenIdA) {
+                        foreach ($examinersB as $roleB => $dosenIdB) {
+                            if ((int) $dosenIdA === (int) $dosenIdB) {
+                                $dosenNama = $dosenNames[$dosenIdA] ?? 'Dosen';
+                                $conflictMap[$a->id]['schedule'][] = "Bentrok Dosen '{$dosenNama}' (sebagai {$roleA}): Sudah bertugas sebagai {$roleB} di ujian '{$b->nama_mahasiswa}' ({$tglIndo}, {$b->jam})";
+                                $conflictMap[$b->id]['schedule'][] = "Bentrok Dosen '{$dosenNama}' (sebagai {$roleB}): Sudah bertugas sebagai {$roleA} di ujian '{$a->nama_mahasiswa}' ({$tglIndo}, {$a->jam})";
+                            }
                         }
                     }
                 }

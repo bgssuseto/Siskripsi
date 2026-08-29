@@ -5,9 +5,23 @@
         createModal: false, 
         editModal: false, 
         deleteModal: false,
-        editPeriode: { id: null, nama_periode: '', aktif: false },
+        editPeriode: { id: null, nama_periode: '', aktif: false, link_grup_wa_skripsi: '', link_grup_wa_sempro: '' },
         errors: {},
         isLoading: false,
+
+        latestWaLinks: { skripsi: {{ Js::from($latestPeriode->link_grup_wa_skripsi ?? '') }}, sempro: {{ Js::from($latestPeriode->link_grup_wa_sempro ?? '') }} },
+        useSameWaLink: {{ ($latestPeriode && ($latestPeriode->link_grup_wa_skripsi || $latestPeriode->link_grup_wa_sempro)) ? 'true' : 'false' }},
+        createWaSkripsi: {{ Js::from($latestPeriode->link_grup_wa_skripsi ?? '') }},
+        createWaSempro: {{ Js::from($latestPeriode->link_grup_wa_sempro ?? '') }},
+        toggleUseSameWaLink() {
+            if (this.useSameWaLink) {
+                this.createWaSkripsi = this.latestWaLinks.skripsi;
+                this.createWaSempro = this.latestWaLinks.sempro;
+            } else {
+                this.createWaSkripsi = '';
+                this.createWaSempro = '';
+            }
+        },
 
         waveCreateModal: false,
         waveEditModal: false,
@@ -65,6 +79,7 @@
                 if (response.ok) {
                     this.createModal = false;
                     form.reset();
+                    this.toggleUseSameWaLink(); // form.reset() doesn't touch Alpine-bound WA link state, resync it
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
                     await refreshComponent(['#table-container', '#filter-container', '#stats-container']);
                 } else {
@@ -335,19 +350,29 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="py-4 px-6 text-right space-x-2">
-                                    @if (!$item->aktif)
-                                        <form method="POST" action="{{ route('master.periode.active', $item->id) }}" @submit.prevent="submitSetActive($event)" class="inline-block">
-                                            @csrf
-                                            <button type="submit" :disabled="isLoading" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-all disabled:opacity-50">Set Aktif</button>
-                                        </form>
-                                    @endif
-                                    <button @click="openEdit({{ json_encode(['id' => $item->id, 'nama_periode' => $item->nama_periode, 'aktif' => (bool)$item->aktif]) }})" class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-lg transition-all">
-                                        Edit
-                                    </button>
-                                    <button @click="openDelete({{ json_encode(['id' => $item->id, 'nama_periode' => $item->nama_periode]) }})" class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition-all">
-                                        Hapus
-                                    </button>
+                                <td class="py-4 px-6 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        @if (!$item->aktif)
+                                            <form method="POST" action="{{ route('master.periode.active', $item->hash_id) }}" @submit.prevent="submitSetActive($event)" class="inline-block">
+                                                @csrf
+                                                <button type="submit" :disabled="isLoading" class="p-2 text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all disabled:opacity-50" title="Set Aktif">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @endif
+                                        <button @click="openEdit({{ json_encode(['id' => $item->hash_id, 'nama_periode' => $item->nama_periode, 'aktif' => (bool)$item->aktif, 'link_grup_wa_skripsi' => $item->link_grup_wa_skripsi, 'link_grup_wa_sempro' => $item->link_grup_wa_sempro]) }})" class="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-all" title="Edit Periode">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                        </button>
+                                        <button @click="openDelete({{ json_encode(['id' => $item->hash_id, 'nama_periode' => $item->nama_periode]) }})" class="p-2 text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all" title="Hapus Periode">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -438,15 +463,21 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="py-4 px-6 text-right space-x-2">
-                                    <button @click="openWaveEdit({{ json_encode(['id' => $wave->id, 'periode_id' => $wave->periode_id, 'jenis' => $wave->jenis, 'gelombang' => $wave->gelombang, 'tanggal_mulai' => $wave->tanggal_mulai->format('Y-m-d'), 'tanggal_selesai' => $wave->tanggal_selesai->format('Y-m-d')]) }})" 
-                                            class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-lg transition-all">
-                                        Edit
-                                    </button>
-                                    <button @click="openWaveDelete({{ json_encode(['id' => $wave->id, 'jenis' => $wave->jenis, 'gelombang' => $wave->gelombang]) }})" 
-                                            class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition-all">
-                                        Hapus
-                                    </button>
+                                <td class="py-4 px-6 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button @click="openWaveEdit({{ json_encode(['id' => $wave->hash_id, 'periode_id' => $wave->periode_id, 'jenis' => $wave->jenis, 'gelombang' => $wave->gelombang, 'tanggal_mulai' => $wave->tanggal_mulai->format('Y-m-d'), 'tanggal_selesai' => $wave->tanggal_selesai->format('Y-m-d')]) }})"
+                                                class="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-all" title="Edit Gelombang">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                        </button>
+                                        <button @click="openWaveDelete({{ json_encode(['id' => $wave->hash_id, 'jenis' => $wave->jenis, 'gelombang' => $wave->gelombang]) }})"
+                                                class="p-2 text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all" title="Hapus Gelombang">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -487,6 +518,32 @@
                         <input type="checkbox" name="aktif" value="1" id="create-aktif" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20">
                         <label for="create-aktif" class="text-sm font-semibold text-slate-700 select-none cursor-pointer">Jadikan Periode Aktif</label>
                     </div>
+                    <div class="pt-2 border-t border-slate-100 space-y-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider pt-2">Link Grup WhatsApp (Opsional)</p>
+
+                        @if($latestPeriode && ($latestPeriode->link_grup_wa_skripsi || $latestPeriode->link_grup_wa_sempro))
+                            <label class="flex items-start gap-2.5 p-3 bg-indigo-50 border border-indigo-100 rounded-xl cursor-pointer select-none">
+                                <input type="checkbox" x-model="useSameWaLink" @change="toggleUseSameWaLink()" class="w-4 h-4 mt-0.5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20">
+                                <span class="text-xs font-semibold text-indigo-800">Gunakan link grup WA yang sama seperti periode sebelumnya (<strong>{{ $latestPeriode->nama_periode }}</strong>), tidak perlu isi ulang.</span>
+                            </label>
+                        @endif
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Grup WA Sidang Skripsi</label>
+                            <input type="url" name="link_grup_wa_skripsi" x-model="createWaSkripsi" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <template x-if="errors.link_grup_wa_skripsi">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.link_grup_wa_skripsi[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Grup WA Sempro</label>
+                            <input type="url" name="link_grup_wa_sempro" x-model="createWaSempro" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <template x-if="errors.link_grup_wa_sempro">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.link_grup_wa_sempro[0]"></p>
+                            </template>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">Link ini akan ditampilkan sebagai tombol "Join Grup WhatsApp" ke mahasiswa yang berkasnya sudah diverifikasi/di-ACC pada periode ini.</p>
+                    </div>
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" @click="createModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
                         <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50">
@@ -520,6 +577,24 @@
                     <div class="flex items-center gap-3 pt-2">
                         <input type="checkbox" name="aktif" value="1" id="edit-aktif" x-model="editPeriode.aktif" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20">
                         <label for="edit-aktif" class="text-sm font-semibold text-slate-700 select-none cursor-pointer">Jadikan Periode Aktif</label>
+                    </div>
+                    <div class="pt-2 border-t border-slate-100 space-y-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider pt-2">Link Grup WhatsApp (Opsional)</p>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Grup WA Sidang Skripsi</label>
+                            <input type="url" name="link_grup_wa_skripsi" x-model="editPeriode.link_grup_wa_skripsi" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <template x-if="errors.link_grup_wa_skripsi">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.link_grup_wa_skripsi[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Grup WA Sempro</label>
+                            <input type="url" name="link_grup_wa_sempro" x-model="editPeriode.link_grup_wa_sempro" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <template x-if="errors.link_grup_wa_sempro">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.link_grup_wa_sempro[0]"></p>
+                            </template>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">Link ini akan ditampilkan sebagai tombol "Join Grup WhatsApp" ke mahasiswa yang berkasnya sudah diverifikasi/di-ACC pada periode ini.</p>
                     </div>
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button type="button" @click="editModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>

@@ -6,6 +6,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Dashboard' }} - Sistem Informasi Skripsi TI</title>
 
+    <!-- Favicon -->
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicon-16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('images/favicon-48.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('images/favicon-192.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon-180.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <meta name="theme-color" content="#3251d4">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -129,6 +139,184 @@
             border-color: rgba(168, 85, 247, 0.35) !important;
         }
 
+        /* Extended Dark Mode Safety-Net — additional color families */
+        html.dark .bg-gray-50, html.dark .bg-gray-50\/40, html.dark .bg-gray-50\/50, html.dark .bg-gray-50\/60, html.dark .bg-gray-50\/80 {
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+            border-color: #1e293b !important;
+        }
+
+        html.dark .bg-gray-100 {
+            background-color: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+
+        html.dark .text-gray-900, html.dark .text-gray-800 {
+            color: #f8fafc !important;
+        }
+
+        html.dark .text-gray-700, html.dark .text-gray-600 {
+            color: #cbd5e1 !important;
+        }
+
+        html.dark .text-gray-500, html.dark .text-gray-400 {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .border-gray-200, html.dark .border-gray-200\/80, html.dark .border-gray-200\/90, html.dark .border-gray-100, html.dark .border-gray-300 {
+            border-color: #334155 !important;
+        }
+
+        html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+        html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+        html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+        html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+            border-color: #334155 !important;
+        }
+
+        html.dark .bg-violet-50, html.dark .bg-violet-100 {
+            background-color: rgba(139, 92, 246, 0.18) !important;
+            color: #c4b5fd !important;
+            border-color: rgba(139, 92, 246, 0.35) !important;
+        }
+
+        html.dark .bg-blue-50, html.dark .bg-blue-100 {
+            background-color: rgba(59, 130, 246, 0.18) !important;
+            color: #93c5fd !important;
+            border-color: rgba(59, 130, 246, 0.35) !important;
+        }
+
+        html.dark .bg-red-50, html.dark .bg-red-100 {
+            background-color: rgba(239, 68, 68, 0.18) !important;
+            color: #fca5a5 !important;
+            border-color: rgba(239, 68, 68, 0.35) !important;
+        }
+
+        html.dark .bg-green-50, html.dark .bg-green-100 {
+            background-color: rgba(34, 197, 94, 0.18) !important;
+            color: #86efac !important;
+            border-color: rgba(34, 197, 94, 0.35) !important;
+        }
+
+        html.dark .bg-teal-50, html.dark .bg-teal-100 {
+            background-color: rgba(20, 184, 166, 0.18) !important;
+            color: #5eead4 !important;
+            border-color: rgba(20, 184, 166, 0.35) !important;
+        }
+
+        html.dark .bg-cyan-50, html.dark .bg-cyan-100 {
+            background-color: rgba(6, 182, 212, 0.18) !important;
+            color: #67e8f9 !important;
+            border-color: rgba(6, 182, 212, 0.35) !important;
+        }
+
+        html.dark .bg-sky-50, html.dark .bg-sky-100 {
+            background-color: rgba(14, 165, 233, 0.18) !important;
+            color: #7dd3fc !important;
+            border-color: rgba(14, 165, 233, 0.35) !important;
+        }
+
+        html.dark .bg-orange-50, html.dark .bg-orange-100 {
+            background-color: rgba(249, 115, 22, 0.18) !important;
+            color: #fdba74 !important;
+            border-color: rgba(249, 115, 22, 0.35) !important;
+        }
+
+        html.dark .bg-yellow-50, html.dark .bg-yellow-100 {
+            background-color: rgba(234, 179, 8, 0.18) !important;
+            color: #fde047 !important;
+            border-color: rgba(234, 179, 8, 0.35) !important;
+        }
+
+        html.dark .text-violet-600, html.dark .text-violet-700, html.dark .text-violet-800 { color: #c4b5fd !important; }
+        html.dark .text-blue-600, html.dark .text-blue-700, html.dark .text-blue-800 { color: #93c5fd !important; }
+        html.dark .text-red-600, html.dark .text-red-700, html.dark .text-red-800 { color: #fca5a5 !important; }
+        html.dark .text-green-600, html.dark .text-green-700, html.dark .text-green-800 { color: #86efac !important; }
+        html.dark .text-teal-600, html.dark .text-teal-700, html.dark .text-teal-800 { color: #5eead4 !important; }
+        html.dark .text-cyan-600, html.dark .text-cyan-700, html.dark .text-cyan-800 { color: #67e8f9 !important; }
+        html.dark .text-sky-600, html.dark .text-sky-700, html.dark .text-sky-800 { color: #7dd3fc !important; }
+        html.dark .text-orange-600, html.dark .text-orange-700, html.dark .text-orange-800 { color: #fdba74 !important; }
+        html.dark .text-yellow-600, html.dark .text-yellow-700, html.dark .text-yellow-800 { color: #fde047 !important; }
+
+        html.dark .border-violet-200, html.dark .border-violet-300 { border-color: rgba(139, 92, 246, 0.35) !important; }
+        html.dark .border-blue-200, html.dark .border-blue-300 { border-color: rgba(59, 130, 246, 0.35) !important; }
+        html.dark .border-red-200, html.dark .border-red-300 { border-color: rgba(239, 68, 68, 0.35) !important; }
+        html.dark .border-green-200, html.dark .border-green-300 { border-color: rgba(34, 197, 94, 0.35) !important; }
+        html.dark .border-teal-200, html.dark .border-teal-300 { border-color: rgba(20, 184, 166, 0.35) !important; }
+        html.dark .border-cyan-200, html.dark .border-cyan-300 { border-color: rgba(6, 182, 212, 0.35) !important; }
+        html.dark .border-sky-200, html.dark .border-sky-300 { border-color: rgba(14, 165, 233, 0.35) !important; }
+        html.dark .border-orange-200, html.dark .border-orange-300 { border-color: rgba(249, 115, 22, 0.35) !important; }
+        html.dark .border-yellow-200, html.dark .border-yellow-300 { border-color: rgba(234, 179, 8, 0.35) !important; }
+
+        html.dark .hover\:bg-gray-50:hover, html.dark .hover\:bg-slate-50:hover {
+            background-color: #1e293b !important;
+        }
+
+        /* ===================== LIGHT-MODE SIDEBAR ===================== */
+        /* The sidebar is built dark-first (permanently dark gradient + white text). Give it
+           an explicit light theme when the app is NOT in dark mode, instead of leaving it
+           stuck looking "dark" regardless of the toggle. */
+        html:not(.dark) #app-sidebar {
+            background: #ffffff !important;
+            border-right: 1px solid #e2e8f0;
+            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.05);
+        }
+
+        html:not(.dark) #app-sidebar .border-white\/\[0\.07\],
+        html:not(.dark) #app-sidebar .border-white\/\[0\.05\] {
+            border-color: #e2e8f0 !important;
+        }
+
+        html:not(.dark) #app-sidebar .text-slate-400 { color: #64748b !important; }
+        html:not(.dark) #app-sidebar .text-slate-500 { color: #475569 !important; }
+        html:not(.dark) #app-sidebar .text-slate-200 { color: #334155 !important; }
+
+        html:not(.dark) #app-sidebar .hover\:bg-white\/\[0\.06\]:hover,
+        html:not(.dark) #app-sidebar .bg-white\/\[0\.08\] {
+            background-color: #eef1fe !important;
+        }
+
+        /* Base: any inherited/explicit white text turns dark on a light sidebar... */
+        html:not(.dark) #app-sidebar .text-white { color: #1e293b !important; }
+        html:not(.dark) #app-sidebar .hover\:text-white:hover { color: #1e293b !important; }
+
+        /* ...except where it sits on a strong/solid colored pill (active nav item),
+           where white text stays legible on any background theme. */
+        html:not(.dark) #app-sidebar .bg-indigo-600.text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600 .text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600\/70.text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600\/70 .text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600\/80.text-white,
+        html:not(.dark) #app-sidebar .bg-indigo-600\/80 .text-white,
+        html:not(.dark) #app-sidebar .bg-blue-600\/70.text-white,
+        html:not(.dark) #app-sidebar .bg-blue-600\/70 .text-white,
+        html:not(.dark) #app-sidebar .bg-amber-600\/70.text-white,
+        html:not(.dark) #app-sidebar .bg-amber-600\/70 .text-white,
+        html:not(.dark) #app-sidebar .bg-violet-600\/80.text-white,
+        html:not(.dark) #app-sidebar .bg-violet-600\/80 .text-white {
+            color: #ffffff !important;
+        }
+
+        /* Translucent "active group / active child" pills paired with light-tinted text
+           need both sides re-balanced for a light background (dark text on a soft tint). */
+        html:not(.dark) #app-sidebar .bg-indigo-600\/30 { background-color: #e0e7ff !important; }
+        html:not(.dark) #app-sidebar .text-indigo-300 { color: #3730a3 !important; }
+        html:not(.dark) #app-sidebar .bg-amber-600\/20 { background-color: #fef3c7 !important; }
+        html:not(.dark) #app-sidebar .text-amber-300 { color: #92400e !important; }
+        html:not(.dark) #app-sidebar .bg-blue-600\/20 { background-color: #dbeafe !important; }
+        html:not(.dark) #app-sidebar .text-blue-300 { color: #1d4ed8 !important; }
+
+        html:not(.dark) #app-sidebar .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(15, 23, 42, 0.15) !important;
+        }
+        html:not(.dark) #app-sidebar .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(15, 23, 42, 0.25) !important;
+        }
+
+        html.dark .shadow, html.dark .shadow-sm, html.dark .shadow-md, html.dark .shadow-lg, html.dark .shadow-xl {
+            --tw-shadow-color: rgba(0, 0, 0, 0.4);
+        }
+
         html.dark .nim-pill {
             background-color: #334155 !important;
             color: #cbd5e1 !important;
@@ -238,6 +426,49 @@
             border-color: #2a43b0 !important;
         }
 
+        /* Nav Button Spacing - jarak antar tombol & antar grup toolbar agar tidak berdempetan */
+        .fc .fc-toolbar.fc-header-toolbar,
+        .fc .fc-toolbar.fc-footer-toolbar {
+            gap: 10px 16px !important;
+            flex-wrap: wrap !important;
+        }
+        .fc .fc-toolbar-chunk {
+            display: flex !important;
+            align-items: center !important;
+        }
+        .fc .fc-button-group {
+            gap: 5px !important;
+        }
+        .fc .fc-button-group .fc-button {
+            border-radius: 0.65rem !important;
+        }
+        .fc .fc-toolbar-chunk > .fc-button:not(:only-child) {
+            margin-left: 5px !important;
+        }
+        .fc .fc-toolbar-chunk > .fc-button:first-child {
+            margin-left: 0 !important;
+        }
+
+        /* Time-Axis Slot Labels - format & rapikan baris waktu */
+        .fc .fc-timegrid-slot-label-cushion {
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            color: #475569 !important;
+        }
+        .fc .fc-timegrid-slot-label {
+            vertical-align: middle !important;
+        }
+        .fc .fc-timegrid-slot.fc-timegrid-slot-minor {
+            border-top-style: dotted !important;
+        }
+        html.dark .fc .fc-timegrid-slot-label-cushion {
+            color: #cbd5e1 !important;
+        }
+        html.dark .fc .fc-timegrid-slot,
+        html.dark .fc .fc-timegrid-axis {
+            border-color: #334155 !important;
+        }
+
         /* FullCalendar Dark Mode Override - Dark Cell Background & White Date Numbers */
         html.dark .fc {
             --fc-page-bg-color: #0f172a;
@@ -314,7 +545,8 @@
           darkMode: localStorage.getItem('theme') !== 'light',
           sidebarOpen: true,
           mobileOpen: false,
-          dataMasterOpen: {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') ? 'true' : 'false' }},
+          dataMasterOpen: {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') || request()->routeIs('master.dosen-penguji-rule.*') ? 'true' : 'false' }},
+          manajemenOpen: {{ request()->routeIs('users.*') || request()->routeIs('admin.menus.*') || request()->routeIs('backup.*') ? 'true' : 'false' }},
           pendaftaranNavOpen: {{ request()->routeIs('pendaftaran.*') ? 'true' : 'false' }},
           dataOpen: {{ request()->routeIs('master.skripsi.*') || request()->routeIs('master.sempro.*') ? 'true' : 'false' }},
           penjadwalanOpen: {{ request()->routeIs('jadwal-ujian.*') || request()->routeIs('jadwal-sempro.*') ? 'true' : 'false' }},
@@ -339,6 +571,7 @@
 
         <!-- ===================== SIDEBAR ===================== -->
         <aside
+            id="app-sidebar"
             class="fixed inset-y-0 left-0 z-50 flex flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white transition-all duration-300 ease-in-out shadow-2xl lg:relative lg:z-auto lg:translate-x-0"
             :class="{
                 'translate-x-0': mobileOpen,
@@ -350,14 +583,13 @@
             <!-- Brand / Logo -->
             <div class="flex items-center h-16 px-4 border-b border-white/[0.07] shrink-0">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
-                    <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #5472f0, #3251d4); box-shadow: 0 8px 20px rgba(67,97,238,0.35);">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                        </svg>
+                    <div class="w-9 h-9 shrink-0 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-lg" style="box-shadow: 0 8px 20px rgba(67,97,238,0.35);">
+                        <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI-UMK" class="w-full h-full object-contain">
                     </div>
                     <div class="overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-36 opacity-100' : 'w-0 opacity-0'">
-                        <p class="font-extrabold text-sm leading-tight text-white whitespace-nowrap">Skripsi TI</p>
-                        <p class="text-[10px] text-indigo-400 font-semibold uppercase tracking-widest whitespace-nowrap">Portal Akademik</p>
+                        <img x-show="darkMode" src="{{ asset('images/logo-ti-umk-text-white.png') }}" alt="TI-UMK" class="h-4 w-auto object-contain">
+                        <img x-show="!darkMode" src="{{ asset('images/logo-ti-umk-text.png') }}" alt="TI-UMK" class="h-4 w-auto object-contain">
+                        <p class="text-[10px] text-indigo-400 font-semibold uppercase tracking-widest whitespace-nowrap mt-1">Portal Akademik</p>
                     </div>
                 </a>
 
@@ -637,34 +869,62 @@
                     <p class="px-3 text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-500 mb-1 transition-all duration-300"
                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">Administrasi</p>
 
-                    <!-- Manajemen User -->
-                    <a href="{{ route('users.index') }}"
-                       class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                              {{ request()->routeIs('users.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
-                       title="Manajemen User">
-                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('users.*') ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                        <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Manajemen User</span>
-                        @if(!request()->routeIs('users.*'))
-                        <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                        @endif
-                    </a>
-
-                    <!-- Manajemen Menu -->
-                    <a href="{{ route('admin.menus.index') }}"
-                       class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                              {{ request()->routeIs('admin.menus.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
-                       title="Manajemen Menu">
-                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('admin.menus.*') ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        <span class="truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Manajemen Menu</span>
-                        @if(!request()->routeIs('admin.menus.*'))
-                        <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                        @endif
-                    </a>
+                    <!-- MANAJEMEN (with submenu: Manajemen Menu, Manajemen User) -->
+                    <div x-data>
+                        <button @click="manajemenOpen = !manajemenOpen; if(!sidebarOpen) sidebarOpen = true"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
+                                       {{ request()->routeIs('users.*') || request()->routeIs('admin.menus.*') || request()->routeIs('backup.*') ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                title="Manajemen">
+                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('users.*') || request()->routeIs('admin.menus.*') || request()->routeIs('backup.*') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span class="flex-1 text-left truncate transition-all duration-300" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'">Manajemen</span>
+                            <svg class="w-4 h-4 text-slate-500 transition-transform duration-300 shrink-0"
+                                 :class="{ 'rotate-180': manajemenOpen, 'opacity-0': !sidebarOpen }"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                            @if(!request()->routeIs('users.*') && !request()->routeIs('admin.menus.*') && !request()->routeIs('backup.*'))
+                            <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                            @endif
+                        </button>
+                        <div x-show="manajemenOpen && sidebarOpen"
+                             x-transition:enter="transition-all duration-200 ease-out"
+                             x-transition:enter-start="opacity-0 -translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition-all duration-150 ease-in"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
+                             x-cloak>
+                            <a href="{{ route('admin.menus.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('admin.menus.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('admin.menus.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                Manajemen Menu
+                            </a>
+                            <a href="{{ route('users.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('users.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('users.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                                Manajemen User
+                            </a>
+                            <a href="{{ route('backup.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('backup.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('backup.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                                </svg>
+                                Backup &amp; Restore
+                            </a>
+                        </div>
+                    </div>
 
                     <!-- DATA MASTER (with submenu) -->
                     <div x-data>
@@ -681,7 +941,7 @@
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
-                            @if(!request()->routeIs('master.dosen.*') && !request()->routeIs('master.ruang.*') && !request()->routeIs('master.periode.*'))
+                            @if(!request()->routeIs('master.dosen.*') && !request()->routeIs('master.ruang.*') && !request()->routeIs('master.periode.*') && !request()->routeIs('master.dosen-penguji-rule.*'))
                             <span class="absolute left-1 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
                             @endif
                         </button>
@@ -717,6 +977,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                                 Master Periode
+                            </a>
+                            <a href="{{ route('master.dosen-penguji-rule.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('master.dosen-penguji-rule.*') ? 'bg-indigo-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('master.dosen-penguji-rule.*') ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Rule Komposisi Penguji
                             </a>
                         </div>
                     </div>
@@ -867,6 +1135,14 @@
                                 </svg>
                                 Kesediaan Dosen
                             </a>
+                            <a href="{{ route('jadwal.auto-plot.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('jadwal.auto-plot.*') ? 'bg-violet-600/80 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('jadwal.auto-plot.*') ? 'text-white' : 'text-slate-500 group-hover:text-violet-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Asisten Plotting Otomatis
+                            </a>
                         </div>
                     </div>
 
@@ -928,6 +1204,12 @@
                                         <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.undangan.*') && $jenisSkripsi ? 'bg-blue-300' : 'bg-slate-600 group-hover:bg-blue-400' }} transition-colors"></span>
                                         Undangan
                                     </a>
+                                    <a href="{{ route('administrasi.rekap-pembimbing.index', ['jenis' => 'skripsi']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.rekap-pembimbing.*') && $jenisSkripsi ? 'bg-blue-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.rekap-pembimbing.*') && $jenisSkripsi ? 'bg-blue-300' : 'bg-slate-600 group-hover:bg-blue-400' }} transition-colors"></span>
+                                        Rekap Pembimbing
+                                    </a>
                                     <a href="{{ route('administrasi.berita-acara.index', ['jenis' => 'skripsi']) }}"
                                        class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
                                               {{ request()->routeIs('administrasi.berita-acara.*') && $jenisSkripsi ? 'bg-blue-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
@@ -972,6 +1254,12 @@
                                         <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.undangan.*') && $jenisSempro ? 'bg-amber-300' : 'bg-slate-600 group-hover:bg-amber-400' }} transition-colors"></span>
                                         Undangan
                                     </a>
+                                    <a href="{{ route('administrasi.rekap-pembimbing.index', ['jenis' => 'sempro']) }}"
+                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
+                                              {{ request()->routeIs('administrasi.rekap-pembimbing.*') && $jenisSempro ? 'bg-amber-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.rekap-pembimbing.*') && $jenisSempro ? 'bg-amber-300' : 'bg-slate-600 group-hover:bg-amber-400' }} transition-colors"></span>
+                                        Rekap Pembimbing
+                                    </a>
                                     <a href="{{ route('administrasi.berita-acara.index', ['jenis' => 'sempro']) }}"
                                        class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
                                               {{ request()->routeIs('administrasi.berita-acara.*') && $jenisSempro ? 'bg-amber-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
@@ -986,6 +1274,26 @@
                                     </a>
                                 </div>
                             </div>
+
+                            {{-- ── Dashboard Analitik ── --}}
+                            <a href="{{ route('administrasi.analitik.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('administrasi.analitik.*') ? 'bg-indigo-600/70 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('administrasi.analitik.*') ? 'text-white' : 'text-slate-500 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                <span class="flex-1 text-left">Dashboard Analitik</span>
+                            </a>
+
+                            {{-- ── Riwayat Aktivitas (Audit Log) ── --}}
+                            <a href="{{ route('administrasi.audit-log.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('administrasi.audit-log.*') ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('administrasi.audit-log.*') ? 'text-white' : 'text-slate-500 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="flex-1 text-left">Riwayat Aktivitas</span>
+                            </a>
 
                         </div>
                     </div>
@@ -1138,7 +1446,7 @@
             <!-- ── TOP NAVBAR ── -->
             <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-700 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0">
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 min-w-0">
                     <!-- Burger toggle (desktop: collapse sidebar) -->
                     <button @click="sidebarOpen = !sidebarOpen"
                             class="hidden lg:flex items-center justify-center w-9 h-9 rounded-xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-400 transition-colors"
@@ -1159,10 +1467,10 @@
                     </button>
 
                     <!-- Page breadcrumb title -->
-                    <div class="flex items-center gap-2 text-sm">
-                        <span class="text-slate-400 dark:text-slate-500 font-medium hidden sm:block">Skripsi TI</span>
-                        <span class="text-slate-300 dark:text-slate-600 hidden sm:block">/</span>
-                        <span class="font-bold text-slate-800 dark:text-slate-100">{{ $header ?? $title ?? 'Dashboard' }}</span>
+                    <div class="flex items-center gap-2 text-sm min-w-0">
+                        <span class="text-slate-400 dark:text-slate-500 font-medium hidden sm:block shrink-0">Skripsi TI</span>
+                        <span class="text-slate-300 dark:text-slate-600 hidden sm:block shrink-0">/</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-100 truncate">{{ $header ?? $title ?? 'Dashboard' }}</span>
                     </div>
                 </div>
 
@@ -1202,7 +1510,7 @@
                         } elseif (Auth::user()->isMahasiswa()) {
                             $nim = Auth::user()->nim ?? null;
                             $name = Auth::user()->name;
-                            
+
                             $upcomingSidangs = \App\Models\Sidang::with(['ruang', 'pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2'])
                                 ->whereDate('tanggal', $tomorrow)
                                 ->where(function ($q) use ($nim, $name) {
@@ -1216,13 +1524,35 @@
                             $upcomingCount = $upcomingSidangs->count();
                         }
                     }
+
+                    // Admin/koordinator notifications: new pending registrations & schedule
+                    // conflicts. Both are derived live from current DB state — once a
+                    // registration is verified or a conflict is resolved by rescheduling,
+                    // it naturally drops out of these lists on the very next page load,
+                    // with no separate "mark as read"/dismiss bookkeeping needed.
+                    $adminPendingRegs = collect();
+                    $adminConflicts = collect();
+                    $adminNotifCount = 0;
+                    if (Auth::check() && (Auth::user()->isSuperAdmin() || Auth::user()->isKoordinator())) {
+                        $adminPendingRegs = \App\Models\Sidang::where('verifikasi_status', 'menunggu')
+                            ->orderByDesc('tanggal_pendaftaran')
+                            ->limit(10)
+                            ->get();
+
+                        $scheduledSidangs = \App\Models\Sidang::with(['ruang'])->whereNotNull('tanggal')->get();
+                        $conflictMapHeader = \App\Services\SidangConflictService::detectAllConflicts($scheduledSidangs);
+                        $conflictIds = collect($conflictMapHeader)->filter(fn ($c) => !empty($c['schedule']))->keys();
+                        $adminConflicts = $scheduledSidangs->whereIn('id', $conflictIds)->values();
+
+                        $adminNotifCount = $adminPendingRegs->count() + $adminConflicts->count();
+                    }
                 @endphp
 
-                <div class="flex items-center gap-2 sm:gap-3 relative" x-data="{ open: false }" @click.away="open = false">
+                <div class="flex items-center gap-2 sm:gap-3 relative shrink-0" x-data="{ open: false }" @click.away="open = false">
 
                     <!-- Theme Toggle Switch Button (Light / Dark Mode) -->
                     <button type="button" 
-                            @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); if(darkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); }"
+                            @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); if(darkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } window.dispatchEvent(new CustomEvent('theme-changed', { detail: { dark: darkMode } }));"
                             class="flex items-center justify-center w-10 h-10 rounded-2xl text-slate-600 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs group shrink-0"
                             title="Ganti Mode Terang / Gelap">
                         <template x-if="!darkMode">
@@ -1257,7 +1587,7 @@
                              x-transition:leave="transition ease-in duration-100"
                              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                              x-transition:leave-end="opacity-0 scale-95 translate-y-1"
-                             class="absolute top-13 right-0 w-[340px] sm:w-[440px] bg-white border border-slate-200 rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden z-50"
+                             class="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 w-auto sm:w-[440px] bg-white border border-slate-200 rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden z-50"
                              x-cloak>
                             <div class="px-5 py-3.5 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between">
                                 <div class="flex items-center gap-2.5">
@@ -1330,6 +1660,87 @@
                                         <p class="text-xs font-semibold text-slate-500">Tidak ada jadwal ujian esok hari.</p>
                                     </div>
                                 @endforelse
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Admin/Koordinator Notification Bell: pendaftaran baru & bentrok jadwal -->
+                    @if (Auth::user()->isSuperAdmin() || Auth::user()->isKoordinator())
+                    <div class="relative" x-data="{ notifOpen: false }" @click.away="notifOpen = false">
+                        <button @click="notifOpen = !notifOpen"
+                                class="relative flex items-center justify-center w-10 h-10 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-slate-800 transition-all duration-200 shadow-2xs border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 group"
+                                title="Notifikasi Pendaftaran & Bentrok Jadwal">
+                            <svg class="w-6 h-6 text-slate-500 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            @if ($adminNotifCount > 0)
+                            <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold text-white ring-2 ring-white dark:ring-slate-900 animate-bounce">
+                                {{ $adminNotifCount > 99 ? '99+' : $adminNotifCount }}
+                            </span>
+                            @endif
+                        </button>
+
+                        <div x-show="notifOpen"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95 translate-y-1"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 translate-y-1"
+                             class="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 w-auto sm:w-[440px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden z-50"
+                             x-cloak>
+                            <div class="px-5 py-3.5 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="text-lg">🔔</span>
+                                    <span class="font-extrabold text-xs tracking-wider uppercase">Notifikasi</span>
+                                </div>
+                                @if ($adminNotifCount > 0)
+                                <span class="bg-indigo-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-indigo-400">
+                                    {{ $adminNotifCount }} Perlu Diproses
+                                </span>
+                                @endif
+                            </div>
+
+                            <div class="max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                                @forelse ($adminPendingRegs as $pr)
+                                    <a href="{{ route($pr->jenis_tugas_akhir === 'sempro' ? 'pendaftaran.sempro' : 'pendaftaran.skripsi', ['verifikasi_status' => 'menunggu']) }}"
+                                       class="block p-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition-colors">
+                                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                                            <span class="inline-flex px-2 py-0.5 text-[9px] font-bold rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                                ⏳ Pendaftaran Baru &mdash; {{ $pr->jenis_tugas_akhir === 'sempro' ? 'Sempro' : 'Skripsi' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug">{{ $pr->nama_mahasiswa }}</p>
+                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">NIM: {{ $pr->nim }}</p>
+                                    </a>
+                                @empty
+                                @endforelse
+
+                                @forelse ($adminConflicts as $cf)
+                                    <a href="{{ route($cf->jenis_tugas_akhir === 'sempro' ? 'jadwal-sempro.index' : 'jadwal-ujian.index') }}"
+                                       class="block p-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition-colors">
+                                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                                            <span class="inline-flex px-2 py-0.5 text-[9px] font-bold rounded bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                                ⚠️ Jadwal Bentrok
+                                            </span>
+                                        </div>
+                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug">{{ $cf->nama_mahasiswa }}</p>
+                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">NIM: {{ $cf->nim }} &middot; {{ $cf->tanggal?->locale('id')->isoFormat('D MMM Y') }}, {{ $cf->jam }}</p>
+                                    </a>
+                                @empty
+                                @endforelse
+
+                                @if ($adminNotifCount === 0)
+                                    <div class="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
+                                        <div class="w-10 h-10 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-full flex items-center justify-center mx-auto mb-2.5">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Tidak ada yang perlu diproses saat ini.</p>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

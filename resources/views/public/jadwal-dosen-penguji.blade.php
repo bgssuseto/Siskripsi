@@ -96,10 +96,16 @@
                     <h3 class="text-base font-extrabold text-white">{{ $selectedDosen->nama_dosen }}</h3>
                     <p class="text-[11px] font-mono text-slate-400">NIDN: {{ $selectedDosen->nidn ?? '-' }}</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <span class="px-3 py-1.5 bg-indigo-500/20 text-indigo-300 text-xs font-extrabold rounded-xl border border-indigo-500/40">
                         {{ $mySidangs->count() }} Ujian Ditemukan
                     </span>
+                    <a href="{{ route('public.jadwal-dosen-penguji.pdf', request()->all()) }}" target="_blank" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5 shadow-md">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Download PDF
+                    </a>
                     @if($selectedDosen->public_token)
                         <a href="{{ $selectedDosen->public_url }}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +121,6 @@
             @if($mySidangs->isNotEmpty())
                 @php
                     $groupedByDate = $mySidangs->filter(fn($s) => $s->tanggal)->groupBy(fn($s) => $s->tanggal->format('Y-m-d'))->sortKeys();
-                    $unplottedSidangs = $mySidangs->filter(fn($s) => !$s->tanggal);
                 @endphp
 
                 <!-- Ringkasan Per Hari -->
@@ -136,6 +141,9 @@
                                 $dateCarbon = \Carbon\Carbon::parse($dateKey)->locale('id');
                                 $hariNama = $dateCarbon->isoFormat('dddd, D MMMM Y');
                                 $totalMhs = $sidangsInDay->count();
+
+                                $ruangList = $sidangsInDay->map(fn($s) => $s->ruang ? $s->ruang->kode_ruangan : null)->filter()->unique()->values();
+                                $ruangText = $ruangList->isNotEmpty() ? $ruangList->join(', ') : 'Belum ditentukan';
 
                                 $jamValues = $sidangsInDay->pluck('jam')->filter()->values();
                                 $jamMulai = '-';
@@ -161,7 +169,12 @@
                                         {{ $totalMhs }} Mahasiswa
                                     </span>
                                 </div>
-                                <div class="flex items-center gap-4 text-[11px]">
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-amber-400 font-bold">📍</span>
+                                        <span class="text-slate-400">Ruangan:</span>
+                                        <span class="font-extrabold text-amber-300">{{ $ruangText }}</span>
+                                    </div>
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-emerald-400 font-bold">▶</span>
                                         <span class="text-slate-400">Mulai:</span>
@@ -288,32 +301,6 @@
                         </div>
                     @endforeach
 
-                    @if(isset($unplottedSidangs) && $unplottedSidangs->isNotEmpty())
-                        <div x-data="{ open: true }" class="bg-slate-800/60 rounded-3xl border border-slate-700/80 overflow-hidden shadow-lg">
-                            <button @click="open = !open" type="button" class="w-full px-5 py-4 bg-slate-800 hover:bg-slate-750 flex items-center justify-between transition-colors text-left border-b border-slate-700/50">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-lg">⏳</span>
-                                    <div>
-                                        <h3 class="text-sm font-extrabold text-amber-400">Belum Memiliki Tanggal (Belum Plotting)</h3>
-                                        <p class="text-[11px] text-slate-400">{{ $unplottedSidangs->count() }} Mahasiswa</p>
-                                    </div>
-                                </div>
-                            </button>
-
-                            <div x-show="open" class="p-4 sm:p-5 space-y-4 bg-slate-900/40">
-                                @foreach($unplottedSidangs as $s)
-                                    <div class="bg-slate-800/90 rounded-2xl p-5 border border-slate-700/80 shadow-md space-y-3">
-                                        <div class="flex justify-between items-center text-xs">
-                                            <span class="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Belum Di-Plotting</span>
-                                            <span class="text-slate-400 font-mono">NIM: {{ $s->nim }}</span>
-                                        </div>
-                                        <h4 class="text-sm font-bold text-white">{{ $s->nama_mahasiswa }}</h4>
-                                        <p class="text-xs text-slate-300 italic">"{{ $s->judul_skripsi }}"</p>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
                 </div>
             @else
                 <div class="bg-slate-800/60 rounded-3xl p-10 border border-slate-700/60 text-center space-y-2">

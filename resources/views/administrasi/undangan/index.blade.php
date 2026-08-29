@@ -42,14 +42,21 @@
                     </svg>
                     Unduh Semua PDF (ZIP)
                 </a>
+                <a href="{{ route('administrasi.undangan.mass-docx', request()->all()) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Unduh Semua DOCX (ZIP)
+                </a>
             </div>
             @endif
         </div>
 
         <!-- Filter Range Tanggal Pendaftaran & Periode -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-            <form method="GET" action="{{ route('administrasi.undangan.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                
+            <form method="GET" action="{{ route('administrasi.undangan.index') }}" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+
                 <!-- Periode -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Periode Akademik</label>
@@ -69,6 +76,19 @@
                     <select name="jenis" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                         <option value="sempro" {{ $jenisUndangan === 'sempro' ? 'selected' : '' }}>Seminar Proposal (Sempro)</option>
                         <option value="skripsi" {{ $jenisUndangan === 'skripsi' ? 'selected' : '' }}>Sidang Skripsi</option>
+                    </select>
+                </div>
+
+                <!-- Gelombang -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Gelombang</label>
+                    <select name="gelombang" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        <option value="">-- Semua Gelombang --</option>
+                        @foreach($gelombangOptions ?? [] as $g)
+                        <option value="{{ $g }}" {{ (string) $selectedGelombang === (string) $g ? 'selected' : '' }}>
+                            Gelombang {{ $g }}
+                        </option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -96,7 +116,7 @@
                         Filter Data
                     </button>
 
-                    @if($tglMulai || $tglSelesai || $selectedPeriodeId || request('jenis'))
+                    @if($tglMulai || $tglSelesai || $selectedPeriodeId || request('jenis') || $selectedGelombang)
                     <a href="{{ route('administrasi.undangan.index') }}"
                        class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-sm rounded-xl transition-all flex items-center justify-center" title="Reset Filter">
                         Reset
@@ -128,7 +148,7 @@
                             <th class="py-3.5 px-4">NIDN</th>
                             <th class="py-3.5 px-4 text-center">Total Uji (Mahasiswa)</th>
                             <th class="py-3.5 px-4 text-center">Total Sesi Jadwal</th>
-                            <th class="py-3.5 px-4 text-center w-48">Aksi</th>
+                            <th class="py-3.5 px-4 text-center w-40">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-sm">
@@ -155,60 +175,97 @@
                             </td>
                             <td class="py-3.5 px-4 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <a href="{{ route('administrasi.undangan.preview', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
+                                    <a href="{{ route('administrasi.undangan.preview', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
                                        target="_blank"
-                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-lg transition-all border border-amber-200" title="Cetak / Preview Undangan">
-                                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       class="inline-flex items-center justify-center p-2 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition-all border border-amber-200" title="Cetak / Preview Undangan">
+                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                                         </svg>
-                                        Cetak Undangan
                                     </a>
-                                    <a href="{{ route('administrasi.undangan.pdf', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
+                                    <a href="{{ route('administrasi.undangan.pdf', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
                                        target="_blank"
-                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium text-xs rounded-lg transition-all border border-indigo-200" title="Unduh PDF">
-                                        <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       class="inline-flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-all border border-indigo-200" title="Unduh PDF">
+                                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
-                                        PDF
                                     </a>
-                                     <a href="{{ $item['dosen']->public_url }}"
-                                        target="_blank"
-                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs rounded-lg transition-all border border-sky-200" title="Buka Link Jadwal Tanpa Login">
-                                         <svg class="w-3.5 h-3.5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                                         </svg>
-                                         Link Publik
-                                     </a>
+                                    @if($item['dosen']->email)
+                                        <form method="POST" action="{{ route('administrasi.undangan.send-email', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
+                                              onsubmit="return confirm('Kirim undangan ini via email ke {{ addslashes($item['dosen']->email) }}?');" class="inline">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center justify-center p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition-all border border-rose-200 cursor-pointer" title="Kirim Undangan via Email ke {{ $item['dosen']->email }}">
+                                                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="inline-flex items-center justify-center p-2 bg-slate-50 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed" title="Dosen ini belum punya email terdaftar — lengkapi di Master Dosen">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                            </svg>
+                                        </span>
+                                    @endif
                                      @php
-                                          $pubLink = $item['dosen']->public_url;
-                                          $jenisTitle = ($jenisUndangan === 'skripsi') ? 'Ujian Skripsi' : 'Seminar Proposal (Sempro)';
-                                          $waText = "Yth. Bapak/Ibu Dosen Penguji " . ($jenisUndangan === 'skripsi' ? 'Skripsi' : 'Sempro') . "\n" .
-                                                    "Program Studi Teknik Informatika\n\n" .
-                                                    "Dengan hormat,\n\n" .
-                                                    "Berikut kami sampaikan undangan pelaksanaan " . $jenisTitle . " beserta lampiran jadwal dan surat undangan untuk masing-masing dosen penguji.\n\n" .
-                                                    "Link Jadwal Ujian:\n" .
-                                                    $pubLink . "\n\n" .
-                                                    "Mohon Bapak/Ibu berkenan untuk mencermati kembali jadwal dan lampiran undangan yang telah kami kirimkan. Apabila terdapat kesalahan data, bentrok jadwal, mohon segera menghubungi Koordinator Skripsi agar dapat segera ditindaklanjuti.\n\n" .
-                                                    "Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.\n\n" .
-                                                    "Wassalamu'alaikum warahmatullahi wabarakatuh.";
-                                          $waLink = $item['dosen']->wa_formatted 
-                                                    ? 'https://wa.me/' . $item['dosen']->wa_formatted . '?text=' . rawurlencode($waText)
-                                                    : 'https://api.whatsapp.com/send?text=' . rawurlencode($waText);
+                                          // Link publik WAJIB di-scope ke Periode + Gelombang (+ Jenis, sudah selalu
+                                          // terpilih di filter atas) yang sedang aktif dipilih admin — supaya link
+                                          // yang dibagikan freeze ke kombinasi itu, bukan ikut "periode aktif saat ini"
+                                          // yang bisa berubah kapan saja. Tombol nonaktif sampai keduanya dipilih.
+                                          $canGeneratePublicLink = !empty($selectedPeriodeId) && $selectedGelombang !== null && $selectedGelombang !== '';
+                                          $pubLink = $canGeneratePublicLink
+                                              ? $item['dosen']->publicUrlFor($selectedPeriodeId, $selectedGelombang, $jenisUndangan)
+                                              : null;
                                       @endphp
-                                     <a href="{{ $waLink }}"
-                                        target="_blank"
-                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-lg transition-all border border-emerald-300 shadow-2xs" title="Kirim Jadwal via WhatsApp Broadcast">
-                                         <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
-                                             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
-                                         </svg>
-                                         Kirim WA
-                                     </a>
-                                    <a href="{{ route('administrasi.undangan.excel', array_merge(['dosen' => $item['dosen']->id], request()->all())) }}"
-                                       class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium text-xs rounded-lg transition-all border border-slate-200" title="Export Excel">
-                                        <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     @if($canGeneratePublicLink)
+                                         <a href="{{ $pubLink }}"
+                                            target="_blank"
+                                            class="inline-flex items-center justify-center p-2 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg transition-all border border-sky-200" title="Buka Link Jadwal Tanpa Login (khusus Periode &amp; Gelombang terpilih)">
+                                             <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                             </svg>
+                                         </a>
+                                     @else
+                                         <span class="inline-flex items-center justify-center p-2 bg-slate-50 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk membuat link publik">
+                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                             </svg>
+                                         </span>
+                                     @endif
+                                     @if($canGeneratePublicLink)
+                                         @php
+                                              $jenisTitle = ($jenisUndangan === 'skripsi') ? 'Ujian Skripsi' : 'Seminar Proposal (Sempro)';
+                                              $waText = "Yth. Bapak/Ibu Dosen Penguji " . ($jenisUndangan === 'skripsi' ? 'Skripsi' : 'Sempro') . "\n" .
+                                                        "Program Studi Teknik Informatika\n\n" .
+                                                        "Dengan hormat,\n\n" .
+                                                        "Berikut kami sampaikan undangan pelaksanaan " . $jenisTitle . " beserta lampiran jadwal dan surat undangan untuk masing-masing dosen penguji.\n\n" .
+                                                        "Link Jadwal Ujian:\n" .
+                                                        $pubLink . "\n\n" .
+                                                        "Mohon Bapak/Ibu berkenan untuk mencermati kembali jadwal dan lampiran undangan yang telah kami kirimkan. Apabila terdapat kesalahan data, bentrok jadwal, mohon segera menghubungi Koordinator Skripsi agar dapat segera ditindaklanjuti.\n\n" .
+                                                        "Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.\n\n" .
+                                                        "Wassalamu'alaikum warahmatullahi wabarakatuh.";
+                                              $waLink = $item['dosen']->wa_formatted
+                                                        ? 'https://wa.me/' . $item['dosen']->wa_formatted . '?text=' . rawurlencode($waText)
+                                                        : 'https://api.whatsapp.com/send?text=' . rawurlencode($waText);
+                                          @endphp
+                                         <a href="{{ $waLink }}"
+                                            target="_blank"
+                                            class="inline-flex items-center justify-center p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition-all border border-emerald-300 shadow-2xs" title="Kirim Jadwal via WhatsApp Broadcast">
+                                             <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                                                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                                             </svg>
+                                         </a>
+                                     @else
+                                         <span class="inline-flex items-center justify-center p-2 bg-slate-50 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk mengirim link">
+                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                                             </svg>
+                                         </span>
+                                     @endif
+                                    <a href="{{ route('administrasi.undangan.excel', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
+                                       class="inline-flex items-center justify-center p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg transition-all border border-slate-200" title="Export Excel">
+                                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
-                                        Excel
                                     </a>
                                 </div>
                             </td>

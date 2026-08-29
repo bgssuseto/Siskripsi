@@ -1,14 +1,19 @@
 <x-app-layout title="Verifikasi Pendaftaran Sidang Skripsi">
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6" 
-     x-data="{ 
-         verifikasiModal: false, 
+     x-data="{
+         verifikasiModal: false,
          previewModal: false,
          deleteModal: false,
          previewUrl: '',
          previewTitle: '',
-         selectedSidang: null, 
-         verifikasiStatus: 'disetujui', 
-         verifikasiKomentar: '' 
+         selectedSidang: null,
+         verifikasiStatus: 'disetujui',
+         verifikasiKomentar: '',
+         selectedIds: [],
+         bulkRejectModal: false,
+         bulkRejectKomentar: '',
+         bulkDeleteModal: false,
+         adminModal: false,
      }">
     
     <!-- Hero Header Banner -->
@@ -29,6 +34,9 @@
             </div>
             
             <div class="shrink-0 flex items-center gap-3">
+                <button type="button" @click="adminModal = true" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl shadow-md transition-all">
+                    <span>➕</span> Daftar Mahasiswa
+                </button>
                 <div class="px-4 py-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center shadow-md">
                     <p class="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Total Pendaftaran</p>
                     <p class="text-lg font-extrabold text-white mt-0.5">{{ $counts['total'] }} Berkas</p>
@@ -105,6 +113,9 @@
         </a>
     </div>
 
+    <!-- Infografis Jalur -->
+    <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$counts['total']" />
+
     <!-- Main Data Table Container -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
         
@@ -113,7 +124,7 @@
             <form method="GET" action="{{ route('pendaftaran.skripsi') }}" class="flex flex-wrap items-center gap-3">
                 
                 <!-- Search Query Input -->
-                <div class="relative flex-1 min-w-[260px]">
+                <div class="relative flex-1 max-w-sm min-w-[220px]">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -124,46 +135,75 @@
                            class="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-all">
                 </div>
 
-                <!-- Filter Status Dropdown -->
-                <div class="min-w-[200px]">
-                    <select name="verifikasi_status" onchange="this.form.submit()" 
-                            class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 focus:outline-none focus:border-purple-600 cursor-pointer shadow-2xs">
-                        <option value="">-- Semua Status Verifikasi --</option>
-                        <option value="menunggu" {{ request('verifikasi_status') === 'menunggu' ? 'selected' : '' }}>⏳ Menunggu Verifikasi</option>
-                        <option value="disetujui" {{ request('verifikasi_status') === 'disetujui' ? 'selected' : '' }}>✓ Disetujui</option>
-                        <option value="ditolak" {{ request('verifikasi_status') === 'ditolak' ? 'selected' : '' }}>✕ Ditolak</option>
-                    </select>
-                </div>
-
-                <!-- Filter Periode Dropdown -->
-                <div class="min-w-[200px]">
-                    <select name="periode_id" onchange="this.form.submit()" 
-                            class="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 focus:outline-none focus:border-purple-600 cursor-pointer shadow-2xs">
-                        <option value="">-- Semua Periode --</option>
-                        @foreach($periodes as $p)
-                            <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode?->id) == $p->id) ? 'selected' : '' }}>
-                                {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                <x-filter-popover :active="request()->hasAny(['verifikasi_status','periode_id','gelombang','dosen_pembimbing_id','dosen_penguji_id'])">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status Verifikasi</label>
+                        <select name="verifikasi_status" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Status Verifikasi --</option>
+                            <option value="menunggu" {{ request('verifikasi_status') === 'menunggu' ? 'selected' : '' }}>⏳ Menunggu Verifikasi</option>
+                            <option value="disetujui" {{ request('verifikasi_status') === 'disetujui' ? 'selected' : '' }}>✓ Disetujui</option>
+                            <option value="ditolak" {{ request('verifikasi_status') === 'ditolak' ? 'selected' : '' }}>✕ Ditolak</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Periode</label>
+                        <select name="periode_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Periode --</option>
+                            @foreach($periodes as $p)
+                                <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode?->id) == $p->id) ? 'selected' : '' }}>
+                                    {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gelombang</label>
+                        <select name="gelombang" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Gelombang --</option>
+                            @foreach($gelombangOptions ?? [] as $g)
+                                <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Pembimbing</label>
+                        <select name="dosen_pembimbing_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Dosen --</option>
+                            @foreach ($dosens as $d)
+                                <option value="{{ $d->id }}" {{ (string) request('dosen_pembimbing_id') === (string) $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Penguji</label>
+                        <select name="dosen_penguji_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
+                            <option value="">-- Semua Dosen --</option>
+                            @foreach ($dosens as $d)
+                                <option value="{{ $d->id }}" {{ (string) request('dosen_penguji_id') === (string) $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </x-filter-popover>
 
                 <!-- Action Buttons with Explicit High-Contrast Colors -->
                 <div class="flex items-center gap-2">
-                    <button type="submit" 
-                            style="background-color: #9333ea; color: #ffffff;" 
+                    <button type="submit"
+                            style="background-color: #9333ea; color: #ffffff;"
                             class="px-5 py-2.5 bg-purple-600 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md hover:bg-purple-700 border border-purple-500 cursor-pointer flex items-center justify-center gap-1.5">
                         🔍 Cari & Filter
                     </button>
-                    
-                    <a href="{{ route('pendaftaran.skripsi.export', request()->query()) }}" 
-                       style="background-color: #059669; color: #ffffff;" 
+
+                    <a href="{{ route('pendaftaran.skripsi.export', request()->query()) }}"
+                       style="background-color: #059669; color: #ffffff;"
                        class="px-4 py-2.5 bg-emerald-600 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md hover:bg-emerald-700 border border-emerald-500 cursor-pointer flex items-center justify-center gap-1.5">
-                        📊 Export Excel
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>Export Excel</span>
                     </a>
 
-                    @if(request('search') || request('verifikasi_status') || request('periode_id'))
-                        <a href="{{ route('pendaftaran.skripsi') }}" 
+                    @if(request('search') || request('verifikasi_status') || request('periode_id') || request('gelombang') || request('dosen_pembimbing_id') || request('dosen_penguji_id'))
+                        <a href="{{ route('pendaftaran.skripsi') }}"
                            style="background-color: #475569; color: #ffffff;"
                            class="px-4 py-2.5 bg-slate-600 text-white font-extrabold text-xs rounded-2xl hover:bg-slate-700 transition-colors border border-slate-500 cursor-pointer flex items-center justify-center gap-1">
                             ✕ Reset
@@ -173,15 +213,42 @@
             </form>
         </div>
 
+        <!-- Bulk Action Bar -->
+        <div x-show="selectedIds.length > 0" x-cloak class="px-5 py-3.5 bg-indigo-50 dark:bg-indigo-950/40 border-b border-indigo-100 dark:border-indigo-900 flex items-center justify-between gap-3 flex-wrap">
+            <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300" x-text="selectedIds.length + ' pendaftaran dipilih'"></span>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" @click="if(confirm('Setujui ' + selectedIds.length + ' pendaftaran terpilih?')) $refs.bulkApproveForm.submit()"
+                        style="background-color: #059669; color: #ffffff;"
+                        class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
+                    ✓ Setujui Terpilih
+                </button>
+                <button type="button" @click="bulkRejectModal = true"
+                        style="background-color: #e11d48; color: #ffffff;"
+                        class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
+                    ✕ Tolak Terpilih
+                </button>
+                <button type="button" @click="bulkDeleteModal = true"
+                        style="background-color: #475569; color: #ffffff;"
+                        class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
+                    🗑️ Hapus Terpilih
+                </button>
+                <button type="button" @click="selectedIds = []" class="px-3.5 py-2 rounded-xl font-bold text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    Batalkan Pilihan
+                </button>
+            </div>
+        </div>
+
         <!-- Table Container with Dedicated DOSEN PEMBIMBING Column -->
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse min-w-[1100px]">
                 <thead>
                     <tr class="bg-slate-100/70 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800">
+                        <th class="py-3.5 px-3 w-10 text-center">
+                            <input type="checkbox" @click="selectedIds = $event.target.checked ? {{ Js::from($sidangs->pluck('id')->map(fn($id) => (string) $id)->values()) }} : []">
+                        </th>
                         <th class="py-3.5 px-4 w-44">MAHASISWA</th>
-                        <th class="py-3.5 px-3 w-28">PRODI</th>
-                        <th class="py-3.5 px-4 min-w-[200px]">JUDUL SKRIPSI</th>
-                        <th class="py-3.5 px-4 w-48">DOSEN PEMBIMBING</th>
+                        <th class="py-3.5 px-4 w-40">PEMBIMBING UTAMA</th>
+                        <th class="py-3.5 px-4 w-40">PEMBIMBING PENDAMPING</th>
                         <th class="py-3.5 px-3 w-36">PERIODE & TANGGAL</th>
                         <th class="py-3.5 px-3 w-36 text-center">BERKAS / PERSYARATAN</th>
                         <th class="py-3.5 px-3 w-36 text-center">STATUS VERIFIKASI</th>
@@ -191,49 +258,30 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium">
                     @forelse($sidangs as $s)
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="py-3.5 px-3 text-center">
+                                <input type="checkbox" x-model="selectedIds" value="{{ $s->id }}">
+                            </td>
                             <!-- Mahasiswa -->
                             <td class="py-3.5 px-4">
-                                <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug">{{ $s->nama_mahasiswa }}</div>
+                                <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug" title="{{ $s->judul_skripsi }}">{{ $s->nama_mahasiswa }}</div>
                                 <div class="mt-1.5"><span class="inline-block px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-mono font-bold text-[10px] border border-purple-200 dark:border-purple-800">NIM: {{ $s->nim }}</span></div>
                                 @if($s->no_wa_aktif)
                                     <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold mt-0.5">WA: {{ $s->no_wa_aktif }}</div>
                                 @endif
                             </td>
 
-                            <!-- Prodi -->
-                            <td class="py-3.5 px-3">
-                                <span class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10.5px] border border-slate-200 dark:border-slate-700 inline-block">
-                                    Teknik Informatika
-                                </span>
-                            </td>
-
-                            <!-- Judul Skripsi -->
-                            <td class="py-3.5 px-4">
-                                <p class="text-slate-800 dark:text-slate-200 font-bold leading-relaxed line-clamp-2" title="{{ $s->judul_skripsi }}">
-                                    "{{ $s->judul_skripsi }}"
-                                </p>
-                            </td>
-
-                            <!-- Dedicated Column: Dosen Pembimbing -->
+                            <!-- Pembimbing Utama -->
                             <td class="py-3.5 px-4">
                                 <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug">
                                     {{ $s->pembimbingUtama->nama_dosen ?? '-' }}
                                 </div>
-                                <div class="mt-1">
-                                    <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                                        PEMBIMBING UTAMA
-                                    </span>
+                            </td>
+
+                            <!-- Pembimbing Pendamping -->
+                            <td class="py-3.5 px-4">
+                                <div class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-snug">
+                                    {{ $s->pembimbingPendamping->nama_dosen ?? '-' }}
                                 </div>
-                                @if($s->pembimbingPendamping)
-                                    <div class="text-[10.5px] font-extrabold text-slate-900 dark:text-slate-100 mt-2.5">
-                                        {{ $s->pembimbingPendamping->nama_dosen }}
-                                    </div>
-                                    <div class="mt-1">
-                                        <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                                            PEMBIMBING PENDAMPING
-                                        </span>
-                                    </div>
-                                @endif
                             </td>
 
                             <!-- Gelombang & Tanggal -->
@@ -241,8 +289,15 @@
                                 <div class="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
                                     {{ $s->periode->nama_periode ?? '-' }}
                                 </div>
+                                @if($s->gelombang)
+                                    <div class="mt-1">
+                                        <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                                            GELOMBANG {{ $s->gelombang }}
+                                        </span>
+                                    </div>
+                                @endif
                                 <div class="text-[10px] text-slate-600 dark:text-slate-300 font-semibold mt-1">
-                                    Tgl Daftar: {{ $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->translatedFormat('l, d/m/Y') : '-' }}
+                                    Tgl Daftar: {{ $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->isoFormat('dddd, D MMMM Y') : '-' }}
                                 </div>
                             </td>
 
@@ -252,12 +307,14 @@
                                     <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                         <button type="button"
                                                 @click="previewUrl = '{{ asset($s->file_persyaratan) }}'; previewTitle = 'Berkas Persyaratan - {{ addslashes($s->nama_mahasiswa) }}'; previewModal = true"
-                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900 text-[11px] font-extrabold transition-all shadow-2xs whitespace-nowrap cursor-pointer">
-                                            👁️ Preview
+                                                title="Preview Berkas"
+                                                class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900 transition-all shadow-2xs cursor-pointer">
+                                            👁️
                                         </button>
                                         <a href="{{ asset($s->file_persyaratan) }}" download
-                                           class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 text-[11px] font-extrabold transition-all shadow-2xs whitespace-nowrap">
-                                            📥 Download
+                                           title="Download Berkas"
+                                           class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 transition-all shadow-2xs">
+                                            📥
                                         </a>
                                     </div>
                                 @else
@@ -291,17 +348,18 @@
 
                             <!-- Aksi Buttons -->
                             <td class="py-3.5 px-4 text-center whitespace-nowrap space-x-1.5">
-                                <button type="button" 
-                                        @click="selectedSidang = {{ json_encode($s) }}; verifikasiStatus = '{{ $s->verifikasi_status ?? 'disetujui' }}'; verifikasiKomentar = '{{ addslashes($s->verifikasi_komentar ?? '') }}'; verifikasiModal = true" 
+                                <button type="button"
+                                        @click="selectedSidang = {{ json_encode($s) }}; verifikasiStatus = '{{ $s->verifikasi_status ?? 'disetujui' }}'; verifikasiKomentar = '{{ addslashes($s->verifikasi_komentar ?? '') }}'; verifikasiModal = true"
                                         style="background-color: #9333ea; color: #ffffff;"
-                                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 text-white font-extrabold text-xs transition-all shadow-md shadow-purple-600/30 hover:bg-purple-700 border border-purple-500 whitespace-nowrap cursor-pointer">
-                                    <span>⚡ Verifikasi</span>
+                                        title="Verifikasi Pendaftaran"
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-purple-600 text-white transition-all shadow-md shadow-purple-600/30 hover:bg-purple-700 border border-purple-500 cursor-pointer">
+                                    ⚡
                                 </button>
-                                <button type="button" 
-                                        @click="selectedSidang = {{ json_encode($s) }}; deleteModal = true" 
-                                        class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-extrabold text-xs transition-all border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 whitespace-nowrap cursor-pointer"
+                                <button type="button"
+                                        @click="selectedSidang = {{ json_encode($s) }}; deleteModal = true"
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 transition-all border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 cursor-pointer"
                                         title="Hapus pendaftaran agar mahasiswa dapat daftar ulang">
-                                    <span>🗑️ Hapus</span>
+                                    🗑️
                                 </button>
                             </td>
                         </tr>
@@ -436,7 +494,7 @@
                 </div>
             </template>
 
-            <form :action="'{{ url('/pendaftaran') }}/' + (selectedSidang ? selectedSidang.id : '') + '/verifikasi'" method="POST" class="space-y-3">
+            <form :action="'{{ url('/pendaftaran') }}/' + (selectedSidang ? selectedSidang.hash_id : '') + '/verifikasi'" method="POST" class="space-y-3">
                 @csrf
                 
                 <div>
@@ -500,7 +558,7 @@
                     </p>
                 </div>
 
-                <form :action="'{{ url('/pendaftaran') }}/' + (selectedSidang ? selectedSidang.id : '')" method="POST" class="flex gap-3 pt-2">
+                <form :action="'{{ url('/pendaftaran') }}/' + (selectedSidang ? selectedSidang.hash_id : '')" method="POST" class="flex gap-3 pt-2">
                     @csrf
                     @method('DELETE')
                     <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">
@@ -511,6 +569,136 @@
                     </button>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Hidden form: Bulk Setujui -->
+    <form x-ref="bulkApproveForm" method="POST" action="{{ route('pendaftaran.bulk-verifikasi') }}">
+        @csrf
+        <input type="hidden" name="verifikasi_status" value="disetujui">
+        <template x-for="id in selectedIds" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+    </form>
+
+    <!-- MODAL BULK TOLAK -->
+    <div x-show="bulkRejectModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div @click.away="bulkRejectModal = false" class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-4">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Tolak <span x-text="selectedIds.length"></span> Pendaftaran Terpilih?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Catatan penolakan berikut akan diterapkan ke seluruh pendaftaran yang dipilih.</p>
+            </div>
+            <form x-ref="bulkRejectForm" method="POST" action="{{ route('pendaftaran.bulk-verifikasi') }}" class="space-y-3">
+                @csrf
+                <input type="hidden" name="verifikasi_status" value="ditolak">
+                <template x-for="id in selectedIds" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Catatan Alasan Penolakan (Opsional)</label>
+                    <textarea name="verifikasi_komentar" x-model="bulkRejectKomentar" rows="3" placeholder="Misal: Berkas persyaratan belum lengkap..."
+                              class="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-medium focus:outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"></textarea>
+                </div>
+                <div class="flex gap-3 pt-1">
+                    <button type="button" @click="bulkRejectModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">Batal</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/30">Ya, Tolak Semua</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL BULK HAPUS -->
+    <div x-show="bulkDeleteModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div @click.away="bulkDeleteModal = false" class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 p-6 text-center space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto shadow-inner">🗑️</div>
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Hapus <span x-text="selectedIds.length"></span> Pendaftaran Terpilih?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Data akan dihapus permanen dan mahasiswa terkait dapat mendaftar ulang.</p>
+            </div>
+            <form x-ref="bulkDeleteForm" method="POST" action="{{ route('pendaftaran.bulk-destroy') }}" class="flex gap-3 pt-2">
+                @csrf
+                @method('DELETE')
+                <template x-for="id in selectedIds" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
+                <button type="button" @click="bulkDeleteModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">Batal</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/30">Ya, Hapus Semua</button>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL: DAFTAR MAHASISWA (Admin/Koordinator) --}}
+    <div x-show="adminModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100">
+        <div @click.away="adminModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 text-slate-800 dark:text-slate-100 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-3 max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">➕ Daftar Mahasiswa Skripsi</h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Untuk mahasiswa remidi/belum lulus periode sebelumnya, atau pendaftaran manual lainnya.</p>
+                </div>
+                <button type="button" @click="adminModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs transition-colors">✕</button>
+            </div>
+            <form method="POST" action="{{ route('pendaftaran.admin-store') }}" class="space-y-3">
+                @csrf
+                <input type="hidden" name="jenis_tugas_akhir" value="skripsi">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">NIM <span class="text-rose-500">*</span></label>
+                        <input type="text" name="nim" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Nama Mahasiswa <span class="text-rose-500">*</span></label>
+                        <input type="text" name="nama_mahasiswa" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Judul Skripsi <span class="text-rose-500">*</span></label>
+                    <textarea name="judul_skripsi" required rows="2" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800"></textarea>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Jenis Tugas Akhir <span class="text-rose-500">*</span></label>
+                    <select name="jenis_ta_pilihan" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                        <option value="sidang">Sidang Skripsi</option>
+                        <option value="jurnal">Jurnal / Artikel</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Dosbing Utama <span class="text-rose-500">*</span></label>
+                        <select name="dosen_pembimbing_utama_id" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                            <option value="">-- Pilih --</option>
+                            @foreach($dosens as $d)
+                                <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Dosbing Pendamping</label>
+                        <select name="dosen_pembimbing_pendamping_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                            <option value="">-- Tidak Ada --</option>
+                            @foreach($dosens as $d)
+                                <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">No. WhatsApp</label>
+                        <input type="text" name="no_wa_aktif" placeholder="0812xxxxxxxx" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Periode</label>
+                        <select name="periode_id" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                            @foreach($periodes as $p)
+                                <option value="{{ $p->id }}" {{ ($activePeriode && $activePeriode->id === $p->id) ? 'selected' : '' }}>{{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <p class="text-[10.5px] text-slate-400 leading-relaxed">Pendaftaran akan langsung berstatus <strong>Terverifikasi</strong>. Data boleh duplikat NIM asalkan periodenya berbeda dari pendaftaran sebelumnya.</p>
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" @click="adminModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md">Daftarkan</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

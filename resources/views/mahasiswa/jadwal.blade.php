@@ -133,6 +133,31 @@
                             </div>
                         </div>
 
+                        <!-- Join Grup WhatsApp (muncul begitu berkas mahasiswa diterima/diverifikasi admin) -->
+                        @if(($s->verifikasi_status ?? 'menunggu') === 'disetujui')
+                            @php
+                                $waLink = $s->jenis_tugas_akhir === 'sempro'
+                                    ? optional($s->periode)->link_grup_wa_sempro
+                                    : optional($s->periode)->link_grup_wa_skripsi;
+                            @endphp
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-lg shrink-0">✅</span>
+                                    <div>
+                                        <p class="text-xs font-extrabold text-emerald-900 dark:text-emerald-300">Bergabung ke Grup WhatsApp</p>
+                                        <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-medium">Untuk info & koordinasi lebih lanjut seputar pelaksanaan ujian.</p>
+                                    </div>
+                                </div>
+                                @if($waLink)
+                                    <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 shrink-0">
+                                        <span>💬</span> Join Grup WhatsApp
+                                    </a>
+                                @else
+                                    <span class="text-[11px] text-emerald-700/70 dark:text-emerald-400/70 font-semibold italic shrink-0">Link grup belum diatur oleh admin.</span>
+                                @endif
+                            </div>
+                        @endif
+
                         <!-- Grid Tim Dosen Pembimbing & Penguji -->
                         <div class="grid grid-cols-1 {{ ($s->jenis_tugas_akhir !== 'sempro' && ($type ?? 'sempro') !== 'sempro') ? 'sm:grid-cols-2' : '' }} gap-4 pt-1">
                             <!-- Box 1: Dosen Pembimbing (Untuk Sempro sekaligus Penguji) -->

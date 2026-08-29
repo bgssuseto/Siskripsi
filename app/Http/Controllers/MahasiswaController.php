@@ -6,6 +6,7 @@ use App\Models\Sidang;
 use App\Models\Periode;
 use App\Models\Dosen;
 use App\Models\PendaftaranPeriode;
+use App\Services\KelulusanService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -31,15 +32,13 @@ class MahasiswaController extends Controller
             'periode'
         ]);
 
-        if ($nim && $name) {
-            return $query->where(function ($q) use ($nim, $name) {
-                $q->where('nim', $nim)
-                  ->orWhere('nama_mahasiswa', 'LIKE', '%' . $name . '%');
-            })->orderByDesc('id')->get();
-        } elseif ($nim) {
+        if ($nim) {
+            // NIM is the reliable identifier — never widen this with a fuzzy name
+            // match, which could pull in another student's records if names overlap.
             return $query->where('nim', $nim)->orderByDesc('id')->get();
         } elseif ($name) {
-            return $query->where('nama_mahasiswa', 'LIKE', '%' . $name . '%')->orderByDesc('id')->get();
+            // No NIM on file yet: fall back to an exact (not substring) name match.
+            return $query->where('nama_mahasiswa', $name)->orderByDesc('id')->get();
         }
 
         return collect();
@@ -82,8 +81,12 @@ class MahasiswaController extends Controller
         // All student's registrations
         $sidangs = $this->getStudentSidangs($user);
 
+        $needsCoordinator = $user->nim
+            ? KelulusanService::needsCoordinatorForRemidi($user->nim, ['sempro'], $activePeriode?->id)
+            : false;
+
         return view('mahasiswa.sempro', compact(
-            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens'
+            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens', 'needsCoordinator'
         ));
     }
 
@@ -98,16 +101,20 @@ class MahasiswaController extends Controller
         $dosens = Dosen::orderBy('nama_dosen')->get();
 
         $allStudentSidangs = $this->getStudentSidangs($user);
-        // Filter student's sidang skripsi only
-        $sidangs = $allStudentSidangs->where('jenis_tugas_akhir', 'sidang');
+        // Filter student's skripsi-track records only (sidang reguler or jurnal)
+        $sidangs = $allStudentSidangs->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
 
         // Check if student has registered for Sempro
         $semproRecord = $allStudentSidangs->where('jenis_tugas_akhir', 'sempro')->first();
         $hasSempro = $semproRecord ? true : false;
         $isSemproApproved = $semproRecord && $semproRecord->verifikasi_status === 'disetujui';
 
+        $needsCoordinator = $user->nim
+            ? KelulusanService::needsCoordinatorForRemidi($user->nim, Sidang::SKRIPSI_BUCKET, $activePeriode?->id)
+            : false;
+
         return view('mahasiswa.skripsi', compact(
-            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens', 'hasSempro', 'isSemproApproved', 'semproRecord'
+            'user', 'sidangs', 'periodes', 'activePeriode', 'dosens', 'hasSempro', 'isSemproApproved', 'semproRecord', 'needsCoordinator'
         ));
     }
 
@@ -147,16 +154,36 @@ class MahasiswaController extends Controller
     public function storeRegistration(Request $request)
     {
         $user = Auth::user();
-        
+
+        if ($user->status_kelulusan === 'lulus') {
+            $msg = 'Anda sudah dinyatakan LULUS dan tidak dapat mendaftar kembali.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
         $activePeriode = Periode::where('aktif', true)->first();
         if (!$activePeriode) {
             return back()->with('error', 'Tidak ada periode akademik yang aktif saat ini.');
         }
 
+        $jenisBucket = $request->input('jenis_tugas_akhir') === 'sempro' ? ['sempro'] : Sidang::SKRIPSI_BUCKET;
+        if ($user->nim && KelulusanService::needsCoordinatorForRemidi($user->nim, $jenisBucket, $activePeriode->id)) {
+            $msg = 'Pendaftaran Anda pada periode sebelumnya belum lulus/remidi. Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
         $jenisTugasAkhir = $request->input('jenis_tugas_akhir') === 'skripsi' ? 'sidang' : $request->input('jenis_tugas_akhir');
 
-        // Check if student already has a registration record in this active period
-        $existing = Sidang::where('nim', $request->input('nim'))
+        // Check if student already has a registration record in this active period.
+        // Always key this off the authenticated user's own NIM — never the raw request
+        // input, which is only readonly client-side and could be tampered with to target
+        // another student's record.
+        $existing = Sidang::where('nim', $user->nim)
             ->where('jenis_tugas_akhir', $jenisTugasAkhir)
             ->where('periode_id', $activePeriode->id)
             ->first();
@@ -196,6 +223,16 @@ class MahasiswaController extends Controller
             'file_persyaratan.mimes'             => 'File persyaratan harus berformat PDF.',
             'file_persyaratan.max'               => 'Ukuran file persyaratan maksimal 4 MB.',
         ]);
+
+        // Guard against submitting another student's NIM (the form field is readonly
+        // client-side only) — never trust the client for whose record this is.
+        if ($validated['nim'] !== $user->nim) {
+            $msg = 'NIM tidak sesuai dengan akun Anda.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
 
         $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
         
@@ -244,6 +281,10 @@ class MahasiswaController extends Controller
             $actualJenis = $request->input('jenis_ta_pilihan', 'sidang') ?: 'sidang';
         }
 
+        // Jalur (sidang/jurnal) yang dipilih mahasiswa saat mendaftar Sempro —
+        // untuk skripsi, jalur otomatis mengikuti jenis_tugas_akhir via Sidang::booted().
+        $jalurTa = $validated['jenis_tugas_akhir'] === 'sempro' ? $request->input('jenis_ta_pilihan') : null;
+
         if ($isRevision) {
             // Overwrite existing record (revise)
             $existing->update([
@@ -254,6 +295,7 @@ class MahasiswaController extends Controller
                 'no_wa_aktif'                    => $validated['no_wa_aktif'],
                 'file_persyaratan'               => $filePath,
                 'jenis_tugas_akhir'              => $actualJenis,
+                'jalur_ta'                       => $jalurTa,
                 'verifikasi_status'              => 'menunggu',
                 'verifikasi_komentar'            => null,
                 'verifikasi_tanggal'             => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
@@ -268,6 +310,7 @@ class MahasiswaController extends Controller
                 'dosen_pembimbing_utama_id'      => $validated['dosen_pembimbing_utama_id'],
                 'dosen_pembimbing_pendamping_id' => $validated['dosen_pembimbing_pendamping_id'] ?? null,
                 'jenis_tugas_akhir'              => $actualJenis,
+                'jalur_ta'                       => $jalurTa,
                 'periode_id'                     => $activePeriode->id,
                 'tanggal_pendaftaran'            => now()->timezone('Asia/Jakarta')->format('Y-m-d'),
                 'no_wa_aktif'                    => $validated['no_wa_aktif'],

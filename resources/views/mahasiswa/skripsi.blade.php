@@ -60,7 +60,15 @@
 
                 @if($activeWave)
                     <div class="mt-4">
-                        @if(!$mySidang)
+                        @if($user->status_kelulusan === 'lulus')
+                            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
+                                <span>🎓</span> Anda telah dinyatakan LULUS. Pendaftaran ditutup.
+                            </div>
+                        @elseif($needsCoordinator)
+                            <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 font-extrabold flex items-center gap-2">
+                                <span>⚠️</span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
+                            </div>
+                        @elseif(!$mySidang)
                             <button @click="regModal = true" style="background-color: #9333ea; color: #ffffff;" class="w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer border border-purple-500">
                                 <span>📝</span> Ajukan Pendaftaran Sidang Skripsi
                             </button>
@@ -68,6 +76,20 @@
                             <button @click="regModal = true" style="background-color: #e11d48; color: #ffffff;" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer border border-rose-500">
                                 <span>✏️</span> Revisi Pendaftaran Skripsi
                             </button>
+                        @elseif($mySidang->verifikasi_status === 'disetujui')
+                            @php $waLink = optional($mySidang->periode)->link_grup_wa_skripsi; @endphp
+                            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 space-y-2">
+                                <p class="text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
+                                    <span>✅</span> Pendaftaran Anda telah terverifikasi.
+                                </p>
+                                @if($waLink)
+                                    <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                                        <span>💬</span> Join Grup WhatsApp
+                                    </a>
+                                @else
+                                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-semibold italic">Link grup WA belum diatur oleh admin.</p>
+                                @endif
+                            </div>
                         @else
                             <div class="bg-purple-100 dark:bg-purple-900/60 border border-purple-300 dark:border-purple-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white font-extrabold flex items-center gap-2">
                                 <span>ℹ️</span> Pendaftaran Anda telah terkirim dan sedang diproses.
@@ -121,7 +143,7 @@
                     </div>
                 </div>
                 <span class="px-2.5 py-1 bg-purple-600 text-white font-extrabold text-[10px] rounded-lg shadow-2xs shrink-0">
-                    Rp 200.000
+                    Rp 700.000
                 </span>
             </div>
         </div>
@@ -180,8 +202,8 @@
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Jenis Tugas Akhir <span class="text-rose-500">*</span></label>
                     <select name="jenis_ta_pilihan" required class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold cursor-pointer bg-white dark:bg-slate-700">
                         <option value="">-- Pilih Jenis Tugas Akhir --</option>
-                        <option value="sidang" {{ (($mySidang->jenis_tugas_akhir ?? '') == 'sidang') ? 'selected' : 'selected' }}>Sidang Skripsi</option>
-                        <option value="jurnal" {{ (($mySidang->jenis_tugas_akhir ?? '') == 'jurnal') ? 'selected' : '' }}>Jurnal</option>
+                        <option value="sidang" {{ ($mySidang && $mySidang->jenis_tugas_akhir == 'sidang') ? 'selected' : '' }}>Sidang Skripsi</option>
+                        <option value="jurnal" {{ ($mySidang && $mySidang->jenis_tugas_akhir == 'jurnal') ? 'selected' : '' }}>Jurnal / Artikel</option>
                     </select>
                 </div>
 
@@ -352,8 +374,8 @@
                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30">
                                 <td class="py-3 px-4 text-slate-400 dark:text-slate-500 text-xs">{{ $i + 1 }}</td>
                                 <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-200 max-w-xs truncate" title="{{ $s->judul_skripsi }}">{{ $s->judul_skripsi }}</td>
-                                <td class="py-3 px-4">
-                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg {{ $s->jenis_tugas_akhir === 'jurnal' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' }}">
+                                <td class="py-3 px-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 text-[10px] font-bold rounded-lg {{ $s->jenis_tugas_akhir === 'jurnal' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' }}">
                                         {{ $s->jenis_tugas_akhir === 'jurnal' ? 'Jurnal' : 'Sidang Skripsi' }}
                                     </span>
                                 </td>
