@@ -10,11 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
 
-    <!-- Dark Mode Initializer Script (Default: Light Mode) -->
+    <!-- Dark Mode Initializer Script (Default: Dark Mode) -->
     <script>
-        if (localStorage.getItem('theme') === 'dark') {
+        if (localStorage.getItem('theme') !== 'light') {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
@@ -119,9 +118,9 @@
         }
 
         html.dark .bg-indigo-50, html.dark .bg-indigo-100 {
-            background-color: rgba(11, 99, 229, 0.18) !important;
-            color: #7fa3ff !important;
-            border-color: rgba(11, 99, 229, 0.35) !important;
+            background-color: rgba(67, 97, 238, 0.18) !important;
+            color: #8b9cf7 !important;
+            border-color: rgba(67, 97, 238, 0.35) !important;
         }
 
         html.dark .bg-purple-50, html.dark .bg-purple-100 {
@@ -249,8 +248,8 @@
            stuck looking "dark" regardless of the toggle. */
         html:not(.dark) #app-sidebar {
             background: #ffffff !important;
-            border-right: none;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+            border-right: 1px solid #e2e8f0;
+            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.05);
         }
 
         html:not(.dark) #app-sidebar .border-white\/\[0\.07\],
@@ -264,7 +263,7 @@
 
         html:not(.dark) #app-sidebar .hover\:bg-white\/\[0\.06\]:hover,
         html:not(.dark) #app-sidebar .bg-white\/\[0\.08\] {
-            background-color: #eff6ff !important;
+            background-color: #eef1fe !important;
         }
 
         /* Base: any inherited/explicit white text turns dark on a light sidebar... */
@@ -290,8 +289,8 @@
 
         /* Translucent "active group / active child" pills paired with light-tinted text
            need both sides re-balanced for a light background (dark text on a soft tint). */
-        html:not(.dark) #app-sidebar .bg-indigo-600\/30 { background-color: #dae2ff !important; }
-        html:not(.dark) #app-sidebar .text-indigo-300 { color: #004cb6 !important; }
+        html:not(.dark) #app-sidebar .bg-indigo-600\/30 { background-color: #e0e7ff !important; }
+        html:not(.dark) #app-sidebar .text-indigo-300 { color: #3730a3 !important; }
         html:not(.dark) #app-sidebar .bg-amber-600\/20 { background-color: #fef3c7 !important; }
         html:not(.dark) #app-sidebar .text-amber-300 { color: #92400e !important; }
         html:not(.dark) #app-sidebar .bg-blue-600\/20 { background-color: #dbeafe !important; }
@@ -346,14 +345,14 @@
         .fc {
             --fc-page-bg-color: #ffffff;
             --fc-neutral-bg-color: #f8fafc;
-            --fc-list-event-hover-bg-color: rgba(11, 99, 229, 0.10);
+            --fc-list-event-hover-bg-color: rgba(67, 97, 238, 0.10);
             --fc-border-color: #cbd5e1;
-            --fc-button-bg-color: #0b63e5;
-            --fc-button-border-color: #004cb6;
-            --fc-button-hover-bg-color: #004cb6;
-            --fc-button-hover-border-color: #1e40af;
-            --fc-button-active-bg-color: #1e40af;
-            --fc-button-active-border-color: #001946;
+            --fc-button-bg-color: #4361ee;
+            --fc-button-border-color: #3251d4;
+            --fc-button-hover-bg-color: #3251d4;
+            --fc-button-hover-border-color: #2a43b0;
+            --fc-button-active-bg-color: #2a43b0;
+            --fc-button-active-border-color: #192355;
         }
         .fc .fc-toolbar-title {
             font-size: 1.15rem !important;
@@ -403,18 +402,18 @@
 
         /* Buttons Styling */
         .fc .fc-button-primary {
-            background-color: #0b63e5 !important;
-            border-color: #004cb6 !important;
+            background-color: #4361ee !important;
+            border-color: #3251d4 !important;
             color: #ffffff !important;
             border-radius: 0.75rem !important;
             font-weight: 700 !important;
             font-size: 0.75rem !important;
             padding: 0.4rem 0.8rem !important;
-            box-shadow: 0 1px 2px 0 rgba(11, 99, 229, 0.20) !important;
+            box-shadow: 0 1px 2px 0 rgba(67, 97, 238, 0.20) !important;
         }
         .fc .fc-button-primary:hover {
-            background-color: #004cb6 !important;
-            border-color: #1e40af !important;
+            background-color: #3251d4 !important;
+            border-color: #2a43b0 !important;
         }
 
         /* Nav Button Spacing - jarak antar tombol & antar grup toolbar agar tidak berdempetan */
@@ -465,12 +464,12 @@
             --fc-page-bg-color: #0f172a;
             --fc-neutral-bg-color: #1e293b;
             --fc-border-color: #334155;
-            --fc-button-bg-color: #3d7bf5;
-            --fc-button-border-color: #0b63e5;
-            --fc-button-hover-bg-color: #0b63e5;
-            --fc-button-hover-border-color: #004cb6;
-            --fc-button-active-bg-color: #004cb6;
-            --fc-button-active-border-color: #1e40af;
+            --fc-button-bg-color: #6b7ff3;
+            --fc-button-border-color: #5472f0;
+            --fc-button-hover-bg-color: #5472f0;
+            --fc-button-hover-border-color: #4361ee;
+            --fc-button-active-bg-color: #4361ee;
+            --fc-button-active-border-color: #3251d4;
         }
         html.dark .fc .fc-scrollgrid,
         html.dark .fc .fc-daygrid-day,
@@ -521,19 +520,19 @@
             font-weight: 800 !important;
         }
         html.dark .fc .fc-button-primary {
-            background-color: #3d7bf5 !important;
-            border-color: #0b63e5 !important;
+            background-color: #6b7ff3 !important;
+            border-color: #5472f0 !important;
             color: #ffffff !important;
         }
         html.dark .fc .fc-button-primary:hover {
-            background-color: #0b63e5 !important;
-            border-color: #004cb6 !important;
+            background-color: #5472f0 !important;
+            border-color: #4361ee !important;
         }
     </style>
 </head>
-<body class="h-full antialiased text-on-surface bg-surface dark:text-slate-100 transition-colors duration-200"
+<body class="h-full antialiased text-slate-800 bg-slate-100 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200"
       x-data="{
-          darkMode: localStorage.getItem('theme') === 'dark',
+          darkMode: localStorage.getItem('theme') !== 'light',
           sidebarOpen: true,
           mobileOpen: false,
           dataMasterOpen: {{ request()->routeIs('master.dosen.*') || request()->routeIs('master.ruang.*') || request()->routeIs('master.periode.*') || request()->routeIs('master.dosen-penguji-rule.*') ? 'true' : 'false' }},
@@ -573,7 +572,7 @@
             <!-- Brand / Logo -->
             <div class="flex items-center h-16 px-4 border-b border-white/[0.07] shrink-0">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
-                    <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #3d7bf5, #0b63e5); box-shadow: 0 8px 20px rgba(11,99,229,0.35);">
+                    <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #5472f0, #3251d4); box-shadow: 0 8px 20px rgba(67,97,238,0.35);">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                         </svg>
@@ -1407,7 +1406,7 @@
         <div class="flex-1 flex flex-col min-w-0 min-h-screen overflow-auto">
 
             <!-- ── TOP NAVBAR ── -->
-            <header class="h-16 bg-surface-container-lowest/90 backdrop-blur-xl dark:bg-slate-900 border-b border-border-subtle dark:border-slate-700 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)] shrink-0">
+            <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-700 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 shadow-sm shrink-0">
 
                 <div class="flex items-center gap-3 min-w-0">
                     <!-- Burger toggle (desktop: collapse sidebar) -->
@@ -1494,7 +1493,7 @@
                     <!-- Theme Toggle Switch Button (Light / Dark Mode) -->
                     <button type="button" 
                             @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); if(darkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } window.dispatchEvent(new CustomEvent('theme-changed', { detail: { dark: darkMode } }));"
-                            class="flex items-center justify-center w-10 h-10 rounded-full text-slate-600 dark:text-slate-200 hover:bg-primary-subtle dark:hover:bg-slate-800 transition-all border border-border-subtle dark:border-slate-700 bg-surface-container-lowest dark:bg-slate-900 shadow-[0_1px_8px_rgba(0,0,0,0.04)] group shrink-0"
+                            class="flex items-center justify-center w-10 h-10 rounded-2xl text-slate-600 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs group shrink-0"
                             title="Ganti Mode Terang / Gelap">
                         <template x-if="!darkMode">
                             <span class="text-base" title="Aktifkan Mode Gelap">🌙</span>
@@ -1507,8 +1506,8 @@
                     <!-- Notification Bell Dropdown -->
                     @if (Auth::user()->isDosen() || Auth::user()->isMahasiswa())
                     <div class="relative" x-data="{ notifOpen: false }" @click.away="notifOpen = false">
-                        <button @click="notifOpen = !notifOpen"
-                                class="relative flex items-center justify-center w-10 h-10 rounded-full text-slate-600 hover:text-primary hover:bg-primary-subtle/80 transition-all duration-200 shadow-[0_1px_8px_rgba(0,0,0,0.04)] border border-border-subtle bg-surface-container-lowest group"
+                        <button @click="notifOpen = !notifOpen" 
+                                class="relative flex items-center justify-center w-10 h-10 rounded-2xl text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/80 transition-all duration-200 shadow-2xs border border-slate-200/80 bg-white group"
                                 title="Notifikasi Ujian H-1">
                             <svg class="w-6 h-6 text-slate-500 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>

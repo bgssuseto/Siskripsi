@@ -8,159 +8,39 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
-/* Material Symbols icon font — used alongside the existing inline SVG icon set */
-.material-symbols-outlined {
-    font-family: 'Material Symbols Outlined';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-feature-settings: 'liga';
-    -webkit-font-smoothing: antialiased;
-    vertical-align: middle;
-}
-
 @theme {
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* ── M3 Blue Primary Palette (re-skin of the previous "royal blue") ── */
-    --color-primary-50:  #eff6ff;
-    --color-primary-100: #dae2ff;
-    --color-primary-200: #b1c5ff;
-    --color-primary-300: #7fa3ff;
-    --color-primary-400: #3d7bf5;
-    --color-primary-500: #0b63e5;
-    --color-primary-600: #0b63e5;
-    --color-primary-700: #004cb6;
-    --color-primary-800: #1e40af;
-    --color-primary-900: #00368a;
-    --color-primary-950: #001946;
-
-    /* ── Material 3-style semantic design tokens ── */
-    --color-on-primary:              var(--m3-on-primary);
-    --color-primary-container:       var(--m3-primary-container);
-    --color-on-primary-container:    var(--m3-on-primary-container);
-    --color-primary-subtle:          var(--m3-primary-subtle);
-    --color-primary-dark:            var(--m3-primary-dark);
-
-    --color-secondary:               var(--m3-secondary);
-    --color-secondary-container:     var(--m3-secondary-container);
-    --color-on-secondary-container:  var(--m3-on-secondary-container);
-
-    --color-tertiary:                var(--m3-tertiary);
-    --color-tertiary-container:      var(--m3-tertiary-container);
-    --color-on-tertiary-container:   var(--m3-on-tertiary-container);
-    --color-accent-gold-light:       var(--m3-accent-gold-light);
-    --color-accent-cyan-subtle:      var(--m3-accent-cyan-subtle);
-
-    --color-surface:                 var(--m3-surface);
-    --color-on-surface:              var(--m3-on-surface);
-    --color-on-surface-variant:      var(--m3-on-surface-variant);
-    --color-surface-container-lowest:  var(--m3-surface-container-lowest);
-    --color-surface-container-low:     var(--m3-surface-container-low);
-    --color-surface-container:         var(--m3-surface-container);
-    --color-surface-container-high:    var(--m3-surface-container-high);
-    --color-surface-container-highest: var(--m3-surface-container-highest);
-
-    --color-outline:                 var(--m3-outline);
-    --color-outline-variant:         var(--m3-outline-variant);
-    --color-border-subtle:           var(--m3-border-subtle);
-    --color-text-muted:              var(--m3-text-muted);
-
-    --color-error-container:         var(--m3-error-container);
-    --color-on-error-container:      var(--m3-on-error-container);
+    /* ── Royal Blue Primary Palette ── */
+    --color-primary-50:  #eef1fe;
+    --color-primary-100: #d8dffd;
+    --color-primary-200: #b5c1fb;
+    --color-primary-300: #8b9cf7;
+    --color-primary-400: #6b7ff3;
+    --color-primary-500: #5472f0;
+    --color-primary-600: #4361ee;
+    --color-primary-700: #3251d4;
+    --color-primary-800: #2a43b0;
+    --color-primary-900: #273b8a;
+    --color-primary-950: #192355;
 }
 
 /* ── Global CSS Variables for Primary Color ── */
 :root {
-    --primary:       #0b63e5;
-    --primary-hover: #004cb6;
-    --primary-light: #3d7bf5;
-    --primary-glow:  rgba(11, 99, 229, 0.25);
-    --primary-soft:  #eff6ff;
-
-    /* Material 3-style tokens — light theme (default) */
-    --m3-on-primary:              #ffffff;
-    --m3-primary-container:       #0b63e5;
-    --m3-on-primary-container:    #e8ecff;
-    --m3-primary-subtle:          #eff6ff;
-    --m3-primary-dark:            #1e40af;
-
-    --m3-secondary:               #00629d;
-    --m3-secondary-container:     #00a2fd;
-    --m3-on-secondary-container:  #003558;
-
-    --m3-tertiary:                #764900;
-    --m3-tertiary-container:      #965f00;
-    --m3-on-tertiary-container:   #ffe9d4;
-    --m3-accent-gold-light:       #fef3c7;
-    --m3-accent-cyan-subtle:      #e0f2fe;
-
-    --m3-surface:                 #faf8ff;
-    --m3-on-surface:              #131b2e;
-    --m3-on-surface-variant:      #424654;
-    --m3-surface-container-lowest:  #ffffff;
-    --m3-surface-container-low:     #f2f3ff;
-    --m3-surface-container:         #eaedff;
-    --m3-surface-container-high:    #e2e7ff;
-    --m3-surface-container-highest: #dae2fd;
-
-    --m3-outline:                 #727786;
-    --m3-outline-variant:         #c2c6d7;
-    --m3-border-subtle:           #e2e8f0;
-    --m3-text-muted:              #64748b;
-
-    --m3-error-container:         #ffdad6;
-    --m3-on-error-container:      #93000a;
+    --primary:       #4361ee;
+    --primary-hover: #3251d4;
+    --primary-light: #6b7ff3;
+    --primary-glow:  rgba(67, 97, 238, 0.25);
+    --primary-soft:  #eef1fe;
 }
 
 html.dark {
-    --primary:       #7fa3ff;
-    --primary-hover: #3d7bf5;
-    --primary-light: #b1c5ff;
-    --primary-glow:  rgba(127, 163, 255, 0.30);
-    --primary-soft:  rgba(11, 99, 229, 0.12);
-
-    /* Material 3-style tokens — dark theme override */
-    --m3-on-primary:              #002f6c;
-    --m3-primary-container:       #3d7bf5;
-    --m3-on-primary-container:    #dae2ff;
-    --m3-primary-subtle:          rgba(11, 99, 229, 0.15);
-    --m3-primary-dark:            #b1c5ff;
-
-    --m3-secondary:               #7fd4ff;
-    --m3-secondary-container:     #004a77;
-    --m3-on-secondary-container:  #cfe5ff;
-
-    --m3-tertiary:                #ffb95f;
-    --m3-tertiary-container:      #653e00;
-    --m3-on-tertiary-container:   #ffddb8;
-    --m3-accent-gold-light:       rgba(245, 158, 11, 0.18);
-    --m3-accent-cyan-subtle:      rgba(14, 165, 233, 0.18);
-
-    --m3-surface:                 #0f1424;
-    --m3-on-surface:              #e8eaf5;
-    --m3-on-surface-variant:      #c2c6d7;
-    --m3-surface-container-lowest:  #0b0f1c;
-    --m3-surface-container-low:     #151b2e;
-    --m3-surface-container:         #1a2136;
-    --m3-surface-container-high:    #232b45;
-    --m3-surface-container-highest: #2c3552;
-
-    --m3-outline:                 #8b90a0;
-    --m3-outline-variant:         #333a52;
-    --m3-border-subtle:           #2c3552;
-    --m3-text-muted:              #8b90a0;
-
-    --m3-error-container:         rgba(244, 63, 94, 0.18);
-    --m3-on-error-container:      #fda4af;
+    --primary:       #6b7ff3;
+    --primary-hover: #5472f0;
+    --primary-light: #8b9cf7;
+    --primary-glow:  rgba(107, 127, 243, 0.30);
+    --primary-soft:  rgba(67, 97, 238, 0.12);
 }
 
 /* ── Override Tailwind's indigo with Royal Blue ── */
@@ -211,7 +91,7 @@ html.dark {
 .via-indigo-600  { --tw-gradient-via:  var(--color-primary-600) !important; }
 
 /* bg-indigo-600/30 */
-.bg-indigo-600\/30 { background-color: rgba(11, 99, 229, 0.30) !important; }
+.bg-indigo-600\/30 { background-color: rgba(67, 97, 238, 0.30) !important; }
 
 /* Dark mode text-indigo adjustments */
 html.dark .text-indigo-300 { color: var(--color-primary-300) !important; }
@@ -220,24 +100,24 @@ html.dark .text-indigo-400 { color: var(--color-primary-400) !important; }
 /* ── Dark Mode: override bg-indigo badge ── */
 html.dark .bg-indigo-50,
 html.dark .bg-indigo-100 {
-    background-color: rgba(11, 99, 229, 0.18) !important;
-    color: #b1c5ff !important;
-    border-color: rgba(11, 99, 229, 0.35) !important;
+    background-color: rgba(67, 97, 238, 0.18) !important;
+    color: #8b9cf7 !important;
+    border-color: rgba(67, 97, 238, 0.35) !important;
 }
 
 /* ── FullCalendar Button Override ── */
 html .fc {
-    --fc-button-bg-color: #0b63e5 !important;
-    --fc-button-border-color: #004cb6 !important;
-    --fc-button-hover-bg-color: #004cb6 !important;
-    --fc-button-hover-border-color: #1e40af !important;
-    --fc-button-active-bg-color: #1e40af !important;
+    --fc-button-bg-color: #4361ee !important;
+    --fc-button-border-color: #3251d4 !important;
+    --fc-button-hover-bg-color: #3251d4 !important;
+    --fc-button-hover-border-color: #2a43b0 !important;
+    --fc-button-active-bg-color: #2a43b0 !important;
 }
 
 html.dark .fc {
-    --fc-button-bg-color: #3d7bf5 !important;
-    --fc-button-border-color: #0b63e5 !important;
-    --fc-button-hover-bg-color: #0b63e5 !important;
-    --fc-button-hover-border-color: #004cb6 !important;
-    --fc-button-active-bg-color: #004cb6 !important;
+    --fc-button-bg-color: #6b7ff3 !important;
+    --fc-button-border-color: #5472f0 !important;
+    --fc-button-hover-bg-color: #5472f0 !important;
+    --fc-button-hover-border-color: #4361ee !important;
+    --fc-button-active-bg-color: #4361ee !important;
 }
