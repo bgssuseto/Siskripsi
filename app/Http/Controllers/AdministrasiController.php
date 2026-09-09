@@ -125,9 +125,14 @@ class AdministrasiController extends Controller
     }
 
     /**
-     * Preview HTML Undangan untuk Cetak / Tampilan Web 1 Dosen
+     * Build the full data context for one dosen's Undangan letter — periode,
+     * matching Sidang list, rekap sesi, koordinator penandatangan, dan logo
+     * kop surat (base64) — dari filter query params yang sama. Dipakai
+     * bersama oleh previewUndanganHtml() (versi "Cetak"/HTML) dan
+     * buildUndanganPdfForDosen() (versi export PDF) supaya KEDUANYA selalu
+     * menampilkan isi & kop surat yang identik.
      */
-    public function previewUndanganHtml(Request $request, Dosen $dosen): View
+    private function buildUndanganContext(Request $request, Dosen $dosen): array
     {
         $periodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
@@ -176,25 +181,48 @@ class AdministrasiController extends Controller
                            ->orderBy('jam', 'asc')
                            ->get();
 
+        // Rekap sesi (menggabungkan slot waktu berurutan per hari & ruang)
         $rekapSesi = $this->buildSimplifiedSessions($mySidangs);
 
-        $kopPath = public_path('images/kop_surat.png');
-        $kopBase64 = '';
-        if (file_exists($kopPath)) {
-            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($kopPath);
-            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        }
+        $koordinator = \App\Models\User::where('role', \App\Models\User::ROLE_KOORDINATOR)
+            ->whereNotNull('dosen_id')
+            ->with('dosen')
+            ->first()?->dosen;
 
-        return view('administrasi.undangan.preview', [
+        return [
             'dosen'         => $dosen,
             'namaPeriode'   => $namaPeriode,
             'rekapSesi'     => $rekapSesi,
             'sidangs'       => $mySidangs,
-            'kopBase64'     => $kopBase64,
             'totalUji'      => $mySidangs->count(),
             'jenisUndangan' => $jenisUndangan,
-        ]);
+            'koordinator'   => $koordinator,
+            'kopBase64'     => $this->imageToBase64(public_path('images/kop_surat.png')),
+            'logoTiBase64'  => $this->imageToBase64(public_path('images/logo-ti-umk-icon.png')),
+        ];
+    }
+
+    /**
+     * Load an image file from disk and encode it as a data: URI, or an empty
+     * string when the file doesn't exist — used for images embedded into the
+     * Undangan kop surat (works both for the browser preview and dompdf).
+     */
+    private function imageToBase64(string $path): string
+    {
+        if (!file_exists($path)) {
+            return '';
+        }
+        $type = pathinfo($path, PATHINFO_EXTENSION);
+        $data = file_get_contents($path);
+        return 'data:image/' . $type . ';base64,' . base64_encode($data);
+    }
+
+    /**
+     * Preview HTML Undangan untuk Cetak / Tampilan Web 1 Dosen
+     */
+    public function previewUndanganHtml(Request $request, Dosen $dosen): View
+    {
+        return view('administrasi.undangan.preview', $this->buildUndanganContext($request, $dosen));
     }
 
     /**
@@ -205,78 +233,16 @@ class AdministrasiController extends Controller
      */
     private function buildUndanganPdfForDosen(Request $request, Dosen $dosen): array
     {
-        $periodeId = $request->get('periode_id');
-        $tglMulai = $request->get('tanggal_pendaftaran_mulai');
-        $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $context = $this->buildUndanganContext($request, $dosen);
 
-        $periode = $periodeId ? Periode::find($periodeId) : Periode::where('aktif', true)->first();
-        $namaPeriode = $periode ? $periode->nama_periode : 'Periode ' . date('Y');
-
-        $jenisUndangan = $request->get('jenis', 'sempro');
-
-        $query = Sidang::with([
-            'pembimbingUtama', 'pembimbingPendamping',
-            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
-            'ruang', 'periode'
-        ])
-        ->where(function ($q) use ($dosen) {
-            $q->where('ketua_penguji_id', $dosen->id)
-              ->orWhere('anggota_penguji_1_id', $dosen->id)
-              ->orWhere('anggota_penguji_2_id', $dosen->id);
-        });
-
-        if ($jenisUndangan === 'sempro') {
-            $query->where('jenis_tugas_akhir', 'sempro');
-        } else {
-            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
-        }
-
-        if ($periode) {
-            $query->where('periode_id', $periode->id);
-        }
-
-        if ($tglMulai) {
-            $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
-        }
-
-        if ($tglSelesai) {
-            $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
-        }
-
-        $selectedGelombang = $request->get('gelombang');
-        if ($selectedGelombang !== null && $selectedGelombang !== '') {
-            $query->where('gelombang', $selectedGelombang);
-        }
-
-        $mySidangs = $query->orderBy('tanggal', 'asc')
-                           ->orderBy('jam', 'asc')
-                           ->get();
-
-        // Build simplified rekap sessions (merging consecutive time slots per day & room)
-        $rekapSesi = $this->buildSimplifiedSessions($mySidangs);
-
-        $koordinator = \App\Models\User::where('role', \App\Models\User::ROLE_KOORDINATOR)
-            ->whereNotNull('dosen_id')
-            ->with('dosen')
-            ->first()?->dosen;
-
-        $pdf = Pdf::loadView('administrasi.undangan.pdf', [
-            'dosen'         => $dosen,
-            'namaPeriode'   => $namaPeriode,
-            'rekapSesi'     => $rekapSesi,
-            'sidangs'       => $mySidangs,
-            'totalUji'      => $mySidangs->count(),
-            'jenisUndangan' => $jenisUndangan,
-            'koordinator'   => $koordinator,
-        ]);
-
+        $pdf = Pdf::loadView('administrasi.undangan.pdf', $context);
         $pdf->setPaper('a4', 'landscape');
 
         return [
             'pdf'           => $pdf,
-            'namaPeriode'   => $namaPeriode,
-            'jenisUndangan' => $jenisUndangan,
-            'totalUji'      => $mySidangs->count(),
+            'namaPeriode'   => $context['namaPeriode'],
+            'jenisUndangan' => $context['jenisUndangan'],
+            'totalUji'      => $context['totalUji'],
         ];
     }
 

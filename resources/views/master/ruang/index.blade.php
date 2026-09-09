@@ -5,7 +5,7 @@
         createModal: false, 
         editModal: false, 
         deleteModal: false,
-        editRuang: { id: null, kode_ruangan: '', nama_ruangan: '' },
+        editRuang: { id: null, kode_ruangan: '', nama_ruangan: '', status: 'siap_digunakan' },
         deleteRuang: { id: null, nama_ruangan: '' },
         errors: {},
         isLoading: false,
@@ -171,6 +171,7 @@
                             <th class="px-6 py-4">No</th>
                             <th class="px-6 py-4">Kode Ruangan</th>
                             <th class="px-6 py-4">Nama Ruangan</th>
+                            <th class="px-6 py-4">Status</th>
                             <th class="px-6 py-4 text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -185,6 +186,19 @@
                             </td>
                             <td class="px-6 py-4 font-semibold text-slate-900 dark:text-slate-100">
                                 {{ $ruang->nama_ruangan }}
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($ruang->status === 'belum_siap_digunakan')
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                    Belum Siap Digunakan
+                                </span>
+                                @else
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    Siap Digunakan
+                                </span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
@@ -207,7 +221,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
@@ -263,6 +277,14 @@
                             </template>
                         </div>
 
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Status Ruangan</label>
+                            <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="siap_digunakan">Siap Digunakan</option>
+                                <option value="belum_siap_digunakan">Belum Siap Digunakan</option>
+                            </select>
+                        </div>
+
                         <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                             <button type="button" @click="createModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
                             <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-600/30 disabled:opacity-50">
@@ -304,11 +326,19 @@
 
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Nama Ruangan <span class="text-rose-500">*</span></label>
-                            <input type="text" name="nama_ruangan" x-model="editRuang.nama_ruangan" required 
+                            <input type="text" name="nama_ruangan" x-model="editRuang.nama_ruangan" required
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <template x-if="errors.nama_ruangan">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_ruangan[0]"></p>
                             </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Status Ruangan</label>
+                            <select name="status" x-model="editRuang.status" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="siap_digunakan">Siap Digunakan</option>
+                                <option value="belum_siap_digunakan">Belum Siap Digunakan</option>
+                            </select>
                         </div>
 
                         <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">

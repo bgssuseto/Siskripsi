@@ -6,8 +6,8 @@
   <title>Undangan {{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }} - {{ $dosen->nama_dosen }}</title>
   <style>
     @page {
-      size: A4;
-      margin: 2cm;
+      size: A4 landscape;
+      margin: 14mm 16mm;
     }
 
     * {
@@ -16,104 +16,202 @@
 
     body {
       font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
-      color: #1a1a1a;
-      max-width: 780px;
-      margin: 20px auto;
-      padding: 40px 50px;
+      color: #1e293b;
+      margin: 0 auto;
+      padding: 24px 40px 40px;
       background: #fff;
-      line-height: 1.6;
-      font-size: 15px;
+      line-height: 1.4;
+      font-size: 13px;
     }
 
-    .kop {
-      text-align: center;
-      margin-bottom: 8px;
+    /* ===================== KOP SURAT (LOGO UMK KIRI, LOGO TI KANAN) ===================== */
+    table.kop-surat {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 6px;
     }
 
-    .kop img {
-      max-width: 100%;
-      height: auto;
+    table.kop-surat td {
+      border: none;
+      padding: 0;
+      vertical-align: middle;
+    }
+
+    .kop-logo-umk {
+      height: 60px;
+    }
+
+    .kop-logo-ti {
+      height: 48px;
+    }
+
+    .kop-logo-right {
+      text-align: right;
     }
 
     .garis {
       border: none;
-      border-top: 3px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
+      border-top: 3px solid #1e3a8a;
+      border-bottom: 1px solid #1e3a8a;
       height: 4px;
-      margin: 0 0 28px 0;
+      margin: 0 0 16px 0;
     }
 
-    table.info {
-      border-collapse: collapse;
+    /* ===================== LETTER META ===================== */
+    table.letter-meta {
       width: 100%;
-      margin-bottom: 24px;
+      border-collapse: collapse;
+      margin-bottom: 12px;
     }
 
-    table.info td {
-      padding: 2px 6px 2px 0;
+    table.letter-meta td {
+      border: none;
+      padding: 0;
       vertical-align: top;
+      font-size: 13px;
+    }
+
+    .letter-date {
+      text-align: right;
+    }
+
+    .perihal-value {
+      font-weight: bold;
     }
 
     .isi p {
-      margin: 0 0 14px 0;
+      margin: 0 0 10px 0;
       text-align: justify;
     }
 
-    .editable {
-      background: #fff8d6;
-      border-bottom: 1px dashed #c9a227;
-      padding: 0 2px;
-    }
-
-    .detail-sidang {
+    /* ===================== SUMMARY STRIP ===================== */
+    table.summary-strip {
       width: 100%;
-      margin: 16px 0 20px 0;
       border-collapse: collapse;
+      margin-bottom: 12px;
+      border: 1px solid #cbd5e1;
+      background-color: #f8fafc;
     }
 
-    .detail-sidang th,
-    .detail-sidang td {
-      border: 1px solid #1a1a1a;
-      padding: 6px 10px;
-      vertical-align: top;
-      font-size: 14px;
+    table.summary-strip td {
+      padding: 6px 14px;
+      font-size: 12px;
+      border: none;
+      border-right: 1px solid #e2e8f0;
     }
 
-    .detail-sidang th {
-      background-color: #f2f2f2;
+    table.summary-strip td:last-child {
+      border-right: none;
+    }
+
+    .strip-label {
+      display: block;
+      color: #64748b;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 2px;
+    }
+
+    .strip-value {
+      display: block;
       font-weight: bold;
+      color: #0f172a;
+      font-size: 13px;
+    }
+
+    .strip-value.accent {
+      color: #1e3a8a;
+    }
+
+    /* ===================== SECTION HEADING ===================== */
+    .section-heading {
+      font-size: 12px;
+      font-weight: bold;
+      color: #1e3a8a;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 5px;
+    }
+
+    .section-block {
+      margin-bottom: 12px;
+    }
+
+    /* ===================== TABEL ===================== */
+    table.data-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      border: 1px solid #94a3b8;
+      font-size: 12px;
+    }
+
+    table.data-table thead th {
+      background-color: #1e3a8a;
+      font-weight: bold;
+      text-align: left;
+      color: #ffffff;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      padding: 6px 8px;
+    }
+
+    table.data-table tbody td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+      word-wrap: break-word;
+    }
+
+    table.data-table tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    table.data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.data-table th.center, table.data-table td.center {
       text-align: center;
     }
 
-    .ttd {
-      margin-top: 48px;
-      display: flex;
-      justify-content: flex-end;
+    /* ===================== SIGNATURE BLOCK ===================== */
+    table.signature-block {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
     }
 
-    .ttd-block {
+    table.signature-block td {
+      border: none;
+      padding: 0;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    .signature-col {
+      width: 280px;
       text-align: center;
-      min-width: 240px;
-      float: right;
     }
 
-    .ttd-nama {
-      margin-top: 70px;
+    .signature-space {
+      height: 34px;
+    }
+
+    .signature-name {
       font-weight: bold;
       text-decoration: underline;
     }
 
-    .ttd-nip {
-      font-size: 14px;
-    }
-
-    .catatan {
-      margin-top: 40px;
-      font-size: 12.5px;
-      color: #555;
-      border-top: 1px dashed #ccc;
-      padding-top: 12px;
-      clear: both;
+    /* ===================== FOOTER ===================== */
+    .doc-footer {
+      margin-top: 10px;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 10px;
+      color: #94a3b8;
     }
 
     .btn-print-bar {
@@ -130,7 +228,7 @@
     }
 
     .btn-print {
-      background: #3251d4;
+      background: #0b63e5;
       color: #fff;
       border: none;
       padding: 8px 16px;
@@ -153,17 +251,10 @@
 
     @media print {
       body {
-        margin: 0;
-        padding: 20px;
-        max-width: 100%;
+        padding: 0;
       }
 
-      .editable {
-        background: none;
-        border-bottom: none;
-      }
-
-      .catatan, .btn-print-bar {
+      .btn-print-bar {
         display: none !important;
       }
     }
@@ -177,87 +268,171 @@
     <button onclick="window.close()" class="btn-close">Tutup</button>
   </div>
 
-  <div class="kop">
-    @if(!empty($kopBase64))
-      <img src="{{ $kopBase64 }}" alt="Kop Surat">
-    @else
-      <div style="font-size: 16px; font-weight: bold; text-transform: uppercase;">UNIVERSITAS MURIA KUDUS</div>
-      <div style="font-size: 14px; font-weight: bold; text-transform: uppercase;">FAKULTAS TEKNIK - PROGRAM STUDI TEKNIK INFORMATIKA</div>
-      <div style="font-size: 11px; color: #555;">Kampus UMK Gondangmanis Kudus. Telp (0291) 438229</div>
-    @endif
-  </div>
+  <!-- ============ KOP SURAT (LOGO UMK KIRI, LOGO TI KANAN) ============ -->
+  <table class="kop-surat">
+    <tr>
+      <td style="width: 50%;">
+        @if(!empty($kopBase64))
+          <img class="kop-logo-umk" src="{{ $kopBase64 }}" alt="Kop Surat UMK">
+        @else
+          <div style="font-size: 16px; font-weight: bold; text-transform: uppercase;">UNIVERSITAS MURIA KUDUS</div>
+          <div style="font-size: 14px; font-weight: bold; text-transform: uppercase;">FAKULTAS TEKNIK - PROGRAM STUDI TEKNIK INFORMATIKA</div>
+          <div style="font-size: 11px; color: #555;">Kampus UMK Gondangmanis Kudus. Telp (0291) 438229</div>
+        @endif
+      </td>
+      <td class="kop-logo-right" style="width: 50%;">
+        @if(!empty($logoTiBase64))
+          <img class="kop-logo-ti" src="{{ $logoTiBase64 }}" alt="Logo Teknik Informatika UMK">
+        @endif
+      </td>
+    </tr>
+  </table>
   <div class="garis"></div>
 
-  <table class="info">
+  <!-- ============ LETTER META ============ -->
+  <table class="letter-meta">
     <tr>
-      <td style="width: 90px;">Nomor</td>
-      <td>: <span class="editable">045/UN13.1/TI/{{ date('Y') }}</span></td>
-    </tr>
-    <tr>
-      <td>Lampiran</td>
-      <td>: <span class="editable">1 (satu) Berkas</span></td>
-    </tr>
-    <tr>
-      <td>Hal</td>
-      <td>: <strong>Undangan {{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }}</strong></td>
+      <td style="width: 60%;">
+        <span class="perihal-value">Perihal</span>: Undangan Menjadi Dewan Penguji {{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }}<br>
+        Lampiran: Jadwal Pelaksanaan ({{ $totalUji }} Mahasiswa)
+      </td>
+      <td class="letter-date">
+        Kudus, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}
+      </td>
     </tr>
   </table>
 
-  <p>Kepada Yth.<br>
-    <strong>{{ $dosen->nama_dosen }}</strong><br>
-    Dosen Penguji / Pembimbing<br>
-    di Tempat
-  </p>
-
   <div class="isi">
-    <p>Dengan hormat,</p>
-    <p>Sehubungan dengan pelaksanaan kegiatan {{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }} Mahasiswa Program Studi Teknik Informatika Periode {{ $namaPeriode }}, kami mengharapkan kesediaan Bapak/Ibu untuk menjadi Penguji/Pembimbing pada kegiatan tersebut yang akan dilaksanakan pada:</p>
+    <p>Kepada Yth.<br>
+      Bapak/Ibu <strong>{{ $dosen->nama_dosen }}</strong><br>
+      Dosen Program Studi Teknik Informatika<br>
+      Universitas Muria Kudus<br>
+      <em>di Tempat</em>
+    </p>
 
-    <!-- Tabel Rekap Sesi Ujian -->
-    <table class="detail-sidang">
+    <p>Dengan hormat, sehubungan dengan akan dilaksanakannya kegiatan <strong>{{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }}</strong>
+      mahasiswa Program Studi Teknik Informatika, Fakultas Teknik, Universitas Muria Kudus pada <strong>{{ strtoupper($namaPeriode) }}</strong>,
+      kami mengundang Bapak/Ibu untuk berkenan hadir sebagai Dewan Penguji sesuai dengan jadwal yang telah kami susun sebagaimana terlampir pada surat ini.</p>
+  </div>
+
+  <!-- ============ SUMMARY STRIP ============ -->
+  <table class="summary-strip">
+    <tr>
+      <td style="width: 30%;">
+        <span class="strip-label">Nama Dosen</span>
+        <span class="strip-value">{{ $dosen->nama_dosen }}</span>
+      </td>
+      <td style="width: 18%;">
+        <span class="strip-label">NIDN</span>
+        <span class="strip-value">{{ $dosen->nidn ?? '-' }}</span>
+      </td>
+      <td style="width: 26%;">
+        <span class="strip-label">Periode Akademik</span>
+        <span class="strip-value">{{ $namaPeriode }}</span>
+      </td>
+      <td style="width: 26%;">
+        <span class="strip-label">Total Mahasiswa Diuji</span>
+        <span class="strip-value accent">{{ $totalUji }} Mahasiswa</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ============ TABEL 1: Rekap Hari & Ruang ============ -->
+  <div class="section-block">
+    <div class="section-heading">Rekap Hari &amp; Ruang</div>
+    <table class="data-table">
       <thead>
         <tr>
-          <th style="width: 5%;">No</th>
-          <th style="width: 25%;">Hari / Tanggal</th>
-          <th style="width: 15%;">Jam</th>
-          <th style="width: 15%;">Ruangan</th>
-          <th>Mahasiswa & Judul</th>
+          <th class="center" style="width: 5%;">No</th>
+          <th style="width: 35%;">Nama Dosen</th>
+          <th style="width: 30%;">Hari, Tanggal</th>
+          <th class="center" style="width: 15%;">Ruang</th>
+          <th class="center" style="width: 15%;">Jam</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($rekapSesi as $idx => $sesi)
+        <tr>
+          <td class="center">{{ $idx + 1 }}</td>
+          <td>{{ $dosen->nama_dosen }}</td>
+          <td>{{ $sesi['hari_tanggal'] }}</td>
+          <td class="center">{{ $sesi['ruang'] }}</td>
+          <td class="center">{{ $sesi['jam'] }}</td>
+        </tr>
+        @empty
+        <tr>
+          <td colspan="5" class="center" style="font-style: italic; color: #94a3b8;">Tidak ada sesi jadwal ujian.</td>
+        </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============ TABEL 2: Daftar Mahasiswa Yang Diuji ============ -->
+  <div class="section-block">
+    <div class="section-heading">Daftar Mahasiswa yang Diuji</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="center" style="width: 3%;">No</th>
+          <th style="width: 15%;">Nama</th>
+          <th style="width: 18%;">Ketua Penguji</th>
+          <th style="width: 16%;">Penguji 1</th>
+          <th style="width: 16%;">Penguji 2</th>
+          <th style="width: 16%;">Hari, Tanggal</th>
+          <th class="center" style="width: 8%;">Jam</th>
+          <th class="center" style="width: 8%;">Ruang</th>
         </tr>
       </thead>
       <tbody>
         @forelse($sidangs as $idx => $s)
         <tr>
-          <td style="text-align: center;">{{ $idx + 1 }}</td>
-          <td>{{ $s->tanggal ? \Carbon\Carbon::parse($s->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y') : '-' }}</td>
-          <td style="text-align: center;">{{ $s->jam ?? '-' }} WIB</td>
-          <td style="text-align: center;">{{ $s->ruang ? $s->ruang->kode_ruangan : '-' }}</td>
+          <td class="center">{{ $idx + 1 }}</td>
+          <td><strong>{{ $s->nama_mahasiswa }}</strong></td>
+          <td>{{ $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : ($s->pembimbingUtama ? $s->pembimbingUtama->nama_dosen : '-') }}</td>
+          <td>{{ $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : ($s->pembimbingPendamping ? $s->pembimbingPendamping->nama_dosen : '-') }}</td>
+          <td>{{ $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-' }}</td>
           <td>
-            <strong>{{ $s->nama_mahasiswa }}</strong> ({{ $s->nim }})<br>
-            <span style="font-size: 13px; color: #444;">"{{ $s->judul_skripsi }}"</span>
+            @if($s->tanggal)
+              {{ \Carbon\Carbon::parse($s->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y') }}
+            @else
+              -
+            @endif
           </td>
+          <td class="center">{{ $s->jam ?? '-' }}</td>
+          <td class="center">{{ $s->ruang ? $s->ruang->kode_ruangan : '-' }}</td>
         </tr>
         @empty
         <tr>
-          <td colspan="5" style="text-align: center; font-style: italic;">Tidak ada sesi jadwal ujian.</td>
+          <td colspan="8" class="center" style="font-style: italic; color: #94a3b8;">Tidak ada data mahasiswa.</td>
         </tr>
         @endforelse
       </tbody>
     </table>
-
-    <p>Demikian surat undangan ini kami sampaikan. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.</p>
   </div>
 
-  <div class="ttd">
-    <div class="ttd-block">
-      <p>Kudus, <span class="editable">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</span><br>
-        Ketua Program Studi Teknik Informatika,</p>
-      <p class="ttd-nama"><span class="editable">Dr. Koordinator Skripsi, M.Kom</span></p>
-      <p class="ttd-nip">NIP. <span class="editable">19800101 200501 1 001</span></p>
-    </div>
+  <div class="isi">
+    <p>Demikian surat undangan ini kami sampaikan. Atas perhatian dan kesediaan Bapak/Ibu untuk hadir dan meluangkan waktu, kami ucapkan terima kasih.</p>
   </div>
 
-  <div class="catatan">
-    <strong>Catatan:</strong> Teks berlatar kuning (<span style="background:#fff8d6;">seperti ini</span>) dapat disesuaikan kembali secara langsung sebelum dicetak.
+  <!-- ============ SIGNATURE BLOCK ============ -->
+  <table class="signature-block">
+    <tr>
+      <td></td>
+      <td class="signature-col">
+        Mengetahui,<br>
+        Koordinator Skripsi/Tugas Akhir<br>
+        Program Studi Teknik Informatika
+        <div class="signature-space"></div>
+        <div class="signature-name">{{ $koordinator->nama_dosen ?? '.....................................' }}</div>
+        <div>NIDN. {{ $koordinator->nidn ?? '.....................................' }}</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ============ FOOTER ============ -->
+  <div class="doc-footer">
+    Dokumen ini dihasilkan otomatis oleh Sistem Informasi Tugas Akhir &mdash; Program Studi Teknik Informatika, Universitas Muria Kudus. Dicetak: {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y, HH:mm') }} WIB.
   </div>
 
 </body>

@@ -56,7 +56,7 @@ class AutoScheduleService
         }
 
         $ruangs = Ruang::orderBy('kode_ruangan')->get()
-            ->filter(fn ($r) => trim($r->kode_ruangan) !== 'Langsung Pemberkasan')
+            ->filter(fn ($r) => trim($r->kode_ruangan) !== 'Langsung Pemberkasan' && $r->isSiapDigunakan())
             ->values();
 
         $bebanDosen = self::calculateBebanDosen();
@@ -96,6 +96,13 @@ class AutoScheduleService
         $proposals = [];
         $unresolved = [];
 
+        // Trio Ketua Penguji + Penguji 1 yang TERAKHIR berhasil dipasangkan secara
+        // otomatis untuk setiap tanggal, dicoba dipakai ulang dulu sebelum memilih
+        // pasangan baru — supaya dewan penguji yang sama menempel di satu tanggal
+        // (dan, lewat preferensi pickRuang(), di satu ruang) sepanjang hari alih-alih
+        // berganti-ganti tiap mahasiswa.
+        $lastTrioPerTanggal = []; // [Y-m-d] => [ketuaId, p1Id]
+
         foreach ($unscheduled as $sidang) {
             $isSempro = $sidang->jenis_tugas_akhir === 'sempro';
 
@@ -107,7 +114,7 @@ class AutoScheduleService
             $needsPengujiAssignment = !$isSempro && (!$sidang->ketua_penguji_id || !$sidang->anggota_penguji_1_id);
 
             if ($needsPengujiAssignment) {
-                $result = self::scheduleWithAutoPenguji($sidang, $kesediaanMap, $busyDosen, $busyRuang, $dosenRuangHariIni, $ruangs, $slotMinutes, $bebanDosen);
+                $result = self::scheduleWithAutoPenguji($sidang, $kesediaanMap, $busyDosen, $busyRuang, $dosenRuangHariIni, $ruangs, $slotMinutes, $bebanDosen, $lastTrioPerTanggal);
                 if ($result) {
                     $proposals[] = $result;
                 } else {
@@ -292,7 +299,8 @@ class AutoScheduleService
         array &$dosenRuangHariIni,
         $ruangs,
         int $slotMinutes,
-        array $bebanDosen
+        array $bebanDosen,
+        array &$lastTrioPerTanggal
     ): ?array {
         $utamaId = $sidang->dosen_pembimbing_utama_id;
         if (empty($kesediaanMap[$utamaId])) {
@@ -347,7 +355,32 @@ class AutoScheduleService
                     continue;
                 }
 
-                $pair = self::pickValidPengujiPair($kandidatTersedia, $utamaId);
+                // Coba pakai ulang dulu trio Ketua/Penguji 1 terakhir yang berhasil
+                // dipasangkan di tanggal ini (kalau ada, masih tersedia di slot ini,
+                // dan tidak melanggar Rule Komposisi terhadap pembimbing utama
+                // mahasiswa ini) — supaya dewan penguji tidak berganti-ganti tiap
+                // mahasiswa dan pickRuang() bisa menahan mereka di satu ruang.
+                $pair = null;
+                $reusedTrio = $lastTrioPerTanggal[$tgl] ?? null;
+                if ($reusedTrio) {
+                    [$reusedKetua, $reusedP1] = $reusedTrio;
+                    $bothAvailable = in_array($reusedKetua, $kandidatTersedia) && in_array($reusedP1, $kandidatTersedia);
+                    if ($bothAvailable) {
+                        $errors = SidangConflictService::checkPengujiCompositionRules([
+                            'jenis_tugas_akhir'    => 'skripsi',
+                            'ketua_penguji_id'     => $reusedKetua,
+                            'anggota_penguji_1_id' => $reusedP1,
+                            'anggota_penguji_2_id' => $utamaId,
+                        ]);
+                        if (empty($errors)) {
+                            $pair = [$reusedKetua, $reusedP1];
+                        }
+                    }
+                }
+
+                if (!$pair) {
+                    $pair = self::pickValidPengujiPair($kandidatTersedia, $utamaId);
+                }
                 if (!$pair) {
                     continue;
                 }
@@ -373,6 +406,7 @@ class AutoScheduleService
                     $dosenRuangHariIni[$dosenId][$tgl][$ruang->id] = true;
                 }
                 $busyRuang[$ruang->id][$tgl][] = [$slotStart, $slotEnd];
+                $lastTrioPerTanggal[$tgl] = [$ketuaId, $p1Id];
 
                 return [
                     'sidang_id'            => $sidang->id,

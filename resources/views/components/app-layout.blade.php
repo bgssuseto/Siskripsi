@@ -253,13 +253,12 @@
         }
 
         /* ===================== LIGHT-MODE SIDEBAR ===================== */
-        /* The sidebar is built dark-first (permanently dark gradient + white text). Give it
+        /* The sidebar is built dark-first (flat dark fill + white text). Give it
            an explicit light theme when the app is NOT in dark mode, instead of leaving it
            stuck looking "dark" regardless of the toggle. */
         html:not(.dark) #app-sidebar {
             background: #ffffff !important;
             border-right: 1px solid #e2e8f0;
-            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.05);
         }
 
         html:not(.dark) #app-sidebar .border-white\/\[0\.07\],
@@ -572,7 +571,7 @@
         <!-- ===================== SIDEBAR ===================== -->
         <aside
             id="app-sidebar"
-            class="fixed inset-y-0 left-0 z-50 flex flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white transition-all duration-300 ease-in-out shadow-2xl lg:relative lg:z-auto lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-50 flex flex-col bg-slate-900 text-white transition-all duration-300 ease-in-out border-r border-slate-800 lg:relative lg:z-auto lg:translate-x-0"
             :class="{
                 'translate-x-0': mobileOpen,
                 '-translate-x-full': !mobileOpen,
@@ -583,7 +582,7 @@
             <!-- Brand / Logo -->
             <div class="flex items-center h-16 px-4 border-b border-white/[0.07] shrink-0">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
-                    <div class="w-9 h-9 shrink-0 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-lg" style="box-shadow: 0 8px 20px rgba(67,97,238,0.35);">
+                    <div class="w-9 h-9 shrink-0 rounded-xl bg-white flex items-center justify-center p-1.5 border border-white/10">
                         <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI-UMK" class="w-full h-full object-contain">
                     </div>
                     <div class="overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-36 opacity-100' : 'w-0 opacity-0'">

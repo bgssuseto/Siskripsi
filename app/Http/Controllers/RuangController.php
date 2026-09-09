@@ -31,11 +31,14 @@ class RuangController extends Controller
         $validated = $request->validate([
             'kode_ruangan' => ['required', 'string', 'max:50', 'unique:ruangs,kode_ruangan'],
             'nama_ruangan' => ['required', 'string', 'max:255'],
+            'status'       => ['nullable', 'in:' . Ruang::STATUS_SIAP . ',' . Ruang::STATUS_BELUM_SIAP],
         ], [
             'kode_ruangan.required' => 'Kode ruangan wajib diisi.',
             'kode_ruangan.unique' => 'Kode ruangan sudah terdaftar.',
             'nama_ruangan.required' => 'Nama ruangan wajib diisi.',
         ]);
+
+        $validated['status'] = $validated['status'] ?? Ruang::STATUS_SIAP;
 
         $ruang = Ruang::create($validated);
 
@@ -55,11 +58,14 @@ class RuangController extends Controller
         $validated = $request->validate([
             'kode_ruangan' => ['required', 'string', 'max:50', 'unique:ruangs,kode_ruangan,' . $ruang->id],
             'nama_ruangan' => ['required', 'string', 'max:255'],
+            'status'       => ['nullable', 'in:' . Ruang::STATUS_SIAP . ',' . Ruang::STATUS_BELUM_SIAP],
         ], [
             'kode_ruangan.required' => 'Kode ruangan wajib diisi.',
             'kode_ruangan.unique' => 'Kode ruangan sudah terdaftar.',
             'nama_ruangan.required' => 'Nama ruangan wajib diisi.',
         ]);
+
+        $validated['status'] = $validated['status'] ?? Ruang::STATUS_SIAP;
 
         $ruang->update($validated);
 

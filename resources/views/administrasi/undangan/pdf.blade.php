@@ -25,10 +25,29 @@
             line-height: 1.35;
         }
 
-        /* ===================== KOP SURAT (CUSTOM, TEXT-BASED) ===================== */
-        .kop-surat {
-            text-align: center;
+        /* ===================== KOP SURAT (LOGO UMK + LOGO TI) ===================== */
+        table.kop-surat {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 5px;
+        }
+
+        table.kop-surat td {
+            border: none;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        .kop-surat .kop-logo-umk {
+            height: 46px;
+        }
+
+        .kop-surat .kop-logo-ti {
+            height: 38px;
+        }
+
+        .kop-surat .kop-logo-right {
+            text-align: right;
         }
 
         .kop-surat .kop-univ {
@@ -240,12 +259,25 @@
 </head>
 <body>
 
-    <!-- ============ KOP SURAT (CUSTOM, TEXT-BASED) ============ -->
-    <div class="kop-surat">
-        <div class="kop-univ">Universitas Muria Kudus</div>
-        <div class="kop-prodi">Fakultas Teknik &mdash; Program Studi Teknik Informatika</div>
-        <div class="kop-alamat">Jln. Gondangmanis Bae Kudus PO BOX 53, Telp: 0291-438229, Fax: 0291-437198 &mdash; www.umk.ac.id &mdash; ti@umk.ac.id</div>
-    </div>
+    <!-- ============ KOP SURAT (LOGO UMK KIRI, LOGO TI KANAN) ============ -->
+    <table class="kop-surat">
+        <tr>
+            <td style="width: 50%;">
+                @if(!empty($kopBase64))
+                    <img class="kop-logo-umk" src="{{ $kopBase64 }}" alt="Kop Surat UMK">
+                @else
+                    <div class="kop-univ">Universitas Muria Kudus</div>
+                    <div class="kop-prodi">Fakultas Teknik &mdash; Program Studi Teknik Informatika</div>
+                    <div class="kop-alamat">Jln. Gondangmanis Bae Kudus PO BOX 53, Telp: 0291-438229, Fax: 0291-437198 &mdash; www.umk.ac.id &mdash; ti@umk.ac.id</div>
+                @endif
+            </td>
+            <td class="kop-logo-right" style="width: 50%;">
+                @if(!empty($logoTiBase64))
+                    <img class="kop-logo-ti" src="{{ $logoTiBase64 }}" alt="Logo Teknik Informatika UMK">
+                @endif
+            </td>
+        </tr>
+    </table>
     <hr class="kop-rule-thick">
     <hr class="kop-rule-thin">
 

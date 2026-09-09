@@ -81,8 +81,8 @@ html.dark {
 .focus\:ring-indigo-500\/50:focus { --tw-ring-color: rgba(84, 114, 240, 0.5) !important; }
 .focus\:border-indigo-500:focus   { border-color: var(--color-primary-500) !important; }
 
-/* shadow-indigo-* */
-.shadow-indigo-600\/25 { --tw-shadow-color: rgba(67, 97, 238, 0.25) !important; }
+/* shadow-indigo-* — flat design: no colored glow shadow, flat solid fill is enough */
+.shadow-indigo-600\/25 { --tw-shadow-color: transparent !important; box-shadow: none !important; }
 
 /* Gradient overrides */
 .from-indigo-500 { --tw-gradient-from: var(--color-primary-500) !important; }

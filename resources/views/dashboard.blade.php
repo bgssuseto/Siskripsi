@@ -7,25 +7,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
     <!-- Welcome Header Banner -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900 via-slate-900 to-purple-950 p-6 sm:p-8 text-white shadow-xl mb-8 border border-indigo-900/50">
+    <div class="relative overflow-hidden rounded-xl bg-slate-900 p-6 sm:p-8 text-white mb-8 border border-slate-800">
         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-indigo-200 border border-white/10 mb-3">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-semibold text-indigo-200 border border-white/10 mb-3">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                     Sistem Informasi Skripsi & Sempro Teknik Informatika
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Selamat Datang, {{ Auth::user()->name }}! 👋</h1>
                 <p class="text-slate-300 text-sm mt-1 max-w-xl">
                     Anda masuk sebagai <span class="font-bold text-white uppercase">{{ Auth::user()->role_label }}</span>. Berikut adalah ringkasan data pendaftaran, verifikasi, dan trend kelulusan terkini.
                 </p>
-            </div> 
-            
+            </div>
+
             <div class="shrink-0 flex items-center gap-3 flex-wrap">
-                <span class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-extrabold border shadow-lg {{ Auth::user()->role_badge_class }}">
+                <span class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-extrabold border {{ Auth::user()->role_badge_class }}">
                     Role: {{ Auth::user()->role_label }}
                 </span>
                 @if(Auth::user()->hasRole(['super_admin', 'koordinator']))
-                <a href="{{ route('pendaftaran.sempro') }}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all">
+                <a href="{{ route('pendaftaran.sempro') }}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all">
                     🛡️ Verifikasi Pendaftaran →
                 </a>
                 @endif
@@ -36,56 +36,56 @@
     <!-- Main Stats Cards (REAL DATA) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {{-- Card 1: Total Pendaftar --}}
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all">
+        <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Pendaftar</p>
                     <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">{{ $totalMahasiswa }}</p>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">Mahasiswa Terdata</p>
                 </div>
-                <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center font-bold text-xl border border-indigo-100 dark:border-indigo-900 shrink-0">
+                <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center font-bold text-xl border border-indigo-100 dark:border-indigo-900 shrink-0">
                     🎓
                 </div>
             </div>
         </div>
 
         {{-- Card 2: Skripsi Reguler vs Artikel Jurnal --}}
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all">
+        <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Skripsi vs Jurnal</p>
                     <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">{{ $skripsiRegulerCount }} <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">/ {{ $artikelJurnalCount }} Jurnal</span></p>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">Sidang Reguler / Artikel Jurnal</p>
                 </div>
-                <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center font-bold text-xl border border-purple-100 dark:border-purple-900 shrink-0">
+                <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center font-bold text-xl border border-purple-100 dark:border-purple-900 shrink-0">
                     📄
                 </div>
             </div>
         </div>
 
         {{-- Card 3: Plotting Jadwal --}}
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all">
+        <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status Plotting</p>
                     <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">{{ $totalTerjadwal }}</p>
                     <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-bold">⚠️ {{ $totalBelumPlotting }} Belum Plotting</p>
                 </div>
-                <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center font-bold text-xl border border-emerald-100 dark:border-emerald-900 shrink-0">
+                <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center font-bold text-xl border border-emerald-100 dark:border-emerald-900 shrink-0">
                     📅
                 </div>
             </div>
         </div>
 
         {{-- Card 4: Status Verifikasi --}}
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all">
+        <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Verifikasi Berkas</p>
                     <p class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{{ $verifikasiDisetujui }}</p>
                     <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-bold">⏳ {{ $verifikasiMenunggu }} Menunggu</p>
                 </div>
-                <div class="w-12 h-12 bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center font-bold text-xl border border-amber-100 dark:border-amber-900 shrink-0">
+                <div class="w-12 h-12 bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center font-bold text-xl border border-amber-100 dark:border-amber-900 shrink-0">
                     🛡️
                 </div>
             </div>
@@ -95,7 +95,7 @@
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
         {{-- Chart 1: Bar Chart Status Verifikasi --}}
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200/80 dark:border-slate-800 flex flex-col">
             <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Status Verifikasi Pendaftaran</h3>
@@ -111,7 +111,7 @@
         </div>
 
         {{-- Chart 2: Grouped Bar Chart Proporsi Jalur — Sempro vs Skripsi, tiap tahap dipecah Reguler vs Jurnal --}}
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200/80 dark:border-slate-800 flex flex-col">
             <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-3">
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Proporsi Jalur Tugas Akhir</h3>
@@ -151,7 +151,7 @@
         </div>
 
         {{-- Chart 3: Line Chart Lulusan Tiap Tahun --}}
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200/80 dark:border-slate-800 flex flex-col">
             <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Grafik Line Lulusan Tiap Tahun</h3>
@@ -168,7 +168,7 @@
     </div>
 
     <!-- Recent Pendaftaran & Activity Table -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden">
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
             <div>
                 <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Pendaftaran & Aktivitas Terbaru</h2>
