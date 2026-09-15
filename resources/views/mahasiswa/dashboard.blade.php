@@ -19,14 +19,14 @@
     </div>
 
 
+
     {{-- ── Registration Countdown Banner ── --}}
     @if($registrationWaves->isNotEmpty())
-    <div class="grid grid-cols-1 {{ $registrationWaves->count() > 1 ? 'md:grid-cols-2' : '' }} gap-4">
+    <div class="grid grid-cols-1 {{ $registrationWaves->count() > 1 ? 'sm:grid-cols-2' : '' }} gap-3">
         @foreach($registrationWaves as $wave)
         @php
             $isSempro  = $wave['jenis'] === 'sempro';
-            $label     = $isSempro ? 'Seminar Proposal' : 'Sidang Skripsi';
-            $sublabel  = $isSempro ? 'SEMPRO' : 'SKRIPSI';
+            $label     = $isSempro ? 'Pendaftaran Sempro' : 'Pendaftaran Skripsi';
             $routeName = $isSempro ? 'mahasiswa.sempro.index' : 'mahasiswa.skripsi.index';
 
             $totalDays = max(1, (int) $wave['tanggal_mulai']->diffInDays($wave['tanggal_selesai']));
@@ -34,108 +34,88 @@
             $barPct    = $wave['is_open'] ? min(100, round($usedDays / $totalDays * 100)) : 0;
 
             if ($wave['is_closing_soon']) {
-                $gradient    = 'from-rose-600 via-rose-500 to-orange-500';
-                $accentRing  = 'ring-rose-400/30';
-                $numBg       = 'bg-white/15';
-                $badgeText   = 'SEGERA TUTUP';
-                $badgeCls    = 'bg-white/20 text-white border border-white/30';
-                $ctaLabel    = 'Daftar Sekarang';
-                $ctaCls      = 'bg-white text-rose-600 hover:bg-rose-50';
-                $statusIcon  = '⚡';
+                $borderColor = 'border-l-rose-500';
+                $numColor    = 'text-rose-600 dark:text-rose-400';
+                $numBg       = 'bg-rose-50 dark:bg-rose-950/40';
+                $badgeColor  = 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300';
+                $barColor    = 'bg-rose-500';
+                $barTrack    = 'bg-rose-100 dark:bg-rose-900/40';
+                $iconBg      = 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400';
+                $badgeLabel  = '⚡ Segera Tutup';
                 $statusMsg   = 'Tutup dalam';
                 $days        = $wave['days_until_close'];
-                $dayLabel    = $days === 1 ? 'hari' : 'hari';
-                $subMsg      = 'Jangan sampai terlewat! Segera lengkapi berkas pendaftaranmu.';
-            } elseif ($wave['is_open']) {
-                $gradient    = 'from-emerald-600 via-teal-500 to-emerald-500';
-                $accentRing  = 'ring-emerald-400/30';
-                $numBg       = 'bg-white/15';
-                $badgeText   = 'DIBUKA';
-                $badgeCls    = 'bg-white/20 text-white border border-white/30';
+                $ctaColor    = 'bg-rose-600 hover:bg-rose-700 text-white';
                 $ctaLabel    = 'Daftar Sekarang';
-                $ctaCls      = 'bg-white text-emerald-600 hover:bg-emerald-50';
-                $statusIcon  = '✅';
-                $statusMsg   = 'Sisa';
+                $subMsg      = 'Tutup: ' . $wave['tanggal_selesai']->translatedFormat('d M Y') . ' — Segera lengkapi berkas!';
+            } elseif ($wave['is_open']) {
+                $borderColor = 'border-l-emerald-500';
+                $numColor    = 'text-emerald-600 dark:text-emerald-400';
+                $numBg       = 'bg-emerald-50 dark:bg-emerald-950/40';
+                $badgeColor  = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300';
+                $barColor    = 'bg-emerald-500';
+                $barTrack    = 'bg-emerald-100 dark:bg-emerald-900/40';
+                $iconBg      = 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400';
+                $badgeLabel  = '● Sedang Dibuka';
+                $statusMsg   = 'Sisa pendaftaran';
                 $days        = $wave['days_until_close'];
-                $dayLabel    = 'hari';
-                $subMsg      = $wave['tanggal_mulai']->translatedFormat('d M') . ' – ' . $wave['tanggal_selesai']->translatedFormat('d M Y');
+                $ctaColor    = 'bg-emerald-600 hover:bg-emerald-700 text-white';
+                $ctaLabel    = 'Daftar Sekarang';
+                $subMsg      = $wave['tanggal_mulai']->format('d M') . ' – ' . $wave['tanggal_selesai']->format('d M Y');
             } else {
-                $gradient    = 'from-indigo-600 via-violet-500 to-indigo-500';
-                $accentRing  = 'ring-indigo-400/30';
-                $numBg       = 'bg-white/15';
-                $badgeText   = 'SEGERA BUKA';
-                $badgeCls    = 'bg-white/20 text-white border border-white/30';
-                $ctaLabel    = 'Lihat Info';
-                $ctaCls      = 'bg-white text-indigo-600 hover:bg-indigo-50';
-                $statusIcon  = '🗓️';
+                $borderColor = 'border-l-indigo-500';
+                $numColor    = 'text-indigo-600 dark:text-indigo-400';
+                $numBg       = 'bg-indigo-50 dark:bg-indigo-950/40';
+                $badgeColor  = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300';
+                $barColor    = 'bg-indigo-400';
+                $barTrack    = 'bg-indigo-100 dark:bg-indigo-900/40';
+                $iconBg      = 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400';
+                $badgeLabel  = '🗓 Segera Dibuka';
                 $statusMsg   = 'Dibuka dalam';
                 $days        = $wave['days_until_open'];
-                $dayLabel    = 'hari';
-                $subMsg      = 'Mulai ' . $wave['tanggal_mulai']->translatedFormat('l, d M Y') . ' — Persiapkan berkasmu!';
+                $ctaColor    = 'bg-indigo-600 hover:bg-indigo-700 text-white';
+                $ctaLabel    = 'Lihat Info';
+                $subMsg      = 'Mulai ' . $wave['tanggal_mulai']->translatedFormat('l, d M Y');
             }
         @endphp
 
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br {{ $gradient }} shadow-lg ring-1 {{ $accentRing }} p-5 text-white">
-            {{-- Decorative circles --}}
-            <div class="pointer-events-none absolute -right-8 -bottom-8 w-36 h-36 rounded-full bg-white/5"></div>
-            <div class="pointer-events-none absolute -right-2 -bottom-2 w-20 h-20 rounded-full bg-white/5"></div>
-            <div class="pointer-events-none absolute right-16 -top-10 w-24 h-24 rounded-full bg-white/5"></div>
+        <div class="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 border-l-4 {{ $borderColor }} rounded-2xl shadow-sm px-5 py-4 flex items-center gap-5">
+            {{-- Angka countdown --}}
+            <div class="{{ $numBg }} rounded-xl px-4 py-3 text-center shrink-0 min-w-[72px]">
+                <p class="text-3xl font-black leading-none {{ $numColor }}">{{ $days }}</p>
+                <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider">hari</p>
+            </div>
 
-            <div class="relative z-10 flex flex-col gap-3.5">
-                {{-- Top row: badge + label --}}
-                <div class="flex items-center justify-between">
-                    <div>
-                        <span class="inline-flex items-center gap-1 text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full {{ $badgeCls }} uppercase">
-                            {{ $badgeText }}
-                        </span>
-                        <p class="text-white/90 text-[10px] font-bold mt-0.5 tracking-wide uppercase">
-                            Pendaftaran {{ $sublabel }} · Gelombang {{ $wave['gelombang'] }}
-                        </p>
-                    </div>
-                    <div class="text-2xl opacity-80">{{ $isSempro ? '📋' : '🎓' }}</div>
+            {{-- Info tengah --}}
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full {{ $badgeColor }} tracking-wide">
+                        {{ $badgeLabel }}
+                    </span>
+                    <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                        Gelombang {{ $wave['gelombang'] }}
+                    </span>
                 </div>
+                <p class="text-sm font-extrabold text-slate-800 dark:text-slate-100 leading-snug">{{ $label }}</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">{{ $statusMsg }} · {{ $subMsg }}</p>
 
-                {{-- Main: big number + label --}}
-                <div class="flex items-end gap-3">
-                    <div class="{{ $numBg }} backdrop-blur-sm rounded-2xl px-4 py-2.5 text-center min-w-[72px] border border-white/20 shadow-inner">
-                        <p class="text-4xl font-black leading-none tracking-tight">{{ $days }}</p>
-                        <p class="text-[10px] font-bold text-white/80 mt-0.5 uppercase tracking-widest">{{ $dayLabel }}</p>
-                    </div>
-                    <div class="pb-1">
-                        <p class="text-white/60 text-[10px] font-bold uppercase tracking-widest">{{ $statusIcon }} {{ $statusMsg }}</p>
-                        <p class="text-white font-extrabold text-base leading-snug">{{ $label }}</p>
-                        <p class="text-white/70 text-[11px] font-medium mt-0.5 leading-relaxed">{{ $subMsg }}</p>
-                    </div>
-                </div>
-
-                {{-- Progress bar (only when open) --}}
                 @if($wave['is_open'])
-                <div>
-                    <div class="flex justify-between text-[9px] font-bold text-white/60 mb-1">
-                        <span>{{ $wave['tanggal_mulai']->format('d M') }}</span>
-                        <span class="font-black text-white/90">{{ $barPct }}% terlewat</span>
-                        <span>{{ $wave['tanggal_selesai']->format('d M') }}</span>
-                    </div>
-                    <div class="h-1.5 rounded-full bg-white/20 overflow-hidden">
-                        <div class="h-full rounded-full bg-white/90 transition-all duration-700" style="width: {{ $barPct }}%"></div>
+                <div class="mt-2">
+                    <div class="h-1.5 rounded-full {{ $barTrack }} overflow-hidden">
+                        <div class="h-full rounded-full {{ $barColor }} transition-all duration-700" style="width: {{ $barPct }}%"></div>
                     </div>
                 </div>
                 @endif
-
-                {{-- CTA --}}
-                <a href="{{ route($routeName) }}"
-                   class="inline-flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-extrabold shadow transition-all {{ $ctaCls }}">
-                    {{ $ctaLabel }}
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
             </div>
+
+            {{-- CTA --}}
+            <a href="{{ route($routeName) }}"
+               class="shrink-0 px-4 py-2 rounded-xl text-xs font-extrabold shadow-sm transition-all whitespace-nowrap {{ $ctaColor }}">
+                {{ $ctaLabel }} →
+            </a>
         </div>
         @endforeach
     </div>
     @endif
-
 
 
     {{-- Graduation Celebration Banner --}}
