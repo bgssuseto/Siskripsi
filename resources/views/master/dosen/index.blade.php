@@ -427,7 +427,7 @@
                         </button>
                     </div>
 
-                    <form :action="'/master/dosen/' + editDosen.hash_id" method="POST" @submit.prevent="submitEdit($event)" class="p-6 space-y-4">
+                    <form :action="'{{ url('master/dosen') }}/' + editDosen.hash_id" method="POST" @submit.prevent="submitEdit($event)" class="p-6 space-y-4">
                         @csrf
                         @method('PUT')
                         <div>
@@ -525,7 +525,7 @@
                         Jika dosen ini pernah tercatat sebagai pembimbing/penguji pada data skripsi/sempro, kolom tersebut akan tampil sebagai "-" dan otomatis kembali seperti semula jika dosen ini ditambahkan lagi dengan NIDN yang sama.
                     </p>
 
-                    <form :action="'/master/dosen/' + deleteDosen.hash_id" method="POST" @submit.prevent="submitDelete($event)" class="flex items-center justify-center gap-3">
+                    <form :action="'{{ url('master/dosen') }}/' + deleteDosen.hash_id" method="POST" @submit.prevent="submitDelete($event)" class="flex items-center justify-center gap-3">
                         @csrf
                         @method('DELETE')
                         <button type="button" @click="deleteModal = false" class="w-1/2 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>

@@ -1018,7 +1018,7 @@
             if (!_hasilUjianHashId) return;
             hideModalAlert('form-hasil-ujian-alert');
             try {
-                const res = await fetch('/jadwal/' + _hasilUjianHashId + '/hasil-ujian', {
+                const res = await fetch('{{ url('jadwal') }}/' + _hasilUjianHashId + '/hasil-ujian', {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ status_ujian: status }),
@@ -1103,7 +1103,7 @@
                         jam = `${sh}.${sm} - ${eh}.${em}`;
                     }
 
-                    fetch(`/jadwal/sempro/${info.event.extendedProps.hash_id}/reschedule`, {
+                    fetch(`{{ url('jadwal/sempro') }}/${info.event.extendedProps.hash_id}/reschedule`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
