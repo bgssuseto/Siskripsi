@@ -124,6 +124,25 @@
                     <li><strong>Melakukan Pembayaran Sebesar "Rp. 200.000" Ke Rekening BSI</strong>.</li>
                     <li>Mengunggah seluruh berkas persyaratan gabungan dalam <strong>1 file format PDF (maksimal 4 MB)</strong>.</li>
                 </ol>
+
+                <!-- Dokumen Wajib Pendaftaran Sempro -->
+                <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm font-bold shrink-0 border border-rose-200 dark:border-rose-800">
+                            📂
+                        </div>
+                        <h3 class="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Dokumen Wajib Pendaftaran Sempro</h3>
+                    </div>
+                    <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-2 list-decimal pl-4 leading-relaxed font-medium">
+                        <li>Scan Halaman Persetujuan Judul Seminar Proposal yang sudah di TTD Pembimbing 1&2 dalam format PDF <span class="text-slate-400 dark:text-slate-500">(Scan bukan foto <em>*bisa menggunakan camscanner</em>)</span></li>
+                        <li>Scan Bukti pembayaran Sempro dalam format PDF <span class="text-slate-400 dark:text-slate-500">(Scan bukan foto <em>*bisa menggunakan camscanner</em>)</span></li>
+                        <li>Scan/file Transkip Nilai lengkap dalam format PDF <span class="text-slate-400 dark:text-slate-500">(Scan bukan foto <em>*bisa menggunakan camscanner</em>)</span></li>
+                        <li>Scan/file bukti KRS Sempro dalam format PDF <span class="text-slate-400 dark:text-slate-500">(Scan bukan foto <em>*bisa menggunakan camscanner</em>)</span></li>
+                    </ol>
+                    <p class="mt-2.5 text-[10px] text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 rounded-lg px-2.5 py-1.5 font-semibold">
+                        💡 Gabungkan seluruh dokumen di atas menjadi <strong>1 file PDF</strong> sebelum diunggah (maks. 4 MB).
+                    </p>
+                </div>
             </div>
 
             <!-- Box Informasi Pembayaran BSI -->
