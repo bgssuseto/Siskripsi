@@ -18,7 +18,127 @@
         </div>
     </div>
 
-    <!-- Graduation Celebration Banner -->
+    {{-- ── Registration Countdown Banner ── --}}
+    @if($registrationWaves->isNotEmpty())
+    <div class="space-y-3">
+        @foreach($registrationWaves as $wave)
+        @php
+            $isSempro  = $wave['jenis'] === 'sempro';
+            $label     = $isSempro ? 'Seminar Proposal (Sempro)' : 'Sidang Skripsi';
+            $icon      = $isSempro ? '📋' : '🎓';
+            $routeName = $isSempro ? 'mahasiswa.sempro.index' : 'mahasiswa.skripsi.index';
+
+            // Colour tokens
+            if ($wave['is_closing_soon']) {
+                // H-3 penutupan → merah / urgent
+                $bg       = 'from-rose-500/10 to-rose-400/5 border-rose-400/40';
+                $badgeBg  = 'bg-rose-500 text-white';
+                $textMain = 'text-rose-700 dark:text-rose-300';
+                $textSub  = 'text-rose-600/80 dark:text-rose-400/80';
+                $dotColor = 'bg-rose-500 animate-ping';
+                $barColor = 'bg-rose-500';
+                $cta      = 'Daftar Sekarang';
+                $ctaCls   = 'bg-rose-600 hover:bg-rose-700 text-white';
+            } elseif ($wave['is_open']) {
+                // Sedang buka → hijau
+                $bg       = 'from-emerald-500/10 to-emerald-400/5 border-emerald-400/40';
+                $badgeBg  = 'bg-emerald-500 text-white';
+                $textMain = 'text-emerald-700 dark:text-emerald-300';
+                $textSub  = 'text-emerald-600/80 dark:text-emerald-400/80';
+                $dotColor = 'bg-emerald-500 animate-pulse';
+                $barColor = 'bg-emerald-500';
+                $cta      = 'Daftar Sekarang';
+                $ctaCls   = 'bg-emerald-600 hover:bg-emerald-700 text-white';
+            } else {
+                // Segera dibuka → biru/indigo
+                $bg       = 'from-indigo-500/10 to-indigo-400/5 border-indigo-400/40';
+                $badgeBg  = 'bg-indigo-500 text-white';
+                $textMain = 'text-indigo-700 dark:text-indigo-300';
+                $textSub  = 'text-indigo-600/80 dark:text-indigo-400/80';
+                $dotColor = 'bg-indigo-400';
+                $barColor = 'bg-indigo-500';
+                $cta      = 'Lihat Info';
+                $ctaCls   = 'bg-indigo-600 hover:bg-indigo-700 text-white';
+            }
+
+            // Progress bar (% hari terpakai dari total window)
+            $totalDays = max(1, (int) $wave['tanggal_mulai']->diffInDays($wave['tanggal_selesai']));
+            $usedDays  = $wave['is_open'] ? ($totalDays - $wave['days_until_close']) : 0;
+            $barPct    = $wave['is_open'] ? min(100, round($usedDays / $totalDays * 100)) : 0;
+        @endphp
+
+        <div class="relative overflow-hidden rounded-2xl border bg-gradient-to-r {{ $bg }} px-5 py-4">
+            {{-- Decorative blur blobs --}}
+            <div class="pointer-events-none absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-20 blur-2xl {{ $barColor }}"></div>
+
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+                {{-- Left: status dot + label + countdown --}}
+                <div class="flex items-start gap-3 min-w-0">
+                    <div class="relative shrink-0 mt-0.5">
+                        <span class="flex w-2.5 h-2.5 rounded-full {{ $dotColor }}"></span>
+                    </div>
+                    <div class="min-w-0">
+                        {{-- Badge + Label --}}
+                        <div class="flex items-center gap-2 flex-wrap mb-1">
+                            <span class="text-xs font-extrabold px-2 py-0.5 rounded-full {{ $badgeBg }}">
+                                {{ $icon }} {{ $label }}
+                            </span>
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                                Gelombang {{ $wave['gelombang'] }}
+                            </span>
+                        </div>
+
+                        {{-- Main message --}}
+                        @if($wave['is_closing_soon'])
+                            <p class="text-sm font-extrabold {{ $textMain }} leading-snug">
+                                ⚡ Penutupan dalam <span class="underline decoration-dotted">{{ $wave['days_until_close'] }} hari lagi</span>!
+                            </p>
+                            <p class="text-[11px] {{ $textSub }} mt-0.5">
+                                Tutup: {{ $wave['tanggal_selesai']->translatedFormat('l, d M Y') }} — Segera lengkapi berkasmu.
+                            </p>
+                        @elseif($wave['is_open'])
+                            <p class="text-sm font-extrabold {{ $textMain }} leading-snug">
+                                Pendaftaran sedang <span class="underline decoration-dotted">dibuka</span> — sisa {{ $wave['days_until_close'] }} hari
+                            </p>
+                            <p class="text-[11px] {{ $textSub }} mt-0.5">
+                                {{ $wave['tanggal_mulai']->translatedFormat('d M') }} – {{ $wave['tanggal_selesai']->translatedFormat('d M Y') }}
+                            </p>
+                        @else
+                            <p class="text-sm font-extrabold {{ $textMain }} leading-snug">
+                                🗓️ Pendaftaran akan dibuka <span class="underline decoration-dotted">{{ $wave['days_until_open'] === 0 ? 'hari ini' : 'dalam ' . $wave['days_until_open'] . ' hari lagi' }}</span>
+                            </p>
+                            <p class="text-[11px] {{ $textSub }} mt-0.5">
+                                Mulai: {{ $wave['tanggal_mulai']->translatedFormat('l, d M Y') }} — Persiapkan berkasmu dari sekarang.
+                            </p>
+                        @endif
+
+                        {{-- Progress bar (only when open) --}}
+                        @if($wave['is_open'])
+                        <div class="mt-2 w-52 max-w-full">
+                            <div class="flex justify-between text-[9px] font-bold {{ $textSub }} mb-0.5">
+                                <span>Mulai</span><span>Tutup</span>
+                            </div>
+                            <div class="h-1.5 rounded-full bg-slate-200/60 dark:bg-slate-700/60 overflow-hidden">
+                                <div class="h-full rounded-full {{ $barColor }} transition-all duration-700" style="width: {{ $barPct }}%"></div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Right: CTA button --}}
+                <a href="{{ route($routeName) }}"
+                   class="shrink-0 px-4 py-2 rounded-xl text-xs font-extrabold shadow-sm transition-all {{ $ctaCls }}">
+                    {{ $cta }} →
+                </a>
+            </div>
+        </div>
+        @endforeach
+    </div>
+    @endif
+
+    {{-- Graduation Celebration Banner --}}
+
     @if($user->status_kelulusan === 'lulus')
         <div class="relative overflow-hidden rounded-3xl p-7 sm:p-9 text-center shadow-xl bg-emerald-600 dark:bg-emerald-700">
             <!-- Confetti particles -->

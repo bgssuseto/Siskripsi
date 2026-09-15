@@ -58,8 +58,45 @@ class MahasiswaController extends Controller
         $sidangSkripsi = $sidangs->where('jenis_tugas_akhir', 'sidang')->first();
         $sidangJurnal  = $sidangs->where('jenis_tugas_akhir', 'jurnal')->first();
 
+        // Countdown gelombang pendaftaran (sempro & skripsi)
+        $today = now()->timezone('Asia/Jakarta')->startOfDay();
+        $registrationWaves = collect();
+
+        if ($activePeriode) {
+            $waves = \App\Models\PendaftaranPeriode::where('periode_id', $activePeriode->id)
+                ->whereIn('jenis', ['sempro', 'skripsi'])
+                ->orderBy('tanggal_mulai')
+                ->get();
+
+            foreach ($waves as $wave) {
+                $start = $wave->tanggal_mulai->startOfDay();
+                $end   = $wave->tanggal_selesai->endOfDay();
+
+                if ($today->gt($end)) continue; // sudah lewat
+
+                $daysUntilOpen  = $today->lt($start) ? (int) $today->diffInDays($start) : 0;
+                $daysUntilClose = (int) $today->diffInDays($end->copy()->startOfDay());
+                $isOpen         = $today->gte($start) && $today->lte($end);
+                $isComingSoon   = !$isOpen && $daysUntilOpen <= 7;
+
+                if ($isOpen || $isComingSoon) {
+                    $registrationWaves->push([
+                        'jenis'          => $wave->jenis,
+                        'gelombang'      => $wave->gelombang,
+                        'tanggal_mulai'  => $wave->tanggal_mulai,
+                        'tanggal_selesai'=> $wave->tanggal_selesai,
+                        'is_open'        => $isOpen,
+                        'is_coming_soon' => $isComingSoon,
+                        'days_until_open'  => $daysUntilOpen,
+                        'days_until_close' => $daysUntilClose,
+                        'is_closing_soon'  => $isOpen && $daysUntilClose <= 3,
+                    ]);
+                }
+            }
+        }
+
         return view('mahasiswa.dashboard', compact(
-            'user', 'sidangs', 'sidangSkripsi', 'sidangJurnal', 'activePeriode'
+            'user', 'sidangs', 'sidangSkripsi', 'sidangJurnal', 'activePeriode', 'registrationWaves'
         ));
     }
 
