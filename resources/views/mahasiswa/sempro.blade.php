@@ -115,11 +115,13 @@
                 </div>
 
                 <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-2 list-decimal pl-4 leading-relaxed font-medium">
-                    <li>Telah menyelesaikan minimal <strong>100 SKS</strong> dengan IPK memenuhi syarat.</li>
-                    <li>Telah menempuh dan lulus mata kuliah <strong>Metodologi Penelitian</strong>.</li>
-                    <li>Memiliki topik/judul proposal tugas akhir yang disetujui Dosen Pembimbing Utama.</li>
-                    <li>Memilih Dosen Pembimbing Utama yang telah terdaftar resmi dalam sistem.</li>
-                    <li>Melunasi administrasi pendaftaran Seminar Proposal sebesar <strong>Rp 200.000</strong>.</li>
+                    <li>Mahasiswa telah menyelesaikan minimal <strong>125 SKS</strong>.</li>
+                    <li>Mahasiswa telah <strong>lulus mata kuliah Metodologi Penelitian</strong>/Tata tulis & Karya Ilmiah/Kapita Selekta dengan nilai <strong>minimal BC</strong>.</li>
+                    <li>Mahasiswa telah <strong>lulus</strong> Mata Kuliah Praktek Kerja Lapangan (<strong>PKL</strong>) atau Kerja Praktek (KP), Kuliah Kerja Lapangan (<strong>KKL</strong>), dan Kuliah Kerja Nyata (<strong>KKN</strong>).</li>
+                    <li>Mahasiswa sudah <strong>lulus Matakuliah Umum</strong> (Pendidikan Pancasila, Kewarganegaraan, Bahasa Indonesia dan Pendidikan Agama) dengan nilai <strong>minimal C</strong>.</li>
+                    <li><strong>IPK minimal 2.5</strong>.</li>
+                    <li><strong>Nilai D tidak lebih dari 10% (14 SKS)</strong>.</li>
+                    <li><strong>Melakukan Pembayaran Sebesar "Rp. 200.000" Ke Rekening BSI</strong>.</li>
                     <li>Mengunggah seluruh berkas persyaratan gabungan dalam <strong>1 file format PDF (maksimal 4 MB)</strong>.</li>
                 </ol>
             </div>
