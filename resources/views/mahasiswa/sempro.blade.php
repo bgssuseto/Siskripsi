@@ -101,66 +101,141 @@
             </div>
         </div>
 
-        <!-- Right Side: Card Syarat & Ketentuan Pendaftaran Sempro -->
-        <div class="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-6 border border-slate-200/80 dark:border-slate-700 flex flex-col justify-between">
-            <div>
-                <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
-                    <div class="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-base font-bold shrink-0 border border-indigo-200 dark:border-indigo-800">
-                        📋
-                    </div>
-                    <div>
-                        <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Syarat & Ketentuan Pendaftaran Seminar Proposal</h2>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Pastikan seluruh dokumen dan kriteria berikut terpenuhi sebelum mendaftar</p>
-                    </div>
+        <!-- Right Side: Card Syarat & Ketentuan -->
+        <div class="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-6 border border-slate-200/80 dark:border-slate-700 flex flex-col gap-5">
+            <!-- Header -->
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700">
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg font-bold shrink-0 border border-indigo-200 dark:border-indigo-800">
+                    📋
                 </div>
-
-                <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-2 list-decimal pl-4 leading-relaxed font-medium">
-                    <li>Mahasiswa telah menyelesaikan minimal <strong>125 SKS</strong>.</li>
-                    <li>Mahasiswa telah <strong>lulus mata kuliah Metodologi Penelitian</strong>/Tata tulis & Karya Ilmiah/Kapita Selekta dengan nilai <strong>minimal BC</strong>.</li>
-                    <li>Mahasiswa telah <strong>lulus</strong> Mata Kuliah Praktek Kerja Lapangan (<strong>PKL</strong>) atau Kerja Praktek (KP), Kuliah Kerja Lapangan (<strong>KKL</strong>), dan Kuliah Kerja Nyata (<strong>KKN</strong>).</li>
-                    <li>Mahasiswa sudah <strong>lulus Matakuliah Umum</strong> (Pendidikan Pancasila, Kewarganegaraan, Bahasa Indonesia dan Pendidikan Agama) dengan nilai <strong>minimal C</strong>.</li>
-                    <li><strong>IPK minimal 2.5</strong>.</li>
-                    <li><strong>Nilai D tidak lebih dari 10% (14 SKS)</strong>.</li>
-                    <li><strong>Melakukan Pembayaran Sebesar "Rp. 200.000" Ke Rekening BSI</strong>.</li>
-                    <li>Mengunggah seluruh berkas persyaratan gabungan dalam <strong>1 file format PDF (maksimal 4 MB)</strong>.</li>
-                </ol>
-
-                <!-- Dokumen Wajib Pendaftaran Sempro -->
-                <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-700">
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm font-bold shrink-0 border border-rose-200 dark:border-rose-800">
-                            📂
-                        </div>
-                        <h3 class="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Dokumen Wajib Pendaftaran Sempro</h3>
-                    </div>
-                    <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-2 list-decimal pl-4 leading-relaxed font-medium">
-                        <li>Scan Halaman Persetujuan Judul Seminar Proposal yang sudah di TTD Pembimbing 1&2 dalam format PDF <span class="text-slate-400 dark:text-slate-500">(Scan bukan foto <em>*bisa menggunakan camscanner</em>)</span></li>
-                        <li>Scan Bukti pembayaran Sempro dalam format PDF <span class="text-slate-400 dark:text-slate-500">(Scan bukan foto <em>*bisa menggunakan camscanner</em>)</span></li>
-                        <li>Scan/file Transkip Nilai lengkap dalam format PDF <span class="text-slate-400 dark:text-slate-500">(Scan bukan foto <em>*bisa menggunakan camscanner</em>)</span></li>
-                        <li>Scan/file bukti KRS Sempro dalam format PDF <span class="text-slate-400 dark:text-slate-500">(Scan bukan foto <em>*bisa menggunakan camscanner</em>)</span></li>
-                    </ol>
-                    <p class="mt-2.5 text-[10px] text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 rounded-lg px-2.5 py-1.5 font-semibold">
-                        💡 Gabungkan seluruh dokumen di atas menjadi <strong>1 file PDF</strong> sebelum diunggah (maks. 4 MB).
-                    </p>
+                <div>
+                    <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Syarat & Ketentuan Pendaftaran Seminar Proposal</h2>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Pastikan seluruh kriteria berikut terpenuhi sebelum mendaftar</p>
                 </div>
             </div>
 
+            <!-- Syarat List dengan numbered pill -->
+            <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-3 list-none pl-0 leading-relaxed font-medium">
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">1</span>
+                    <span>Mahasiswa telah menyelesaikan minimal <strong>125 SKS</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">2</span>
+                    <span>Mahasiswa telah <strong>lulus mata kuliah Metodologi Penelitian</strong>/Tata tulis &amp; Karya Ilmiah/Kapita Selekta dengan nilai <strong>minimal BC</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">3</span>
+                    <span>Mahasiswa telah <strong>lulus</strong> Mata Kuliah Praktek Kerja Lapangan (<strong>PKL</strong>) atau Kerja Praktek (KP), Kuliah Kerja Lapangan (<strong>KKL</strong>), dan Kuliah Kerja Nyata (<strong>KKN</strong>).</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">4</span>
+                    <span>Mahasiswa sudah <strong>lulus Matakuliah Umum</strong> (Pendidikan Pancasila, Kewarganegaraan, Bahasa Indonesia dan Pendidikan Agama) dengan nilai <strong>minimal C</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">5</span>
+                    <span><strong>IPK minimal 2.5</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">6</span>
+                    <span><strong>Nilai D tidak lebih dari 10% (14 SKS)</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">7</span>
+                    <span><strong>Melakukan Pembayaran Sebesar "Rp. 200.000" Ke Rekening BSI</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">8</span>
+                    <span>Mengunggah seluruh berkas persyaratan gabungan dalam <strong>1 file format PDF (maksimal 4 MB)</strong>.</span>
+                </li>
+            </ol>
+
             <!-- Box Informasi Pembayaran BSI -->
-            <div class="mt-4 p-3.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/80 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-200">
-                <div class="flex items-center gap-2">
-                    <span class="text-base">💳</span>
+            <div class="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/80 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-200 mt-auto">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl">💳</span>
                     <div>
                         <p class="font-extrabold">Pembayaran Administrasi (Bank BSI)</p>
-                        <p class="text-[11px] text-indigo-700 dark:text-indigo-300">No. Rek: <strong class="font-mono font-bold">7318709593</strong> (A.n. Ahmad Abdul Chamid / Alvin R)</p>
+                        <p class="text-[11px] text-indigo-700 dark:text-indigo-300 mt-0.5">No. Rek: <strong class="font-mono font-bold">7318709593</strong> (A.n. Ahmad Abdul Chamid / Alvin R)</p>
                     </div>
                 </div>
-                <span class="px-2.5 py-1 bg-indigo-600 text-white font-extrabold text-[10px] rounded-lg shadow-2xs shrink-0">
+                <span class="px-3 py-1.5 bg-indigo-600 text-white font-extrabold text-xs rounded-lg shadow-sm shrink-0">
                     Rp 200.000
                 </span>
             </div>
         </div>
 
     </div>
+
+    <!-- Dokumen Wajib Pendaftaran Sempro (Full Width Card) -->
+    <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 overflow-hidden">
+        <!-- Card Header -->
+        <div class="flex items-center gap-3 px-6 py-4 bg-rose-50/60 dark:bg-rose-950/30 border-b border-rose-100 dark:border-rose-900/60">
+            <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base font-bold shrink-0 border border-rose-200 dark:border-rose-800">
+                📂
+            </div>
+            <div>
+                <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Dokumen Wajib Pendaftaran Sempro</h2>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Gabungkan semua dokumen berikut menjadi <strong>1 file PDF</strong> sebelum diunggah</p>
+            </div>
+        </div>
+
+        <!-- Dokumen 4-column Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6">
+            <!-- Dok 1 -->
+            <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-base border border-indigo-200 dark:border-indigo-800 shrink-0">📝</div>
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 1</span>
+                </div>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Surat Persetujuan Judul</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan halaman persetujuan judul Seminar Proposal yang sudah di TTD Pembimbing 1 &amp; 2 dalam format PDF</p>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">*bisa menggunakan camscanner</span>
+            </div>
+
+            <!-- Dok 2 -->
+            <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base border border-emerald-200 dark:border-emerald-800 shrink-0">💳</div>
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 2</span>
+                </div>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Bukti Pembayaran Sempro</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan bukti pembayaran Sempro dalam format PDF</p>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">*bisa menggunakan camscanner</span>
+            </div>
+
+            <!-- Dok 3 -->
+            <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-amber-200 dark:hover:border-amber-800 transition-colors">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base border border-amber-200 dark:border-amber-800 shrink-0">📊</div>
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 3</span>
+                </div>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Transkip Nilai Lengkap</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan/file Transkip Nilai lengkap dalam format PDF</p>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">*bisa menggunakan camscanner</span>
+            </div>
+
+            <!-- Dok 4 -->
+            <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-rose-200 dark:hover:border-rose-800 transition-colors">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base border border-rose-200 dark:border-rose-800 shrink-0">📋</div>
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 4</span>
+                </div>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Bukti KRS Sempro</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan/file bukti KRS Sempro dalam format PDF</p>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">*bisa menggunakan camscanner</span>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="px-6 pb-5">
+            <div class="flex items-center gap-2.5 px-4 py-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 rounded-xl text-xs text-indigo-800 dark:text-indigo-300 font-semibold">
+                <span class="text-base shrink-0">💡</span>
+                <span>Gabungkan seluruh dokumen di atas menjadi <strong>1 file PDF</strong> sebelum diunggah (maks. 4 MB). Scan bukan foto untuk hasil terbaik.</span>
+            </div>
+        </div>
+    </div>
+
 
     {{-- Modal Pendaftaran Seminar Proposal (Proporsional & Compact) --}}
     @if($activeWave)
