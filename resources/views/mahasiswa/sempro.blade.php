@@ -228,10 +228,10 @@
         </div>
 
         <!-- Footer Info -->
-        <div class="px-6 pb-5">
-            <div class="flex items-center gap-2.5 px-4 py-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 rounded-xl text-xs text-indigo-800 dark:text-indigo-300 font-semibold">
-                <span class="text-base shrink-0">💡</span>
-                <span>Gabungkan seluruh dokumen di atas menjadi <strong>1 file PDF</strong> sebelum diunggah (maks. 4 MB). Scan bukan foto untuk hasil terbaik.</span>
+        <div class="px-6 pb-6">
+            <div class="flex items-center gap-3 px-5 py-4 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 rounded-2xl text-sm text-indigo-800 dark:text-indigo-300 font-semibold">
+                <span class="text-xl shrink-0">💡</span>
+                <span class="leading-relaxed">Gabungkan seluruh dokumen di atas menjadi <strong>1 file PDF</strong> sebelum diunggah (maks. 4 MB). Scan bukan foto untuk hasil terbaik.</span>
             </div>
         </div>
     </div>
