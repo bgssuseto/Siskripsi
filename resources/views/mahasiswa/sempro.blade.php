@@ -268,7 +268,9 @@
             <form id="form-daftar-sempro" method="POST" action="{{ route('mahasiswa.daftar.store') }}" enctype="multipart/form-data" class="p-5 space-y-3.5">
                 @csrf
                 <input type="hidden" name="jenis_tugas_akhir" value="sempro">
-                
+                {{-- Periode otomatis dari periode aktif, tidak bisa diubah mahasiswa --}}
+                <input type="hidden" name="periode_id" value="{{ $activePeriode?->id }}">
+
                 {{-- NIM & Nama (Readonly) --}}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>

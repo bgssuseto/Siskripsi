@@ -178,6 +178,8 @@
             <form id="form-daftar-skripsi" method="POST" action="{{ route('mahasiswa.daftar.store') }}" enctype="multipart/form-data" class="p-6 space-y-4">
                 @csrf
                 <input type="hidden" name="jenis_tugas_akhir" value="skripsi">
+                {{-- Periode otomatis dari periode aktif, tidak bisa diubah mahasiswa --}}
+                <input type="hidden" name="periode_id" value="{{ $activePeriode?->id }}">
                 
                 {{-- NIM & Nama --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

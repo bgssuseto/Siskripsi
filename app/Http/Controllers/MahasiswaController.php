@@ -113,7 +113,10 @@ class MahasiswaController extends Controller
         $user     = Auth::user();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
-        $dosens = Dosen::orderBy('nama_dosen')->get();
+        // Exclude dosen yang akunnya super_admin
+        $dosens = Dosen::orderBy('nama_dosen')
+            ->whereDoesntHave('user', fn ($q) => $q->where('role', \App\Models\User::ROLE_SUPER_ADMIN))
+            ->get();
 
         // All student's registrations
         $sidangs = $this->getStudentSidangs($user);
@@ -135,7 +138,10 @@ class MahasiswaController extends Controller
         $user     = Auth::user();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
-        $dosens = Dosen::orderBy('nama_dosen')->get();
+        // Exclude dosen yang akunnya super_admin
+        $dosens = Dosen::orderBy('nama_dosen')
+            ->whereDoesntHave('user', fn ($q) => $q->where('role', \App\Models\User::ROLE_SUPER_ADMIN))
+            ->get();
 
         $allStudentSidangs = $this->getStudentSidangs($user);
         // Filter student's skripsi-track records only (sidang reguler or jurnal)
