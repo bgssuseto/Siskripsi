@@ -20,6 +20,7 @@ class Dosen extends Model
         'alias',
         'kepakaran',
         'jabatan_fungsional',
+        'status_kepegawaian',
         'no_wa',
         'can_fill_kesediaan',
     ];
@@ -39,6 +40,47 @@ class Dosen extends Model
         'Lektor Kepala'   => 4,
         'Guru Besar'      => 5,
     ];
+
+    public const STATUS_AKTIF         = 'aktif';
+    public const STATUS_IZIN_BELAJAR  = 'izin_belajar';
+    public const STATUS_TUGAS_BELAJAR = 'tugas_belajar';
+
+    public const STATUS_KEPEGAWAIAN_LABELS = [
+        self::STATUS_AKTIF         => 'Aktif',
+        self::STATUS_IZIN_BELAJAR  => 'Izin Belajar',
+        self::STATUS_TUGAS_BELAJAR => 'Tugas Belajar',
+    ];
+
+    public function getStatusKepegawaianLabelAttribute(): string
+    {
+        return self::STATUS_KEPEGAWAIAN_LABELS[$this->status_kepegawaian] ?? 'Aktif';
+    }
+
+    /**
+     * Dosen yang sedang tugas belajar tidak boleh ditugaskan sebagai
+     * Ketua Penguji / Anggota Penguji 1 / Anggota Penguji 2, baik untuk
+     * Sempro maupun Sidang Skripsi — ditegakkan di SidangConflictService
+     * dan dikecualikan dari kandidat otomatis di AutoScheduleService.
+     */
+    public function isTugasBelajar(): bool
+    {
+        return $this->status_kepegawaian === self::STATUS_TUGAS_BELAJAR;
+    }
+
+    /**
+     * URL pencarian resmi PDDIKTI untuk dosen ini (dibuka manual oleh admin di
+     * tab baru — PDDIKTI memakai Cloudflare Turnstile sehingga tidak bisa
+     * di-fetch otomatis dari server/browser kita). Diutamakan cari via NIDN
+     * (lebih presisi), fallback ke nama dosen.
+     */
+    public function getPddiktiSearchUrlAttribute(): string
+    {
+        $query = !empty($this->nidn) && !str_starts_with($this->nidn, 'NIDN-')
+            ? $this->nidn
+            : self::cleanName($this->nama_dosen);
+
+        return 'https://pddikti.kemdiktisaintek.go.id/search/' . urlencode($query);
+    }
 
     /**
      * The login account (if any) linked to this dosen record.

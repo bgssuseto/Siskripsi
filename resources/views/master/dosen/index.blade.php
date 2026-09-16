@@ -6,7 +6,7 @@
         editModal: false, 
         deleteModal: false,
         importModal: false,
-        editDosen: { id: null, nidn: '', nama_dosen: '', email: '', alias: '', kepakaran: '', jabatan_fungsional: '', no_wa: '' },
+        editDosen: { id: null, nidn: '', nama_dosen: '', email: '', alias: '', kepakaran: '', jabatan_fungsional: '', status_kepegawaian: 'aktif', no_wa: '' },
         deleteDosen: { id: null, nama_dosen: '' },
         errors: {},
         isLoading: false,
@@ -236,6 +236,7 @@
                             <th class="px-6 py-4">Inisial</th>
                             <th class="px-6 py-4">Kepakaran</th>
                             <th class="px-6 py-4">Jabatan Fungsional</th>
+                            <th class="px-6 py-4">Status</th>
                             <th class="px-6 py-4">No. WhatsApp</th>
                             <th class="px-6 py-4 text-right">Aksi</th>
                         </tr>
@@ -273,12 +274,38 @@
                                     <span class="text-slate-400">-</span>
                                 @endif
                             </td>
+                            <td class="px-6 py-4">
+                                @if($dosen->status_kepegawaian === 'tugas_belajar')
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                        Tugas Belajar
+                                    </span>
+                                @elseif($dosen->status_kepegawaian === 'izin_belajar')
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                        Izin Belajar
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Aktif
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-300">
                                 {{ $dosen->no_wa ?? '-' }}
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button @click="openEdit({{ json_encode($dosen) }})" 
+                                    <a href="{{ $dosen->pddikti_search_url }}"
+                                       target="_blank" rel="noopener"
+                                       class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                       title="Cek Data di PDDIKTI (tab baru)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                        </svg>
+                                    </a>
+                                    <button @click="openEdit({{ json_encode($dosen) }})"
                                             class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                                             title="Edit Dosen">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -297,7 +324,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="11" class="px-6 py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -395,6 +422,19 @@
                         </div>
 
                         <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Status Kepegawaian</label>
+                            <select name="status_kepegawaian" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer">
+                                @foreach(\App\Models\Dosen::STATUS_KEPEGAWAIAN_LABELS as $val => $label)
+                                    <option value="{{ $val }}" {{ $val === 'aktif' ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-[11px] text-slate-400 mt-1">Dosen berstatus "Tugas Belajar" otomatis tidak bisa dipasang sebagai penguji Sempro/Sidang Skripsi.</p>
+                            <template x-if="errors.status_kepegawaian">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.status_kepegawaian[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">No. WhatsApp (Opsional)</label>
                             <input type="text" name="no_wa" placeholder="Contoh: 081234567890"
                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
@@ -486,6 +526,19 @@
                             </select>
                             <template x-if="errors.jabatan_fungsional">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.jabatan_fungsional[0]"></p>
+                            </template>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Status Kepegawaian</label>
+                            <select name="status_kepegawaian" x-model="editDosen.status_kepegawaian" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer">
+                                @foreach(\App\Models\Dosen::STATUS_KEPEGAWAIAN_LABELS as $val => $label)
+                                    <option value="{{ $val }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-[11px] text-slate-400 mt-1">Dosen berstatus "Tugas Belajar" otomatis tidak bisa dipasang sebagai penguji Sempro/Sidang Skripsi.</p>
+                            <template x-if="errors.status_kepegawaian">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.status_kepegawaian[0]"></p>
                             </template>
                         </div>
 

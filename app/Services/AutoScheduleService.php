@@ -61,6 +61,9 @@ class AutoScheduleService
 
         $bebanDosen = self::calculateBebanDosen();
 
+        // Dosen tugas belajar dikecualikan total dari kandidat penguji otomatis.
+        $tugasBelajarIds = Dosen::where('status_kepegawaian', Dosen::STATUS_TUGAS_BELAJAR)->pluck('id')->all();
+
         // ── Busy maps, seeded dari seluruh Sidang yang SUDAH terjadwal (sistem-wide) ──
         $busyDosen = [];      // [dosen_id][Y-m-d] => [[start,end], ...]
         $busyRuang = [];      // [ruang_id][Y-m-d] => [[start,end], ...]
@@ -114,7 +117,7 @@ class AutoScheduleService
             $needsPengujiAssignment = !$isSempro && (!$sidang->ketua_penguji_id || !$sidang->anggota_penguji_1_id);
 
             if ($needsPengujiAssignment) {
-                $result = self::scheduleWithAutoPenguji($sidang, $kesediaanMap, $busyDosen, $busyRuang, $dosenRuangHariIni, $ruangs, $slotMinutes, $bebanDosen, $lastTrioPerTanggal);
+                $result = self::scheduleWithAutoPenguji($sidang, $kesediaanMap, $busyDosen, $busyRuang, $dosenRuangHariIni, $ruangs, $slotMinutes, $bebanDosen, $lastTrioPerTanggal, $tugasBelajarIds);
                 if ($result) {
                     $proposals[] = $result;
                 } else {
@@ -140,6 +143,12 @@ class AutoScheduleService
                     'anggota_penguji_1_id'  => $sidang->anggota_penguji_1_id,
                     'anggota_penguji_2_id'  => $sidang->anggota_penguji_2_id,
                 ]);
+                $tugasBelajarErrors = SidangConflictService::checkTugasBelajarRule([
+                    'ketua_penguji_id'      => $sidang->ketua_penguji_id,
+                    'anggota_penguji_1_id'  => $sidang->anggota_penguji_1_id,
+                    'anggota_penguji_2_id'  => $sidang->anggota_penguji_2_id,
+                ]);
+                $compositionErrors = array_merge($compositionErrors, $tugasBelajarErrors);
                 if (!empty($compositionErrors)) {
                     $unresolved[] = self::unresolvedEntry($sidang, 'Dewan penguji yang sudah diisi melanggar Rule Komposisi Dosen Penguji: ' . implode(' ', $compositionErrors));
                     continue;
@@ -300,7 +309,8 @@ class AutoScheduleService
         $ruangs,
         int $slotMinutes,
         array $bebanDosen,
-        array &$lastTrioPerTanggal
+        array &$lastTrioPerTanggal,
+        array $tugasBelajarIds = []
     ): ?array {
         $utamaId = $sidang->dosen_pembimbing_utama_id;
         if (empty($kesediaanMap[$utamaId])) {
@@ -320,7 +330,7 @@ class AutoScheduleService
             // Pool kandidat penguji: dosen lain yang punya kesediaan di tanggal ini
             $pool = [];
             foreach ($kesediaanMap as $dosenId => $tanggalMap) {
-                if (in_array($dosenId, $excludeIds) || empty($tanggalMap[$tgl])) {
+                if (in_array($dosenId, $excludeIds) || in_array($dosenId, $tugasBelajarIds) || empty($tanggalMap[$tgl])) {
                     continue;
                 }
                 $free = self::subtractBusy($tanggalMap[$tgl], $busyDosen[$dosenId][$tgl] ?? []);

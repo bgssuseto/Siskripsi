@@ -187,9 +187,40 @@ class SidangConflictService
      * Check schedule conflicts for a single Sidang data (for Store/Update validation).
      * Returns human-readable messages only about time/room/lecturer overlaps.
      */
+    /**
+     * Dosen berstatus "Tugas Belajar" tidak boleh menjadi Ketua Penguji /
+     * Anggota Penguji 1 / Anggota Penguji 2 — berlaku untuk Sempro maupun
+     * Sidang Skripsi karena keduanya memakai kolom penguji yang sama.
+     */
+    public static function checkTugasBelajarRule(array $data): array
+    {
+        $errors = [];
+
+        $roles = array_filter([
+            'Ketua Penguji'    => $data['ketua_penguji_id']     ?? null,
+            'Penguji 1'        => $data['anggota_penguji_1_id'] ?? null,
+            'Penguji 2'        => $data['anggota_penguji_2_id'] ?? null,
+        ]);
+
+        if (empty($roles)) {
+            return $errors;
+        }
+
+        $dosens = Dosen::whereIn('id', array_unique(array_values($roles)))->get()->keyBy('id');
+
+        foreach ($roles as $role => $dosenId) {
+            $dosen = $dosens->get($dosenId);
+            if ($dosen && $dosen->isTugasBelajar()) {
+                $errors[] = "Dosen {$dosen->nama_dosen} sedang berstatus Tugas Belajar dan tidak bisa ditugaskan sebagai {$role}.";
+            }
+        }
+
+        return $errors;
+    }
+
     public static function checkConflicts(array $data, ?int $excludeId = null): array
     {
-        $conflicts = [];
+        $conflicts = array_merge([], self::checkTugasBelajarRule($data));
 
         $tanggal = $data['tanggal'] ?? null;
         $jam     = $data['jam']     ?? null;

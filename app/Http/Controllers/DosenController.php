@@ -138,6 +138,7 @@ class DosenController extends Controller
             'alias' => ['nullable', 'string', 'max:50', 'alpha_dash', 'unique:dosens,alias'],
             'kepakaran' => ['nullable', 'string', 'max:255'],
             'jabatan_fungsional' => ['nullable', 'string', Rule::in(array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS))],
+            'status_kepegawaian' => ['nullable', 'string', Rule::in(array_keys(Dosen::STATUS_KEPEGAWAIAN_LABELS))],
             'no_wa' => ['nullable', 'string', 'max:30'],
         ], [
             'nidn.required' => 'NIDN wajib diisi.',
@@ -171,6 +172,7 @@ class DosenController extends Controller
             'alias' => ['nullable', 'string', 'max:50', 'alpha_dash', 'unique:dosens,alias,' . $dosen->id],
             'kepakaran' => ['nullable', 'string', 'max:255'],
             'jabatan_fungsional' => ['nullable', 'string', Rule::in(array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS))],
+            'status_kepegawaian' => ['nullable', 'string', Rule::in(array_keys(Dosen::STATUS_KEPEGAWAIAN_LABELS))],
             'no_wa' => ['nullable', 'string', 'max:30'],
         ], [
             'nidn.required' => 'NIDN wajib diisi.',
@@ -180,7 +182,7 @@ class DosenController extends Controller
             'alias.unique' => 'Alias sudah dipakai dosen lain.',
         ]);
 
-        $trackedFields = ['nidn', 'nama_dosen', 'email', 'alias', 'kepakaran', 'jabatan_fungsional', 'no_wa'];
+        $trackedFields = ['nidn', 'nama_dosen', 'email', 'alias', 'kepakaran', 'jabatan_fungsional', 'status_kepegawaian', 'no_wa'];
         $before = $dosen->only($trackedFields);
         $dosen->update($validated);
         $this->syncLinkedUserAccount($dosen);
