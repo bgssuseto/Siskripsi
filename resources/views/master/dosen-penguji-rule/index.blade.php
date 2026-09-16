@@ -215,7 +215,7 @@
                         </button>
                     </div>
 
-                    <form :action="'{{ url('master/dosen-penguji-rule') }}/' + editRule.id" method="POST" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                    <form :action="window.location.pathname.replace(/\/$/, '') + '/' + editRule.id" method="POST" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                         @csrf
                         @method('PUT')
 
@@ -273,7 +273,7 @@
                     <p class="text-xs text-slate-500 mb-6">
                         Apakah Anda yakin ingin menghapus rule komposisi penguji untuk <span class="font-bold text-slate-800" x-text="deleteRule.dosen_nama"></span>?
                     </p>
-                    <form :action="'{{ url('master/dosen-penguji-rule') }}/' + deleteRule.id" method="POST" class="flex items-center justify-center gap-3">
+                    <form :action="window.location.pathname.replace(/\/$/, '') + '/' + deleteRule.id" method="POST" class="flex items-center justify-center gap-3">
                         @csrf
                         @method('DELETE')
                         <button type="button" @click="deleteModal = false" class="w-1/2 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
