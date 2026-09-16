@@ -93,4 +93,44 @@ class RuangController extends Controller
 
         return redirect()->route('master.ruang.index')->with('success', 'Data ruangan berhasil dihapus!');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:ruangs,id'],
+        ]);
+
+        $count = Ruang::whereIn('id', $validated['ids'])->count();
+        Ruang::whereIn('id', $validated['ids'])->delete();
+
+        $message = "{$count} data ruangan berhasil dihapus.";
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+
+        return redirect()->route('master.ruang.index')->with('success', $message);
+    }
+
+    public function bulkUpdateStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'    => ['required', 'array', 'min:1'],
+            'ids.*'  => ['integer', 'exists:ruangs,id'],
+            'status' => ['required', 'in:' . Ruang::STATUS_SIAP . ',' . Ruang::STATUS_BELUM_SIAP],
+        ]);
+
+        $count = Ruang::whereIn('id', $validated['ids'])->count();
+        Ruang::whereIn('id', $validated['ids'])->update(['status' => $validated['status']]);
+
+        $label = Ruang::STATUS_LABELS[$validated['status']] ?? $validated['status'];
+        $message = "Status {$count} ruangan berhasil diubah menjadi \"{$label}\".";
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+
+        return redirect()->route('master.ruang.index')->with('success', $message);
+    }
 }

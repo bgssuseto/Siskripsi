@@ -162,12 +162,29 @@
             </div>
         </div>
 
+        <!-- Bulk Action Bar -->
+        <div id="bulk-bar" class="hidden items-center justify-between gap-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-2xl px-4 py-3 mb-4 flex-wrap">
+            <span class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300"><span id="bulk-count">0</span> ruangan dipilih</span>
+            <div class="flex items-center gap-2 flex-wrap">
+                <select id="bulk-status-select" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-xs font-semibold">
+                    <option value="siap_digunakan">Siap Digunakan</option>
+                    <option value="belum_siap_digunakan">Belum Siap Digunakan</option>
+                </select>
+                <button type="button" onclick="bulkUpdateStatusRuang()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all">Ubah Status Terpilih</button>
+                <button type="button" onclick="bulkDeleteRuang()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all">🗑️ Hapus Terpilih</button>
+                <button type="button" onclick="toggleSelectAllRuang(null, true)" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all">Batalkan Pilihan</button>
+            </div>
+        </div>
+
         <!-- Table Card -->
         <div id="table-container" @click="if ($event.target.closest('a')) { const link = $event.target.closest('a'); if (link.href && !link.hasAttribute('download') && !link.getAttribute('href').startsWith('#') && link.target !== '_blank') { $event.preventDefault(); navigate(link.href); } }" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                     <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         <tr>
+                            <th class="px-4 py-4 w-8 text-center">
+                                <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAllRuang(this)">
+                            </th>
                             <th class="px-6 py-4">No</th>
                             <th class="px-6 py-4">Kode Ruangan</th>
                             <th class="px-6 py-4">Nama Ruangan</th>
@@ -178,6 +195,9 @@
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                         @forelse ($ruangs as $index => $ruang)
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors">
+                            <td class="px-4 py-4 text-center">
+                                <input type="checkbox" class="row-checkbox-ruang" value="{{ $ruang->id }}" onchange="updateBulkBarRuang()">
+                            </td>
                             <td class="px-6 py-4 font-medium text-slate-400 dark:text-slate-500">
                                 {{ $ruangs->firstItem() + $index }}
                             </td>
@@ -221,7 +241,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="6" class="px-6 py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
@@ -384,4 +404,76 @@
         </div>
 
     </div>
+
+    <script>
+        function toggleSelectAllRuang(sourceCheckbox, forceUncheck = false) {
+            const checked = forceUncheck ? false : (sourceCheckbox ? sourceCheckbox.checked : false);
+            document.querySelectorAll('.row-checkbox-ruang').forEach(cb => cb.checked = checked);
+            const selectAll = document.getElementById('select-all-checkbox');
+            if (selectAll) selectAll.checked = checked;
+            updateBulkBarRuang();
+        }
+
+        function updateBulkBarRuang() {
+            const checked = document.querySelectorAll('.row-checkbox-ruang:checked');
+            const bar = document.getElementById('bulk-bar');
+            document.getElementById('bulk-count').textContent = checked.length;
+            bar.classList.toggle('hidden', checked.length === 0);
+            bar.classList.toggle('flex', checked.length > 0);
+        }
+
+        async function bulkDeleteRuang() {
+            const ids = Array.from(document.querySelectorAll('.row-checkbox-ruang:checked')).map(cb => cb.value);
+            if (ids.length === 0) return;
+            if (!confirm('Hapus ' + ids.length + ' data ruangan terpilih?')) return;
+
+            const params = new URLSearchParams();
+            ids.forEach(id => params.append('ids[]', id));
+            params.append('_method', 'DELETE');
+
+            try {
+                const res = await fetch(window.location.pathname.replace(/\/$/, '') + '/bulk-destroy', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString(),
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message || 'Gagal menghapus data.', type: 'error' } }));
+                }
+            } catch (err) {
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Gagal terhubung ke server.', type: 'error' } }));
+            }
+        }
+
+        async function bulkUpdateStatusRuang() {
+            const ids = Array.from(document.querySelectorAll('.row-checkbox-ruang:checked')).map(cb => cb.value);
+            if (ids.length === 0) return;
+            const status = document.getElementById('bulk-status-select').value;
+
+            const params = new URLSearchParams();
+            ids.forEach(id => params.append('ids[]', id));
+            params.append('status', status);
+
+            try {
+                const res = await fetch(window.location.pathname.replace(/\/$/, '') + '/bulk-update-status', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString(),
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message || 'Gagal mengubah status.', type: 'error' } }));
+                }
+            } catch (err) {
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Gagal terhubung ke server.', type: 'error' } }));
+            }
+        }
+    </script>
 </x-app-layout>

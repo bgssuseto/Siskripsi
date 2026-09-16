@@ -189,6 +189,8 @@ Route::middleware('auth')->group(function () {
         // Data Master - Ruang
         Route::get('/master/ruang', [RuangController::class, 'index'])->name('master.ruang.index');
         Route::post('/master/ruang', [RuangController::class, 'store'])->name('master.ruang.store');
+        Route::delete('/master/ruang/bulk-destroy', [RuangController::class, 'bulkDestroy'])->name('master.ruang.bulk-destroy');
+        Route::post('/master/ruang/bulk-update-status', [RuangController::class, 'bulkUpdateStatus'])->name('master.ruang.bulk-update-status');
         Route::put('/master/ruang/{ruang}', [RuangController::class, 'update'])->name('master.ruang.update');
         Route::delete('/master/ruang/{ruang}', [RuangController::class, 'destroy'])->name('master.ruang.destroy');
 
