@@ -432,6 +432,17 @@
     @if(session('error'))   showToastSkripsi('error',   @json(session('error')));   @endif
     @if(session('warning')) showToastSkripsi('warning', @json(session('warning'))); @endif
 
+    // Ambil pesan error spesifik per-field dari respons validasi Laravel (422),
+    // supaya mahasiswa tahu persis bagian mana yang salah (mis. "File persyaratan
+    // harus berformat PDF"), bukan cuma pesan generik "The given data was invalid."
+    function extractErrorMessageSkripsi(data, fallback) {
+        if (data && data.errors && typeof data.errors === 'object') {
+            const messages = Object.values(data.errors).flat();
+            if (messages.length) return messages.join(' ');
+        }
+        return (data && data.message) || fallback;
+    }
+
     // Pendaftaran Skripsi (AJAX)
     const formDaftarSkripsi = document.getElementById('form-daftar-skripsi');
     if (formDaftarSkripsi) {
@@ -446,7 +457,7 @@
                     showToastSkripsi('success', data.message || 'Pendaftaran berhasil dikirim!');
                     setTimeout(() => location.reload(), 1200);
                 } else {
-                    showToastSkripsi(res.status === 422 ? 'warning' : 'error', data.message || 'Terjadi kesalahan.');
+                    showToastSkripsi(res.status === 422 ? 'warning' : 'error', extractErrorMessageSkripsi(data, 'Terjadi kesalahan.'));
                 }
             } catch(err) { showToastSkripsi('error', 'Gagal terhubung ke server.'); }
             finally { btn.disabled = false; btn.innerHTML = orig; }

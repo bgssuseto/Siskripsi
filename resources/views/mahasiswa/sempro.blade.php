@@ -509,6 +509,17 @@
     @if(session('error'))   showToastMhs('error',   @json(session('error')));   @endif
     @if(session('warning')) showToastMhs('warning', @json(session('warning'))); @endif
 
+    // Ambil pesan error spesifik per-field dari respons validasi Laravel (422),
+    // supaya mahasiswa tahu persis bagian mana yang salah (mis. "File persyaratan
+    // harus berformat PDF"), bukan cuma pesan generik "The given data was invalid."
+    function extractErrorMessageMhs(data, fallback) {
+        if (data && data.errors && typeof data.errors === 'object') {
+            const messages = Object.values(data.errors).flat();
+            if (messages.length) return messages.join(' ');
+        }
+        return (data && data.message) || fallback;
+    }
+
     // Pendaftaran Sempro (AJAX)
     const formDaftar = document.getElementById('form-daftar-sempro');
     if (formDaftar) {
@@ -523,7 +534,7 @@
                     showToastMhs('success', data.message || 'Pendaftaran berhasil dikirim!');
                     setTimeout(() => location.reload(), 1200);
                 } else {
-                    showToastMhs(res.status === 422 ? 'warning' : 'error', data.message || 'Terjadi kesalahan.');
+                    showToastMhs(res.status === 422 ? 'warning' : 'error', extractErrorMessageMhs(data, 'Terjadi kesalahan.'));
                 }
             } catch(err) { showToastMhs('error', 'Gagal terhubung ke server.'); }
             finally { btn.disabled = false; btn.innerHTML = orig; }
