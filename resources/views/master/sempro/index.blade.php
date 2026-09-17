@@ -309,7 +309,7 @@
                                     <span class="nim-pill">{{ $item->nim }}</span>
                                     @if($item->file_persyaratan)
                                         <div class="mt-1">
-                                            <a href="{{ asset($item->file_persyaratan) }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold">
+                                            <a href="{{ route('dokumen.show', [$item, 'persyaratan']) }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold">
                                                 <span>📄</span> Berkas (PDF)
                                             </a>
                                         </div>

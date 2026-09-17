@@ -339,7 +339,7 @@
                         fileName: '',
                         fileSize: '',
                         fileError: '',
-                        existingFile: '{{ ($mySidang && $mySidang->file_persyaratan) ? asset($mySidang->file_persyaratan) : '' }}',
+                        existingFile: '{{ ($mySidang && $mySidang->file_persyaratan) ? route('dokumen.show', [$mySidang, 'persyaratan']) : '' }}',
                         handleFileSelect(e) {
                             const file = e.target.files[0] || (e.dataTransfer ? e.dataTransfer.files[0] : null);
                             if (!file) return;
@@ -468,11 +468,11 @@
                                 </td>
                                 <td class="py-3 px-4 text-center">
                                     @if($s->file_persyaratan)
-                                        <a href="{{ asset($s->file_persyaratan) }}" target="_blank" class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold rounded-lg border border-indigo-200 dark:border-indigo-700 transition-all flex items-center gap-1 shadow-2xs justify-center">
+                                        <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}" target="_blank" class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold rounded-lg border border-indigo-200 dark:border-indigo-700 transition-all flex items-center gap-1 shadow-2xs justify-center">
                                             <span>📄</span> Preview
                                         </a>
                                     @elseif($s->bukti_pembayaran)
-                                        <a href="{{ asset($s->bukti_pembayaran) }}" target="_blank" class="px-2.5 py-1 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-600 transition-all flex items-center gap-1 shadow-2xs justify-center">
+                                        <a href="{{ route('dokumen.show', [$s, 'bukti-pembayaran']) }}" target="_blank" class="px-2.5 py-1 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-600 transition-all flex items-center gap-1 shadow-2xs justify-center">
                                             <span>📄</span> Lihat Bukti
                                         </a>
                                     @else

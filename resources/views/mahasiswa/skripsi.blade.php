@@ -253,7 +253,7 @@
                         fileName: '',
                         fileSize: '',
                         fileError: '',
-                        existingFile: '{{ ($mySidang && $mySidang->file_persyaratan) ? asset($mySidang->file_persyaratan) : '' }}',
+                        existingFile: '{{ ($mySidang && $mySidang->file_persyaratan) ? route('dokumen.show', [$mySidang, 'persyaratan']) : '' }}',
                         handleFileSelect(e) {
                             const file = e.target.files[0] || (e.dataTransfer ? e.dataTransfer.files[0] : null);
                             if (!file) return;
@@ -391,10 +391,10 @@
                                 <td class="py-3 px-4 text-center">
                                     @if($s->file_persyaratan)
                                         <div class="flex items-center justify-center gap-1.5">
-                                            <a href="{{ asset($s->file_persyaratan) }}" target="_blank" class="px-2.5 py-1 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 text-purple-700 dark:text-purple-300 text-[11px] font-bold rounded-lg border border-purple-200 dark:border-purple-700 transition-all flex items-center gap-1 shadow-sm">
+                                            <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}" target="_blank" class="px-2.5 py-1 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 text-purple-700 dark:text-purple-300 text-[11px] font-bold rounded-lg border border-purple-200 dark:border-purple-700 transition-all flex items-center gap-1 shadow-sm">
                                                 <span>👁️</span> Preview
                                             </a>
-                                            <a href="{{ asset($s->file_persyaratan) }}" download class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold rounded-lg border border-emerald-200 dark:border-emerald-700 transition-all flex items-center gap-1 shadow-sm">
+                                            <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}?download=1" class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold rounded-lg border border-emerald-200 dark:border-emerald-700 transition-all flex items-center gap-1 shadow-sm">
                                                 <span>📥</span>
                                             </a>
                                         </div>

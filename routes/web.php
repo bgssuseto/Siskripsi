@@ -28,6 +28,7 @@ use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\AnalitikController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AutoScheduleController;
+use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\DosenPengujiRuleController;
 
 Route::get('/', function () {
@@ -58,6 +59,12 @@ Route::middleware('guest')->group(function () {
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {
+    // Dokumen pendaftaran (persyaratan / bukti pembayaran) — dilayani lewat PHP,
+    // bukan link statis, supaya tidak 404 ketika webroot production berbeda dari public_path()
+    Route::get('/dokumen/{sidang}/{type}', [DokumenController::class, 'show'])
+        ->name('dokumen.show')
+        ->where('type', 'persyaratan|bukti-pembayaran');
+
     Route::get('/dashboard', function () {
         $user = auth()->user();
         if ($user) {
