@@ -30,6 +30,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AutoScheduleController;
 use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\DosenPengujiRuleController;
+use App\Http\Controllers\PublicKesediaanController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -44,6 +45,11 @@ Route::get('/jadwal-dosen-penguji/pdf', [AdministrasiController::class, 'publicJ
 // Shortlink berbasis alias/inisial dosen (fallback ke token di atas kalau dosen belum punya alias)
 Route::get('/j/{alias}', [AdministrasiController::class, 'publicJadwalDosenByAlias'])->name('public.dosen.jadwal.alias');
 Route::get('/j/{alias}/pdf', [AdministrasiController::class, 'publicJadwalDosenByAliasPdf'])->name('public.dosen.jadwal.alias.pdf');
+
+// Link publik (tanpa login) form kesediaan menguji dosen — token per-periode,
+// otomatis aktif/nonaktif mengikuti jendela tanggal Gelombang yang berjalan.
+Route::get('/kesediaan-publik/{token}', [PublicKesediaanController::class, 'show'])->name('public.kesediaan.show');
+Route::post('/kesediaan-publik/{token}', [PublicKesediaanController::class, 'store'])->name('public.kesediaan.store')->middleware('throttle:20,1');
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -299,6 +305,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/master/kesediaan-dosen/destroy-all', [KesediaanDosenController::class, 'destroyAll'])->name('master.kesediaan-dosen.destroy-all');
         Route::delete('/master/kesediaan-dosen/{kesediaanDosen}', [KesediaanDosenController::class, 'destroy'])->name('master.kesediaan-dosen.destroy');
         Route::post('/master/kesediaan-dosen/settings', [KesediaanDosenController::class, 'updateSettings'])->name('master.kesediaan-dosen.settings');
+        Route::post('/master/kesediaan-dosen/reset-public-token', [KesediaanDosenController::class, 'resetPublicToken'])->name('master.kesediaan-dosen.reset-public-token');
         Route::post('/master/kesediaan-dosen/toggle-access/{dosen}', [KesediaanDosenController::class, 'toggleAccess'])->name('master.kesediaan-dosen.toggle-access');
         Route::post('/master/kesediaan-dosen/destroy-group', [KesediaanDosenController::class, 'destroyGroup'])->name('master.kesediaan-dosen.destroy-group');
         Route::post('/master/kesediaan-dosen/import', [KesediaanDosenController::class, 'importExcel'])->name('master.kesediaan-dosen.import');

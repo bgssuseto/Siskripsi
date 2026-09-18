@@ -251,6 +251,24 @@ class KesediaanDosenController extends Controller
     }
 
     /**
+     * Buat ulang token link publik kesediaan (menonaktifkan link lama yang
+     * sudah pernah dibagikan — mis. kalau bocor atau ingin mulai "bersih"
+     * untuk gelombang berikutnya).
+     */
+    public function resetPublicToken(Request $request): RedirectResponse
+    {
+        $activePeriode = Periode::where('aktif', true)->first();
+
+        if (!$activePeriode) {
+            return redirect()->back()->with('error', 'Tidak ada periode akademik yang aktif saat ini.');
+        }
+
+        $activePeriode->update(['kesediaan_public_token' => \Illuminate\Support\Str::random(40)]);
+
+        return redirect()->back()->with('success', 'Link publik form kesediaan berhasil di-reset. Link lama sudah tidak berlaku.');
+    }
+
+    /**
      * Toggle individual Dosen form access
      */
     public function toggleAccess(Dosen $dosen): RedirectResponse

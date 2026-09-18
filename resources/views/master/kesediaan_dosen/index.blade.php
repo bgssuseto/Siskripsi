@@ -147,6 +147,46 @@
                     </div>
                 </form>
             </div>
+
+            {{-- Link Publik Form Kesediaan (Tanpa Login) --}}
+            <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm mb-6" x-data="{ copied: false }">
+                <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700 mb-5">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-100 dark:border-emerald-700 shadow-xs shrink-0">
+                        🔗
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Link Publik Form Kesediaan (Tanpa Login)</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Bagikan link ini ke dosen (mis. lewat WhatsApp) — otomatis aktif hanya selama ada Gelombang pendaftaran yang sedang berjalan untuk periode <strong class="text-indigo-600 dark:text-indigo-400">{{ $activePeriode->nama_periode }}</strong>, dan nonaktif otomatis di luar jadwal itu.</p>
+                    </div>
+                </div>
+
+                @if($activePeriode->isKesediaanPublicLinkActive())
+                    <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 mb-3">
+                        🟢 AKTIF SEKARANG
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 mb-3">
+                        ⚪ TIDAK AKTIF — di luar jendela gelombang / form ditutup / dikunci
+                    </span>
+                @endif
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="kesediaan-public-link" type="text" readonly value="{{ $activePeriode->kesediaan_public_url }}"
+                           class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-mono">
+                    <button type="button"
+                            @click="navigator.clipboard.writeText(document.getElementById('kesediaan-public-link').value); copied = true; setTimeout(() => copied = false, 1500)"
+                            class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shrink-0">
+                        <span x-show="!copied">📋 Salin Link</span>
+                        <span x-show="copied">✅ Tersalin</span>
+                    </button>
+                    <form method="POST" action="{{ route('master.kesediaan-dosen.reset-public-token') }}" onsubmit="return confirm('Reset link publik? Link lama yang sudah dibagikan akan langsung tidak berlaku.')" class="shrink-0">
+                        @csrf
+                        <button type="submit" class="w-full px-4 py-2.5 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-xs font-bold transition-all">
+                            🔄 Reset Link
+                        </button>
+                    </form>
+                </div>
+            </div>
         @else
             <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-xs font-bold shadow-xs mb-6 flex items-center gap-3">
                 <span class="text-lg">⚠️</span>
