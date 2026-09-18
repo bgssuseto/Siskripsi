@@ -306,12 +306,12 @@
                                 @if($s->file_persyaratan)
                                     <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                         <button type="button"
-                                                @click="previewUrl = '{{ asset($s->file_persyaratan) }}'; previewTitle = 'Berkas Persyaratan - {{ addslashes($s->nama_mahasiswa) }}'; previewModal = true"
+                                                @click="previewUrl = '{{ route('dokumen.show', [$s, 'persyaratan']) }}'; previewTitle = 'Berkas Persyaratan - {{ addslashes($s->nama_mahasiswa) }}'; previewModal = true"
                                                 title="Preview Berkas"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900 transition-all shadow-2xs cursor-pointer">
                                             👁️
                                         </button>
-                                        <a href="{{ asset($s->file_persyaratan) }}" download
+                                        <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}?download=1"
                                            title="Download Berkas"
                                            class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 transition-all shadow-2xs">
                                             📥
@@ -412,16 +412,13 @@
 
             <!-- Preview Content -->
             <div class="bg-slate-950 rounded-2xl p-2 flex items-center justify-center min-h-[350px] max-h-[550px] overflow-auto border border-slate-800">
-                <template x-if="previewUrl && previewUrl.toLowerCase().includes('.pdf')">
+                <template x-if="previewUrl">
                     <iframe :src="previewUrl" class="w-full h-[500px] rounded-xl border-0 bg-white"></iframe>
-                </template>
-                <template x-if="previewUrl && !previewUrl.toLowerCase().includes('.pdf')">
-                    <img :src="previewUrl" alt="Berkas Persyaratan" class="max-w-full max-h-[500px] rounded-xl object-contain shadow-lg">
                 </template>
             </div>
 
             <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <a :href="previewUrl" download target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 text-purple-700 dark:text-purple-300 font-extrabold text-xs rounded-xl border border-purple-200 dark:border-purple-900 transition-all">
+                <a :href="previewUrl + (previewUrl.includes('?') ? '&' : '?') + 'download=1'" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 text-purple-700 dark:text-purple-300 font-extrabold text-xs rounded-xl border border-purple-200 dark:border-purple-900 transition-all">
                     📥 Unduh File Asli
                 </a>
                 <button type="button" @click="previewModal = false" class="px-5 py-2 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-extrabold rounded-xl transition-all">
@@ -476,12 +473,12 @@
                         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Berkas Persyaratan:</span>
                         <template x-if="selectedSidang.file_persyaratan">
                             <div class="flex items-center gap-2">
-                                <button type="button" 
-                                         @click.stop="previewUrl = (selectedSidang.file_persyaratan.startsWith('http') || selectedSidang.file_persyaratan.startsWith('/')) ? selectedSidang.file_persyaratan : '{{ asset('') }}' + selectedSidang.file_persyaratan; previewTitle = 'Berkas Persyaratan - ' + selectedSidang.nama_mahasiswa; previewModal = true"
+                                <button type="button"
+                                         @click.stop="previewUrl = '{{ url('dokumen') }}/' + selectedSidang.hash_id + '/persyaratan'; previewTitle = 'Berkas Persyaratan - ' + selectedSidang.nama_mahasiswa; previewModal = true"
                                          class="inline-flex items-center gap-1 text-[10.5px] text-purple-600 dark:text-purple-400 font-extrabold hover:underline cursor-pointer">
                                     👁️ Preview Berkas
                                 </button>
-                                <a :href="(selectedSidang.file_persyaratan.startsWith('http') || selectedSidang.file_persyaratan.startsWith('/')) ? selectedSidang.file_persyaratan : '{{ asset('') }}' + selectedSidang.file_persyaratan" download
+                                <a :href="'{{ url('dokumen') }}/' + selectedSidang.hash_id + '/persyaratan?download=1'"
                                    class="inline-flex items-center gap-1 text-[10.5px] text-emerald-600 dark:text-emerald-400 font-extrabold hover:underline">
                                     📥 Download
                                 </a>
