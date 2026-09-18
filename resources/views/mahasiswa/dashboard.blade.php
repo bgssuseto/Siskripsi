@@ -78,38 +78,40 @@
             }
         @endphp
 
-        <div class="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 border-l-4 {{ $borderColor }} rounded-2xl shadow-sm px-5 py-4 flex items-center gap-5">
-            {{-- Angka countdown --}}
-            <div class="{{ $numBg }} rounded-xl px-4 py-3 text-center shrink-0 min-w-[72px]">
-                <p class="text-3xl font-black leading-none {{ $numColor }}">{{ $days }}</p>
-                <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider">hari</p>
-            </div>
-
-            {{-- Info tengah --}}
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full {{ $badgeColor }} tracking-wide">
-                        {{ $badgeLabel }}
-                    </span>
-                    <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-                        Gelombang {{ $wave['gelombang'] }}
-                    </span>
+        <div class="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 border-l-4 {{ $borderColor }} rounded-2xl shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+            <div class="flex items-center gap-4 sm:gap-5 flex-1 min-w-0">
+                {{-- Angka countdown --}}
+                <div class="{{ $numBg }} rounded-xl px-4 py-3 text-center shrink-0 min-w-[72px]">
+                    <p class="text-3xl font-black leading-none {{ $numColor }}">{{ $days }}</p>
+                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-wider">hari</p>
                 </div>
-                <p class="text-sm font-extrabold text-slate-800 dark:text-slate-100 leading-snug">{{ $label }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">{{ $statusMsg }} · {{ $subMsg }}</p>
 
-                @if($wave['is_open'])
-                <div class="mt-2">
-                    <div class="h-1.5 rounded-full {{ $barTrack }} overflow-hidden">
-                        <div class="h-full rounded-full {{ $barColor }} transition-all duration-700" style="width: {{ $barPct }}%"></div>
+                {{-- Info tengah --}}
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full {{ $badgeColor }} tracking-wide">
+                            {{ $badgeLabel }}
+                        </span>
+                        <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                            Gelombang {{ $wave['gelombang'] }}
+                        </span>
                     </div>
+                    <p class="text-sm font-extrabold text-slate-800 dark:text-slate-100 leading-snug">{{ $label }}</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">{{ $statusMsg }} · {{ $subMsg }}</p>
+
+                    @if($wave['is_open'])
+                    <div class="mt-2">
+                        <div class="h-1.5 rounded-full {{ $barTrack }} overflow-hidden">
+                            <div class="h-full rounded-full {{ $barColor }} transition-all duration-700" style="width: {{ $barPct }}%"></div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
-                @endif
             </div>
 
             {{-- CTA --}}
             <a href="{{ route($routeName) }}"
-               class="shrink-0 px-4 py-2 rounded-xl text-xs font-extrabold shadow-sm transition-all whitespace-nowrap {{ $ctaColor }}">
+               class="shrink-0 w-full sm:w-auto text-center px-4 py-2 rounded-xl text-xs font-extrabold shadow-sm transition-all whitespace-nowrap {{ $ctaColor }}">
                 {{ $ctaLabel }} →
             </a>
         </div>
