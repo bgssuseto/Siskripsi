@@ -82,9 +82,40 @@ class SidangConflictService
      * @param array $data  Validated field array (or model attributes)
      * @return array       List of human-readable error messages (empty = OK)
      */
-    public static function checkBusinessRules(array $data): array
+    /**
+     * Ketua Penguji, Penguji 1, dan Penguji 2 wajib 3 dosen berbeda — berlaku
+     * untuk semua jenis tugas akhir. Tanpa ini, dosen yang sama bisa terpilih
+     * di lebih dari satu peran penguji sekaligus (mis. menjadi Ketua Penguji
+     * sekaligus Penguji 1 pada sidang yang sama) tanpa terdeteksi oleh aturan
+     * lain, karena itu bukan "bentrok" dengan record lain melainkan
+     * inkonsistensi di dalam satu record itu sendiri.
+     */
+    public static function checkDuplicatePengujiRoles(array $data): array
     {
         $errors = [];
+
+        $pengujiRoles = array_filter([
+            'Ketua Penguji'     => (int) ($data['ketua_penguji_id']     ?? 0),
+            'Anggota Penguji 1' => (int) ($data['anggota_penguji_1_id'] ?? 0),
+            'Anggota Penguji 2' => (int) ($data['anggota_penguji_2_id'] ?? 0),
+        ]);
+
+        $seenRoleByDosenId = [];
+        foreach ($pengujiRoles as $role => $dosenId) {
+            if (isset($seenRoleByDosenId[$dosenId])) {
+                $nama = Dosen::find($dosenId)?->nama_dosen ?? 'Dosen';
+                $errors[] = "Pelanggaran: {$nama} tidak boleh menempati lebih dari satu peran penguji ({$seenRoleByDosenId[$dosenId]} dan {$role}) pada sidang yang sama.";
+            } else {
+                $seenRoleByDosenId[$dosenId] = $role;
+            }
+        }
+
+        return $errors;
+    }
+
+    public static function checkBusinessRules(array $data): array
+    {
+        $errors = self::checkDuplicatePengujiRoles($data);
 
         if (($data['jenis_tugas_akhir'] ?? '') === 'sempro') {
             return $errors;
@@ -220,7 +251,7 @@ class SidangConflictService
 
     public static function checkConflicts(array $data, ?int $excludeId = null): array
     {
-        $conflicts = array_merge([], self::checkTugasBelajarRule($data));
+        $conflicts = array_merge(self::checkDuplicatePengujiRoles($data), self::checkTugasBelajarRule($data));
 
         $tanggal = $data['tanggal'] ?? null;
         $jam     = $data['jam']     ?? null;
@@ -228,6 +259,16 @@ class SidangConflictService
 
         if (!$tanggal || !$jam) {
             return $conflicts;
+        }
+
+        // Reject an inverted/zero-length jam range (jam mulai >= jam selesai)
+        // up front — otherwise isTimeOverlap()'s overlap math on this range
+        // silently never flags a real conflict against it, for as long as the
+        // corrupted record exists.
+        $jamRange = self::parseJamRange($jam);
+        if ($jamRange && $jamRange['end'] <= $jamRange['start']) {
+            $conflicts[] = "Rentang jam '{$jam}' tidak valid: jam mulai harus lebih awal dari jam selesai.";
+            return array_unique($conflicts);
         }
 
         $tanggalYmd = ($tanggal instanceof Carbon)
@@ -259,6 +300,14 @@ class SidangConflictService
             if ($ruangId && (int) $item->ruang_id === (int) $ruangId) {
                 $ruangNama = $item->ruang?->kode_ruangan ?? 'Ruangan';
                 $conflicts[] = "Bentrok Ruangan '{$ruangNama}': Sudah dipakai ujian '{$item->nama_mahasiswa}' pada {$tglIndo} jam {$item->jam}.";
+            }
+
+            // 1b. Mahasiswa Conflict — cegah mahasiswa yang sama terjadwal di
+            // dua ujian yang waktunya tumpang tindih (mis. sempro & sidang
+            // skripsi, atau dua record duplikat, di jam yang sama).
+            $newNim = trim((string) ($data['nim'] ?? ''));
+            if ($newNim !== '' && trim((string) $item->nim) === $newNim) {
+                $conflicts[] = "Bentrok Mahasiswa '{$item->nama_mahasiswa}' (NIM {$newNim}): Sudah terjadwal pada ujian lain di {$tglIndo} jam {$item->jam}.";
             }
 
             // 2. Dosen Conflicts (Pembimbing Pendamping only tests in Sempro)
