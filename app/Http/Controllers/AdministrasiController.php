@@ -631,6 +631,11 @@ class AdministrasiController extends Controller
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
         }
 
+        $koordinator = \App\Models\User::where('role', \App\Models\User::ROLE_KOORDINATOR)
+            ->whereNotNull('dosen_id')
+            ->with('dosen')
+            ->first()?->dosen;
+
         $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $zipFilename = "Undangan_{$invType}_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
         $tempZipPath = storage_path('app/public/' . $zipFilename);
@@ -670,6 +675,7 @@ class AdministrasiController extends Controller
                 'logoTiBase64'  => $logoTiBase64,
                 'totalUji'      => $mySidangs->count(),
                 'jenisUndangan' => $jenisUndangan,
+                'koordinator'   => $koordinator,
             ]);
 
             $pdf->setPaper('a4', 'landscape');
@@ -1386,6 +1392,7 @@ class AdministrasiController extends Controller
         $periodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $jenis = $request->get('jenis'); // 'skripsi' | 'sempro' | null
 
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
@@ -1403,6 +1410,12 @@ class AdministrasiController extends Controller
 
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        if ($jenis === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } elseif ($jenis === 'skripsi') {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
         }
 
         $sidangs = $query->orderBy('tanggal', 'asc')
@@ -1440,6 +1453,7 @@ class AdministrasiController extends Controller
         $periodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $jenis = $request->get('jenis'); // 'skripsi' | 'sempro' | null
 
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
@@ -1457,6 +1471,12 @@ class AdministrasiController extends Controller
 
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        if ($jenis === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } elseif ($jenis === 'skripsi') {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
         }
 
         $sidangs = $query->orderBy('tanggal', 'asc')
@@ -1494,6 +1514,7 @@ class AdministrasiController extends Controller
         $periodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $jenis = $request->get('jenis'); // 'skripsi' | 'sempro' | null
 
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
@@ -1511,6 +1532,12 @@ class AdministrasiController extends Controller
 
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+
+        if ($jenis === 'sempro') {
+            $query->where('jenis_tugas_akhir', 'sempro');
+        } elseif ($jenis === 'skripsi') {
+            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
         }
 
         $sidangs = $query->get();
