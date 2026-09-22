@@ -126,6 +126,21 @@ class DosenPortalController extends Controller
             return redirect()->back()->with('error', 'Akun Anda belum terhubung dengan data Dosen.');
         }
 
+        $activePeriode = Periode::where('aktif', true)->first();
+        if (!$activePeriode) {
+            return redirect()->back()->with('error', 'Tidak ada periode akademik aktif saat ini.');
+        }
+
+        // The dashboard hides the "Tambah Slot" button / whole card when any of
+        // these are off (show_form_kesediaan, can_fill_kesediaan, lock_form_kesediaan),
+        // but that's cosmetic only — re-check server-side too, since a stale tab
+        // or a direct POST replay could otherwise still write through a closed/
+        // locked form.
+        $showFormKesediaan = (bool) $activePeriode->show_form_kesediaan && (bool) $dosen->can_fill_kesediaan;
+        if (!$showFormKesediaan || $activePeriode->lock_form_kesediaan) {
+            return redirect()->back()->with('error', 'Form kesediaan sedang tidak dapat diisi (ditutup/dikunci oleh koordinator).');
+        }
+
         $request->validate([
             'slots' => 'required|array|min:1',
             'slots.*.tanggal' => 'required|date',
@@ -133,13 +148,25 @@ class DosenPortalController extends Controller
             'wave_id' => 'required|exists:pendaftaran_periodes,id',
         ]);
 
-        $activePeriode = Periode::where('aktif', true)->first();
+        // Pastikan gelombang yang dipilih benar-benar gelombang periode AKTIF
+        // ini dan SEDANG berjalan — bukan gelombang periode lain (sudah tidak
+        // aktif) atau gelombang yang sudah lewat tanggalnya.
+        $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
+        $wave = PendaftaranPeriode::where('id', $request->wave_id)
+            ->where('periode_id', $activePeriode->id)
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
+
+        if (!$wave) {
+            return redirect()->back()->with('error', 'Gelombang yang dipilih sudah tidak aktif. Silakan muat ulang halaman.');
+        }
 
         foreach ($request->slots as $slot) {
             KesediaanDosen::create([
                 'dosen_id' => $dosen->id,
-                'periode_id' => $activePeriode->id ?? null,
-                'wave_id' => $request->wave_id,
+                'periode_id' => $activePeriode->id,
+                'wave_id' => $wave->id,
                 'tanggal' => $slot['tanggal'],
                 'jam_mulai' => '',
                 'jam_selesai' => '',
@@ -160,6 +187,11 @@ class DosenPortalController extends Controller
 
         if (!$dosen) {
             return redirect()->back()->with('error', 'Akses ditolak.');
+        }
+
+        $activePeriode = Periode::where('aktif', true)->first();
+        if ($activePeriode && $activePeriode->lock_form_kesediaan) {
+            return redirect()->back()->with('error', 'Data kesediaan sedang dikunci oleh koordinator dan tidak dapat dihapus.');
         }
 
         $id = KesediaanDosen::decodeHashId($hashId);
