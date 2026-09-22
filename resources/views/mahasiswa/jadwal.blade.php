@@ -47,7 +47,12 @@
             <div class="grid grid-cols-1 gap-6">
                 @foreach($sidangs as $s)
                     @php
-                        $isPlotted = $s->tanggal && $s->ruang_id && $s->ketua_penguji_id;
+                        // Sempro never gets a ketua_penguji assigned (jadwalkan() for
+                        // sempro only sets tanggal/jam/ruang_id) — requiring it here
+                        // would permanently stick sempro cards on "Belum di-Plotting".
+                        $isPlotted = $s->jenis_tugas_akhir === 'sempro'
+                            ? ($s->tanggal && $s->ruang_id)
+                            : ($s->tanggal && $s->ruang_id && $s->ketua_penguji_id);
                     @endphp
                     <div class="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-800 hover:shadow-lg transition-all duration-300 space-y-5 relative overflow-hidden group">
                         

@@ -54,8 +54,12 @@ class MahasiswaController extends Controller
 
         $activePeriode = Periode::where('aktif', true)->first();
 
-        // Stats
-        $sidangSkripsi = $sidangs->where('jenis_tugas_akhir', 'sidang')->first();
+        // Stats. Student self-registration stores the thesis-defense track as
+        // 'sidang' (see storeRegistration()), but koordinator-created/edited
+        // records (SkripsiController) use the literal 'skripsi' for the same
+        // track — both must match here or an admin-entered record silently
+        // disappears from this card.
+        $sidangSkripsi = $sidangs->whereIn('jenis_tugas_akhir', ['sidang', 'skripsi'])->first();
         $sidangJurnal  = $sidangs->where('jenis_tugas_akhir', 'jurnal')->first();
 
         // Countdown gelombang pendaftaran (sempro & skripsi)
@@ -382,9 +386,17 @@ class MahasiswaController extends Controller
     public function updateBukti(Request $request, Sidang $sidang)
     {
         $user = Auth::user();
-        
-        // Ensure this belongs to the logged-in student
-        if ($sidang->nim !== $user->nim && $sidang->nama_mahasiswa !== $user->name) {
+
+        // Ensure this belongs to the logged-in student. NIM is the reliable
+        // identifier (see getStudentSidangs() above) — only fall back to an
+        // exact name match when the user has no NIM on file yet. Matching on
+        // EITHER nim OR name (as this used to do) would let a same-named
+        // student hijack someone else's registration by nim alone.
+        $isOwner = $user->nim
+            ? $sidang->nim === $user->nim
+            : $sidang->nama_mahasiswa === $user->name;
+
+        if (! $isOwner) {
             abort(403, 'Unauthorized action.');
         }
 
