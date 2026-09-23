@@ -147,7 +147,20 @@ class AutoScheduleController extends Controller
             }
 
             $before = $sidang->only(array_keys($update));
-            $sidang->update($update);
+
+            // Unique DB constraint on (ruang_id, tanggal, jam) is the final
+            // backstop if another request just took this exact slot in the
+            // narrow window between checkConflicts() above and this write —
+            // skip this row rather than fail the whole batch.
+            try {
+                $sidang->update($update);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ((int) $e->getCode() === 23000) {
+                    $skipped[] = "{$sidang->nama_mahasiswa}: ruang/jam baru saja dipakai jadwal lain, dilewati.";
+                    continue;
+                }
+                throw $e;
+            }
 
             ActivityLogger::log(
                 'jadwalkan',

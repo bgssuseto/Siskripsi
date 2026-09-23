@@ -349,24 +349,40 @@ class MahasiswaController extends Controller
             ]);
             $message = 'Pendaftaran berhasil direvisi dan dikirim kembali!';
         } else {
-            // Create new registration
-            Sidang::create([
-                'nim'                            => $validated['nim'],
-                'nama_mahasiswa'                 => $user->name,
-                'judul_skripsi'                  => $validated['judul_skripsi'],
-                'dosen_pembimbing_utama_id'      => $validated['dosen_pembimbing_utama_id'],
-                'dosen_pembimbing_pendamping_id' => $validated['dosen_pembimbing_pendamping_id'] ?? null,
-                'jenis_tugas_akhir'              => $actualJenis,
-                'jalur_ta'                       => $jalurTa,
-                'periode_id'                     => $activePeriode->id,
-                'tanggal_pendaftaran'            => now()->timezone('Asia/Jakarta')->format('Y-m-d'),
-                'no_wa_aktif'                    => $validated['no_wa_aktif'],
-                'ketua_penguji_id'               => null,
-                'anggota_penguji_1_id'           => null,
-                'anggota_penguji_2_id'           => null,
-                'verifikasi_status'              => 'menunggu',
-                'file_persyaratan'               => $filePath,
-            ]);
+            // Create new registration. A unique DB constraint on
+            // (nim, jenis_tugas_akhir, periode_id) is the final backstop against
+            // a double-click/retry racing past the $existing check above (both
+            // requests reading "no existing row" before either one commits) —
+            // catch it here and turn it into the same friendly message the
+            // $existing check already gives for the non-race case.
+            try {
+                Sidang::create([
+                    'nim'                            => $validated['nim'],
+                    'nama_mahasiswa'                 => $user->name,
+                    'judul_skripsi'                  => $validated['judul_skripsi'],
+                    'dosen_pembimbing_utama_id'      => $validated['dosen_pembimbing_utama_id'],
+                    'dosen_pembimbing_pendamping_id' => $validated['dosen_pembimbing_pendamping_id'] ?? null,
+                    'jenis_tugas_akhir'              => $actualJenis,
+                    'jalur_ta'                       => $jalurTa,
+                    'periode_id'                     => $activePeriode->id,
+                    'tanggal_pendaftaran'            => now()->timezone('Asia/Jakarta')->format('Y-m-d'),
+                    'no_wa_aktif'                    => $validated['no_wa_aktif'],
+                    'ketua_penguji_id'               => null,
+                    'anggota_penguji_1_id'           => null,
+                    'anggota_penguji_2_id'           => null,
+                    'verifikasi_status'              => 'menunggu',
+                    'file_persyaratan'               => $filePath,
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ((int) $e->getCode() === 23000) {
+                    $msg = 'Pendaftaran Anda sudah tersimpan (kemungkinan terkirim dua kali). Muat ulang halaman untuk melihat status terbaru.';
+                    if ($request->expectsJson()) {
+                        return response()->json(['success' => false, 'message' => $msg], 422);
+                    }
+                    return back()->with('error', $msg);
+                }
+                throw $e;
+            }
             $message = 'Pendaftaran ' . ($validated['jenis_tugas_akhir'] === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi') . ' berhasil dikirim!';
         }
 

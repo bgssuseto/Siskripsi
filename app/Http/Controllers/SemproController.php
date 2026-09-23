@@ -486,7 +486,22 @@ class SemproController extends Controller
         }
 
         $before = $sidang->only(['tanggal', 'jam', 'ruang_id']);
-        $sidang->update($validated);
+
+        // Unique DB constraint on (ruang_id, tanggal, jam) is the final
+        // backstop if another request just took this exact slot in the narrow
+        // window between checkConflicts() above and this write.
+        try {
+            $sidang->update($validated);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ((int) $e->getCode() === 23000) {
+                $msg = '⚠️ Ruang/jam ini baru saja dipakai jadwal lain. Silakan pilih ruang atau jam yang berbeda.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+                return back()->with('warning', $msg);
+            }
+            throw $e;
+        }
 
         ActivityLogger::log(
             'jadwalkan',
