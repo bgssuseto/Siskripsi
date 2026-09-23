@@ -176,15 +176,21 @@ class DosenPortalController extends Controller
         }
 
         foreach ($request->slots as $slot) {
-            KesediaanDosen::create([
-                'dosen_id' => $dosen->id,
-                'periode_id' => $activePeriode->id,
-                'wave_id' => $wave->id,
-                'tanggal' => $slot['tanggal'],
-                'jam_mulai' => '',
-                'jam_selesai' => '',
-                'keterangan' => $slot['keterangan'] ?? null,
-            ]);
+            // firstOrCreate on the natural key so a double-submit (double-click,
+            // browser retry) doesn't leave duplicate slots for the same date.
+            KesediaanDosen::firstOrCreate(
+                [
+                    'dosen_id' => $dosen->id,
+                    'wave_id' => $wave->id,
+                    'tanggal' => $slot['tanggal'],
+                ],
+                [
+                    'periode_id' => $activePeriode->id,
+                    'jam_mulai' => '',
+                    'jam_selesai' => '',
+                    'keterangan' => $slot['keterangan'] ?? null,
+                ]
+            );
         }
 
         return redirect()->back()->with('success', 'Form kesediaan menguji berhasil disimpan.');
