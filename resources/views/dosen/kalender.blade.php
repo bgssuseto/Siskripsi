@@ -83,7 +83,7 @@
 
     <!-- Back Navigation -->
     <div class="mb-4">
-        <a href="{{ route('dosen.dashboard') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+        <a href="{{ route('dosen.dashboard') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
@@ -92,13 +92,23 @@
     </div>
 
     @if(!$dosen)
-        <div class="mb-8">
-            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Agenda & Kalender Ujian</h2>
-            <p class="text-sm text-slate-500 mt-1">Timeline menyeluruh jadwal ujian Seminar Proposal, Sidang Skripsi, dan kegiatan akademik Anda.</p>
+        <!-- Hero Banner Header -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-8">
+            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+            <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Modul Agenda & Kalender Ujian
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Agenda & Kalender Ujian</h1>
+                <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">Timeline menyeluruh jadwal ujian Seminar Proposal, Sidang Skripsi, dan kegiatan akademik Anda.</p>
+            </div>
         </div>
-        <div class="bg-white rounded-3xl border border-slate-200 p-8 text-center text-slate-500 shadow-sm">
-            <h3 class="font-extrabold text-slate-800 text-base">Akun Belum Terhubung</h3>
-            <p class="text-xs text-slate-400 mt-1">Hubungkan akun Anda dengan Master Dosen untuk melihat kalender agenda.</p>
+        <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400 shadow-sm">
+            <h3 class="font-extrabold text-slate-800 dark:text-slate-200 text-base">Akun Belum Terhubung</h3>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Hubungkan akun Anda dengan Master Dosen untuk melihat kalender agenda.</p>
         </div>
     @else
         <div class="calendar-page" x-data="{
@@ -182,25 +192,34 @@
         }" x-init="$nextTick(() => initCalendar())">
 
             <!-- Header Section -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Agenda & Kalender Ujian</h2>
-                    <p class="text-sm text-slate-500 mt-1">Timeline menyeluruh jadwal ujian Seminar Proposal, Sidang Skripsi, dan kegiatan akademik Anda.</p>
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-6">
+                <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+                <div class="relative z-10">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Modul Agenda & Kalender Ujian
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Agenda & Kalender Ujian</h1>
+                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">Timeline menyeluruh jadwal ujian Seminar Proposal, Sidang Skripsi, dan kegiatan akademik Anda.</p>
                 </div>
-                
-                <!-- View Toggle Buttons -->
-                <div class="flex items-center gap-1.5 bg-slate-200/60 p-1.5 rounded-2xl w-fit self-start sm:self-center">
-                    <button @click="currentView = 'calendar'; $nextTick(() => initCalendar())" 
+            </div>
+
+            <!-- View Toggle Buttons -->
+            <div class="flex justify-end mb-8">
+                <div class="flex items-center gap-1.5 bg-slate-200/60 p-1.5 rounded-2xl w-fit">
+                    <button @click="currentView = 'calendar'; $nextTick(() => initCalendar())"
                             :class="currentView === 'calendar' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0">
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                         Kalender View
                     </button>
-                    <button @click="currentView = 'list'" 
+                    <button @click="currentView = 'list'"
                             :class="currentView === 'list' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0">
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
                         </svg>
@@ -218,44 +237,44 @@
                 <!-- Main Timeline (Left 2 cols) -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Filters & Search Toolbar -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                    <div class="bg-white dark:bg-slate-800/80 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
                         <form method="GET" action="{{ route('dosen.kalender') }}" class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 w-full">
                             <!-- Hidden input to keep active tab/view as list -->
                             <input type="hidden" name="view" value="list">
 
                             <div class="relative flex-1">
-                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                     </svg>
                                 </span>
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama mahasiswa, NIM atau judul..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 placeholder-slate-400">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama mahasiswa, NIM atau judul..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500">
                             </div>
 
                             <div class="flex flex-wrap items-center gap-3">
                                 <div>
-                                    <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 font-semibold cursor-pointer">
+                                    <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 dark:text-slate-200 font-semibold cursor-pointer">
                                 </div>
-                                
-                                <select name="jenis" class="px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 font-bold cursor-pointer">
+
+                                <select name="jenis" class="px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 dark:text-slate-200 font-bold cursor-pointer">
                                     <option value="">Semua Jenis Ujian</option>
                                     <option value="sempro" {{ request('jenis') === 'sempro' ? 'selected' : '' }}>Seminar Proposal</option>
                                     <option value="skripsi" {{ request('jenis') === 'skripsi' ? 'selected' : '' }}>Sidang Skripsi</option>
                                 </select>
 
-                                <select name="status" class="px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 font-bold cursor-pointer">
+                                <select name="status" class="px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 dark:text-slate-200 font-bold cursor-pointer">
                                     <option value="">Akan Datang (Default)</option>
                                     <option value="terjadwal" {{ request('status') === 'terjadwal' ? 'selected' : '' }}>Terjadwal & Belum Sidang</option>
                                     <option value="proses" {{ request('status') === 'proses' ? 'selected' : '' }}>Proses Ujian</option>
                                     <option value="sudah" {{ request('status') === 'sudah' ? 'selected' : '' }}>Sudah Sidang</option>
                                 </select>
 
-                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-855 active:bg-slate-950 text-white font-bold text-xs rounded-xl shadow-sm hover:shadow transition-all shrink-0">
+                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-855 active:bg-slate-950 text-white font-bold text-xs rounded-xl shadow-sm hover:shadow transition-all shrink-0 cursor-pointer">
                                     Filter
                                 </button>
 
                                 @if(request()->anyFilled(['search', 'tanggal', 'jenis', 'status']))
-                                    <a href="{{ route('dosen.kalender', ['view' => 'list']) }}" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl transition-all text-center shrink-0">
+                                    <a href="{{ route('dosen.kalender', ['view' => 'list']) }}" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all text-center shrink-0">
                                         Reset
                                     </a>
                                 @endif
@@ -270,13 +289,13 @@
 
                     <!-- Kategori: Seminar Proposal -->
                     <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm" x-data="{ open: true }">
-                        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-2 text-left">
+                        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-2 text-left cursor-pointer">
                             <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-blue-600 shrink-0"></span>
                                 Agenda Seminar Proposal
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">{{ $agendaSempro->count() }}</span>
                             </h3>
-                            <svg class="w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -294,13 +313,13 @@
 
                     <!-- Kategori: Sidang Skripsi -->
                     <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm" x-data="{ open: true }">
-                        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-2 text-left">
+                        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-2 text-left cursor-pointer">
                             <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0"></span>
                                 Agenda Sidang Skripsi
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200">{{ $agendaSkripsi->count() }}</span>
                             </h3>
-                            <svg class="w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -354,57 +373,57 @@
             {{-- MODAL: DETAIL AGENDA --}}
             <div id="modal-detail" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-detail')">
                 <div class="modal-box">
-                    <div class="modal-header bg-slate-50 border-b border-slate-100">
+                    <div class="modal-header bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                         <span class="modal-title font-bold">📄 Detail Agenda Ujian</span>
                         <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
                     </div>
                     <div class="modal-body space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Peran Anda</span>
-                            <span class="col-span-2"><span id="detail-peran" class="px-2.5 py-0.5 text-xs font-extrabold bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg"></span></span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Peran Anda</span>
+                            <span class="col-span-2"><span id="detail-peran" class="px-2.5 py-0.5 text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-lg"></span></span>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Jenis Ujian</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jenis Ujian</span>
                             <span class="col-span-2"><span id="detail-jenis" class="badge"></span></span>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">NIM / Nama</span>
-                            <span class="col-span-2 text-slate-800 font-semibold"><span id="detail-nim" class="nim-pill"></span> <span id="detail-nama" class="ml-1"></span></span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">NIM / Nama</span>
+                            <span class="col-span-2 text-slate-800 dark:text-slate-100 font-semibold"><span id="detail-nim" class="nim-pill"></span> <span id="detail-nama" class="ml-1"></span></span>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Judul Skripsi</span>
-                            <span class="col-span-2 text-slate-700 text-sm leading-relaxed" id="detail-judul"></span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Judul Skripsi</span>
+                            <span class="col-span-2 text-slate-700 dark:text-slate-300 text-sm leading-relaxed" id="detail-judul"></span>
                         </div>
-                        
-                        <hr class="border-slate-100">
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pembimbing</span>
-                            <div class="col-span-2 space-y-1">
-                                <div><span class="text-xs font-semibold text-slate-400">Utama:</span> <span id="detail-dosbing" class="text-slate-800 font-medium"></span></div>
-                                <div><span class="text-xs font-semibold text-slate-400">Pendamping:</span> <span id="detail-dosbing-p" class="text-slate-800 font-medium"></span></div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Penguji</span>
-                            <div class="col-span-2 space-y-1">
-                                <div><span class="text-xs font-semibold text-slate-400">Ketua:</span> <span id="detail-ketua" class="text-slate-800 font-medium"></span></div>
-                                <div><span class="text-xs font-semibold text-slate-400">Anggota 1:</span> <span id="detail-penguji1" class="text-slate-800 font-medium"></span></div>
-                                <div><span class="text-xs font-semibold text-slate-400">Anggota 2:</span> <span id="detail-penguji2" class="text-slate-800 font-medium"></span></div>
-                            </div>
-                        </div>
-                        
-                        <hr class="border-slate-100">
+
+                        <hr class="border-slate-100 dark:border-slate-700">
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Jadwal & Ruang</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pembimbing</span>
                             <div class="col-span-2 space-y-1">
-                                <div class="text-slate-800 font-semibold" id="detail-jadwal"></div>
+                                <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Utama:</span> <span id="detail-dosbing" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                                <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Pendamping:</span> <span id="detail-dosbing-p" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Penguji</span>
+                            <div class="col-span-2 space-y-1">
+                                <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Ketua:</span> <span id="detail-ketua" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                                <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Anggota 1:</span> <span id="detail-penguji1" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                                <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Anggota 2:</span> <span id="detail-penguji2" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100 dark:border-slate-700">
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jadwal & Ruang</span>
+                            <div class="col-span-2 space-y-1">
+                                <div class="text-slate-800 dark:text-slate-200 font-semibold" id="detail-jadwal"></div>
                                 <div><span class="schedule-ruang" id="detail-ruang"></span></div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-slate-50 border-t border-slate-100">
+                    <div class="modal-footer bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
                         <button type="button" class="btn btn-outline" onclick="closeModal('modal-detail')">Tutup</button>
                     </div>
                 </div>

@@ -275,39 +275,53 @@
         }
     }">
 
-        {{-- Header & Add button --}}
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Master Periode Akademik</h2>
-                <p class="text-sm text-slate-500 mt-1">Kelola data periode semester aktif untuk jadwal sidang skripsi.</p>
+        {{-- Hero Banner Header --}}
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-6">
+            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Modul Master Periode Akademik
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Master Periode Akademik</h1>
+                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
+                        Kelola data periode semester aktif untuk jadwal sidang skripsi.
+                    </p>
+                </div>
+
+                <div class="shrink-0">
+                    <button @click="createModal = true" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-indigo-50 font-semibold text-sm px-4 py-2.5 rounded-xl transition-all duration-200 shadow-lg focus:outline-none cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Tambah Periode
+                    </button>
+                </div>
             </div>
-            <button @click="createModal = true" class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-indigo-600/20 focus:outline-none">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Tambah Periode
-            </button>
         </div>
 
         {{-- Search & stats bar --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div id="filter-container" class="lg:col-span-2 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between gap-4">
+            <div id="filter-container" class="lg:col-span-2 bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between gap-4">
                 <form method="GET" action="{{ route('master.periode.index') }}" @submit.prevent="submitSearch($event.currentTarget)" class="w-full flex gap-3">
                     <div class="relative flex-1">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </span>
-                        <input type="text" name="search" value="{{ request('search') }}" @input.debounce.500ms="submitSearch($event.target.form)" placeholder="Cari nama periode..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400 text-slate-800">
+                        <input type="text" name="search" value="{{ request('search') }}" @input.debounce.500ms="submitSearch($event.target.form)" placeholder="Cari nama periode..." class="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-100">
                     </div>
-                    <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm px-4 py-2 rounded-xl transition-all">Filter</button>
+                    <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm px-4 py-2 rounded-xl transition-all cursor-pointer">Filter</button>
                     @if (request()->filled('search'))
-                        <a href="{{ route('master.periode.index') }}" @click.prevent="navigate($event.currentTarget.href)" class="inline-flex items-center justify-center border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm px-4 py-2 rounded-xl transition-all">Reset</a>
+                        <a href="{{ route('master.periode.index') }}" @click.prevent="navigate($event.currentTarget.href)" class="inline-flex items-center justify-center border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm px-4 py-2 rounded-xl transition-all cursor-pointer">Reset</a>
                     @endif
                 </form>
             </div>
-            
+
             <div id="stats-container" class="bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Periode Aktif</p>
@@ -315,7 +329,7 @@
                         {{ \App\Models\Periode::where('aktif', true)->first()->nama_periode ?? 'Belum ada yang aktif' }}
                     </p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold">
                     ✓
                 </div>
             </div>
@@ -340,12 +354,12 @@
                                 <td class="py-4 px-6 font-semibold text-slate-900 dark:text-slate-100">{{ $item->nama_periode }}</td>
                                 <td class="py-4 px-6">
                                     @if ($item->aktif)
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                             Aktif
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-500 border border-slate-200">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
                                             Tidak Aktif
                                         </span>
                                     @endif
@@ -355,19 +369,19 @@
                                         @if (!$item->aktif)
                                             <form method="POST" action="{{ route('master.periode.active', $item->hash_id) }}" @submit.prevent="submitSetActive($event)" class="inline-block">
                                                 @csrf
-                                                <button type="submit" :disabled="isLoading" class="p-2 text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all disabled:opacity-50" title="Set Aktif">
+                                                <button type="submit" :disabled="isLoading" class="p-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg transition-all disabled:opacity-50 cursor-pointer" title="Set Aktif">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                                     </svg>
                                                 </button>
                                             </form>
                                         @endif
-                                        <button @click="openEdit({{ json_encode(['id' => $item->hash_id, 'nama_periode' => $item->nama_periode, 'aktif' => (bool)$item->aktif, 'link_grup_wa_skripsi' => $item->link_grup_wa_skripsi, 'link_grup_wa_sempro' => $item->link_grup_wa_sempro]) }})" class="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-all" title="Edit Periode">
+                                        <button @click="openEdit({{ json_encode(['id' => $item->hash_id, 'nama_periode' => $item->nama_periode, 'aktif' => (bool)$item->aktif, 'link_grup_wa_skripsi' => $item->link_grup_wa_skripsi, 'link_grup_wa_sempro' => $item->link_grup_wa_sempro]) }})" class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all cursor-pointer" title="Edit Periode">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                             </svg>
                                         </button>
-                                        <button @click="openDelete({{ json_encode(['id' => $item->hash_id, 'nama_periode' => $item->nama_periode]) }})" class="p-2 text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all" title="Hapus Periode">
+                                        <button @click="openDelete({{ json_encode(['id' => $item->hash_id, 'nama_periode' => $item->nama_periode]) }})" class="p-2 text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-lg transition-all cursor-pointer" title="Hapus Periode">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
@@ -377,12 +391,12 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-12 text-center text-slate-400">
-                                    <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <td colspan="4" class="py-12 text-center text-slate-400 dark:text-slate-500">
+                                    <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path>
                                     </svg>
-                                    <p class="font-medium text-slate-500">Belum ada data periode</p>
-                                    <p class="text-xs text-slate-400 mt-1">Silakan tambahkan data periode baru.</p>
+                                    <p class="font-medium text-slate-500 dark:text-slate-400">Belum ada data periode</p>
+                                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Silakan tambahkan data periode baru.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -403,11 +417,11 @@
         <!-- Wave section header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6" id="wave-filter-container">
             <div>
-                <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Jadwal Gelombang Pendaftaran Ujian</h2>
-                <p class="text-sm text-slate-500 mt-1">Kelola rentang tanggal dibukanya gelombang pendaftaran Seminar Proposal & Sidang Skripsi bagi Mahasiswa.</p>
+                <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Jadwal Gelombang Pendaftaran Ujian</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola rentang tanggal dibukanya gelombang pendaftaran Seminar Proposal & Sidang Skripsi bagi Mahasiswa.</p>
             </div>
-            <button @click="editWave = { id: null, periode_id: '{{ $periodes->where('aktif', true)->first()->id ?? '' }}', jenis: 'sempro', gelombang: 1, tanggal_mulai: '', tanggal_selesai: '' }; errors = {}; waveCreateModal = true;" 
-                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all shrink-0">
+            <button @click="editWave = { id: null, periode_id: '{{ $periodes->where('aktif', true)->first()->id ?? '' }}', jenis: 'sempro', gelombang: 1, tanggal_mulai: '', tanggal_selesai: '' }; errors = {}; waveCreateModal = true;"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all shrink-0 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -438,27 +452,27 @@
                                 $selesai = $wave->tanggal_selesai->format('Y-m-d');
                                 $isOpen = ($today >= $mulai && $today <= $selesai);
                             @endphp
-                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="py-4 px-6 font-medium text-slate-400">{{ $index + 1 }}</td>
-                                <td class="py-4 px-6 font-semibold text-slate-900">{{ $wave->periode->nama_periode }}</td>
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
+                                <td class="py-4 px-6 font-medium text-slate-400 dark:text-slate-500">{{ $index + 1 }}</td>
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-slate-100">{{ $wave->periode->nama_periode }}</td>
                                 <td class="py-4 px-6">
                                     <span class="inline-flex px-2 py-0.5 text-[10px] font-extrabold rounded-md uppercase tracking-wider
-                                        {{ $wave->jenis === 'sempro' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}">
+                                        {{ $wave->jenis === 'sempro' ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800' : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' }}">
                                         {{ $wave->jenis === 'sempro' ? 'Sempro' : 'Sidang Skripsi' }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6 font-bold text-slate-800">Gelombang {{ $wave->gelombang }}</td>
-                                <td class="py-4 px-6 font-medium text-slate-650">
+                                <td class="py-4 px-6 font-bold text-slate-800 dark:text-slate-200">Gelombang {{ $wave->gelombang }}</td>
+                                <td class="py-4 px-6 font-medium text-slate-650 dark:text-slate-300">
                                     {{ $wave->tanggal_mulai->translatedFormat('d M Y') }} s/d {{ $wave->tanggal_selesai->translatedFormat('d M Y') }}
                                 </td>
                                 <td class="py-4 px-6">
                                     @if ($isOpen)
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                             Terbuka
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-200">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                                             Tutup / Belum Mulai
                                         </span>
                                     @endif
@@ -466,13 +480,13 @@
                                 <td class="py-4 px-6 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <button @click="openWaveEdit({{ json_encode(['id' => $wave->hash_id, 'periode_id' => $wave->periode_id, 'jenis' => $wave->jenis, 'gelombang' => $wave->gelombang, 'tanggal_mulai' => $wave->tanggal_mulai->format('Y-m-d'), 'tanggal_selesai' => $wave->tanggal_selesai->format('Y-m-d')]) }})"
-                                                class="p-2 text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-all" title="Edit Gelombang">
+                                                class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all cursor-pointer" title="Edit Gelombang">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                             </svg>
                                         </button>
                                         <button @click="openWaveDelete({{ json_encode(['id' => $wave->hash_id, 'jenis' => $wave->jenis, 'gelombang' => $wave->gelombang]) }})"
-                                                class="p-2 text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all" title="Hapus Gelombang">
+                                                class="p-2 text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-lg transition-all cursor-pointer" title="Hapus Gelombang">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
@@ -482,12 +496,12 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-12 text-center text-slate-400">
-                                    <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <td colspan="7" class="py-12 text-center text-slate-400 dark:text-slate-500">
+                                    <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z"></path>
                                     </svg>
-                                    <p class="font-medium text-slate-500">Belum ada gelombang pendaftaran</p>
-                                    <p class="text-xs text-slate-400 mt-1">Silakan klik tombol di atas untuk menambah gelombang pendaftaran baru.</p>
+                                    <p class="font-medium text-slate-500 dark:text-slate-400">Belum ada gelombang pendaftaran</p>
+                                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Silakan klik tombol di atas untuk menambah gelombang pendaftaran baru.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -498,55 +512,55 @@
 
         {{-- Modal Tambah --}}
         <div x-show="createModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-cloak>
-            <div @click.away="createModal = false" class="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <h3 class="text-base font-bold text-slate-900">Tambah Periode Akademik</h3>
-                    <button @click="createModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+            <div @click.away="createModal = false" class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden transform transition-all duration-300">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Tambah Periode Akademik</h3>
+                    <button @click="createModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
                         ✕
                     </button>
                 </div>
                 <form method="POST" action="{{ route('master.periode.store') }}" @submit.prevent="submitCreate($event)" class="p-6 space-y-4">
                     @csrf
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nama Periode <span class="text-rose-500">*</span></label>
-                        <input type="text" name="nama_periode" required placeholder="Contoh: Semester Genap 2026/2027" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nama Periode <span class="text-rose-500">*</span></label>
+                        <input type="text" name="nama_periode" required placeholder="Contoh: Semester Genap 2026/2027" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                         <template x-if="errors.nama_periode">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_periode[0]"></p>
                         </template>
                     </div>
                     <div class="flex items-center gap-3 pt-2">
-                        <input type="checkbox" name="aktif" value="1" id="create-aktif" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20">
-                        <label for="create-aktif" class="text-sm font-semibold text-slate-700 select-none cursor-pointer">Jadikan Periode Aktif</label>
+                        <input type="checkbox" name="aktif" value="1" id="create-aktif" class="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500/20 dark:bg-slate-700">
+                        <label for="create-aktif" class="text-sm font-semibold text-slate-700 dark:text-slate-300 select-none cursor-pointer">Jadikan Periode Aktif</label>
                     </div>
-                    <div class="pt-2 border-t border-slate-100 space-y-4">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider pt-2">Link Grup WhatsApp (Opsional)</p>
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-700 space-y-4">
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pt-2">Link Grup WhatsApp (Opsional)</p>
 
                         @if($latestPeriode && ($latestPeriode->link_grup_wa_skripsi || $latestPeriode->link_grup_wa_sempro))
-                            <label class="flex items-start gap-2.5 p-3 bg-indigo-50 border border-indigo-100 rounded-xl cursor-pointer select-none">
-                                <input type="checkbox" x-model="useSameWaLink" @change="toggleUseSameWaLink()" class="w-4 h-4 mt-0.5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20">
-                                <span class="text-xs font-semibold text-indigo-800">Gunakan link grup WA yang sama seperti periode sebelumnya (<strong>{{ $latestPeriode->nama_periode }}</strong>), tidak perlu isi ulang.</span>
+                            <label class="flex items-start gap-2.5 p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-800 rounded-xl cursor-pointer select-none">
+                                <input type="checkbox" x-model="useSameWaLink" @change="toggleUseSameWaLink()" class="w-4 h-4 mt-0.5 text-indigo-600 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500/20 dark:bg-slate-700">
+                                <span class="text-xs font-semibold text-indigo-800 dark:text-indigo-300">Gunakan link grup WA yang sama seperti periode sebelumnya (<strong>{{ $latestPeriode->nama_periode }}</strong>), tidak perlu isi ulang.</span>
                             </label>
                         @endif
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Grup WA Sidang Skripsi</label>
-                            <input type="url" name="link_grup_wa_skripsi" x-model="createWaSkripsi" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Grup WA Sidang Skripsi</label>
+                            <input type="url" name="link_grup_wa_skripsi" x-model="createWaSkripsi" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <template x-if="errors.link_grup_wa_skripsi">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.link_grup_wa_skripsi[0]"></p>
                             </template>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Grup WA Sempro</label>
-                            <input type="url" name="link_grup_wa_sempro" x-model="createWaSempro" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Grup WA Sempro</label>
+                            <input type="url" name="link_grup_wa_sempro" x-model="createWaSempro" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <template x-if="errors.link_grup_wa_sempro">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.link_grup_wa_sempro[0]"></p>
                             </template>
                         </div>
-                        <p class="text-[11px] text-slate-400 leading-relaxed">Link ini akan ditampilkan sebagai tombol "Join Grup WhatsApp" ke mahasiswa yang berkasnya sudah diverifikasi/di-ACC pada periode ini.</p>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">Link ini akan ditampilkan sebagai tombol "Join Grup WhatsApp" ke mahasiswa yang berkasnya sudah diverifikasi/di-ACC pada periode ini.</p>
                     </div>
-                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button type="button" @click="createModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50">
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" @click="createModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Simpan Data</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
@@ -557,10 +571,10 @@
 
         {{-- Modal Edit --}}
         <div x-show="editModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-cloak>
-            <div @click.away="editModal = false" class="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <h3 class="text-base font-bold text-slate-900">Edit Periode Akademik</h3>
-                    <button @click="editModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+            <div @click.away="editModal = false" class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden transform transition-all duration-300">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Edit Periode Akademik</h3>
+                    <button @click="editModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
                         ✕
                     </button>
                 </div>
@@ -568,37 +582,37 @@
                     @csrf
                     @method('PUT')
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nama Periode <span class="text-rose-500">*</span></label>
-                        <input type="text" name="nama_periode" x-model="editPeriode.nama_periode" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nama Periode <span class="text-rose-500">*</span></label>
+                        <input type="text" name="nama_periode" x-model="editPeriode.nama_periode" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                         <template x-if="errors.nama_periode">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.nama_periode[0]"></p>
                         </template>
                     </div>
                     <div class="flex items-center gap-3 pt-2">
-                        <input type="checkbox" name="aktif" value="1" id="edit-aktif" x-model="editPeriode.aktif" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20">
-                        <label for="edit-aktif" class="text-sm font-semibold text-slate-700 select-none cursor-pointer">Jadikan Periode Aktif</label>
+                        <input type="checkbox" name="aktif" value="1" id="edit-aktif" x-model="editPeriode.aktif" class="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500/20 dark:bg-slate-700">
+                        <label for="edit-aktif" class="text-sm font-semibold text-slate-700 dark:text-slate-300 select-none cursor-pointer">Jadikan Periode Aktif</label>
                     </div>
-                    <div class="pt-2 border-t border-slate-100 space-y-4">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider pt-2">Link Grup WhatsApp (Opsional)</p>
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-700 space-y-4">
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pt-2">Link Grup WhatsApp (Opsional)</p>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Grup WA Sidang Skripsi</label>
-                            <input type="url" name="link_grup_wa_skripsi" x-model="editPeriode.link_grup_wa_skripsi" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Grup WA Sidang Skripsi</label>
+                            <input type="url" name="link_grup_wa_skripsi" x-model="editPeriode.link_grup_wa_skripsi" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <template x-if="errors.link_grup_wa_skripsi">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.link_grup_wa_skripsi[0]"></p>
                             </template>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Grup WA Sempro</label>
-                            <input type="url" name="link_grup_wa_sempro" x-model="editPeriode.link_grup_wa_sempro" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Grup WA Sempro</label>
+                            <input type="url" name="link_grup_wa_sempro" x-model="editPeriode.link_grup_wa_sempro" placeholder="https://chat.whatsapp.com/..." class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <template x-if="errors.link_grup_wa_sempro">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.link_grup_wa_sempro[0]"></p>
                             </template>
                         </div>
-                        <p class="text-[11px] text-slate-400 leading-relaxed">Link ini akan ditampilkan sebagai tombol "Join Grup WhatsApp" ke mahasiswa yang berkasnya sudah diverifikasi/di-ACC pada periode ini.</p>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">Link ini akan ditampilkan sebagai tombol "Join Grup WhatsApp" ke mahasiswa yang berkasnya sudah diverifikasi/di-ACC pada periode ini.</p>
                     </div>
-                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button type="button" @click="editModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50">
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" @click="editModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Simpan Perubahan</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
@@ -609,23 +623,23 @@
 
         {{-- Modal Hapus --}}
         <div x-show="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-cloak>
-            <div @click.away="deleteModal = false" class="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <h3 class="text-base font-bold text-rose-600">Hapus Periode</h3>
-                    <button @click="deleteModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+            <div @click.away="deleteModal = false" class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden transform transition-all duration-300">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
+                    <h3 class="text-base font-bold text-rose-600 dark:text-rose-400">Hapus Periode</h3>
+                    <button @click="deleteModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
                         ✕
                     </button>
                 </div>
                 <div class="p-6">
-                    <p class="text-sm text-slate-600">Apakah Anda yakin ingin menghapus periode <strong class="text-slate-900" x-text="editPeriode.nama_periode"></strong>?</p>
-                    <p class="text-xs text-rose-500 mt-2 font-semibold">⚠️ Tindakan ini tidak dapat dibatalkan.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Apakah Anda yakin ingin menghapus periode <strong class="text-slate-900 dark:text-slate-100" x-text="editPeriode.nama_periode"></strong>?</p>
+                    <p class="text-xs text-rose-500 dark:text-rose-400 mt-2 font-semibold">⚠️ Tindakan ini tidak dapat dibatalkan.</p>
                 </div>
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                    <button type="button" @click="deleteModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
+                <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+                    <button type="button" @click="deleteModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
                     <form method="POST" :action="`{{ route('master.periode.index') }}/${editPeriode.id}`" @submit.prevent="submitDelete($event)" class="inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl transition-all disabled:opacity-50">Ya, Hapus</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl transition-all disabled:opacity-50 cursor-pointer">Ya, Hapus</button>
                     </form>
                 </div>
             </div>
@@ -633,18 +647,18 @@
 
         {{-- Modal Tambah Gelombang --}}
         <div x-show="waveCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-cloak>
-            <div @click.away="waveCreateModal = false" class="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <h3 class="text-base font-bold text-slate-900">Tambah Gelombang Pendaftaran</h3>
-                    <button @click="waveCreateModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+            <div @click.away="waveCreateModal = false" class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden transform transition-all duration-300">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Tambah Gelombang Pendaftaran</h3>
+                    <button @click="waveCreateModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
                         ✕
                     </button>
                 </div>
                 <form method="POST" action="{{ route('master.pendaftaran-periode.store') }}" @submit.prevent="submitWaveCreate($event)" class="p-6 space-y-4">
                     @csrf
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Periode Akademik <span class="text-rose-500">*</span></label>
-                        <select name="periode_id" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Periode Akademik <span class="text-rose-500">*</span></label>
+                        <select name="periode_id" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             @foreach(\App\Models\Periode::orderBy('id', 'desc')->get() as $p)
                                 <option value="{{ $p->id }}" {{ $p->aktif ? 'selected' : '' }}>{{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}</option>
                             @endforeach
@@ -655,8 +669,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Jenis Ujian <span class="text-rose-500">*</span></label>
-                        <select name="jenis" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Jenis Ujian <span class="text-rose-500">*</span></label>
+                        <select name="jenis" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <option value="sempro">Seminar Proposal (Sempro)</option>
                             <option value="skripsi">Sidang Skripsi</option>
                         </select>
@@ -666,8 +680,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Gelombang Ke- <span class="text-rose-500">*</span></label>
-                        <input type="number" name="gelombang" required min="1" max="10" value="1" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Gelombang Ke- <span class="text-rose-500">*</span></label>
+                        <input type="number" name="gelombang" required min="1" max="10" value="1" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                         <template x-if="errors.gelombang">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.gelombang[0]"></p>
                         </template>
@@ -675,24 +689,24 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mulai <span class="text-rose-500">*</span></label>
-                            <input type="date" name="tanggal_mulai" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Mulai <span class="text-rose-500">*</span></label>
+                            <input type="date" name="tanggal_mulai" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <template x-if="errors.tanggal_mulai">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.tanggal_mulai[0]"></p>
                             </template>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Selesai <span class="text-rose-500">*</span></label>
-                            <input type="date" name="tanggal_selesai" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Selesai <span class="text-rose-500">*</span></label>
+                            <input type="date" name="tanggal_selesai" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <template x-if="errors.tanggal_selesai">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.tanggal_selesai[0]"></p>
                             </template>
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button type="button" @click="waveCreateModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50">
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" @click="waveCreateModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Simpan</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
@@ -703,10 +717,10 @@
 
         {{-- Modal Edit Gelombang --}}
         <div x-show="waveEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-cloak>
-            <div @click.away="waveEditModal = false" class="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <h3 class="text-base font-bold text-slate-900">Edit Gelombang Pendaftaran</h3>
-                    <button @click="waveEditModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+            <div @click.away="waveEditModal = false" class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden transform transition-all duration-300">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Edit Gelombang Pendaftaran</h3>
+                    <button @click="waveEditModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
                         ✕
                     </button>
                 </div>
@@ -714,8 +728,8 @@
                     @csrf
                     @method('PUT')
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Periode Akademik <span class="text-rose-500">*</span></label>
-                        <select name="periode_id" x-model="editWave.periode_id" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Periode Akademik <span class="text-rose-500">*</span></label>
+                        <select name="periode_id" x-model="editWave.periode_id" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             @foreach(\App\Models\Periode::orderBy('id', 'desc')->get() as $p)
                                 <option value="{{ $p->id }}">{{ $p->nama_periode }}</option>
                             @endforeach
@@ -726,8 +740,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Jenis Ujian <span class="text-rose-500">*</span></label>
-                        <select name="jenis" x-model="editWave.jenis" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Jenis Ujian <span class="text-rose-500">*</span></label>
+                        <select name="jenis" x-model="editWave.jenis" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <option value="sempro">Seminar Proposal (Sempro)</option>
                             <option value="skripsi">Sidang Skripsi</option>
                         </select>
@@ -737,8 +751,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Gelombang Ke- <span class="text-rose-500">*</span></label>
-                        <input type="number" name="gelombang" x-model="editWave.gelombang" required min="1" max="10" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Gelombang Ke- <span class="text-rose-500">*</span></label>
+                        <input type="number" name="gelombang" x-model="editWave.gelombang" required min="1" max="10" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                         <template x-if="errors.gelombang">
                             <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.gelombang[0]"></p>
                         </template>
@@ -746,24 +760,24 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mulai <span class="text-rose-500">*</span></label>
-                            <input type="date" name="tanggal_mulai" x-model="editWave.tanggal_mulai" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Mulai <span class="text-rose-500">*</span></label>
+                            <input type="date" name="tanggal_mulai" x-model="editWave.tanggal_mulai" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <template x-if="errors.tanggal_mulai">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.tanggal_mulai[0]"></p>
                             </template>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Selesai <span class="text-rose-500">*</span></label>
-                            <input type="date" name="tanggal_selesai" x-model="editWave.tanggal_selesai" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Selesai <span class="text-rose-500">*</span></label>
+                            <input type="date" name="tanggal_selesai" x-model="editWave.tanggal_selesai" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-100">
                             <template x-if="errors.tanggal_selesai">
                                 <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.tanggal_selesai[0]"></p>
                             </template>
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button type="button" @click="waveEditModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50">
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" @click="waveEditModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Simpan Perubahan</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
@@ -774,23 +788,23 @@
 
         {{-- Modal Hapus Gelombang --}}
         <div x-show="waveDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" x-cloak>
-            <div @click.away="waveDeleteModal = false" class="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <h3 class="text-base font-bold text-rose-600">Hapus Gelombang Pendaftaran</h3>
-                    <button @click="waveDeleteModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+            <div @click.away="waveDeleteModal = false" class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden transform transition-all duration-300">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
+                    <h3 class="text-base font-bold text-rose-600 dark:text-rose-400">Hapus Gelombang Pendaftaran</h3>
+                    <button @click="waveDeleteModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
                         ✕
                     </button>
                 </div>
                 <div class="p-6">
-                    <p class="text-sm text-slate-600">Apakah Anda yakin ingin menghapus gelombang pendaftaran <span class="capitalize" x-text="editWave.jenis"></span> <strong class="text-slate-900">Gelombang <span x-text="editWave.gelombang"></span></strong>?</p>
-                    <p class="text-xs text-rose-500 mt-2 font-semibold">⚠️ Tindakan ini tidak dapat dibatalkan.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Apakah Anda yakin ingin menghapus gelombang pendaftaran <span class="capitalize" x-text="editWave.jenis"></span> <strong class="text-slate-900 dark:text-slate-100">Gelombang <span x-text="editWave.gelombang"></span></strong>?</p>
+                    <p class="text-xs text-rose-500 dark:text-rose-400 mt-2 font-semibold">⚠️ Tindakan ini tidak dapat dibatalkan.</p>
                 </div>
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                    <button type="button" @click="waveDeleteModal = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all">Batal</button>
+                <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+                    <button type="button" @click="waveDeleteModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
                     <form method="POST" :action="`{{ route('master.pendaftaran-periode.store') }}/${editWave.id}`" @submit.prevent="submitWaveDelete($event)" class="inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl transition-all disabled:opacity-50">Ya, Hapus</button>
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl transition-all disabled:opacity-50 cursor-pointer">Ya, Hapus</button>
                     </form>
                 </div>
             </div>
