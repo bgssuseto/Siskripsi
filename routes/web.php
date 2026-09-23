@@ -217,8 +217,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/master/pendaftaran-periode/{pendaftaranPeriode}', [PeriodeController::class, 'updatePendaftaranPeriode'])->name('master.pendaftaran-periode.update');
         Route::delete('/master/pendaftaran-periode/{pendaftaranPeriode}', [PeriodeController::class, 'destroyPendaftaranPeriode'])->name('master.pendaftaran-periode.destroy');
 
-        // Data Master - Rule Komposisi Dosen Penguji
-        Route::get('/master/dosen-penguji-rule', [DosenPengujiRuleController::class, 'index'])->name('master.dosen-penguji-rule.index');
+        // Data Master - Rule Komposisi Dosen Penguji (index/view dipindah ke grup
+        // menu.permission di bawah — koordinator bisa diberi akses lihat lewat
+        // "Atur Akses Role Koordinator"; mutasi tetap super_admin-only)
         Route::post('/master/dosen-penguji-rule', [DosenPengujiRuleController::class, 'store'])->name('master.dosen-penguji-rule.store');
         Route::put('/master/dosen-penguji-rule/{dosenPengujiRule}', [DosenPengujiRuleController::class, 'update'])->name('master.dosen-penguji-rule.update');
         Route::delete('/master/dosen-penguji-rule/{dosenPengujiRule}', [DosenPengujiRuleController::class, 'destroy'])->name('master.dosen-penguji-rule.destroy');
@@ -286,6 +287,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/administrasi/sk/export-pembimbing-pdf', [AdministrasiController::class, 'exportSkPembimbingPdf'])->name('administrasi.sk.export-pembimbing-pdf');
         Route::get('/administrasi/sk/export-penguji-pdf', [AdministrasiController::class, 'exportSkPengujiPdf'])->name('administrasi.sk.export-penguji-pdf');
         Route::get('/administrasi/audit-log', [AuditLogController::class, 'index'])->name('administrasi.audit-log.index');
+        Route::get('/administrasi/analitik', [AnalitikController::class, 'index'])->name('administrasi.analitik.index');
+        Route::get('/master/dosen-penguji-rule', [DosenPengujiRuleController::class, 'index'])->name('master.dosen-penguji-rule.index');
     });
 
     // Pendaftaran & Kesediaan Dosen Management (Super Admin & Koordinator)
@@ -309,8 +312,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/master/kesediaan-dosen/toggle-access/{dosen}', [KesediaanDosenController::class, 'toggleAccess'])->name('master.kesediaan-dosen.toggle-access');
         Route::post('/master/kesediaan-dosen/destroy-group', [KesediaanDosenController::class, 'destroyGroup'])->name('master.kesediaan-dosen.destroy-group');
         Route::post('/master/kesediaan-dosen/import', [KesediaanDosenController::class, 'importExcel'])->name('master.kesediaan-dosen.import');
-
-        Route::get('/administrasi/analitik', [AnalitikController::class, 'index'])->name('administrasi.analitik.index');
 
         // Jadwal Sidang Skripsi
         Route::get('/jadwal-ujian', [SkripsiController::class, 'jadwalIndex'])->name('jadwal-ujian.index');

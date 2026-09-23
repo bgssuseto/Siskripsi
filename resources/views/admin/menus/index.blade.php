@@ -718,8 +718,8 @@
                     <div class="flex items-center gap-3">
                         <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white font-extrabold flex items-center justify-center text-base shadow-md shadow-amber-500/20">R</div>
                         <div>
-                            <h3 class="font-extrabold text-slate-900 text-lg leading-tight" x-text="`Pengaturan Hak Akses Role: Dosen`"></h3>
-                            <p class="text-xs text-slate-400 font-medium mt-0.5">Konfigurasi menu default yang dapat diakses oleh seluruh pengguna dengan Role Dosen.</p>
+                            <h3 class="font-extrabold text-slate-900 text-lg leading-tight" x-text="`Pengaturan Hak Akses Role: ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`"></h3>
+                            <p class="text-xs text-slate-400 font-medium mt-0.5" x-text="`Konfigurasi menu default yang dapat diakses oleh seluruh pengguna dengan Role ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}.`"></p>
                         </div>
                     </div>
                     <button type="button" @click="roleAccessModal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-200 flex items-center justify-center transition-all font-bold">&times;</button>
