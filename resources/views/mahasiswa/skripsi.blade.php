@@ -20,7 +20,13 @@
             ->whereDate('tanggal_selesai', '>=', $today)
             ->first();
     }
-    $mySidang = $sidangs->first();
+    // Scope ke periode aktif — tanpa ini, catatan skripsi yang ditolak dari
+    // periode lama (sudah tertutup) bisa terpilih di sini dan modal salah
+    // menampilkan "Revisi Pendaftaran" dari data basi alih-alih pendaftaran
+    // baru di periode berjalan.
+    $mySidang = $activePeriode
+        ? $sidangs->where('periode_id', $activePeriode->id)->first()
+        : null;
 @endphp
 
     <!-- Top Grid: Status Cards & Card Syarat & Ketentuan Pendaftaran -->

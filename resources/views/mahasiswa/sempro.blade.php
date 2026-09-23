@@ -21,7 +21,13 @@
             ->whereDate('tanggal_selesai', '>=', $today)
             ->first();
     }
-    $mySidang = $sidangs->where('jenis_tugas_akhir', 'sempro')->first();
+    // Scope ke periode aktif — tanpa ini, catatan sempro yang ditolak dari
+    // periode lama (sudah tertutup) bisa terpilih di sini dan modal salah
+    // menampilkan "Revisi Pendaftaran" dari data basi alih-alih pendaftaran
+    // baru di periode berjalan.
+    $mySidang = $activePeriode
+        ? $sidangs->where('jenis_tugas_akhir', 'sempro')->where('periode_id', $activePeriode->id)->first()
+        : null;
 @endphp
 
     <!-- Top Grid: Status Cards & Card Syarat & Ketentuan Pendaftaran -->
