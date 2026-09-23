@@ -109,6 +109,7 @@ class DosenController extends Controller
                 'alias' => ['nullable', 'string', 'max:50', 'alpha_dash', Rule::unique('dosens', 'alias')->ignore($trashed->id)],
                 'kepakaran' => ['nullable', 'string', 'max:255'],
                 'jabatan_fungsional' => ['nullable', 'string', Rule::in(array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS))],
+                'status_kepegawaian' => ['nullable', 'string', Rule::in(array_keys(Dosen::STATUS_KEPEGAWAIAN_LABELS))],
                 'no_wa' => ['nullable', 'string', 'max:30'],
             ], [
                 'nama_dosen.required' => 'Nama dosen wajib diisi.',

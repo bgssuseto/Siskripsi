@@ -52,8 +52,11 @@ class DosenPortalController extends Controller
         if ($dosen) {
             $dosenId = $dosen->id;
 
+            // Scope ke periode aktif saja — tanpa ini, slot dari periode lama yang
+            // sudah lewat ikut tampil selamanya di kartu "Saat Ini" pada dashboard.
             $existingKesediaan = KesediaanDosen::with(['wave', 'periode'])
                 ->where('dosen_id', $dosen->id)
+                ->when($activePeriode, fn ($q) => $q->where('periode_id', $activePeriode->id))
                 ->orderBy('tanggal', 'asc')
                 ->get();
 
@@ -109,7 +112,17 @@ class DosenPortalController extends Controller
             $existingKesediaan = collect();
         }
 
-        $allWaves = PendaftaranPeriode::orderBy('id', 'desc')->get();
+        // Hanya gelombang periode aktif yang sedang berjalan — dropdown yang
+        // menampilkan gelombang dari periode lain/basi bisa berujung dosen
+        // memilih gelombang yang sudah tidak relevan (lihat storeKesediaan(),
+        // yang sudah menolak wave_id di luar periode aktif & rentang berjalan).
+        $allWaves = $activePeriode
+            ? PendaftaranPeriode::where('periode_id', $activePeriode->id)
+                ->whereDate('tanggal_mulai', '<=', $todayStr)
+                ->whereDate('tanggal_selesai', '>=', $todayStr)
+                ->orderBy('gelombang')
+                ->get()
+            : collect();
 
         return view('dosen.dashboard', compact('stats', 'dosen', 'showFormKesediaan', 'isLockedKesediaan', 'activeWaveInfo', 'allWaves', 'existingKesediaan', 'isRegistrationClosed', 'activePeriode'));
     }
