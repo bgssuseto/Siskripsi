@@ -1987,6 +1987,11 @@ class AdministrasiController extends Controller
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
         }
 
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
+
         if ($jenisTa) {
             if ($jenisTa === 'sempro') {
                 $query->where('jenis_tugas_akhir', 'sempro');
@@ -2336,6 +2341,10 @@ class AdministrasiController extends Controller
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
         }
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
+        }
         if ($jenisTa) {
             if ($jenisTa === 'sempro') {
                 $query->where('jenis_tugas_akhir', 'sempro');
@@ -2404,6 +2413,10 @@ class AdministrasiController extends Controller
         }
         if ($tglSelesai) {
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
+        }
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
         }
         if ($jenisTa) {
             if ($jenisTa === 'sempro') {
