@@ -1,66 +1,75 @@
 <x-app-layout title="Administrasi - Undangan Sidang">
     <x-slot:header>Administrasi Undangan Sidang</x-slot:header>
 
-    <div class="space-y-6">
+    <div class="max-w-7xl mx-auto space-y-6">
 
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-            <div>
-                <h1 class="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2.5">
-                    <span class="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                    </span>
-                    Generate Undangan Sidang Dosen
-                </h1>
-                <p class="text-sm text-slate-500 mt-1">
-                    Filter berdasarkan rentang tanggal pendaftaran gelombang sidang untuk membuat dokumen undangan menguji bagi setiap dosen.
-                </p>
-            </div>
+        <!-- Hero Banner Header -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
+            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
 
-            @if($dosenList->count() > 0)
-            <div class="flex items-center gap-2 flex-wrap">
-                <a href="{{ route('administrasi.undangan.mass-excel', request()->all()) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Export Excel Semua Dosen
-                </a>
-                <a href="{{ route('administrasi.undangan.rekap-dosen-penguji', request()->all()) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    Rekap Dosen Penguji
-                </a>
-                <a href="{{ route('administrasi.undangan.zip', request()->all()) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Unduh Semua PDF (ZIP)
-                </a>
-                <a href="{{ route('administrasi.undangan.mass-docx', request()->all()) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Unduh Semua DOCX (ZIP)
-                </a>
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Modul Administrasi Undangan
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Generate Undangan Sidang Dosen</h1>
+                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
+                        Filter berdasarkan rentang tanggal pendaftaran gelombang sidang untuk membuat dokumen undangan menguji bagi setiap dosen.
+                    </p>
+                </div>
+
+                @if($dosenList->count() > 0)
+                <div class="shrink-0 flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 px-4 py-3 shadow-md">
+                    <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Dosen Penguji</p>
+                    <p class="text-sm font-extrabold text-white">{{ $dosenList->count() }}</p>
+                </div>
+                @endif
             </div>
-            @endif
         </div>
 
+        @if($dosenList->count() > 0)
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="{{ route('administrasi.undangan.mass-excel', request()->all()) }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Export Excel Semua Dosen
+            </a>
+            <a href="{{ route('administrasi.undangan.rekap-dosen-penguji', request()->all()) }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                Rekap Dosen Penguji
+            </a>
+            <a href="{{ route('administrasi.undangan.zip', request()->all()) }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Unduh Semua PDF (ZIP)
+            </a>
+            <a href="{{ route('administrasi.undangan.mass-docx', request()->all()) }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Unduh Semua DOCX (ZIP)
+            </a>
+        </div>
+        @endif
+
         <!-- Filter Range Tanggal Pendaftaran & Periode -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="bg-white dark:bg-slate-800/80 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
             <form method="GET" action="{{ route('administrasi.undangan.index') }}" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
 
                 <!-- Periode -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Periode Akademik</label>
-                    <select name="periode_id" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
+                    <select name="periode_id" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
                         <option value="">-- Semua Periode --</option>
                         @foreach($periodes as $p)
                         <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>
@@ -72,8 +81,8 @@
 
                 <!-- Jenis Undangan -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Jenis Undangan</label>
-                    <select name="jenis" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Jenis Undangan</label>
+                    <select name="jenis" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
                         <option value="sempro" {{ $jenisUndangan === 'sempro' ? 'selected' : '' }}>Seminar Proposal (Sempro)</option>
                         <option value="skripsi" {{ $jenisUndangan === 'skripsi' ? 'selected' : '' }}>Sidang Skripsi</option>
                     </select>
@@ -81,8 +90,8 @@
 
                 <!-- Gelombang -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Gelombang</label>
-                    <select name="gelombang" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Gelombang</label>
+                    <select name="gelombang" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
                         <option value="">-- Semua Gelombang --</option>
                         @foreach($gelombangOptions ?? [] as $g)
                         <option value="{{ $g }}" {{ (string) $selectedGelombang === (string) $g ? 'selected' : '' }}>
@@ -94,22 +103,22 @@
 
                 <!-- Range Tanggal Pendaftaran Mulai -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Pendaftaran Dari Tanggal</label>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pendaftaran Dari Tanggal</label>
                     <input type="date" name="tanggal_pendaftaran_mulai" value="{{ $tglMulai }}"
-                           class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                           class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                 </div>
 
                 <!-- Range Tanggal Pendaftaran Selesai -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Pendaftaran Sampai Tanggal</label>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pendaftaran Sampai Tanggal</label>
                     <input type="date" name="tanggal_pendaftaran_selesai" value="{{ $tglSelesai }}"
-                           class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                           class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                 </div>
 
                 <!-- Submit Filter -->
                 <div class="flex gap-2">
                     <button type="submit"
-                            class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl shadow-md transition-all">
+                            class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl shadow-md transition-all cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                         </svg>
@@ -118,7 +127,7 @@
 
                     @if($tglMulai || $tglSelesai || $selectedPeriodeId || request('jenis') || $selectedGelombang)
                     <a href="{{ route('administrasi.undangan.index') }}"
-                       class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-sm rounded-xl transition-all flex items-center justify-center" title="Reset Filter">
+                       class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-medium text-sm rounded-xl transition-all flex items-center justify-center" title="Reset Filter">
                         Reset
                     </a>
                     @endif
@@ -128,12 +137,12 @@
         </div>
 
         <!-- Tabel Daftar Dosen Penguji -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-            
-            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
+
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-base">Daftar Dosen Penguji</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Daftar Dosen Penguji</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         Menampilkan {{ $dosenList->count() }} dosen penguji (Ketua Penguji, Penguji 1, dan Penguji 2) pada gelombang pendaftaran ini.
                     </p>
                 </div>
@@ -142,7 +151,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200/80 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200/80 dark:border-slate-700 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <th class="py-3.5 px-4 text-center w-12">No</th>
                             <th class="py-3.5 px-4">Nama Dosen & Gelar</th>
                             <th class="py-3.5 px-4">NIDN</th>
@@ -151,25 +160,25 @@
                             <th class="py-3.5 px-4 text-center w-40">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-sm">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-sm">
                         @forelse($dosenList as $idx => $item)
-                        <tr class="hover:bg-slate-50/80 transition-colors">
-                            <td class="py-3.5 px-4 text-center font-medium text-slate-400">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/40 transition-colors">
+                            <td class="py-3.5 px-4 text-center font-medium text-slate-400 dark:text-slate-500">
                                 {{ $idx + 1 }}
                             </td>
-                            <td class="py-3.5 px-4 font-semibold text-slate-800">
+                            <td class="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-100">
                                 {{ $item['dosen']->nama_dosen }}
                             </td>
-                            <td class="py-3.5 px-4 text-slate-500 font-mono text-xs">
+                            <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 font-mono text-xs">
                                 {{ $item['dosen']->nidn ?? '-' }}
                             </td>
                             <td class="py-3.5 px-4 text-center">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
                                     {{ $item['total_uji'] }} Mahasiswa
                                 </span>
                             </td>
                             <td class="py-3.5 px-4 text-center">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
                                     {{ $item['total_sesi'] }} Sesi Sektor
                                 </span>
                             </td>
@@ -177,15 +186,15 @@
                                 <div class="flex items-center justify-center gap-1.5">
                                     <a href="{{ route('administrasi.undangan.preview', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
                                        target="_blank"
-                                       class="inline-flex items-center justify-center p-2 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition-all border border-amber-200" title="Cetak / Preview Undangan">
-                                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       class="inline-flex items-center justify-center p-2 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 rounded-lg transition-all border border-amber-200 dark:border-amber-800" title="Cetak / Preview Undangan">
+                                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                                         </svg>
                                     </a>
                                     <a href="{{ route('administrasi.undangan.pdf', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
                                        target="_blank"
-                                       class="inline-flex items-center justify-center p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-all border border-indigo-200" title="Unduh PDF">
-                                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       class="inline-flex items-center justify-center p-2 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 rounded-lg transition-all border border-indigo-200 dark:border-indigo-800" title="Unduh PDF">
+                                        <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
                                     </a>
@@ -193,14 +202,14 @@
                                         <form method="POST" action="{{ route('administrasi.undangan.send-email', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
                                               onsubmit="return confirm('Kirim undangan ini via email ke {{ addslashes($item['dosen']->email) }}?');" class="inline">
                                             @csrf
-                                            <button type="submit" class="inline-flex items-center justify-center p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition-all border border-rose-200 cursor-pointer" title="Kirim Undangan via Email ke {{ $item['dosen']->email }}">
-                                                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <button type="submit" class="inline-flex items-center justify-center p-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 rounded-lg transition-all border border-rose-200 dark:border-rose-800 cursor-pointer" title="Kirim Undangan via Email ke {{ $item['dosen']->email }}">
+                                                <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                                 </svg>
                                             </button>
                                         </form>
                                     @else
-                                        <span class="inline-flex items-center justify-center p-2 bg-slate-50 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed" title="Dosen ini belum punya email terdaftar — lengkapi di Master Dosen">
+                                        <span class="inline-flex items-center justify-center p-2 bg-slate-50 dark:bg-slate-700/60 text-slate-400 dark:text-slate-500 rounded-lg border border-slate-200 dark:border-slate-600 cursor-not-allowed" title="Dosen ini belum punya email terdaftar — lengkapi di Master Dosen">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                             </svg>
@@ -219,13 +228,13 @@
                                      @if($canGeneratePublicLink)
                                          <a href="{{ $pubLink }}"
                                             target="_blank"
-                                            class="inline-flex items-center justify-center p-2 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg transition-all border border-sky-200" title="Buka Link Jadwal Tanpa Login (khusus Periode &amp; Gelombang terpilih)">
-                                             <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            class="inline-flex items-center justify-center p-2 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 rounded-lg transition-all border border-sky-200 dark:border-sky-800" title="Buka Link Jadwal Tanpa Login (khusus Periode &amp; Gelombang terpilih)">
+                                             <svg class="w-4 h-4 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                                              </svg>
                                          </a>
                                      @else
-                                         <span class="inline-flex items-center justify-center p-2 bg-slate-50 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk membuat link publik">
+                                         <span class="inline-flex items-center justify-center p-2 bg-slate-50 dark:bg-slate-700/60 text-slate-400 dark:text-slate-500 rounded-lg border border-slate-200 dark:border-slate-600 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk membuat link publik">
                                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                                              </svg>
@@ -249,21 +258,21 @@
                                           @endphp
                                          <a href="{{ $waLink }}"
                                             target="_blank"
-                                            class="inline-flex items-center justify-center p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition-all border border-emerald-300 shadow-2xs" title="Kirim Jadwal via WhatsApp Broadcast">
-                                             <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                                            class="inline-flex items-center justify-center p-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 rounded-lg transition-all border border-emerald-300 dark:border-emerald-800 shadow-2xs" title="Kirim Jadwal via WhatsApp Broadcast">
+                                             <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
                                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
                                              </svg>
                                          </a>
                                      @else
-                                         <span class="inline-flex items-center justify-center p-2 bg-slate-50 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk mengirim link">
+                                         <span class="inline-flex items-center justify-center p-2 bg-slate-50 dark:bg-slate-700/60 text-slate-400 dark:text-slate-500 rounded-lg border border-slate-200 dark:border-slate-600 cursor-not-allowed" title="Pilih Periode & Gelombang di filter atas dulu untuk mengirim link">
                                              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
                                              </svg>
                                          </span>
                                      @endif
                                     <a href="{{ route('administrasi.undangan.excel', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
-                                       class="inline-flex items-center justify-center p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg transition-all border border-slate-200" title="Export Excel">
-                                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       class="inline-flex items-center justify-center p-2 bg-slate-50 dark:bg-slate-700/60 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-all border border-slate-200 dark:border-slate-600" title="Export Excel">
+                                        <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
                                     </a>
@@ -272,13 +281,13 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-400">
+                            <td colspan="6" class="py-12 text-center text-slate-400 dark:text-slate-500">
                                 <div class="max-w-xs mx-auto text-center">
-                                    <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                                     </svg>
-                                    <p class="font-semibold text-slate-600">Belum ada data penguji</p>
-                                    <p class="text-xs text-slate-400 mt-1">Gunakan filter range tanggal pendaftaran di atas untuk menampilkan dosen yang bertugas menguji.</p>
+                                    <p class="font-semibold text-slate-600 dark:text-slate-300">Belum ada data penguji</p>
+                                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Gunakan filter range tanggal pendaftaran di atas untuk menampilkan dosen yang bertugas menguji.</p>
                                 </div>
                             </td>
                         </tr>
