@@ -751,7 +751,11 @@ class SemproController extends Controller
      */
     public function destroyAll(Request $request): RedirectResponse
     {
-        $count = Sidang::where('jenis_tugas_akhir', 'sempro')->delete();
+        // ->get()->each->delete() (not a query-builder ->delete()) so the
+        // model's deleting() hook fires per record and cleans up uploaded files.
+        $rows = Sidang::where('jenis_tugas_akhir', 'sempro')->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         return redirect()->route('master.sempro.index')->with('success', "Berhasil menghapus seluruh data sempro ({$count} data berhasil dihapus).");
     }
@@ -766,7 +770,9 @@ class SemproController extends Controller
             'ids.*' => ['integer', 'exists:sidangs,id'],
         ]);
 
-        $count = Sidang::where('jenis_tugas_akhir', 'sempro')->whereIn('id', $validated['ids'])->delete();
+        $rows = Sidang::where('jenis_tugas_akhir', 'sempro')->whereIn('id', $validated['ids'])->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         $message = "🗑️ {$count} data sempro berhasil dihapus.";
 

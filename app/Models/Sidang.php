@@ -83,6 +83,23 @@ class Sidang extends Model
 
             static::syncJalurTa($sidang);
         });
+
+        // Deleting a registration (so the student can re-register) previously
+        // left its uploaded file_persyaratan/bukti_pembayaran orphaned on disk
+        // forever — clean them up alongside the record. Bulk-delete controllers
+        // must use ->get()->each->delete() rather than a query-builder ->delete()
+        // for this hook to fire.
+        static::deleting(function ($sidang) {
+            foreach (['file_persyaratan', 'bukti_pembayaran'] as $field) {
+                $path = $sidang->{$field};
+                if ($path) {
+                    $fullPath = public_path($path);
+                    if (is_file($fullPath)) {
+                        @unlink($fullPath);
+                    }
+                }
+            }
+        });
     }
 
     /**

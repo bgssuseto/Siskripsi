@@ -996,7 +996,11 @@ class SkripsiController extends Controller
      */
     public function destroyAll(Request $request): RedirectResponse
     {
-        $count = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->delete();
+        // ->get()->each->delete() (not a query-builder ->delete()) so the
+        // model's deleting() hook fires per record and cleans up uploaded files.
+        $rows = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         return redirect()->route('master.skripsi.index')->with('success', "Berhasil menghapus seluruh data skripsi & jurnal ({$count} data berhasil dihapus).");
     }
@@ -1011,7 +1015,9 @@ class SkripsiController extends Controller
             'ids.*' => ['integer', 'exists:sidangs,id'],
         ]);
 
-        $count = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->whereIn('id', $validated['ids'])->delete();
+        $rows = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->whereIn('id', $validated['ids'])->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         $message = "🗑️ {$count} data skripsi/jurnal berhasil dihapus.";
 

@@ -430,7 +430,11 @@ class PendaftaranController extends Controller
             'ids.*'  => ['integer', 'exists:sidangs,id'],
         ]);
 
-        $count = Sidang::whereIn('id', $validated['ids'])->delete();
+        // ->get()->each->delete() (not a query-builder ->delete()) so the
+        // model's deleting() hook fires per record and cleans up uploaded files.
+        $rows = Sidang::whereIn('id', $validated['ids'])->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         $message = "🗑️ {$count} data pendaftaran berhasil dihapus. Mahasiswa terkait kini dapat melakukan pendaftaran ulang.";
 
