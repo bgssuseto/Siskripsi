@@ -354,7 +354,10 @@ class AdministrasiController extends Controller
         $phpWord = $this->buildUndanganDocxForDosen($dosen, $mySidangs, $namaPeriode, $jenisUndangan);
 
         $filename = "{$dosen->nama_dosen}.docx";
-        $tempPath = storage_path('app/public/' . preg_replace('/[^\w\s\.,-]/', '_', $filename));
+        // uniqid() prefix on the on-disk temp path (not the downloaded filename)
+        // so two concurrent exports never overwrite/truncate each other's file
+        // while one is still streaming to its own requester.
+        $tempPath = storage_path('app/public/' . uniqid('undangan_', true) . '_' . preg_replace('/[^\w\s\.,-]/', '_', $filename));
 
         $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
         $objWriter->save($tempPath);
@@ -530,16 +533,21 @@ class AdministrasiController extends Controller
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
         }
 
+        // uniqid() on both the zip path and its scratch directory so two
+        // concurrent mass-exports never share files — the old shared
+        // tmp_undangan_docx/ dir let one request's final cleanup (unlink all
+        // *.docx) delete another still-in-progress request's files.
+        $requestToken = uniqid('', true);
         $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $zipFilename = "Undangan_DOCX_{$invType}_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
-        $tempZipPath = storage_path('app/public/' . $zipFilename);
+        $tempZipPath = storage_path('app/public/' . $requestToken . '_' . $zipFilename);
 
         $zip = new ZipArchive();
         if ($zip->open($tempZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
             return back()->with('error', 'Gagal membuat file ZIP.');
         }
 
-        $tempDocxDir = storage_path('app/public/tmp_undangan_docx');
+        $tempDocxDir = storage_path('app/public/tmp_undangan_docx_' . $requestToken);
         if (!is_dir($tempDocxDir)) {
             mkdir($tempDocxDir, 0777, true);
         }
@@ -566,12 +574,14 @@ class AdministrasiController extends Controller
 
         $zip->close();
 
-        // Clean up temp docx files after they've been added to the zip
+        // Clean up this request's own scratch docx files/dir after they've
+        // been added to the zip.
         foreach (glob($tempDocxDir . '/*.docx') as $f) {
             @unlink($f);
         }
+        @rmdir($tempDocxDir);
 
-        return response()->download($tempZipPath)->deleteFileAfterSend(true);
+        return response()->download($tempZipPath, $zipFilename)->deleteFileAfterSend(true);
     }
 
     /**
@@ -638,7 +648,10 @@ class AdministrasiController extends Controller
 
         $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $zipFilename = "Undangan_{$invType}_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
-        $tempZipPath = storage_path('app/public/' . $zipFilename);
+        // uniqid() prefix on the on-disk temp path only — the download itself
+        // keeps the clean $zipFilename — so two concurrent exports never
+        // overwrite/truncate each other's zip.
+        $tempZipPath = storage_path('app/public/' . uniqid('', true) . '_' . $zipFilename);
 
         $zip = new ZipArchive();
         if ($zip->open($tempZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
@@ -687,7 +700,7 @@ class AdministrasiController extends Controller
 
         $zip->close();
 
-        return response()->download($tempZipPath)->deleteFileAfterSend(true);
+        return response()->download($tempZipPath, $zipFilename)->deleteFileAfterSend(true);
     }
 
     /**
@@ -1550,7 +1563,10 @@ class AdministrasiController extends Controller
         $namaPeriode = $periode ? $periode->nama_periode : 'Periode ' . date('Y');
 
         $zipFilename = "Berita_Acara_Sidang_Skripsi_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
-        $tempZipPath = storage_path('app/public/' . $zipFilename);
+        // uniqid() prefix on the on-disk temp path only — the download itself
+        // keeps the clean $zipFilename — so two concurrent exports never
+        // overwrite/truncate each other's zip.
+        $tempZipPath = storage_path('app/public/' . uniqid('', true) . '_' . $zipFilename);
 
         $zip = new ZipArchive();
         if ($zip->open($tempZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
@@ -1580,7 +1596,7 @@ class AdministrasiController extends Controller
 
         $zip->close();
 
-        return response()->download($tempZipPath)->deleteFileAfterSend(true);
+        return response()->download($tempZipPath, $zipFilename)->deleteFileAfterSend(true);
     }
 
     public function skIndex(Request $request): View
