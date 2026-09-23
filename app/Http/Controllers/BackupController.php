@@ -136,6 +136,31 @@ class BackupController extends Controller
             return back()->with('error', 'File SQL tidak valid.');
         }
 
+        // The uploaded file is piped verbatim as stdin into the `mysql` CLI — a
+        // legitimate mysqldump export never needs statements that write files or
+        // grant privileges. If the DB user happens to have FILE privilege (common
+        // on shared hosting), an unchecked upload could otherwise turn this into
+        // arbitrary server file writes. Reject anything that isn't a plain data
+        // restore, even though this endpoint is already super_admin-only.
+        $dangerousPatterns = [
+            '/\bINTO\s+OUTFILE\b/i',
+            '/\bINTO\s+DUMPFILE\b/i',
+            '/\bLOAD_FILE\s*\(/i',
+            '/\bLOAD\s+DATA\s+(LOCAL\s+)?INFILE\b/i',
+            '/\bCREATE\s+USER\b/i',
+            '/\bGRANT\s+/i',
+            '/\bDROP\s+DATABASE\b/i',
+            '/\bDROP\s+SCHEMA\b/i',
+            '/\bSET\s+GLOBAL\b/i',
+        ];
+        $sqlContent = file_get_contents($uploadedPath);
+        foreach ($dangerousPatterns as $pattern) {
+            if (preg_match($pattern, $sqlContent)) {
+                return back()->with('error', 'File SQL ditolak: mengandung statement yang tidak diizinkan untuk restore (mis. INTO OUTFILE/LOAD_FILE/GRANT/DROP DATABASE). Pastikan file ini benar-benar hasil backup mysqldump, bukan file lain.');
+            }
+        }
+        unset($sqlContent);
+
         $mysqlBin = config('services.mysql.mysql_path', 'mysql');
 
         $command = [
