@@ -317,6 +317,14 @@ class AutoScheduleService
             return null;
         }
 
+        // Pembimbing Utama otomatis jadi Anggota Penguji 2 (lihat Sidang::booted()
+        // dan pickValidPengujiPair() di bawah) — dosen berstatus Tugas Belajar
+        // tidak boleh menjadi penguji sama sekali, jadi jangan jadwalkan lewat
+        // jalur auto-penguji ini sampai pembimbingnya diganti atau statusnya pulih.
+        if (in_array($utamaId, $tugasBelajarIds)) {
+            return null;
+        }
+
         $excludeIds = array_filter([$utamaId, $sidang->dosen_pembimbing_pendamping_id]);
         $tanggalCandidates = array_keys($kesediaanMap[$utamaId]);
         sort($tanggalCandidates);
