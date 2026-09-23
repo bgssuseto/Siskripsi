@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Menu;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +43,8 @@ class MenuController extends Controller
 
         $menu = Menu::create($validated);
 
+        ActivityLogger::log('created', $menu, "Menambahkan menu sistem baru: {$menu->name}" . ($menu->route ? " (route: {$menu->route})" : '') . '.');
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -71,7 +74,15 @@ class MenuController extends Controller
 
         $validated['is_active'] = $request->has('is_active');
 
+        $before = $menu->only(['name', 'route', 'role_default', 'sort_order', 'is_active']);
         $menu->update($validated);
+
+        ActivityLogger::log(
+            'updated',
+            $menu,
+            "Memperbarui menu sistem: {$menu->name}.",
+            ['before' => $before, 'after' => $menu->only(['name', 'route', 'role_default', 'sort_order', 'is_active'])]
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -89,7 +100,10 @@ class MenuController extends Controller
      */
     public function destroy(Request $request, Menu $menu)
     {
+        $menuName = $menu->name;
         $menu->delete();
+
+        ActivityLogger::log('deleted', $menu, "Menghapus menu sistem: {$menuName}.");
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -107,8 +121,10 @@ class MenuController extends Controller
     public function assignUserMenus(Request $request, User $user)
     {
         $menuIds = $request->input('menu_ids', []);
-        
+
         $user->menus()->sync($menuIds);
+
+        ActivityLogger::log('updated', $user, "Mengatur akses menu kustom untuk user {$user->name} ({$user->email}) — " . count($menuIds) . ' menu diberikan.');
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -149,6 +165,8 @@ class MenuController extends Controller
         if (!empty($insertData)) {
             \Illuminate\Support\Facades\DB::table('role_menu')->insert($insertData);
         }
+
+        ActivityLogger::log('updated', null, "Mengatur hak akses menu default untuk role {$role} — " . count($menuIds) . ' menu diberikan.');
 
         if ($request->expectsJson()) {
             return response()->json([

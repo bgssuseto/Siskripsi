@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,6 +65,8 @@ class UserController extends Controller
 
         $this->syncKoordinatorRole($user, $request->boolean('jadikan_koordinator'));
 
+        ActivityLogger::log('created', $user, "Menambahkan user baru: {$user->name} ({$user->email}) dengan role {$user->role}.");
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -100,6 +103,8 @@ class UserController extends Controller
             }
         }
 
+        $before = $user->only(['name', 'email', 'role', 'dosen_id']);
+
         $userData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -114,6 +119,16 @@ class UserController extends Controller
         $user->update($userData);
 
         $this->syncKoordinatorRole($user, $request->boolean('jadikan_koordinator'));
+
+        $roleChanged = $before['role'] !== $user->role;
+        ActivityLogger::log(
+            'updated',
+            $user,
+            $roleChanged
+                ? "Mengubah data user {$user->name} ({$user->email}) — role diubah dari {$before['role']} menjadi {$user->role}."
+                : "Memperbarui data user: {$user->name} ({$user->email}).",
+            ['before' => $before, 'after' => $user->only(['name', 'email', 'role', 'dosen_id'])]
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -159,6 +174,10 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri yang sedang digunakan!');
         }
 
+        $deletedName = $user->name;
+        $deletedEmail = $user->email;
+        $deletedRole = $user->role;
+
         $dosenId = $user->dosen_id;
         if ($user->role === User::ROLE_DOSEN && $dosenId) {
             // Ensure Super Administrator Dosen exists
@@ -199,6 +218,8 @@ class UserController extends Controller
         if ($dosenId) {
             \App\Models\Dosen::where('id', $dosenId)->delete();
         }
+
+        ActivityLogger::log('deleted', $user, "Menghapus user: {$deletedName} ({$deletedEmail}), role {$deletedRole}.");
 
         if ($request->expectsJson()) {
             return response()->json([
