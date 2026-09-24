@@ -1,5 +1,8 @@
 <x-app-layout title="Daftar Skripsi">
-<div class="max-w-7xl mx-auto p-6 space-y-6" x-data="{ regModal: false }">
+<div class="max-w-7xl mx-auto p-6 space-y-6" x-data="{
+    regModal: false,
+    jenisTaSelected: '{{ $mySidang && $mySidang->jenis_tugas_akhir === 'jurnal' ? 'jurnal' : ($mySidang && $mySidang->jenis_tugas_akhir === 'sidang' ? 'sidang' : '') }}'
+}">
     <div class="bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center">
         <div>
             <h1 class="text-2xl font-extrabold mb-1">Pendaftaran Sidang Skripsi</h1>
@@ -135,6 +138,7 @@
                     <li>Hasil Turnitin maksimal <strong>25%</strong>.</li>
                     <li>Halaman persetujuan yang telah ditandatangani.</li>
                     <li>Lampiran ACC pada buku bimbingan.</li>
+                    <li>Khusus jalur <strong>Jurnal / Artikel</strong>: wajib melampirkan <strong>LOA (Letter of Acceptance)</strong> atau <strong>bukti publish jurnal</strong>.</li>
                 </ol>
                 <p class="mt-3 text-[11px] text-slate-500 dark:text-slate-400">Semua dokumen digabung dalam <strong>1 file PDF (maks. 4 MB)</strong>. Format nama file: <code class="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-purple-700 dark:text-purple-300 font-mono">NIM_NAMA_SKRIPSI.pdf</code></p>
             </div>
@@ -208,11 +212,30 @@
                 {{-- Jenis TA --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Jenis Tugas Akhir <span class="text-rose-500">*</span></label>
-                    <select name="jenis_ta_pilihan" required class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold cursor-pointer bg-white dark:bg-slate-700">
+                    <select name="jenis_ta_pilihan" x-model="jenisTaSelected" required class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold cursor-pointer bg-white dark:bg-slate-700">
                         <option value="">-- Pilih Jenis Tugas Akhir --</option>
-                        <option value="sidang" {{ ($mySidang && $mySidang->jenis_tugas_akhir == 'sidang') ? 'selected' : '' }}>Sidang Skripsi</option>
-                        <option value="jurnal" {{ ($mySidang && $mySidang->jenis_tugas_akhir == 'jurnal') ? 'selected' : '' }}>Jurnal / Artikel</option>
+                        <option value="sidang">Sidang Skripsi</option>
+                        <option value="jurnal">Jurnal / Artikel</option>
                     </select>
+                </div>
+
+                {{-- Kategori & Link Jurnal (hanya untuk jalur Jurnal / Artikel) --}}
+                <div x-show="jenisTaSelected === 'jurnal'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Kategori Jurnal <span class="text-rose-500">*</span></label>
+                        <select name="kategori_jurnal" :required="jenisTaSelected === 'jurnal'" class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold cursor-pointer bg-white dark:bg-slate-700">
+                            <option value="">-- Pilih Kategori --</option>
+                            @foreach(\App\Models\Sidang::KATEGORI_JURNAL_OPTIONS as $kat)
+                                <option value="{{ $kat }}" {{ ($mySidang && $mySidang->kategori_jurnal === $kat) ? 'selected' : '' }}>{{ $kat }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Target/tingkat publikasi jurnal Anda.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Link Jurnal <span class="text-[9px] text-slate-400 font-normal normal-case">(jika sudah terbit)</span></label>
+                        <input type="url" name="link_jurnal" value="{{ $mySidang->link_jurnal ?? '' }}" placeholder="https://..." class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold bg-white dark:bg-slate-700 placeholder-slate-400">
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Kosongkan jika artikel belum terbit.</p>
+                    </div>
                 </div>
 
                 {{-- Dosbing Utama & Pendamping --}}
@@ -251,6 +274,14 @@
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Tanggal Pendaftaran</label>
                         <input type="text" value="{{ now()->timezone('Asia/Jakarta')->format('d M Y') }}" readonly class="w-full px-3.5 py-2 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs text-slate-600 dark:text-slate-300 font-semibold cursor-not-allowed">
                     </div>
+                </div>
+
+                {{-- Info wajib LOA / bukti publish untuk jalur Jurnal (hanya tampil saat jalur Jurnal dipilih) --}}
+                <div x-show="jenisTaSelected === 'jurnal'" x-cloak class="flex items-start gap-2.5 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl">
+                    <span class="text-base shrink-0">⚠️</span>
+                    <p class="text-[11px] text-amber-900 dark:text-amber-300 font-semibold leading-relaxed">
+                        Untuk jalur <strong>Jurnal / Artikel</strong>, wajib melampirkan <strong>LOA (Letter of Acceptance)</strong> atau <strong>bukti publish jurnal</strong> pada file persyaratan (digabung dalam 1 PDF di bawah ini).
+                    </p>
                 </div>
 
                 {{-- File Upload PDF Only --}}
@@ -386,6 +417,14 @@
                                     <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 text-[10px] font-bold rounded-lg {{ $s->jenis_tugas_akhir === 'jurnal' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' }}">
                                         {{ $s->jenis_tugas_akhir === 'jurnal' ? 'Jurnal' : 'Sidang Skripsi' }}
                                     </span>
+                                    @if($s->jenis_tugas_akhir === 'jurnal' && $s->kategori_jurnal)
+                                        <div class="mt-1 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                                            {{ $s->kategori_jurnal }}
+                                            @if($s->link_jurnal)
+                                                · <a href="{{ $s->link_jurnal }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 hover:underline">Lihat Jurnal ↗</a>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="py-3 px-4 text-slate-600 dark:text-slate-400">{{ $s->pembimbingUtama->nama_dosen ?? '-' }}</td>
                                 <td class="py-3 px-4 text-slate-600 dark:text-slate-400 text-xs font-mono">{{ $s->no_wa_aktif ?? '-' }}</td>

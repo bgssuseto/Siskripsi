@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 
 class MahasiswaController extends Controller
 {
@@ -251,7 +252,14 @@ class MahasiswaController extends Controller
         }
 
 
-        // Validate request
+        // Validate request. kategori_jurnal/link_jurnal only make sense for the
+        // SKRIPSI form's jurnal track — jenis_ta_pilihan='jurnal' is also
+        // submitted by the Sempro form (declaring an intended future track),
+        // so this must check jenis_tugas_akhir==='skripsi' too, or a Sempro
+        // registrant declaring "jurnal" would wrongly be forced to fill in a
+        // kategori_jurnal field that doesn't even exist on that form.
+        $isJurnal = $request->input('jenis_tugas_akhir') === 'skripsi'
+            && $request->input('jenis_ta_pilihan') === 'jurnal';
         $validated = $request->validate([
             'nim'                            => ['required', 'string', 'max:30'],
             'jenis_tugas_akhir'              => ['required', 'string', 'in:sempro,skripsi'],
@@ -260,12 +268,16 @@ class MahasiswaController extends Controller
             'dosen_pembimbing_pendamping_id' => ['nullable', 'exists:dosens,id'],
             'no_wa_aktif'                    => ['required', 'string', 'max:20'],
             'jenis_ta_pilihan'               => ['nullable', 'string', 'in:sidang,jurnal'],
+            'kategori_jurnal'                => $isJurnal ? ['required', 'string', Rule::in(Sidang::KATEGORI_JURNAL_OPTIONS)] : ['nullable', 'string'],
+            'link_jurnal'                    => ['nullable', 'url', 'max:500'],
             'file_persyaratan'               => [$isRevision ? 'nullable' : 'required', 'file', 'mimes:pdf', 'max:4096'],
         ], [
             'nim.required'                       => 'NIM wajib diisi.',
             'judul_skripsi.required'             => 'Judul tugas akhir wajib diisi.',
             'dosen_pembimbing_utama_id.required' => 'Dosen Pembimbing Utama wajib dipilih.',
             'no_wa_aktif.required'               => 'Nomor WhatsApp aktif wajib diisi.',
+            'kategori_jurnal.required'           => 'Kategori jurnal wajib dipilih untuk jalur Jurnal / Artikel.',
+            'link_jurnal.url'                    => 'Link jurnal harus berupa URL yang valid.',
             'file_persyaratan.required'          => 'File persyaratan wajib diunggah.',
             'file_persyaratan.mimes'             => 'File persyaratan harus berformat PDF.',
             'file_persyaratan.max'               => 'Ukuran file persyaratan maksimal 4 MB.',
@@ -332,6 +344,12 @@ class MahasiswaController extends Controller
         // untuk skripsi, jalur otomatis mengikuti jenis_tugas_akhir via Sidang::booted().
         $jalurTa = $validated['jenis_tugas_akhir'] === 'sempro' ? $request->input('jenis_ta_pilihan') : null;
 
+        // Null out on any submission that isn't jurnal, so revising a rejected
+        // jurnal registration back into the sidang track doesn't leave stale
+        // kategori/link data behind.
+        $kategoriJurnal = $isJurnal ? $validated['kategori_jurnal'] : null;
+        $linkJurnal     = $isJurnal ? ($validated['link_jurnal'] ?? null) : null;
+
         if ($isRevision) {
             // Overwrite existing record (revise)
             $existing->update([
@@ -343,6 +361,8 @@ class MahasiswaController extends Controller
                 'file_persyaratan'               => $filePath,
                 'jenis_tugas_akhir'              => $actualJenis,
                 'jalur_ta'                       => $jalurTa,
+                'kategori_jurnal'                => $kategoriJurnal,
+                'link_jurnal'                    => $linkJurnal,
                 'verifikasi_status'              => 'menunggu',
                 'verifikasi_komentar'            => null,
                 'verifikasi_tanggal'             => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
@@ -364,6 +384,8 @@ class MahasiswaController extends Controller
                     'dosen_pembimbing_pendamping_id' => $validated['dosen_pembimbing_pendamping_id'] ?? null,
                     'jenis_tugas_akhir'              => $actualJenis,
                     'jalur_ta'                       => $jalurTa,
+                    'kategori_jurnal'                => $kategoriJurnal,
+                    'link_jurnal'                    => $linkJurnal,
                     'periode_id'                     => $activePeriode->id,
                     'tanggal_pendaftaran'            => now()->timezone('Asia/Jakarta')->format('Y-m-d'),
                     'no_wa_aktif'                    => $validated['no_wa_aktif'],

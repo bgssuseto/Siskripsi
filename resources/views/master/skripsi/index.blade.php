@@ -398,6 +398,14 @@
                                         <span class="badge badge-skripsi">Skripsi</span>
                                     @else
                                         <span class="badge badge-jurnal">Jurnal</span>
+                                        @if($item->kategori_jurnal)
+                                            <div class="mt-1 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                                                {{ $item->kategori_jurnal }}
+                                                @if($item->link_jurnal)
+                                                    · <a href="{{ $item->link_jurnal }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 hover:underline">Link ↗</a>
+                                                @endif
+                                            </div>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="text-right space-x-1 whitespace-nowrap">
@@ -408,6 +416,8 @@
                                             'nama_mahasiswa'                 => $item->nama_mahasiswa,
                                             'judul_skripsi'                  => $item->judul_skripsi,
                                             'jenis_tugas_akhir'              => $item->jenis_tugas_akhir,
+                                            'kategori_jurnal'                => $item->kategori_jurnal,
+                                            'link_jurnal'                    => $item->link_jurnal,
                                             'periode_id'                     => $item->periode_id,
                                             'tanggal_pendaftaran'            => $item->tanggal_pendaftaran?->format('Y-m-d'),
                                             'dosen_pembimbing_utama_id'      => $item->dosen_pembimbing_utama_id,
@@ -488,7 +498,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Jenis <span style="color:red">*</span></label>
-                                <select name="jenis_tugas_akhir" class="form-control" required>
+                                <select name="jenis_tugas_akhir" class="form-control" required onchange="toggleJurnalFields('tambah', this.value)">
                                     <option value="skripsi">Skripsi</option>
                                     <option value="jurnal">Jurnal / Artikel</option>
                                 </select>
@@ -501,6 +511,21 @@
                         <div class="form-group mt-3">
                             <label>Judul Skripsi / TA <span style="color:red">*</span></label>
                             <textarea name="judul_skripsi" class="form-control" required placeholder="Judul skripsi / tugas akhir"></textarea>
+                        </div>
+                        <div id="tambah-jurnal-fields" class="form-grid-2 mt-3" style="display:none;">
+                            <div class="form-group">
+                                <label>Kategori Jurnal <span style="color:red">*</span></label>
+                                <select name="kategori_jurnal" class="form-control">
+                                    <option value="">-- Pilih Kategori --</option>
+                                    @foreach(\App\Models\Sidang::KATEGORI_JURNAL_OPTIONS as $kat)
+                                        <option value="{{ $kat }}">{{ $kat }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Link Jurnal <span class="text-[10px] text-slate-400 font-normal">(jika sudah terbit)</span></label>
+                                <input type="url" name="link_jurnal" class="form-control" placeholder="https://...">
+                            </div>
                         </div>
                         <div class="form-grid-2 mt-3">
                             <div class="form-group">
@@ -599,7 +624,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Jenis <span style="color:red">*</span></label>
-                                <select name="jenis_tugas_akhir" id="edit-jenis" class="form-control" required>
+                                <select name="jenis_tugas_akhir" id="edit-jenis" class="form-control" required onchange="toggleJurnalFields('edit', this.value)">
                                     <option value="skripsi">Skripsi</option>
                                     <option value="jurnal">Jurnal / Artikel</option>
                                 </select>
@@ -612,6 +637,21 @@
                         <div class="form-group mt-3">
                             <label>Judul Skripsi / TA <span style="color:red">*</span></label>
                             <textarea name="judul_skripsi" id="edit-judul" class="form-control" required></textarea>
+                        </div>
+                        <div id="edit-jurnal-fields" class="form-grid-2 mt-3" style="display:none;">
+                            <div class="form-group">
+                                <label>Kategori Jurnal <span style="color:red">*</span></label>
+                                <select name="kategori_jurnal" id="edit-kategori-jurnal" class="form-control">
+                                    <option value="">-- Pilih Kategori --</option>
+                                    @foreach(\App\Models\Sidang::KATEGORI_JURNAL_OPTIONS as $kat)
+                                        <option value="{{ $kat }}">{{ $kat }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Link Jurnal <span class="text-[10px] text-slate-400 font-normal">(jika sudah terbit)</span></label>
+                                <input type="url" name="link_jurnal" id="edit-link-jurnal" class="form-control" placeholder="https://...">
+                            </div>
                         </div>
                         <div class="form-grid-2 mt-3">
                             <div class="form-group">
@@ -951,6 +991,9 @@
             document.getElementById('edit-judul').value = data.judul_skripsi || '';
             document.getElementById('edit-jenis').value = data.jenis_tugas_akhir || 'skripsi';
             document.getElementById('edit-tgl-daftar').value = data.tanggal_pendaftaran || '';
+            document.getElementById('edit-link-jurnal').value = data.link_jurnal || '';
+            setSelect('edit-kategori-jurnal', data.kategori_jurnal);
+            toggleJurnalFields('edit', data.jenis_tugas_akhir || 'skripsi');
             setSelect('edit-periode',           data.periode_id);
             setSelect('edit-dosbing-utama',     data.dosen_pembimbing_utama_id);
             setSelect('edit-dosbing-pendamping',data.dosen_pembimbing_pendamping_id);
@@ -963,6 +1006,17 @@
         function setSelect(id, val) {
             const el = document.getElementById(id);
             if (el) el.value = val || '';
+        }
+
+        // Kategori/Link Jurnal cuma relevan untuk jenis 'jurnal' — sembunyikan &
+        // kosongkan kategori (biar tidak ikut submit) saat jenisnya 'skripsi'.
+        function toggleJurnalFields(prefix, jenis) {
+            const wrap = document.getElementById(prefix + '-jurnal-fields');
+            if (!wrap) return;
+            const isJurnal = jenis === 'jurnal';
+            wrap.style.display = isJurnal ? '' : 'none';
+            const kategoriSelect = wrap.querySelector('select[name="kategori_jurnal"]');
+            if (kategoriSelect) kategoriSelect.required = isJurnal;
         }
 
         // ── Edit Data (AJAX) ──────────────────────────────────────────────────

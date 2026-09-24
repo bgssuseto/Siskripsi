@@ -16,6 +16,16 @@ class Sidang extends Model
      */
     public const SKRIPSI_BUCKET = ['skripsi', 'sidang', 'jurnal'];
 
+    /**
+     * Kategori jurnal yang bisa dipilih mahasiswa saat mendaftar jalur jurnal —
+     * target/tingkat publikasi, bukan status terbit (itu ditandai lewat link_jurnal).
+     */
+    public const KATEGORI_JURNAL_OPTIONS = [
+        'Sinta 1', 'Sinta 2', 'Sinta 3', 'Sinta 4',
+        'Q1', 'Q2', 'Q3', 'Q4',
+        'Seminar Internasional', 'Lainnya',
+    ];
+
     protected $table = 'sidangs';
 
     protected $fillable = [
@@ -35,6 +45,8 @@ class Sidang extends Model
         'jam',
         'jenis_tugas_akhir',
         'jalur_ta',
+        'kategori_jurnal',
+        'link_jurnal',
         'verifikasi_status',
         'verifikasi_komentar',
         'verifikasi_tanggal',

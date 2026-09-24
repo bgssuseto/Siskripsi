@@ -15,6 +15,7 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class SkripsiController extends Controller
 {
@@ -870,6 +871,10 @@ class SkripsiController extends Controller
             'tanggal_pendaftaran'            => ['nullable', 'date'],
             'jam'                            => ['nullable', 'string', 'max:100'],
             'jenis_tugas_akhir'              => ['required', 'in:skripsi,jurnal'],
+            'kategori_jurnal'                => [$request->input('jenis_tugas_akhir') === 'jurnal' ? 'required' : 'nullable', 'string', Rule::in(Sidang::KATEGORI_JURNAL_OPTIONS)],
+            'link_jurnal'                    => ['nullable', 'url', 'max:500'],
+        ], [
+            'kategori_jurnal.required' => 'Kategori jurnal wajib dipilih untuk jenis Jurnal.',
         ]);
 
         // 1. Check business rules (Pembimbing Utama wajib jadi Penguji 2, Pendamping tidak boleh menguji)
@@ -914,6 +919,11 @@ class SkripsiController extends Controller
             $validated['periode_id'] = $activePeriode ? $activePeriode->id : null;
         }
 
+        if ($validated['jenis_tugas_akhir'] !== 'jurnal') {
+            $validated['kategori_jurnal'] = null;
+            $validated['link_jurnal'] = null;
+        }
+
         $validated['verifikasi_status'] = 'disetujui';
         $sidang = Sidang::create($validated);
 
@@ -951,6 +961,10 @@ class SkripsiController extends Controller
             'tanggal_pendaftaran'            => ['nullable', 'date'],
             'jam'                            => ['nullable', 'string', 'max:100'],
             'jenis_tugas_akhir'              => ['required', 'in:skripsi,jurnal'],
+            'kategori_jurnal'                => [$request->input('jenis_tugas_akhir') === 'jurnal' ? 'required' : 'nullable', 'string', Rule::in(Sidang::KATEGORI_JURNAL_OPTIONS)],
+            'link_jurnal'                    => ['nullable', 'url', 'max:500'],
+        ], [
+            'kategori_jurnal.required' => 'Kategori jurnal wajib dipilih untuk jenis Jurnal.',
         ]);
 
         // 1. Check business rules
@@ -975,6 +989,11 @@ class SkripsiController extends Controller
                 ], 422);
             }
             return back()->withInput()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
+        }
+
+        if ($validated['jenis_tugas_akhir'] !== 'jurnal') {
+            $validated['kategori_jurnal'] = null;
+            $validated['link_jurnal'] = null;
         }
 
         $sidang->update($validated);
