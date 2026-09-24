@@ -267,24 +267,33 @@
     }">
 
         {{-- Top Header --}}
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Jadwal Sempro</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Penjadwalan seminar proposal mahasiswa.</p>
-            </div>
-            <div class="flex items-center gap-3 flex-wrap">
-                @if(Auth::user()->isSuperAdmin())
-                    <a href="{{ route('jadwal.semua.index') }}" class="btn btn-outline btn-sm">
-                        📅 Lihat Semua Jadwal
-                    </a>
-                @endif
-                <div class="view-toggle">
-                    <button class="view-toggle-btn" :class="{ 'active': currentView === 'table' }" @click="currentView = 'table'">
-                        📋 Tabel
-                    </button>
-                    <button class="view-toggle-btn" :class="{ 'active': currentView === 'calendar' }" @click="currentView = 'calendar'; $nextTick(() => initCalendar())">
-                        📅 Kalender
-                    </button>
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
+            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Modul Penjadwalan Sempro
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Jadwal Sempro</h1>
+                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">Penjadwalan seminar proposal mahasiswa.</p>
+                </div>
+                <div class="flex items-center gap-3 flex-wrap">
+                    @if(Auth::user()->isSuperAdmin())
+                        <a href="{{ route('jadwal.semua.index') }}" class="btn btn-outline btn-sm">
+                            📅 Lihat Semua Jadwal
+                        </a>
+                    @endif
+                    <div class="view-toggle">
+                        <button class="view-toggle-btn" :class="{ 'active': currentView === 'table' }" @click="currentView = 'table'">
+                            📋 Tabel
+                        </button>
+                        <button class="view-toggle-btn" :class="{ 'active': currentView === 'calendar' }" @click="currentView = 'calendar'; $nextTick(() => initCalendar())">
+                            📅 Kalender
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -376,8 +385,8 @@
         {{-- TAMPILAN TABEL --}}
         <div x-show="currentView === 'table'" class="space-y-4">
             {{-- Bulk Action Bar --}}
-            <div x-show="selectedIds.length > 0" x-cloak class="flex items-center justify-between gap-3 bg-violet-50 border border-violet-200 rounded-2xl p-3.5">
-                <span class="text-xs font-bold text-violet-800" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
+            <div x-show="selectedIds.length > 0" x-cloak class="flex items-center justify-between gap-3 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 rounded-2xl p-3.5">
+                <span class="text-xs font-bold text-violet-800 dark:text-violet-300" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
                 <div class="flex items-center gap-2">
                     <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm">📅 Jadwalkan Terpilih (Otomatis)</button>
                     <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot Manual (Massal)</button>
@@ -417,25 +426,25 @@
                                             <input type="checkbox" x-model="selectedIds" value="{{ $item->id }}">
                                         @endif
                                     </td>
-                                    <td style="text-align:center; color:#475569; vertical-align: middle;">
+                                    <td style="text-align:center; vertical-align: middle;" class="text-slate-600 dark:text-slate-400">
                                         <div class="flex flex-col items-center justify-center">
                                             <span class="font-bold text-xs">{{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}</span>
                                             @if($hasConflict)
-                                                <span class="text-red-600 text-xs" title="Bentrok Jadwal">⚠️</span>
+                                                <span class="text-red-600 dark:text-red-400 text-xs" title="Bentrok Jadwal">⚠️</span>
                                             @endif
                                         </div>
                                     </td>
                                     <td>
                                         @if($item->tanggal_pendaftaran)
-                                            <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md whitespace-nowrap">
+                                            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md whitespace-nowrap">
                                                 {{ $item->tanggal_pendaftaran->format('d/m/Y') }}
                                             </span>
                                         @else
-                                            <span style="color:#cbd5e1;">—</span>
+                                            <span class="text-slate-300 dark:text-slate-600">—</span>
                                         @endif
                                     </td>
                                     <td><span class="nim-pill">{{ $item->nim }}</span></td>
-                                        <td style="font-weight:600; color:#1e293b; min-width:160px;">
+                                        <td style="min-width:160px;" class="font-semibold text-slate-900 dark:text-slate-100">
                                             <div class="text-slate-900 dark:text-slate-100 font-extrabold">{{ $item->nama_mahasiswa }}</div>
                                             @if($hasConflict)
                                                 <div class="mt-1">
@@ -459,7 +468,7 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td><span class="text-xs font-semibold text-slate-500">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
+                                    <td><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                     <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                     <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                     <td class="schedule-cell">
@@ -467,7 +476,7 @@
                                             <div class="schedule-hari">{{ $item->tanggal->locale('id')->translatedFormat('l, d F Y') }}</div>
                                             <div class="schedule-jam">{{ $item->jam ?: '—' }}</div>
                                         @else
-                                            <span style="color:#cbd5e1;">—</span>
+                                            <span class="text-slate-300 dark:text-slate-600">—</span>
                                         @endif
                                     </td>
                                     <td>
@@ -477,7 +486,7 @@
                                                 {{ $item->ruang->kode_ruangan }}
                                             </span>
                                         @else
-                                            <span style="color:#cbd5e1;">—</span>
+                                            <span class="text-slate-300 dark:text-slate-600">—</span>
                                         @endif
                                     </td>
                                     <td class="text-right space-x-1 whitespace-nowrap">
@@ -510,8 +519,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="14" class="py-12 text-center text-slate-400">
-                                        <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    <td colspan="14" class="py-12 text-center text-slate-400 dark:text-slate-500">
+                                        <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                         <h3>Belum ada data sempro</h3>
                                         <p style="font-size:.85rem;">Import Excel di menu Data Sempro terlebih dahulu.</p>
                                     </td>
@@ -550,9 +559,9 @@
                         <span>⚠️</span>
                         <span id="form-jadwalkan-alert-text"></span>
                     </div>
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl mb-4 text-xs">
-                        <div class="font-bold text-slate-800 text-sm" id="jadwalkan-mhs-nama"></div>
-                        <div class="text-slate-500 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
+                    <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl mb-4 text-xs">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 text-sm" id="jadwalkan-mhs-nama"></div>
+                        <div class="text-slate-500 dark:text-slate-400 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
                     </div>
 
                     {{-- Info Box Kesediaan Menguji Dosen: awalnya tampilkan semua slot, otomatis
@@ -569,12 +578,12 @@
                             </div>
                             <div class="max-h-32 overflow-y-auto space-y-1.5 pr-1" id="kesediaan-info-list">
                                 @foreach($kesediaanDosens as $kd)
-                                    <div class="flex items-center justify-between bg-white border border-emerald-100 rounded-xl p-2 text-[11px]">
+                                    <div class="flex items-center justify-between bg-white dark:bg-slate-800 border border-emerald-100 dark:border-emerald-800 rounded-xl p-2 text-[11px]">
                                         <div>
-                                            <strong class="text-slate-800">{{ $kd->dosen->nama_dosen ?? 'Dosen' }}</strong>
-                                            <span class="text-indigo-700 font-bold ml-1">({{ \Carbon\Carbon::parse($kd->tanggal)->locale('id')->translatedFormat('l, d F Y') }})</span>
+                                            <strong class="text-slate-800 dark:text-slate-100">{{ $kd->dosen->nama_dosen ?? 'Dosen' }}</strong>
+                                            <span class="text-indigo-700 dark:text-indigo-400 font-bold ml-1">({{ \Carbon\Carbon::parse($kd->tanggal)->locale('id')->translatedFormat('l, d F Y') }})</span>
                                         </div>
-                                        <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                        <div class="font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
                                             ⏰ {{ $kd->jam_mulai }} - {{ $kd->jam_selesai }} WIB
                                         </div>
                                     </div>
@@ -600,11 +609,11 @@
                         <div class="form-section-title">Waktu & Tempat Sempro</div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
                                 <input type="date" name="tanggal" id="jadwalkan-tanggal" class="form-control text-xs p-2.5" required onchange="refreshKesediaanInfo()">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai *</label>
                                 <select name="jam_mulai" id="jadwalkan-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -612,7 +621,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Selesai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Selesai *</label>
                                 <select name="jam_selesai" id="jadwalkan-jam-selesai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -621,7 +630,7 @@
                             </div>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Keterangan (Opsional)</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan / Keterangan (Opsional)</label>
                             <input type="text" name="keterangan" id="jadwalkan-keterangan" placeholder="Catatan tambahan..." class="form-control text-xs p-2.5">
                         </div>
                         <div class="form-group mt-3">
@@ -661,11 +670,11 @@
                     <div class="form-section-title">Waktu &amp; Tempat Sempro</div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
                             <input type="date" id="bulk-tanggal" class="form-control text-xs p-2.5" required>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai (Sesi 1) *</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai (Sesi 1) *</label>
                             <select id="bulk-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
                                 @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00'] as $t)
                                     <option value="{{ $t }}">{{ $t }}</option>
@@ -673,7 +682,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Durasi per Sesi *</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Durasi per Sesi *</label>
                             <select id="bulk-durasi" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
                                 <option value="30">30 menit</option>
                                 <option value="60" selected>60 menit</option>
@@ -771,11 +780,11 @@
                         <div class="form-section-title">Jadwal & Ruangan</div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
                                 <input type="date" name="tanggal" id="edit-tanggal" class="form-control text-xs p-2.5">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai *</label>
                                 <select name="jam_mulai" id="edit-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -783,7 +792,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Selesai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Selesai *</label>
                                 <select name="jam_selesai" id="edit-jam-selesai" class="form-control text-xs p-2.5 bg-white cursor-pointer">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -792,7 +801,7 @@
                             </div>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Keterangan (Opsional)</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan / Keterangan (Opsional)</label>
                             <input type="text" name="keterangan" id="edit-keterangan" placeholder="Catatan tambahan..." class="form-control text-xs p-2.5">
                         </div>
                         <div class="form-grid-2">
@@ -824,9 +833,9 @@
     <div id="modal-hapus" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-hapus')">
         <div class="modal-box modal-sm text-center">
             <div class="modal-body pt-6">
-                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 text-xl">⚠️</div>
-                <h3 class="text-base font-bold text-slate-800">Hapus Data Sempro?</h3>
-                <p class="text-xs text-slate-500 mt-1">Anda yakin ingin menghapus data sempro <strong id="hapus-nama"></strong>?</p>
+                <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-3 text-xl">⚠️</div>
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Hapus Data Sempro?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Anda yakin ingin menghapus data sempro <strong id="hapus-nama"></strong>?</p>
             </div>
             <form method="POST" id="form-hapus">
                 @csrf @method('DELETE')

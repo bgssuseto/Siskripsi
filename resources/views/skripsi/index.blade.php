@@ -411,31 +411,40 @@
 
 
         {{-- Page header --}}
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Jadwal Sidang Skripsi</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Plotting, kelola jadwal, dan visualisasikan sidang skripsi mahasiswa.</p>
-            </div>
-            
-            <div class="flex items-center gap-3 flex-wrap">
-                @if(Auth::user()->isSuperAdmin())
-                    <a href="{{ route('jadwal.semua.index') }}" class="btn btn-outline btn-sm">
-                        📅 Lihat Semua Jadwal
-                    </a>
-                @endif
-                @if(($scheduleConflictCount ?? 0) > 0 || ($ruleViolationCount ?? 0) > 0)
-                    <a href="{{ route('jadwal-ujian.export-bentrok') }}" class="btn btn-danger btn-sm">
-                        ⚠️ Export Jadwal Bentrok
-                    </a>
-                @endif
-                {{-- View Toggle --}}
-                <div class="view-toggle">
-                    <button @click="currentView = 'table'" :class="currentView === 'table' ? 'active' : ''" class="view-toggle-btn">
-                        📋 Tabel
-                    </button>
-                    <button @click="currentView = 'calendar'; $nextTick(() => initCalendar())" :class="currentView === 'calendar' ? 'active' : ''" class="view-toggle-btn">
-                        📅 Kalender
-                    </button>
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-6">
+            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Modul Penjadwalan Sidang Skripsi
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Jadwal Sidang Skripsi</h1>
+                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">Plotting, kelola jadwal, dan visualisasikan sidang skripsi mahasiswa.</p>
+                </div>
+
+                <div class="flex items-center gap-3 flex-wrap shrink-0">
+                    @if(Auth::user()->isSuperAdmin())
+                        <a href="{{ route('jadwal.semua.index') }}" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-md font-semibold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer">
+                            📅 Lihat Semua Jadwal
+                        </a>
+                    @endif
+                    @if(($scheduleConflictCount ?? 0) > 0 || ($ruleViolationCount ?? 0) > 0)
+                        <a href="{{ route('jadwal-ujian.export-bentrok') }}" class="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg cursor-pointer">
+                            ⚠️ Export Jadwal Bentrok
+                        </a>
+                    @endif
+                    {{-- View Toggle --}}
+                    <div class="view-toggle">
+                        <button @click="currentView = 'table'" :class="currentView === 'table' ? 'active' : ''" class="view-toggle-btn">
+                            📋 Tabel
+                        </button>
+                        <button @click="currentView = 'calendar'; $nextTick(() => initCalendar())" :class="currentView === 'calendar' ? 'active' : ''" class="view-toggle-btn">
+                            📅 Kalender
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -557,8 +566,8 @@
             </form>
 
             {{-- Bulk Action Bar --}}
-            <div x-show="selectedIds.length > 0" x-cloak class="flex items-center justify-between gap-3 bg-violet-50 border border-violet-200 rounded-2xl p-3.5">
-                <span class="text-xs font-bold text-violet-800" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
+            <div x-show="selectedIds.length > 0" x-cloak class="flex items-center justify-between gap-3 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 rounded-2xl p-3.5">
+                <span class="text-xs font-bold text-violet-800 dark:text-violet-300" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
                 <div class="flex items-center gap-2">
                     <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm">📅 Jadwalkan Terpilih (Otomatis)</button>
                     <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot Manual (Massal)</button>
@@ -609,15 +618,15 @@
                                         <div class="flex flex-col items-center justify-center">
                                             <span class="font-bold text-xs">{{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}</span>
                                             @if($hasSchedule)
-                                                <span class="text-red-600 text-xs" title="Bentrok Jadwal">⚠️</span>
+                                                <span class="text-red-600 dark:text-red-400 text-xs" title="Bentrok Jadwal">⚠️</span>
                                             @elseif($hasRuleViolation)
-                                                <span class="text-orange-500 text-xs" title="Pelanggaran Aturan">❌</span>
+                                                <span class="text-orange-500 dark:text-orange-400 text-xs" title="Pelanggaran Aturan">❌</span>
                                             @endif
                                         </div>
                                     </td>
                                     <td>
                                         @if($item->tanggal_pendaftaran)
-                                            <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md whitespace-nowrap">
+                                            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/60 px-2 py-1 rounded-md whitespace-nowrap">
                                                 {{ $item->tanggal_pendaftaran->format('d/m/Y') }}
                                             </span>
                                         @else
@@ -661,7 +670,7 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td><span class="text-xs font-semibold text-slate-500">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
+                                    <td><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                     <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                     <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                     <td><span class="dosen-chip ketua {{ $hasSchedule && in_array($item->ketua_penguji_id, array_column(array_filter(($conflictMap[$item->id]['schedule'] ?? []), fn($m) => str_contains($m,'Ketua')), 0)) ? 'ring-1 ring-red-400' : '' }}">{{ $item->ketuaPenguji ? $item->ketuaPenguji->nama_dosen : '—' }}</span></td>
@@ -725,8 +734,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="17" class="py-12 text-center text-slate-400">
-                                        <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    <td colspan="17" class="py-12 text-center text-slate-400 dark:text-slate-500">
+                                        <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                         <h3>Belum ada data skripsi</h3>
                                         <p style="font-size:.85rem;">Import Excel atau tambah data secara manual.</p>
                                         <div class="flex gap-3 justify-center mt-4">
@@ -826,7 +835,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="ketua_penguji_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -835,7 +844,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="anggota_penguji_1_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -910,26 +919,26 @@
                     </div>
                     {{-- Dynamic Conflict Warning Box: 2 sections --}}
                     <div id="edit-conflict-schedule-box"
-                         class="mb-3 rounded-xl border border-red-200 bg-red-50 p-3.5"
+                         class="mb-3 rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/30 p-3.5"
                          style="display:none;">
                         <div class="flex items-start gap-2">
                             <span class="text-base">⚠️</span>
                             <div class="flex-1">
-                                <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 mb-1.5">Bentrok Jadwal</strong>
-                                <ul id="edit-conflict-schedule-list" class="list-disc list-inside space-y-1 text-xs font-medium text-red-800"></ul>
-                                <p class="mt-2 text-[11px] italic text-red-600">* Sesuaikan Jam, Ruangan, atau Penguji agar bentrok hilang.</p>
+                                <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 mb-1.5">Bentrok Jadwal</strong>
+                                <ul id="edit-conflict-schedule-list" class="list-disc list-inside space-y-1 text-xs font-medium text-red-800 dark:text-red-300"></ul>
+                                <p class="mt-2 text-[11px] italic text-red-600 dark:text-red-400">* Sesuaikan Jam, Ruangan, atau Penguji agar bentrok hilang.</p>
                             </div>
                         </div>
                     </div>
                     <div id="edit-conflict-rules-box"
-                         class="mb-3 rounded-xl border border-orange-200 bg-orange-50 p-3.5"
+                         class="mb-3 rounded-xl border border-orange-200 dark:border-orange-800/60 bg-orange-50 dark:bg-orange-950/30 p-3.5"
                          style="display:none;">
                         <div class="flex items-start gap-2">
                             <span class="text-base">❌</span>
                             <div class="flex-1">
-                                <strong class="block text-xs font-bold uppercase tracking-wider text-orange-700 mb-1.5">Pelanggaran Aturan Skripsi</strong>
-                                <ul id="edit-conflict-rules-list" class="list-disc list-inside space-y-1 text-xs font-medium text-orange-800"></ul>
-                                <p class="mt-2 text-[11px] italic text-orange-600">* Aturan: (1) Pembimbing Utama wajib menjadi Penguji 2. (2) Pembimbing Pendamping tidak boleh menguji.</p>
+                                <strong class="block text-xs font-bold uppercase tracking-wider text-orange-700 dark:text-orange-400 mb-1.5">Pelanggaran Aturan Skripsi</strong>
+                                <ul id="edit-conflict-rules-list" class="list-disc list-inside space-y-1 text-xs font-medium text-orange-800 dark:text-orange-300"></ul>
+                                <p class="mt-2 text-[11px] italic text-orange-600 dark:text-orange-400">* Aturan: (1) Pembimbing Utama wajib menjadi Penguji 2. (2) Pembimbing Pendamping tidak boleh menguji.</p>
                             </div>
                         </div>
                     </div>
@@ -988,7 +997,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="ketua_penguji_id" id="edit-ketua" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -997,7 +1006,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="anggota_penguji_1_id" id="edit-penguji1" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -1021,11 +1030,11 @@
                         <div class="form-section-title">Jadwal & Ruangan</div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
                                 <input type="date" name="tanggal" id="edit-tanggal" class="form-control text-xs p-2.5">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai *</label>
                                 <select name="jam_mulai" id="edit-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -1033,7 +1042,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Selesai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Selesai *</label>
                                 <select name="jam_selesai" id="edit-jam-selesai" class="form-control text-xs p-2.5 bg-white cursor-pointer">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -1042,7 +1051,7 @@
                             </div>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Keterangan (Opsional)</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan / Keterangan (Opsional)</label>
                             <input type="text" name="keterangan" id="edit-keterangan" placeholder="Catatan tambahan..." class="form-control text-xs p-2.5">
                         </div>
                         <div class="form-grid-2">
@@ -1121,62 +1130,62 @@
     {{-- ════════════════════════════════════════════════════════════════ --}}
     <div id="modal-detail" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-detail')">
         <div class="modal-box">
-            <div class="modal-header bg-slate-50 border-b border-slate-100">
+            <div class="modal-header bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                 <span class="modal-title font-bold">📄 Detail Jadwal Skripsi</span>
                 <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
             </div>
             <div class="modal-body space-y-4">
-                <div id="detail-conflict-box" class="rounded-xl border border-red-200 bg-red-50 p-3.5" style="display:none;">
+                <div id="detail-conflict-box" class="rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/30 p-3.5" style="display:none;">
                     <div class="flex items-start gap-2">
                         <span class="text-base">⚠️</span>
                         <div class="flex-1">
-                            <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 mb-1">Masalah Jadwal / Pelanggaran Aturan</strong>
-                            <div id="detail-conflict-text" class="text-xs font-semibold text-red-800 leading-snug"></div>
+                            <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 mb-1">Masalah Jadwal / Pelanggaran Aturan</strong>
+                            <div id="detail-conflict-text" class="text-xs font-semibold text-red-800 dark:text-red-300 leading-snug"></div>
                         </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Jenis Ujian</span>
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jenis Ujian</span>
                     <span class="col-span-2"><span id="detail-jenis" class="badge"></span></span>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">NIM / Nama</span>
-                    <span class="col-span-2 text-slate-800 font-semibold"><span id="detail-nim" class="nim-pill"></span> <span id="detail-nama" class="ml-1"></span></span>
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">NIM / Nama</span>
+                    <span class="col-span-2 text-slate-800 dark:text-slate-100 font-semibold"><span id="detail-nim" class="nim-pill"></span> <span id="detail-nama" class="ml-1"></span></span>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Judul Skripsi</span>
-                    <span class="col-span-2 text-slate-700 text-sm leading-relaxed" id="detail-judul"></span>
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Judul Skripsi</span>
+                    <span class="col-span-2 text-slate-700 dark:text-slate-300 text-sm leading-relaxed" id="detail-judul"></span>
                 </div>
-                
-                <hr class="border-slate-100">
-                
-                <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pembimbing</span>
-                    <div class="col-span-2 space-y-1">
-                        <div><span class="text-xs font-semibold text-slate-400">Utama:</span> <span id="detail-dosbing" class="text-slate-800 font-medium"></span></div>
-                        <div><span class="text-xs font-semibold text-slate-400">Pendamping:</span> <span id="detail-dosbing-p" class="text-slate-800 font-medium"></span></div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Penguji</span>
-                    <div class="col-span-2 space-y-1">
-                        <div><span class="text-xs font-semibold text-slate-400">Ketua:</span> <span id="detail-ketua" class="text-slate-800 font-medium"></span></div>
-                        <div><span class="text-xs font-semibold text-slate-400">Anggota 1:</span> <span id="detail-penguji1" class="text-slate-800 font-medium"></span></div>
-                        <div><span class="text-xs font-semibold text-slate-400">Anggota 2:</span> <span id="detail-penguji2" class="text-slate-800 font-medium"></span></div>
-                    </div>
-                </div>
-                
-                <hr class="border-slate-100">
+
+                <hr class="border-slate-100 dark:border-slate-700">
 
                 <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Jadwal & Ruang</span>
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pembimbing</span>
                     <div class="col-span-2 space-y-1">
-                        <div class="text-slate-800 font-semibold" id="detail-jadwal"></div>
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Utama:</span> <span id="detail-dosbing" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Pendamping:</span> <span id="detail-dosbing-p" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Penguji</span>
+                    <div class="col-span-2 space-y-1">
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Ketua:</span> <span id="detail-ketua" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Anggota 1:</span> <span id="detail-penguji1" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Anggota 2:</span> <span id="detail-penguji2" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100 dark:border-slate-700">
+
+                <div class="grid grid-cols-3 gap-2">
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jadwal & Ruang</span>
+                    <div class="col-span-2 space-y-1">
+                        <div class="text-slate-800 dark:text-slate-200 font-semibold" id="detail-jadwal"></div>
                         <div><span class="schedule-ruang" id="detail-ruang"></span></div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer bg-slate-50 border-t border-slate-100">
+            <div class="modal-footer bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
                 <button type="button" class="btn btn-outline" onclick="closeModal('modal-detail')">Tutup</button>
                 <button type="button" class="btn btn-primary" onclick="openEditFromDetail()">✏️ Edit Ruangan / Penguji / Jam</button>
             </div>
@@ -1200,9 +1209,9 @@
                         <span id="form-jadwalkan-alert-text"></span>
                     </div>
                     <input type="hidden" id="jadwalkan-sidang-id">
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl mb-4 text-xs">
-                        <div class="font-bold text-slate-800 text-sm" id="jadwalkan-mhs-nama"></div>
-                        <div class="text-slate-500 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
+                    <div class="p-3.5 bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-600 rounded-xl mb-4 text-xs">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 text-sm" id="jadwalkan-mhs-nama"></div>
+                        <div class="text-slate-500 dark:text-slate-400 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
                     </div>
 
                     {{-- Info Box Kesediaan Menguji Dosen: awalnya tampilkan semua slot, otomatis
@@ -1250,12 +1259,12 @@
                         <div class="form-section-title">Waktu & Tempat Sidang</div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
                                 <input type="date" name="tanggal" id="jadwalkan-tanggal" class="form-control text-xs p-2.5" required onchange="refreshPengujiAvailability()">
-                                <p class="text-[10px] text-emerald-600 font-semibold mt-1" id="jadwalkan-tanggal-hint"></p>
+                                <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1" id="jadwalkan-tanggal-hint"></p>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai *</label>
                                 <select name="jam_mulai" id="jadwalkan-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required onchange="refreshPengujiAvailability()">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -1263,7 +1272,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Selesai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Selesai *</label>
                                 <select name="jam_selesai" id="jadwalkan-jam-selesai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required onchange="refreshPengujiAvailability()">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -1272,7 +1281,7 @@
                             </div>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Keterangan (Opsional)</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan / Keterangan (Opsional)</label>
                             <input type="text" name="keterangan" id="jadwalkan-keterangan" placeholder="Catatan tambahan..." class="form-control text-xs p-2.5">
                         </div>
                         <div class="form-group mt-3">
@@ -1297,7 +1306,7 @@
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-[10px] text-rose-600 font-bold mt-1" id="jadwalkan-ketua-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
+                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-ketua-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                             </div>
                             <div class="form-group">
                                 <label>Penguji 1 <span style="color:red">*</span></label>
@@ -1307,13 +1316,13 @@
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-[10px] text-rose-600 font-bold mt-1" id="jadwalkan-penguji1-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
+                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji1-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                             </div>
                             <div class="form-group">
                                 <label>Penguji 2 (Otomatis)</label>
-                                <div class="form-control text-xs p-2.5 bg-slate-100 text-slate-600 font-semibold" id="jadwalkan-penguji2-display">—</div>
-                                <p class="text-[10px] text-slate-400 font-semibold mt-1">Otomatis diisi Pembimbing Utama sesuai aturan komposisi penguji.</p>
-                                <p class="text-[10px] text-rose-600 font-bold mt-1" id="jadwalkan-penguji2-warning" style="display:none;">⚠️ Pembimbing Utama belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
+                                <div class="form-control text-xs p-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold" id="jadwalkan-penguji2-display">—</div>
+                                <p class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Otomatis diisi Pembimbing Utama sesuai aturan komposisi penguji.</p>
+                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji2-warning" style="display:none;">⚠️ Pembimbing Utama belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                                 <input type="hidden" name="anggota_penguji_2_id" id="jadwalkan-penguji2">
                             </div>
                         </div>
@@ -1347,11 +1356,11 @@
                     <div class="form-section-title">Waktu &amp; Tempat Sidang</div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
                             <input type="date" id="bulk-tanggal" class="form-control text-xs p-2.5" required>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai (Sesi 1) *</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai (Sesi 1) *</label>
                             <select id="bulk-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
                                 @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00'] as $t)
                                     <option value="{{ $t }}">{{ $t }}</option>
@@ -1359,7 +1368,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Durasi per Sesi *</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Durasi per Sesi *</label>
                             <select id="bulk-durasi" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
                                 <option value="30">30 menit</option>
                                 <option value="60" selected>60 menit</option>
@@ -1401,7 +1410,7 @@
                             </select>
                         </div>
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-1">Penguji 2 otomatis = Pembimbing Utama masing-masing mahasiswa (bisa berbeda per mahasiswa).</p>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Penguji 2 otomatis = Pembimbing Utama masing-masing mahasiswa (bisa berbeda per mahasiswa).</p>
                 </div>
 
                 <div id="bulk-jadwalkan-result" class="mt-2 text-xs"></div>
