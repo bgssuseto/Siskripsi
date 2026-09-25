@@ -1,18 +1,5 @@
 <x-app-layout title="Daftar Skripsi">
-<div class="max-w-7xl mx-auto p-6 space-y-6" x-data="{
-    regModal: false,
-    jenisTaSelected: '{{ $mySidang && $mySidang->jenis_tugas_akhir === 'jurnal' ? 'jurnal' : ($mySidang && $mySidang->jenis_tugas_akhir === 'sidang' ? 'sidang' : '') }}'
-}">
-    <div class="bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-extrabold mb-1">Pendaftaran Sidang Skripsi</h1>
-            <p class="text-xs text-purple-200">Kelola riwayat dan pendaftaran Sidang Skripsi Tugas Akhir Anda.</p>
-        </div>
-        <span class="px-3.5 py-1.5 bg-purple-500/30 border border-purple-400/30 text-purple-200 text-xs font-bold rounded-xl">
-            Sidang Skripsi
-        </span>
-    </div>
-
+{{-- Harus di paling atas: $mySidang dipakai oleh x-data elemen pembungkus di bawah. --}}
 @php
     $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
     $activeWave = null;
@@ -31,6 +18,19 @@
         ? $sidangs->where('periode_id', $activePeriode->id)->first()
         : null;
 @endphp
+<div class="max-w-7xl mx-auto p-6 space-y-6" x-data="{
+    regModal: false,
+    jenisTaSelected: '{{ $mySidang && $mySidang->jenis_tugas_akhir === 'jurnal' ? 'jurnal' : ($mySidang && $mySidang->jenis_tugas_akhir === 'sidang' ? 'sidang' : '') }}'
+}">
+    <div class="bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-extrabold mb-1">Pendaftaran Sidang Skripsi</h1>
+            <p class="text-xs text-purple-200">Kelola riwayat dan pendaftaran Sidang Skripsi Tugas Akhir Anda.</p>
+        </div>
+        <span class="px-3.5 py-1.5 bg-purple-500/30 border border-purple-400/30 text-purple-200 text-xs font-bold rounded-xl">
+            Sidang Skripsi
+        </span>
+    </div>
 
     <!-- Top Grid: Status Cards & Card Syarat & Ketentuan Pendaftaran -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -124,7 +124,7 @@
 
                 <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-2 list-decimal pl-4 leading-relaxed font-medium columns-1 sm:columns-2 gap-x-6">
                     <li>Scan surat pendaftaran skripsi bertandatangan kaprodi.</li>
-                    <li>Scan transkrip nilai resmi dari BAAK.</li>
+                    <li>Scan transkrip nilai <strong>WAJIB</strong> yang dikeluarkan oleh <strong>BAAK</strong>.</li>
                     <li>Tidak terdapat nilai <strong>E</strong>.</li>
                     <li>Nilai <strong>D</strong> maksimal 14 SKS.</li>
                     <li>Nilai Metodologi Penelitian minimal <strong>BC</strong>.</li>

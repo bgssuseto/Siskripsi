@@ -216,8 +216,8 @@
                     <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base border border-amber-200 dark:border-amber-800 shrink-0">📊</div>
                     <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 3</span>
                 </div>
-                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Transkip Nilai Lengkap</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan/file Transkip Nilai lengkap dalam format PDF</p>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Transkrip Nilai Lengkap</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan/file Transkrip Nilai lengkap <strong>WAJIB</strong> yang dikeluarkan oleh <strong>BAAK</strong> dalam format PDF</p>
                 <span class="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">*bisa menggunakan camscanner</span>
             </div>
 
