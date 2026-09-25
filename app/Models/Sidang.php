@@ -50,6 +50,7 @@ class Sidang extends Model
         'verifikasi_status',
         'verifikasi_komentar',
         'verifikasi_tanggal',
+        'wa_joined_at',
         'status_ujian',
         'bukti_pembayaran',
         'no_wa_aktif',
@@ -60,6 +61,7 @@ class Sidang extends Model
         'tanggal' => 'date',
         'tanggal_pendaftaran' => 'date',
         'verifikasi_tanggal' => 'datetime',
+        'wa_joined_at' => 'datetime',
     ];
 
     /**
@@ -315,6 +317,20 @@ class Sidang extends Model
     public function getVerifikasiStatusHtmlAttribute(): string
     {
         return $this->getVerifikasiStatusHtml();
+    }
+
+    /**
+     * Whether the koordinator has finished plotting this exam. Sempro only needs
+     * tanggal + ruang (it never gets a ketua penguji — see SemproController::jadwalkan()),
+     * while skripsi/jurnal also needs its ketua penguji assigned.
+     */
+    public function isPlotted(): bool
+    {
+        if (empty($this->tanggal) || empty($this->ruang_id)) {
+            return false;
+        }
+
+        return $this->jenis_tugas_akhir === 'sempro' || !empty($this->ketua_penguji_id);
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Models\Periode;
 use App\Models\Dosen;
 use App\Models\PendaftaranPeriode;
 use App\Services\KelulusanService;
+use App\Services\ProgressTugasAkhirService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +44,20 @@ class MahasiswaController extends Controller
         }
 
         return collect();
+    }
+
+    /**
+     * Whether this registration belongs to the logged-in student. NIM is the
+     * reliable identifier (see getStudentSidangs() above) — only fall back to an
+     * exact name match when the user has no NIM on file yet. Matching on EITHER
+     * nim OR name would let a same-named student act on someone else's
+     * registration by nim alone.
+     */
+    private function ownsSidang(Sidang $sidang, $user): bool
+    {
+        return $user->nim
+            ? $sidang->nim === $user->nim
+            : $sidang->nama_mahasiswa === $user->name;
     }
 
     /**
@@ -100,9 +115,55 @@ class MahasiswaController extends Controller
             }
         }
 
+        // Progress 5 tahap per track — pakai pendaftaran TERBARU tiap track
+        // ($sidangs sudah urut id desc). Skripsi mencakup jalur sidang & jurnal.
+        $progressSempro = ProgressTugasAkhirService::build(
+            $sidangs->where('jenis_tugas_akhir', 'sempro')->first(),
+            ProgressTugasAkhirService::TRACK_SEMPRO
+        );
+        $progressSkripsi = ProgressTugasAkhirService::build(
+            $sidangs->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->first(),
+            ProgressTugasAkhirService::TRACK_SKRIPSI
+        );
+
         return view('mahasiswa.dashboard', compact(
-            'user', 'sidangs', 'sidangSkripsi', 'sidangJurnal', 'activePeriode', 'registrationWaves'
+            'user', 'sidangs', 'sidangSkripsi', 'sidangJurnal', 'activePeriode', 'registrationWaves',
+            'progressSempro', 'progressSkripsi'
         ));
+    }
+
+    /**
+     * Tombol "Join Grup WhatsApp": catat klik PERTAMA mahasiswa (penanda tahap
+     * "Join Grup WA" di progress dashboard), lalu teruskan ke link grup. Link
+     * harus lewat sini — kalau langsung ke WhatsApp, klik tidak bisa tercatat.
+     */
+    public function joinWa(Sidang $sidang)
+    {
+        abort_unless($this->ownsSidang($sidang, Auth::user()), 403, 'Unauthorized action.');
+
+        if (($sidang->verifikasi_status ?: 'menunggu') !== 'disetujui') {
+            return redirect()->route('mahasiswa.dashboard')
+                ->with('error', 'Grup WhatsApp baru bisa diakses setelah berkas Anda diterima koordinator.');
+        }
+
+        $periode = $sidang->periode;
+        $link = $sidang->jenis_tugas_akhir === 'sempro'
+            ? $periode?->link_grup_wa_sempro
+            : $periode?->link_grup_wa_skripsi;
+
+        // Link diatur admin, tapi tetap pastikan skema http(s) sebelum redirect keluar.
+        if (!$link || !preg_match('#^https?://#i', $link)) {
+            return redirect()->route('mahasiswa.dashboard')
+                ->with('error', 'Link grup WhatsApp belum diatur oleh koordinator.');
+        }
+
+        // Hanya klik pertama yang dicatat (whereNull) — sekaligus tidak menimpa
+        // penanda saat mahasiswa klik lagi. Query builder sengaja dipakai supaya
+        // event model Sidang (mis. auto-isi Penguji 2) tidak ikut terpicu hanya
+        // karena sebuah klik.
+        Sidang::whereKey($sidang->getKey())->whereNull('wa_joined_at')->update(['wa_joined_at' => now()]);
+
+        return redirect()->away($link);
     }
 
     /**
@@ -423,20 +484,7 @@ class MahasiswaController extends Controller
      */
     public function updateBukti(Request $request, Sidang $sidang)
     {
-        $user = Auth::user();
-
-        // Ensure this belongs to the logged-in student. NIM is the reliable
-        // identifier (see getStudentSidangs() above) — only fall back to an
-        // exact name match when the user has no NIM on file yet. Matching on
-        // EITHER nim OR name (as this used to do) would let a same-named
-        // student hijack someone else's registration by nim alone.
-        $isOwner = $user->nim
-            ? $sidang->nim === $user->nim
-            : $sidang->nama_mahasiswa === $user->name;
-
-        if (! $isOwner) {
-            abort(403, 'Unauthorized action.');
-        }
+        abort_unless($this->ownsSidang($sidang, Auth::user()), 403, 'Unauthorized action.');
 
         $request->validate([
             'file_persyaratan' => ['required', 'file', 'mimes:pdf', 'max:4096'],

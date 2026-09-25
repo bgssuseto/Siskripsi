@@ -346,6 +346,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/mahasiswa/jadwal/skripsi', [MahasiswaController::class, 'jadwalSkripsiIndex'])->name('mahasiswa.jadwal.skripsi');
         Route::post('/mahasiswa/daftar', [MahasiswaController::class, 'storeRegistration'])->name('mahasiswa.daftar.store');
         Route::post('/mahasiswa/sidang/{sidang}/update-bukti', [MahasiswaController::class, 'updateBukti'])->name('mahasiswa.sidang.update-bukti');
+        Route::get('/mahasiswa/sidang/{sidang}/join-wa', [MahasiswaController::class, 'joinWa'])->name('mahasiswa.sidang.join-wa');
     });
     // Dosen routes
     Route::middleware(['role:dosen', 'menu.permission'])->group(function () {

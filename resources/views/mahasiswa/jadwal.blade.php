@@ -47,12 +47,9 @@
             <div class="grid grid-cols-1 gap-6">
                 @foreach($sidangs as $s)
                     @php
-                        // Sempro never gets a ketua_penguji assigned (jadwalkan() for
-                        // sempro only sets tanggal/jam/ruang_id) — requiring it here
-                        // would permanently stick sempro cards on "Belum di-Plotting".
-                        $isPlotted = $s->jenis_tugas_akhir === 'sempro'
-                            ? ($s->tanggal && $s->ruang_id)
-                            : ($s->tanggal && $s->ruang_id && $s->ketua_penguji_id);
+                        // Sempro tidak pernah punya ketua penguji, jadi aturannya ada di
+                        // Sidang::isPlotted() (juga dipakai progress di dashboard).
+                        $isPlotted = $s->isPlotted();
                     @endphp
                     <div class="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-800 hover:shadow-lg transition-all duration-300 space-y-5 relative overflow-hidden group">
                         
@@ -154,7 +151,7 @@
                                     </div>
                                 </div>
                                 @if($waLink)
-                                    <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 shrink-0">
+                                    <a href="{{ route('mahasiswa.sidang.join-wa', $s) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 shrink-0">
                                         <span>💬</span> Join Grup WhatsApp
                                     </a>
                                 @else

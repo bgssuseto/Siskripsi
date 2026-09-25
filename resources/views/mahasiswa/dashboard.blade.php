@@ -182,6 +182,12 @@
         </style>
     @endif
 
+    {{-- Progress pendaftaran Sempro & Skripsi (5 tahap per track) --}}
+    <div class="space-y-4">
+        <x-progress-tugas-akhir :progress="$progressSempro" />
+        <x-progress-tugas-akhir :progress="$progressSkripsi" />
+    </div>
+
     <!-- Informasi & Tata Tertib Persiapan Sidang -->
     <x-info-persiapan-sidang />
 
