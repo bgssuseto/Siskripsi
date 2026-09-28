@@ -81,6 +81,9 @@ class MahasiswaController extends Controller
         // Countdown gelombang pendaftaran (sempro & skripsi)
         $today = now()->timezone('Asia/Jakarta')->startOfDay();
         $registrationWaves = collect();
+        // Dipakai tahap "Pendaftaran" pada progress di bawah: gelombang track ini
+        // sedang buka HARI INI? (dihitung sekali di sini, bukan query terpisah).
+        $waveOpen = ['sempro' => false, 'skripsi' => false];
 
         if ($activePeriode) {
             $waves = \App\Models\PendaftaranPeriode::where('periode_id', $activePeriode->id)
@@ -98,6 +101,10 @@ class MahasiswaController extends Controller
                 $daysUntilClose = (int) $today->diffInDays($end->copy()->startOfDay());
                 $isOpen         = $today->gte($start) && $today->lte($end);
                 $isComingSoon   = !$isOpen && $daysUntilOpen <= 7;
+
+                if ($isOpen) {
+                    $waveOpen[$wave->jenis] = true;
+                }
 
                 if ($isOpen || $isComingSoon) {
                     $registrationWaves->push([
@@ -119,11 +126,15 @@ class MahasiswaController extends Controller
         // ($sidangs sudah urut id desc). Skripsi mencakup jalur sidang & jurnal.
         $progressSempro = ProgressTugasAkhirService::build(
             $sidangs->where('jenis_tugas_akhir', 'sempro')->first(),
-            ProgressTugasAkhirService::TRACK_SEMPRO
+            ProgressTugasAkhirService::TRACK_SEMPRO,
+            null,
+            $waveOpen['sempro']
         );
         $progressSkripsi = ProgressTugasAkhirService::build(
             $sidangs->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->first(),
-            ProgressTugasAkhirService::TRACK_SKRIPSI
+            ProgressTugasAkhirService::TRACK_SKRIPSI,
+            null,
+            $waveOpen['skripsi']
         );
 
         return view('mahasiswa.dashboard', compact(

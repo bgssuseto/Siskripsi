@@ -15,7 +15,13 @@ use Carbon\Carbon;
  * Tiap tahap punya status independen (done / active / pending / failed) yang
  * diturunkan langsung dari data pendaftaran (Sidang) — bukan urutan linear kaku,
  * karena mis. koordinator bisa menjadwalkan sebelum mahasiswa sempat join grup WA.
- * Murni logika: tidak ada query selain lazy-load relasi periode/ruang.
+ * Murni logika: tidak ada query selain lazy-load relasi periode/ruang — status
+ * gelombang pendaftaran ($waveOpen) sudah harus dihitung pemanggil lalu dioper masuk.
+ *
+ * Sebelum mendaftar, tahap "Pendaftaran" sendiri dinamis mengikuti gelombang:
+ * "Belum dibuka Pendaftaran" (tidak ada tombol) atau "Sedang Buka" (tombol Daftar).
+ * Setelah dikirim, tahap "Verifikasi Berkas" melanjutkan cerita: "Sedang Diverifikasi"
+ * → "Berkas diterima" atau "Berkas ditolak" (dengan tombol Revisi).
  */
 class ProgressTugasAkhirService
 {
@@ -28,9 +34,11 @@ class ProgressTugasAkhirService
     public const FAILED  = 'failed';
 
     /**
-     * @param  Sidang|null  $sidang  Pendaftaran terbaru mahasiswa pada track ini (null = belum mendaftar)
-     * @param  string       $track   self::TRACK_SEMPRO | self::TRACK_SKRIPSI
-     * @param  Carbon|null  $today   Hanya untuk test; default hari ini (Asia/Jakarta)
+     * @param  Sidang|null  $sidang    Pendaftaran terbaru mahasiswa pada track ini (null = belum mendaftar)
+     * @param  string       $track     self::TRACK_SEMPRO | self::TRACK_SKRIPSI
+     * @param  Carbon|null  $today     Hanya untuk test; default hari ini (Asia/Jakarta)
+     * @param  bool         $waveOpen  Gelombang pendaftaran track ini sedang buka HARI INI?
+     *                                 Hanya dipakai saat $sidang null (mahasiswa belum mendaftar).
      *
      * @return array{
      *   track: string, registered: bool, sidang: ?Sidang, jenis_label: ?string,
@@ -38,7 +46,7 @@ class ProgressTugasAkhirService
      *   percent: int, current_index: int, failed: bool, complete: bool
      * }
      */
-    public static function build(?Sidang $sidang, string $track, ?Carbon $today = null): array
+    public static function build(?Sidang $sidang, string $track, ?Carbon $today = null, bool $waveOpen = false): array
     {
         $today = ($today ?? Carbon::now('Asia/Jakarta'))->copy()->startOfDay();
 
@@ -57,7 +65,7 @@ class ProgressTugasAkhirService
         $examPassed = $daysUntilExam !== null && $daysUntilExam < 0;
 
         $steps = [
-            self::stepPendaftaran($sidang, $registered),
+            self::stepPendaftaran($sidang, $registered, $waveOpen),
             self::stepVerifikasi($sidang, $registered, $status),
             self::stepJoinWa($sidang, $track, $verified, $examPassed),
             self::stepPenjadwalan($verified, $scheduled),
@@ -111,10 +119,12 @@ class ProgressTugasAkhirService
         ], $extra);
     }
 
-    private static function stepPendaftaran(?Sidang $sidang, bool $registered): array
+    private static function stepPendaftaran(?Sidang $sidang, bool $registered, bool $waveOpen): array
     {
         if (!$registered) {
-            return self::step('pendaftaran', 'Pendaftaran', self::ACTIVE, 'Belum mendaftar', ['cta' => 'daftar']);
+            return $waveOpen
+                ? self::step('pendaftaran', 'Pendaftaran', self::ACTIVE, 'Sedang Buka', ['cta' => 'daftar'])
+                : self::step('pendaftaran', 'Pendaftaran', self::PENDING, 'Belum dibuka Pendaftaran');
         }
 
         $detail = $sidang->tanggal_pendaftaran
@@ -139,7 +149,7 @@ class ProgressTugasAkhirService
                 'badge'      => 'Ditolak', 'badge_tone' => 'danger',
                 'cta'        => 'revisi',
             ]),
-            default => self::step('verifikasi', 'Verifikasi Berkas', self::ACTIVE, 'Menunggu verifikasi koordinator'),
+            default => self::step('verifikasi', 'Verifikasi Berkas', self::ACTIVE, 'Sedang Diverifikasi'),
         };
     }
 

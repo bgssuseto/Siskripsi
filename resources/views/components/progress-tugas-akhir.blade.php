@@ -36,7 +36,13 @@
     } elseif ($progress['complete']) {
         $headline = ['Selesai', $tones['success'], 'Seluruh tahap telah dilalui'];
     } elseif (!$progress['registered']) {
-        $headline = ['Belum mendaftar', $tones['neutral'], 'Belum ada pendaftaran'];
+        // Tahap "Pendaftaran" sendiri sudah dinamis (lihat ProgressTugasAkhirService):
+        // "Sedang Buka" (gelombang buka, tombol Daftar tersedia di bawah) atau
+        // "Belum dibuka Pendaftaran". Badge & subjudul atas mengikutinya.
+        $waveOpen = $current['status'] === 'active';
+        $headline = $waveOpen
+            ? [$current['detail'], $tones['info'], 'Pendaftaran sedang dibuka — klik "Daftar sekarang" di bawah.']
+            : [$current['detail'], $tones['neutral'], 'Cek kembali saat gelombang pendaftaran dibuka.'];
     } else {
         $headline = ['Tahap ' . ($progress['current_index'] + 1) . ' dari ' . $progress['total'], $tones['info'], 'Saat ini: ' . $current['label']];
     }

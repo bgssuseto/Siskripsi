@@ -45,16 +45,31 @@ class ProgressTugasAkhirServiceTest extends TestCase
         return array_column($progress['steps'], 'status', 'key');
     }
 
-    public function test_belum_mendaftar_hanya_pendaftaran_yang_aktif(): void
+    public function test_belum_mendaftar_dan_gelombang_sedang_buka(): void
     {
-        $p = Progress::build(null, 'sempro', $this->today());
+        $p = Progress::build(null, 'sempro', $this->today(), waveOpen: true);
 
         $this->assertFalse($p['registered']);
         $this->assertSame([
             'pendaftaran' => 'active', 'verifikasi' => 'pending', 'join_wa' => 'pending',
             'penjadwalan' => 'pending', 'ujian' => 'pending',
         ], $this->statuses($p));
+        $this->assertSame('Sedang Buka', $p['steps'][0]['detail']);
         $this->assertSame('daftar', $p['steps'][0]['cta']);
+        $this->assertSame(0, $p['percent']);
+        $this->assertSame(0, $p['current_index']);
+    }
+
+    public function test_belum_mendaftar_dan_gelombang_belum_dibuka(): void
+    {
+        // waveOpen default (false): mahasiswa belum bisa mendaftar sama sekali,
+        // jadi tahap "Pendaftaran" tidak boleh menawarkan tombol Daftar.
+        $p = Progress::build(null, 'sempro', $this->today());
+
+        $this->assertFalse($p['registered']);
+        $this->assertSame('pending', $p['steps'][0]['status']);
+        $this->assertSame('Belum dibuka Pendaftaran', $p['steps'][0]['detail']);
+        $this->assertNull($p['steps'][0]['cta']);
         $this->assertSame(0, $p['percent']);
         $this->assertSame(0, $p['current_index']);
     }
@@ -65,6 +80,7 @@ class ProgressTugasAkhirServiceTest extends TestCase
 
         $this->assertSame('done', $p['steps'][0]['status']);
         $this->assertSame('active', $p['steps'][1]['status']);
+        $this->assertSame('Sedang Diverifikasi', $p['steps'][1]['detail']);
         $this->assertSame('pending', $p['steps'][2]['status']);
         $this->assertSame(20, $p['percent']);
         $this->assertSame(1, $p['current_index']);

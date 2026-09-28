@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Dosen;
+use App\Models\PendaftaranPeriode;
 use App\Models\Periode;
 use App\Models\Sidang;
 use App\Models\User;
@@ -60,14 +61,32 @@ class MahasiswaProgressTest extends TestCase
         ], $attrs));
     }
 
-    public function test_dashboard_menampilkan_progress_kosong_untuk_mahasiswa_belum_mendaftar(): void
+    public function test_dashboard_menampilkan_pendaftaran_belum_dibuka_saat_tidak_ada_gelombang_aktif(): void
     {
+        // Setup default: $this->periode tidak aktif -> tidak ada periode aktif sama
+        // sekali, jadi tahap "Pendaftaran" harus dianggap tertutup (tanpa tombol Daftar).
         $this->actingAs($this->student)
             ->get(route('mahasiswa.dashboard'))
             ->assertOk()
             ->assertSee('Progress Seminar Proposal (Sempro)')
             ->assertSee('Progress Sidang Skripsi')
-            ->assertSee('Belum mendaftar')
+            ->assertSee('Belum dibuka Pendaftaran')
+            ->assertDontSee('Daftar sekarang');
+    }
+
+    public function test_dashboard_menampilkan_tombol_daftar_saat_gelombang_sedang_buka(): void
+    {
+        $active = Periode::create(['nama_periode' => 'Periode Progress Aktif', 'aktif' => true]);
+        PendaftaranPeriode::create([
+            'periode_id'      => $active->id, 'jenis' => 'sempro', 'gelombang' => 1,
+            'tanggal_mulai'   => now()->subDay()->format('Y-m-d'),
+            'tanggal_selesai' => now()->addDays(7)->format('Y-m-d'),
+        ]);
+
+        $this->actingAs($this->student)
+            ->get(route('mahasiswa.dashboard'))
+            ->assertOk()
+            ->assertSee('Sedang Buka')
             ->assertSee('Daftar sekarang');
     }
 
