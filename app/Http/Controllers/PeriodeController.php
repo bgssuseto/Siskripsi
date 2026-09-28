@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Periode;
 use App\Models\PendaftaranPeriode;
+use App\Models\Sidang;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -216,6 +217,11 @@ class PeriodeController extends Controller
 
         $pendaftaran = PendaftaranPeriode::create($validated);
 
+        // Mahasiswa yang sudah terdaftar SEBELUM gelombang ini dibuat tapi tanggal
+        // daftarnya masuk rentang gelombang ini tidak otomatis ter-tag — tag ulang
+        // sekarang supaya langsung terdeteksi di Asisten Plotting/Undangan/dll.
+        Sidang::recomputeGelombangForPeriode($pendaftaran->periode_id, $pendaftaran->jenis);
+
         ActivityLogger::log('created', $pendaftaran, "Menambahkan gelombang pendaftaran {$pendaftaran->jenis} #{$pendaftaran->gelombang} ({$pendaftaran->tanggal_mulai->format('d/m/Y')} - {$pendaftaran->tanggal_selesai->format('d/m/Y')}).");
 
         if ($request->expectsJson()) {
@@ -266,8 +272,17 @@ class PeriodeController extends Controller
         }
 
         $before = $pendaftaranPeriode->only(['periode_id', 'jenis', 'gelombang', 'tanggal_mulai', 'tanggal_selesai']);
+        $oldPeriodeId = $pendaftaranPeriode->periode_id;
+        $oldJenis = $pendaftaranPeriode->jenis;
 
         $pendaftaranPeriode->update($validated);
+
+        // Rentang tanggal (atau periode/jenis-nya) bisa berubah — tag ulang gelombang
+        // untuk pasangan periode+jenis LAMA maupun BARU (kalau sama, cukup sekali).
+        Sidang::recomputeGelombangForPeriode($oldPeriodeId, $oldJenis);
+        if ($oldPeriodeId !== $pendaftaranPeriode->periode_id || $oldJenis !== $pendaftaranPeriode->jenis) {
+            Sidang::recomputeGelombangForPeriode($pendaftaranPeriode->periode_id, $pendaftaranPeriode->jenis);
+        }
 
         ActivityLogger::log(
             'updated',
@@ -294,8 +309,13 @@ class PeriodeController extends Controller
     {
         $jenis = $pendaftaranPeriode->jenis;
         $gelombang = $pendaftaranPeriode->gelombang;
+        $periodeId = $pendaftaranPeriode->periode_id;
 
         $pendaftaranPeriode->delete();
+
+        // Mahasiswa yang sebelumnya ke-tag gelombang ini perlu di-null-kan (atau
+        // dicocokkan ulang ke gelombang lain yang masih ada) sekarang juga.
+        Sidang::recomputeGelombangForPeriode($periodeId, $jenis);
 
         ActivityLogger::log('deleted', $pendaftaranPeriode, "Menghapus gelombang pendaftaran {$jenis} #{$gelombang}.");
 

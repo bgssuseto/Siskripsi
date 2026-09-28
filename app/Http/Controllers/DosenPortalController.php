@@ -476,9 +476,14 @@ class DosenPortalController extends Controller
                 $roles = [];
                  if ($s->dosen_pembimbing_utama_id === $dosen->id) $roles[] = 'Pembimbing Utama';
                  if ($isSempro && $s->dosen_pembimbing_pendamping_id === $dosen->id) $roles[] = 'Pembimbing Pendamping';
-                 if ($s->ketua_penguji_id === $dosen->id) $roles[] = 'Ketua Penguji';
-                 if ($s->anggota_penguji_1_id === $dosen->id) $roles[] = 'Anggota Penguji 1';
-                 if ($s->anggota_penguji_2_id === $dosen->id) $roles[] = 'Anggota Penguji 2';
+                 // Untuk Sempro, ketua_penguji_id/anggota_penguji_1_id/2_id SELALU
+                 // mencerminkan pembimbing utama/pendamping (lihat
+                 // Sidang::syncPengujiFromPembimbing()) — sudah tercakup 2 baris di
+                 // atas, jadi dilewati di sini supaya tidak dobel ("Pembimbing Utama"
+                 // + "Ketua Penguji" untuk peran yang sama).
+                 if (!$isSempro && $s->ketua_penguji_id === $dosen->id) $roles[] = 'Ketua Penguji';
+                 if (!$isSempro && $s->anggota_penguji_1_id === $dosen->id) $roles[] = 'Anggota Penguji 1';
+                 if (!$isSempro && $s->anggota_penguji_2_id === $dosen->id) $roles[] = 'Anggota Penguji 2';
 
                 return [
                     'id'              => $s->id,

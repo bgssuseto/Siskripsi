@@ -50,8 +50,14 @@ class AnalitikController extends Controller
         $bebanDosen = Dosen::orderBy('nama_dosen')->get()->map(function ($d) use ($sidangs) {
             $bimbingUtama = $sidangs->where('dosen_pembimbing_utama_id', $d->id)->count();
             $bimbingPendamping = $sidangs->where('dosen_pembimbing_pendamping_id', $d->id)->count();
+            // anggota_penguji_2_id (skripsi) & ketua/anggota_penguji_1_id (sempro) ikut
+            // otomatis = pembimbing (lihat Sidang::syncPengujiFromPembimbing()) — sidang
+            // yang sama tidak dihitung dobel di sini kalau dosennya juga si pembimbing,
+            // supaya $total di bawah tidak menjumlahkan satu sidang dua kali.
             $menguji = $sidangs->filter(function ($s) use ($d) {
-                return $s->ketua_penguji_id == $d->id || $s->anggota_penguji_1_id == $d->id || $s->anggota_penguji_2_id == $d->id;
+                $isPenguji = $s->ketua_penguji_id == $d->id || $s->anggota_penguji_1_id == $d->id || $s->anggota_penguji_2_id == $d->id;
+                $isPembimbing = $s->dosen_pembimbing_utama_id == $d->id || $s->dosen_pembimbing_pendamping_id == $d->id;
+                return $isPenguji && !$isPembimbing;
             })->count();
             $total = $bimbingUtama + $bimbingPendamping + $menguji;
 

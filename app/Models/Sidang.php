@@ -72,24 +72,13 @@ class Sidang extends Model
     protected static function booted()
     {
         static::creating(function ($sidang) {
-            // Dosbing utama hanya wajib jadi penguji 2 pada skripsi, bukan sempro
-            if ($sidang->jenis_tugas_akhir !== 'sempro'
-                && empty($sidang->anggota_penguji_2_id)
-                && !empty($sidang->dosen_pembimbing_utama_id)) {
-                $sidang->anggota_penguji_2_id = $sidang->dosen_pembimbing_utama_id;
-            }
-
+            static::syncPengujiFromPembimbing($sidang);
             $sidang->gelombang = static::computeGelombang($sidang);
             static::syncJalurTa($sidang);
         });
 
         static::updating(function ($sidang) {
-            // Dosbing utama hanya wajib jadi penguji 2 pada skripsi, bukan sempro
-            if ($sidang->jenis_tugas_akhir !== 'sempro'
-                && empty($sidang->anggota_penguji_2_id)
-                && !empty($sidang->dosen_pembimbing_utama_id)) {
-                $sidang->anggota_penguji_2_id = $sidang->dosen_pembimbing_utama_id;
-            }
+            static::syncPengujiFromPembimbing($sidang);
 
             if ($sidang->isDirty(['periode_id', 'tanggal_pendaftaran', 'jenis_tugas_akhir'])) {
                 $sidang->gelombang = static::computeGelombang($sidang);
@@ -114,6 +103,75 @@ class Sidang extends Model
                 }
             }
         });
+    }
+
+    /**
+     * Dewan penguji Sempro SELALU = pembimbing mahasiswa sendiri — sempro tidak
+     * punya penguji eksternal sama sekali (lihat SemproController::store/update
+     * yang tidak pernah menampilkan field pemilihan penguji). Disinkronkan PENUH
+     * setiap kali disimpan (bukan cuma "kalau kosong"), supaya kalau pembimbingnya
+     * berubah (mis. saat revisi pendaftaran) dewan pengujinya ikut berubah, tidak
+     * nyangkut ke pembimbing lama. Pemetaan kolomnya sengaja mengikuti konvensi
+     * tampilan yang sudah ada (undangan/pdf.blade.php, undangan/preview.blade.php):
+     * Ketua Penguji <-> Pembimbing Utama, Penguji 1 <-> Pembimbing Pendamping.
+     *
+     * Untuk Skripsi/Sidang/Jurnal, HANYA anggota_penguji_2_id yang di-default ke
+     * pembimbing utama SAAT MASIH KOSONG — ketua_penguji_id & anggota_penguji_1_id
+     * memang sengaja diisi manual atau oleh Asisten Plotting dengan dosen lain.
+     */
+    protected static function syncPengujiFromPembimbing($sidang): void
+    {
+        if ($sidang->jenis_tugas_akhir === 'sempro') {
+            $sidang->ketua_penguji_id = $sidang->dosen_pembimbing_utama_id;
+            $sidang->anggota_penguji_1_id = $sidang->dosen_pembimbing_pendamping_id;
+            $sidang->anggota_penguji_2_id = null;
+            return;
+        }
+
+        if (empty($sidang->anggota_penguji_2_id) && !empty($sidang->dosen_pembimbing_utama_id)) {
+            $sidang->anggota_penguji_2_id = $sidang->dosen_pembimbing_utama_id;
+        }
+    }
+
+    /**
+     * Hitung ulang & simpan kolom `gelombang` untuk seluruh Sidang pada
+     * periode+jenis ini berdasarkan Master Gelombang (PendaftaranPeriode) SAAT
+     * INI. Perlu dipanggil setiap kali sebuah gelombang dibuat/diubah/dihapus
+     * (lihat PeriodeController) — computeGelombang() di bawah cuma jalan otomatis
+     * saat Sidang itu sendiri dibuat/diupdate, TIDAK retroaktif untuk Sidang yang
+     * sudah ada sebelum gelombangnya ditambahkan/diedit (mis. Asisten Plotting
+     * tidak menemukan mahasiswa pada gelombang yang baru saja dibuat).
+     *
+     * @param  string  $waveJenis  'sempro' | 'skripsi' — persis seperti kolom
+     *                              pendaftaran_periodes.jenis, bukan jenis_tugas_akhir.
+     */
+    public static function recomputeGelombangForPeriode(?int $periodeId, string $waveJenis): void
+    {
+        if (!$periodeId) {
+            return;
+        }
+
+        $jenisList = $waveJenis === 'sempro' ? ['sempro'] : self::SKRIPSI_BUCKET;
+
+        // Reset dulu, supaya mahasiswa yang tanggal daftarnya sudah tidak masuk
+        // gelombang manapun (mis. gelombangnya baru dihapus/diperkecil rentangnya)
+        // ikut ter-null-kan, bukan nyangkut ke gelombang lama.
+        static::where('periode_id', $periodeId)
+            ->whereIn('jenis_tugas_akhir', $jenisList)
+            ->update(['gelombang' => null]);
+
+        PendaftaranPeriode::where('periode_id', $periodeId)
+            ->where('jenis', $waveJenis)
+            ->orderBy('gelombang')
+            ->get()
+            ->each(function ($wave) use ($periodeId, $jenisList) {
+                static::where('periode_id', $periodeId)
+                    ->whereIn('jenis_tugas_akhir', $jenisList)
+                    ->whereNotNull('tanggal_pendaftaran')
+                    ->whereDate('tanggal_pendaftaran', '>=', $wave->tanggal_mulai)
+                    ->whereDate('tanggal_pendaftaran', '<=', $wave->tanggal_selesai)
+                    ->update(['gelombang' => $wave->gelombang]);
+            });
     }
 
     /**
@@ -321,8 +379,9 @@ class Sidang extends Model
 
     /**
      * Whether the koordinator has finished plotting this exam. Sempro only needs
-     * tanggal + ruang (it never gets a ketua penguji — see SemproController::jadwalkan()),
-     * while skripsi/jurnal also needs its ketua penguji assigned.
+     * tanggal + ruang — its ketua_penguji_id is always auto-derived from the
+     * pembimbing (see syncPengujiFromPembimbing() above), never a separate
+     * plotting step — while skripsi/jurnal also needs its ketua penguji assigned.
      */
     public function isPlotted(): bool
     {

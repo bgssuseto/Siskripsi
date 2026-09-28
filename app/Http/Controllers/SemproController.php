@@ -658,8 +658,12 @@ class SemproController extends Controller
 
         $validated['jenis_tugas_akhir'] = 'sempro';
         $validated['verifikasi_status'] = 'disetujui';
-        $validated['ketua_penguji_id'] = null;
-        $validated['anggota_penguji_1_id'] = null;
+        // Dewan penguji Sempro SELALU = pembimbing sendiri (lihat
+        // Sidang::syncPengujiFromPembimbing(), yang akan menegaskan ulang nilai
+        // ini saat disimpan) — diisi di sini juga supaya checkConflicts() di
+        // bawah (Rule Tugas Belajar) menilai data yang sebenarnya, bukan kosong.
+        $validated['ketua_penguji_id'] = $validated['dosen_pembimbing_utama_id'] ?? null;
+        $validated['anggota_penguji_1_id'] = $validated['dosen_pembimbing_pendamping_id'] ?? null;
         $validated['anggota_penguji_2_id'] = null;
 
         // Check schedule conflicts (room overlaps)
@@ -716,8 +720,10 @@ class SemproController extends Controller
         ]);
 
         $validated['jenis_tugas_akhir'] = 'sempro';
-        $validated['ketua_penguji_id'] = null;
-        $validated['anggota_penguji_1_id'] = null;
+        // Dewan penguji Sempro SELALU = pembimbing sendiri — lihat catatan yang
+        // sama di store() di atas.
+        $validated['ketua_penguji_id'] = $validated['dosen_pembimbing_utama_id'] ?? null;
+        $validated['anggota_penguji_1_id'] = $validated['dosen_pembimbing_pendamping_id'] ?? null;
         $validated['anggota_penguji_2_id'] = null;
 
         // Check schedule conflicts excluding current ID
@@ -992,8 +998,10 @@ class SemproController extends Controller
                             'judul_skripsi'                => $judul,
                             'dosen_pembimbing_utama_id'      => $dosenUtama?->id,
                             'dosen_pembimbing_pendamping_id' => $dosenPend?->id,
-                            'ketua_penguji_id'               => null,
-                            'anggota_penguji_1_id'           => null,
+                            // Dewan penguji Sempro SELALU = pembimbing sendiri
+                            // (lihat Sidang::syncPengujiFromPembimbing()).
+                            'ketua_penguji_id'               => $dosenUtama?->id,
+                            'anggota_penguji_1_id'           => $dosenPend?->id,
                             'anggota_penguji_2_id'           => null,
                             'tanggal'                      => $tanggalParsed,
                             'jam'                          => $waktuJam ?: null,

@@ -305,12 +305,16 @@
                                     <td class="py-4 px-6 text-center">
                                         @php
                                             $dosenId = $dosen ? $dosen->id : 0;
+                                            $isSemproRow = $s->jenis_tugas_akhir === 'sempro';
                                             $roles = [];
                                             if ($s->dosen_pembimbing_utama_id == $dosenId) $roles[] = ['name' => 'Pembimbing Utama', 'class' => 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700'];
                                             if ($s->dosen_pembimbing_pendamping_id == $dosenId) $roles[] = ['name' => 'Pembimbing Pendamping', 'class' => 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'];
-                                            if ($s->ketua_penguji_id == $dosenId) $roles[] = ['name' => 'Ketua Penguji', 'class' => 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700'];
-                                            if ($s->anggota_penguji_1_id == $dosenId) $roles[] = ['name' => 'Penguji 1', 'class' => 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700'];
-                                            if ($s->anggota_penguji_2_id == $dosenId) $roles[] = ['name' => 'Penguji 2', 'class' => 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700'];
+                                            // Untuk Sempro, ketua_penguji_id/anggota_penguji_1_id/2_id SELALU mencerminkan
+                                            // pembimbing (Sidang::syncPengujiFromPembimbing()) — sudah tercakup 2 baris di
+                                            // atas, dilewati di sini supaya tidak dobel.
+                                            if (!$isSemproRow && $s->ketua_penguji_id == $dosenId) $roles[] = ['name' => 'Ketua Penguji', 'class' => 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700'];
+                                            if (!$isSemproRow && $s->anggota_penguji_1_id == $dosenId) $roles[] = ['name' => 'Penguji 1', 'class' => 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700'];
+                                            if (!$isSemproRow && $s->anggota_penguji_2_id == $dosenId) $roles[] = ['name' => 'Penguji 2', 'class' => 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700'];
                                         @endphp
                                         <div class="flex flex-wrap gap-1.5 justify-center items-center">
                                             @forelse($roles as $r)

@@ -1631,11 +1631,15 @@
                                             @if(Auth::user()->isDosen() && isset($dosenId))
                                                 @php
                                                     $peran = [];
+                                                    $isSemproUs = $us->jenis_tugas_akhir === 'sempro';
                                                     if ($us->dosen_pembimbing_utama_id == $dosenId) $peran[] = 'Dosbing Utama';
                                                     if ($us->dosen_pembimbing_pendamping_id == $dosenId) $peran[] = 'Dosbing Pendamping';
-                                                    if ($us->ketua_penguji_id == $dosenId) $peran[] = 'Ketua Penguji';
-                                                    if ($us->anggota_penguji_1_id == $dosenId) $peran[] = 'Penguji 1';
-                                                    if ($us->anggota_penguji_2_id == $dosenId) $peran[] = 'Penguji 2';
+                                                    // Untuk Sempro, ketua_penguji_id/anggota_penguji_1_id/2_id SELALU
+                                                    // mencerminkan pembimbing (lihat Sidang::syncPengujiFromPembimbing())
+                                                    // — sudah tercakup 2 baris di atas, dilewati di sini supaya tidak dobel.
+                                                    if (!$isSemproUs && $us->ketua_penguji_id == $dosenId) $peran[] = 'Ketua Penguji';
+                                                    if (!$isSemproUs && $us->anggota_penguji_1_id == $dosenId) $peran[] = 'Penguji 1';
+                                                    if (!$isSemproUs && $us->anggota_penguji_2_id == $dosenId) $peran[] = 'Penguji 2';
                                                 @endphp
                                                 <div class="flex items-center gap-1">
                                                     <span>👤 Peran:</span>

@@ -51,6 +51,13 @@ class AutoScheduleController extends Controller
         $generated = $request->boolean('generate') && $selectedPeriodeId;
 
         if ($generated) {
+            // Self-heal: kolom `gelombang` pada Sidang cuma dihitung otomatis saat
+            // Sidang itu sendiri dibuat/diupdate (lihat Sidang::computeGelombang()),
+            // TIDAK retroaktif kalau gelombangnya baru dibuat/diedit belakangan —
+            // tag ulang di sini supaya filter Gelombang selalu mencerminkan Master
+            // Gelombang yang berlaku sekarang, walau datanya sempat telanjur usang.
+            Sidang::recomputeGelombangForPeriode((int) $selectedPeriodeId, $jenis);
+
             $result = AutoScheduleService::generateProposals(
                 (int) $selectedPeriodeId,
                 $jenis,
