@@ -370,10 +370,18 @@
             <thead>
                 <tr>
                     <th class="center" style="width: 3%;">No</th>
-                    <th style="width: 15%;">Nama</th>
-                    <th style="width: 18%;">Ketua Penguji</th>
-                    <th style="width: 16%;">Penguji 1</th>
-                    <th style="width: 16%;">Penguji 2</th>
+                    @if(($jenisUndangan ?? 'sempro') === 'sempro')
+                      <th style="width: 10%;">NIM</th>
+                      <th style="width: 17%;">Nama</th>
+                      <th style="width: 19%;">Penguji 1</th>
+                      <th style="width: 19%;">Penguji 2</th>
+                    @else
+                      <th style="width: 9%;">NIM</th>
+                      <th style="width: 14%;">Nama</th>
+                      <th style="width: 14%;">Ketua Penguji</th>
+                      <th style="width: 13%;">Penguji 1</th>
+                      <th style="width: 13%;">Penguji 2</th>
+                    @endif
                     <th style="width: 16%;">Hari, Tanggal</th>
                     <th class="center" style="width: 8%;">Jam</th>
                     <th class="center" style="width: 8%;">Ruang</th>
@@ -383,10 +391,17 @@
                 @forelse($sidangs as $idx => $s)
                 <tr>
                     <td class="center">{{ $idx + 1 }}</td>
+                    <td>{{ $s->nim ?? '-' }}</td>
                     <td><strong>{{ $s->nama_mahasiswa }}</strong></td>
-                    <td>{{ $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : ($s->pembimbingUtama ? $s->pembimbingUtama->nama_dosen : '-') }}</td>
-                    <td>{{ $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : ($s->pembimbingPendamping ? $s->pembimbingPendamping->nama_dosen : '-') }}</td>
-                    <td>{{ $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-' }}</td>
+                    @if(($jenisUndangan ?? 'sempro') === 'sempro')
+                      {{-- Sempro: dewan penguji = pembimbing mahasiswa sendiri, tanpa ketua penguji --}}
+                      <td>{{ $s->pembimbingUtama->nama_dosen ?? ($s->ketuaPenguji->nama_dosen ?? '-') }}</td>
+                      <td>{{ $s->pembimbingPendamping->nama_dosen ?? ($s->anggotaPenguji1->nama_dosen ?? '-') }}</td>
+                    @else
+                      <td>{{ $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : ($s->pembimbingUtama ? $s->pembimbingUtama->nama_dosen : '-') }}</td>
+                      <td>{{ $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : ($s->pembimbingPendamping ? $s->pembimbingPendamping->nama_dosen : '-') }}</td>
+                      <td>{{ $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-' }}</td>
+                    @endif
                     <td>
                         @if($s->tanggal)
                             {{ \Carbon\Carbon::parse($s->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y') }}
@@ -399,7 +414,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="center" style="font-style: italic; color: #94a3b8;">Tidak ada data mahasiswa.</td>
+                    <td colspan="{{ ($jenisUndangan ?? 'sempro') === 'sempro' ? 8 : 9 }}" class="center" style="font-style: italic; color: #94a3b8;">Tidak ada data mahasiswa.</td>
                 </tr>
                 @endforelse
             </tbody>

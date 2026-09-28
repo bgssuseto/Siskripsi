@@ -450,8 +450,12 @@ class AdministrasiController extends Controller
 
         $table2->addRow();
         $table2->addCell(600)->addText('No', ['bold' => true, 'size' => 9]);
+        $table2->addCell(1500)->addText('NIM', ['bold' => true, 'size' => 9]);
         $table2->addCell(2500)->addText('Nama', ['bold' => true, 'size' => 9]);
-        $table2->addCell(2500)->addText('Ketua Penguji', ['bold' => true, 'size' => 9]);
+        // Sempro: dewan penguji = pembimbing mahasiswa sendiri, tanpa ketua penguji
+        if ($jenisUndangan !== 'sempro') {
+            $table2->addCell(2500)->addText('Ketua Penguji', ['bold' => true, 'size' => 9]);
+        }
         $table2->addCell(2500)->addText('Penguji 1', ['bold' => true, 'size' => 9]);
         $table2->addCell(2500)->addText('Penguji 2', ['bold' => true, 'size' => 9]);
         $table2->addCell(2200)->addText('Hari', ['bold' => true, 'size' => 9]);
@@ -464,10 +468,16 @@ class AdministrasiController extends Controller
 
             $table2->addRow();
             $table2->addCell(600)->addText(($idx + 1), ['size' => 9]);
+            $table2->addCell(1500)->addText($s->nim ?? '-', ['size' => 9]);
             $table2->addCell(2500)->addText($s->nama_mahasiswa, ['size' => 9]);
-            $table2->addCell(2500)->addText($s->ketuaPenguji->nama_dosen ?? '-', ['size' => 9]);
-            $table2->addCell(2500)->addText($s->anggotaPenguji1->nama_dosen ?? '-', ['size' => 9]);
-            $table2->addCell(2500)->addText($s->anggotaPenguji2->nama_dosen ?? '-', ['size' => 9]);
+            if ($jenisUndangan === 'sempro') {
+                $table2->addCell(2500)->addText($s->pembimbingUtama->nama_dosen ?? ($s->ketuaPenguji->nama_dosen ?? '-'), ['size' => 9]);
+                $table2->addCell(2500)->addText($s->pembimbingPendamping->nama_dosen ?? ($s->anggotaPenguji1->nama_dosen ?? '-'), ['size' => 9]);
+            } else {
+                $table2->addCell(2500)->addText($s->ketuaPenguji->nama_dosen ?? '-', ['size' => 9]);
+                $table2->addCell(2500)->addText($s->anggotaPenguji1->nama_dosen ?? '-', ['size' => 9]);
+                $table2->addCell(2500)->addText($s->anggotaPenguji2->nama_dosen ?? '-', ['size' => 9]);
+            }
             $table2->addCell(2200)->addText($tglStr, ['size' => 9]);
             $table2->addCell(1500)->addText($s->jam ?? '-', ['size' => 9]);
             $table2->addCell(1200)->addText($ruangKode, ['size' => 9]);
