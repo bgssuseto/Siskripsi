@@ -37,12 +37,16 @@ class AutoScheduleController extends Controller
             $slotMinutes = 60;
         }
 
-        $gelombangOptions = $selectedPeriodeId
-            ? PendaftaranPeriode::where('periode_id', $selectedPeriodeId)
-                ->where('jenis', $jenis)
-                ->orderBy('gelombang')
-                ->pluck('gelombang')
-            : collect();
+        // Semua kombinasi periode+jenis+gelombang yang ada, dikirim sekali ke
+        // halaman supaya dropdown Gelombang bisa langsung menyesuaikan diri di
+        // browser (Alpine) begitu Periode Akademik/Jenis diganti — TANPA reload
+        // ke server tiap kali, karena datanya sudah kecil (jumlah gelombang per
+        // periode+jenis) dan seluruhnya sudah ada di sini.
+        $allWaves = PendaftaranPeriode::select('periode_id', 'jenis', 'gelombang')
+            ->orderBy('gelombang')
+            ->get()
+            ->map(fn ($w) => ['periode_id' => $w->periode_id, 'jenis' => $w->jenis, 'gelombang' => $w->gelombang])
+            ->values();
 
         $sidangIds = array_filter(array_map('intval', (array) $request->get('ids', [])));
 
@@ -89,7 +93,7 @@ class AutoScheduleController extends Controller
         $jamOptions = ['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'];
 
         return view('penjadwalan.auto-schedule.index', compact(
-            'periodes', 'selectedPeriodeId', 'jenis', 'selectedGelombang', 'gelombangOptions',
+            'periodes', 'selectedPeriodeId', 'jenis', 'selectedGelombang', 'allWaves',
             'slotMinutes', 'proposals', 'unresolved', 'generated', 'ruangs', 'sidangIds', 'dosens', 'jamOptions'
         ));
     }

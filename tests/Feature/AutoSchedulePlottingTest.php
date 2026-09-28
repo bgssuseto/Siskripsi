@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Dosen;
 use App\Models\KesediaanDosen;
+use App\Models\PendaftaranPeriode;
 use App\Models\Periode;
 use App\Models\Ruang;
 use App\Models\Sidang;
@@ -129,6 +130,41 @@ class AutoSchedulePlottingTest extends TestCase
 
         $this->assertCount(1, $proposals);
         $this->assertNotSame($ruangBelumSiap->id, $proposals[0]['ruang_id']);
+    }
+
+    public function test_halaman_mengirim_data_semua_gelombang_untuk_dropdown_reaktif_tanpa_reload(): void
+    {
+        PendaftaranPeriode::create([
+            'periode_id' => $this->periode->id, 'jenis' => 'sempro', 'gelombang' => 1,
+            'tanggal_mulai' => '2026-10-01', 'tanggal_selesai' => '2026-10-10',
+        ]);
+        PendaftaranPeriode::create([
+            'periode_id' => $this->periode->id, 'jenis' => 'skripsi', 'gelombang' => 2,
+            'tanggal_mulai' => '2026-10-01', 'tanggal_selesai' => '2026-10-10',
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)->get(route('jadwal.auto-plot.index'));
+
+        $response->assertOk();
+        $allWaves = $response->viewData('allWaves');
+
+        $this->assertCount(2, $allWaves);
+        $this->assertTrue($allWaves->contains(fn ($w) => $w['jenis'] === 'sempro' && $w['gelombang'] === 1));
+        $this->assertTrue($allWaves->contains(fn ($w) => $w['jenis'] === 'skripsi' && $w['gelombang'] === 2));
+        // Data ini yang dipakai Alpine di browser (lihat x-data pada blade) untuk
+        // mengisi ulang dropdown Gelombang tanpa reload saat Jenis/Periode diganti.
+        // Js::from() membungkusnya sebagai JSON.parse('...') dengan tanda kutip
+        // di-escape (") supaya aman disisipkan ke dalam atribut x-data="...".
+        $response->assertSee('allWaves: JSON.parse(', false);
+        $response->assertSee('\\u0022jenis\\u0022:\\u0022sempro\\u0022', false);
+    }
+
+    public function test_halaman_tetap_tampil_normal_tanpa_gelombang_sama_sekali(): void
+    {
+        $this->actingAs($this->superAdmin)
+            ->get(route('jadwal.auto-plot.index'))
+            ->assertOk()
+            ->assertSee('-- Semua Gelombang --');
     }
 
     public function test_gelombang_baru_langsung_terdeteksi_saat_generate_usulan(): void
