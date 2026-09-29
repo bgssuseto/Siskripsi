@@ -3,10 +3,11 @@
         Manajemen User & Role
     </x-slot:header>
 
-    <div x-data="{ 
-        createModal: false, 
+    <div x-data="{
+        createModal: false,
         editModal: false,
         deleteModal: false,
+        importModal: false,
         selectedUser: { id: null, name: '', email: '', role: 'mahasiswa', dosen_id: null, jadikan_koordinator: false },
         deleteUrl: '',
         errors: {},
@@ -68,6 +69,38 @@
                     } else {
                         window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
                     }
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Terjadi kesalahan jaringan.', type: 'error' } }));
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        async submitImport(e) {
+            this.isLoading = true;
+            this.errors = {};
+            const form = e.target;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    this.importModal = false;
+                    form.reset();
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
+                    await refreshComponent(['#stats-container', '#table-container']);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    }
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal meng-import data.', type: 'error' } }));
                 }
             } catch (err) {
                 console.error(err);
@@ -156,13 +189,29 @@
                         Kelola data pengguna, hak akses, dan role dalam sistem.
                     </p>
                 </div>
-                <button @click="createModal = true"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shrink-0 cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                    </svg>
-                    Tambah User Baru
-                </button>
+                <div class="flex items-center gap-2 shrink-0">
+                    <a href="{{ route('users.export', request()->query()) }}"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm border border-white/15 backdrop-blur-md transition-all duration-200 cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Export Excel
+                    </a>
+                    <button @click="importModal = true"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm border border-white/15 backdrop-blur-md transition-all duration-200 cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        Import Excel
+                    </button>
+                    <button @click="createModal = true"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                        </svg>
+                        Tambah User Baru
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -564,6 +613,59 @@
                         <span x-show="isLoading">Menghapus...</span>
                     </button>
                 </form>
+            </div>
+        </div>
+
+        <!-- MODAL: Import User -->
+        <div x-show="importModal" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div @click="importModal = false" class="fixed inset-0 transition-opacity bg-slate-900/60 backdrop-blur-sm"></div>
+
+                <div class="inline-block relative z-10 w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">Import / Restore Data User</h3>
+                        <button @click="importModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form method="POST" action="{{ route('users.import') }}" enctype="multipart/form-data" @submit.prevent="submitImport($event)" class="p-6 space-y-4">
+                        @csrf
+                        <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-xl p-4 text-xs text-indigo-900 dark:text-indigo-200 space-y-2">
+                            <p class="font-bold flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Petunjuk File Excel:
+                            </p>
+                            <ul class="list-disc list-inside space-y-1 pl-1">
+                                <li>Gunakan file hasil <b>Export Excel</b> — header: Nama, Email, Role, NIM (Mahasiswa), NIDN (Dosen), No. HP.</li>
+                                <li>Dicocokkan lewat <b>Email</b>: akun yang sudah ada diperbarui datanya, email baru membuat akun baru.</li>
+                                <li>Password akun yang sudah ada TIDAK PERNAH diubah. Akun baru memakai password default <code>password</code> dan wajib menggantinya.</li>
+                                <li>Format yang didukung: <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code>.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Pilih File Excel <span class="text-rose-500">*</span></label>
+                            <input type="file" name="file" accept=".xlsx,.xls,.csv" required
+                                   class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                            <template x-if="errors.file">
+                                <p class="text-xs text-rose-600 mt-1 font-semibold" x-text="errors.file[0]"></p>
+                            </template>
+                        </div>
+
+                        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-700">
+                            <button type="button" @click="importModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 cursor-pointer">Batal</button>
+                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md shadow-emerald-600/30 disabled:opacity-50 cursor-pointer">
+                                <span x-show="!isLoading">Import Data</span>
+                                <span x-show="isLoading">Meng-import...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
