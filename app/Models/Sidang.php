@@ -65,6 +65,16 @@ class Sidang extends Model
     ];
 
     /**
+     * Nama mahasiswa selalu diseragamkan HURUF KAPITAL — baik saat mendaftar
+     * maupun saat diubah admin/koordinator lewat Data Master — supaya konsisten
+     * di semua tampilan/laporan tanpa perlu menormalkan tiap titik input satu-satu.
+     */
+    public function setNamaMahasiswaAttribute($value): void
+    {
+        $this->attributes['nama_mahasiswa'] = $value === null ? null : mb_strtoupper(trim($value));
+    }
+
+    /**
      * Booted model events.
      * Default anggota_penguji_2_id to dosen_pembimbing_utama_id if empty.
      * Only applies to skripsi/sidang, NOT sempro.
@@ -302,6 +312,43 @@ class Sidang extends Model
     }
 
     /**
+     * Apakah sidang/ujian ini SUDAH benar-benar berlangsung — dibandingkan
+     * lengkap tanggal+jam selesainya (bukan cuma tanggal), supaya sidang hari
+     * ini yang jamnya belum lewat tetap tampil "Proses Ujian", bukan langsung
+     * "Selesai". Kalau `jam` kosong/tidak bisa diparse, fallback ke perbandingan
+     * tanggal saja (jam akhir dianggap akhir hari itu).
+     */
+    public function isExamEnded(): bool
+    {
+        if (empty($this->tanggal)) {
+            return false;
+        }
+
+        $now = now()->timezone('Asia/Jakarta');
+        $today = $now->format('Y-m-d');
+        $jadwal = $this->tanggal->format('Y-m-d');
+
+        if ($jadwal < $today) {
+            return true;
+        }
+
+        if ($jadwal > $today) {
+            return false;
+        }
+
+        // Hari ini — cek jam selesainya betul-betul sudah lewat.
+        $jamRange = \App\Services\SidangConflictService::parseJamRange($this->jam);
+        if (!$jamRange) {
+            // Tidak ada jam tercatat — anggap belum selesai selama masih hari ini.
+            return false;
+        }
+
+        $examEndsAt = $this->tanggal->copy()->timezone('Asia/Jakarta')->startOfDay()->addMinutes($jamRange['end']);
+
+        return $now->greaterThan($examEndsAt);
+    }
+
+    /**
      * Get the schedule status badge HTML — termasuk badge tanggal, jam, dan
      * ruang saat sidang sudah terjadwal, supaya info lengkap terlihat tanpa
      * harus melihat kolom lain. Dipakai di semua role (admin/koordinator,
@@ -325,23 +372,25 @@ class Sidang extends Model
             $detailBadges .= '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">📍 ' . e($ruangKode) . '</span>';
         }
 
+        if ($this->isExamEnded()) {
+            return '<div class="flex flex-wrap gap-1">' .
+                   '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">✓ Selesai</span>' .
+                   $detailBadges .
+                   '</div>';
+        }
+
         if ($jadwal > $today) {
             return '<div class="flex flex-wrap gap-1">' .
                    '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">✓ Terjadwal</span>' .
                    '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">● Belum Sidang</span>' .
                    $detailBadges .
                    '</div>';
-        } elseif ($jadwal === $today) {
-            return '<div class="flex flex-wrap gap-1">' .
-                   '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">⏳ Proses Ujian</span>' .
-                   $detailBadges .
-                   '</div>';
-        } else {
-            return '<div class="flex flex-wrap gap-1">' .
-                   '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">✓ Sudah Sidang</span>' .
-                   $detailBadges .
-                   '</div>';
         }
+
+        return '<div class="flex flex-wrap gap-1">' .
+               '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">⏳ Proses Ujian</span>' .
+               $detailBadges .
+               '</div>';
     }
 
     /**

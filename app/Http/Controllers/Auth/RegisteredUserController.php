@@ -75,7 +75,9 @@ class RegisteredUserController extends Controller
         $this->generateCaptcha();
 
         $user = User::create([
-            'name'     => $request->name,
+            // Pendaftaran publik ini selalu untuk akun mahasiswa (wajib isi NIM) —
+            // nama diseragamkan HURUF KAPITAL supaya konsisten di semua data.
+            'name'     => mb_strtoupper(trim($request->name)),
             'nim'      => $request->nim,
             'email'    => $request->email,
             'password' => Hash::make($request->password),

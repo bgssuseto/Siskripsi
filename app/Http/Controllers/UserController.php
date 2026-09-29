@@ -56,7 +56,9 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
+            // Nama akun mahasiswa diseragamkan HURUF KAPITAL agar konsisten
+            // dengan data pendaftaran sidang/sempro.
+            'name' => $validated['role'] === User::ROLE_MAHASISWA ? mb_strtoupper(trim($validated['name'])) : $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
@@ -106,7 +108,9 @@ class UserController extends Controller
         $before = $user->only(['name', 'email', 'role', 'dosen_id']);
 
         $userData = [
-            'name' => $validated['name'],
+            // Nama akun mahasiswa diseragamkan HURUF KAPITAL agar konsisten
+            // dengan data pendaftaran sidang/sempro.
+            'name' => $validated['role'] === User::ROLE_MAHASISWA ? mb_strtoupper(trim($validated['name'])) : $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
             'dosen_id' => $validated['role'] === User::ROLE_DOSEN ? ($validated['dosen_id'] ?? null) : null,

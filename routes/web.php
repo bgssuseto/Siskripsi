@@ -353,6 +353,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dosen/dashboard', [DosenPortalController::class, 'dashboard'])->name('dosen.dashboard');
         Route::get('/dosen/jadwal/sempro', [DosenPortalController::class, 'sempro'])->name('dosen.jadwal.sempro');
         Route::get('/dosen/jadwal/skripsi', [DosenPortalController::class, 'skripsi'])->name('dosen.jadwal.skripsi');
+        Route::get('/dosen/riwayat-menguji', [DosenPortalController::class, 'riwayat'])->name('dosen.riwayat');
+        Route::get('/dosen/riwayat-menguji/export', [DosenPortalController::class, 'riwayatExport'])->name('dosen.riwayat.export');
         Route::get('/dosen/kalender', [DosenPortalController::class, 'kalender'])->name('dosen.kalender');
         Route::get('/dosen/profil', fn() => redirect()->route('profile.edit'))->name('dosen.profil');
         Route::post('/dosen/kesediaan', [DosenPortalController::class, 'storeKesediaan'])->name('dosen.kesediaan.store');
