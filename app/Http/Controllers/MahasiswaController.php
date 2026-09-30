@@ -353,6 +353,12 @@ class MahasiswaController extends Controller
             'file_persyaratan.required'          => 'File persyaratan wajib diunggah.',
             'file_persyaratan.mimes'             => 'File persyaratan harus berformat PDF.',
             'file_persyaratan.max'               => 'Ukuran file persyaratan maksimal 4 MB.',
+            // Laravel menambahkan rule "uploaded" otomatis untuk field file — ini yang
+            // gagal (bukan .max) ketika file melebihi upload_max_filesize di php.ini
+            // server, walau ukurannya masih di bawah batas 4MB yang ditampilkan ke
+            // mahasiswa. Tanpa pesan ini, mahasiswa hanya melihat "validation.uploaded"
+            // yang sama sekali tidak menjelaskan apa-apa.
+            'file_persyaratan.uploaded'          => 'File persyaratan gagal diunggah ke server — kemungkinan ukurannya terlalu besar. Coba kompres file PDF-nya lalu unggah ulang.',
         ]);
 
         // Guard against submitting another student's NIM (the form field is readonly
@@ -503,6 +509,7 @@ class MahasiswaController extends Controller
             'file_persyaratan.required' => 'File persyaratan wajib diunggah.',
             'file_persyaratan.mimes'    => 'File persyaratan harus berformat PDF.',
             'file_persyaratan.max'      => 'Ukuran file persyaratan maksimal 4 MB.',
+            'file_persyaratan.uploaded' => 'File persyaratan gagal diunggah ke server — kemungkinan ukurannya terlalu besar. Coba kompres file PDF-nya lalu unggah ulang.',
         ]);
 
         // Delete old file
