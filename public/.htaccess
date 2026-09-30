@@ -1,3 +1,11 @@
+<IfModule mod_php.c>
+    # Cadangan untuk .user.ini pada host yang menjalankan PHP sebagai modul Apache
+    # (mod_php) alih-alih PHP-FPM/CGI — .user.ini tidak berlaku di mode itu, jadi
+    # batas upload file persyaratan (4MB) tetap bisa gagal tanpa ini.
+    php_value upload_max_filesize 8M
+    php_value post_max_size 10M
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
