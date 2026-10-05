@@ -159,7 +159,7 @@ class SemproController extends Controller
         );
 
         // Dropdown lists
-        $dosens = Dosen::orderBy('nama_dosen')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
         $ruangs = Ruang::orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
@@ -431,7 +431,7 @@ class SemproController extends Controller
             ];
         });
 
-        $dosens  = Dosen::orderBy('nama_dosen')->get();
+        $dosens  = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
         $ruangs  = Ruang::orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();

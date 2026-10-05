@@ -44,7 +44,7 @@ class UserController extends Controller
             'dosen' => User::where('role', User::ROLE_DOSEN)->count(),
         ];
 
-        $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
+        $dosens = \App\Models\Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         return view('users.index', compact('users', 'stats', 'dosens'));
     }
@@ -191,7 +191,7 @@ class UserController extends Controller
         if ($user->role === User::ROLE_DOSEN && $dosenId) {
             // Ensure Super Administrator Dosen exists
             $superAdminDosen = \App\Models\Dosen::firstOrCreate(
-                ['nidn' => '0000000000'],
+                ['nidn' => \App\Models\Dosen::NIDN_SUPER_ADMIN_PLACEHOLDER],
                 ['nama_dosen' => 'Super Administrator']
             );
 

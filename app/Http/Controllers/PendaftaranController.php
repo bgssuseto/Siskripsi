@@ -84,7 +84,7 @@ class PendaftaranController extends Controller
                 ->pluck('gelombang')
             : collect();
 
-        $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
+        $dosens = \App\Models\Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         $sidangs = $query->orderByRaw("CASE WHEN verifikasi_status = 'menunggu' THEN 1 WHEN verifikasi_status = 'ditolak' THEN 2 ELSE 3 END")
             ->orderByDesc('id')
@@ -189,7 +189,7 @@ class PendaftaranController extends Controller
                 ->pluck('gelombang')
             : collect();
 
-        $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
+        $dosens = \App\Models\Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         $sidangs = $query->orderByRaw("CASE WHEN verifikasi_status = 'menunggu' THEN 1 WHEN verifikasi_status = 'ditolak' THEN 2 ELSE 3 END")
             ->orderByDesc('id')

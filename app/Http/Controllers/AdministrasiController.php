@@ -98,6 +98,7 @@ class AdministrasiController extends Controller
 
         // Build list of lecturers with stats
         $dosenList = Dosen::whereIn('id', $dosenExaminerIds)
+            ->excludingSuperAdminPlaceholder()
             ->orderBy('nama_dosen', 'asc')
             ->get()
             ->map(function ($dosen) use ($sidangs) {
@@ -537,7 +538,7 @@ class AdministrasiController extends Controller
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
         }
 
-        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->get();
+        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->excludingSuperAdminPlaceholder()->get();
 
         if ($dosens->isEmpty()) {
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
@@ -645,7 +646,7 @@ class AdministrasiController extends Controller
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
         }
 
-        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->get();
+        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->excludingSuperAdminPlaceholder()->get();
 
         if ($dosens->isEmpty()) {
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
@@ -838,7 +839,7 @@ class AdministrasiController extends Controller
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
         }
 
-        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->orderBy('nama_dosen')->get();
+        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         if ($dosens->isEmpty()) {
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
@@ -943,7 +944,7 @@ class AdministrasiController extends Controller
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
         }
 
-        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->orderBy('nama_dosen')->get();
+        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         if ($dosens->isEmpty()) {
             return back()->with('warning', 'Tidak ada data dosen penguji yang dapat diexport.');
@@ -2656,7 +2657,7 @@ class AdministrasiController extends Controller
      */
     public function publicJadwalDosenPenguji(Request $request): View
     {
-        $dosens = Dosen::orderBy('nama_dosen', 'asc')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen', 'asc')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
 
         $selectedDosenId = $request->get('dosen_id');

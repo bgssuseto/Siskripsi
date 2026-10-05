@@ -55,7 +55,16 @@ class Dosen extends Model
      * NIDN placeholder dosen "Super Administrator" (lihat
      * UserController::destroy(), dibuat otomatis sebagai penampung data saat
      * dosen asli dihapus) — bukan dosen sungguhan, jadi tidak boleh muncul di
-     * daftar pilih dosen untuk menguji (kesediaan, dsb).
+     * daftar PILIH dosen (pembimbing/penguji/kesediaan, dsb — lihat
+     * scopeExcludingSuperAdminPlaceholder() di bawah).
+     *
+     * SENGAJA bukan global scope: sidang lama yang pembimbing/pengujinya
+     * sudah di-reassign ke placeholder ini (dosen aslinya terhapus) tetap
+     * harus bisa ditampilkan namanya ("Super Administrator") lewat relasi
+     * ketuaPenguji()/pembimbingUtama() dsb — kalau disembunyikan total lewat
+     * global scope, relasi itu akan diam-diam resolve ke null dan field
+     * penguji/pembimbing-nya terlihat kosong di undangan/berita acara/dsb,
+     * bukan cuma hilang dari pilihan baru.
      */
     public const NIDN_SUPER_ADMIN_PLACEHOLDER = '0000000000';
 
@@ -66,8 +75,11 @@ class Dosen extends Model
 
     /**
      * Kecualikan dosen placeholder "Super Administrator" — pakai ini di
-     * daftar pilih dosen yang harus murni berisi dosen sungguhan (mis. form
-     * kesediaan menguji).
+     * SEMUA query yang membangun daftar PILIHAN dosen (dropdown pembimbing,
+     * penguji, kesediaan menguji, filter admin, dsb). Jangan dipakai pada
+     * query yang menampilkan dosen yang SUDAH tercatat pada suatu data (mis.
+     * lewat relasi ketuaPenguji()), karena itu memang boleh/perlu tetap
+     * menampilkan "Super Administrator" sebagai penanda data yang di-reassign.
      */
     public function scopeExcludingSuperAdminPlaceholder($query)
     {

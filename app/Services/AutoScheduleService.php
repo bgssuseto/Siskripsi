@@ -61,8 +61,13 @@ class AutoScheduleService
 
         $bebanDosen = self::calculateBebanDosen();
 
-        // Dosen tugas belajar dikecualikan total dari kandidat penguji otomatis.
-        $tugasBelajarIds = Dosen::where('status_kepegawaian', Dosen::STATUS_TUGAS_BELAJAR)->pluck('id')->all();
+        // Dosen tugas belajar & placeholder "Super Administrator" dikecualikan
+        // total dari kandidat penguji otomatis (nama variabel dipertahankan
+        // karena sudah dipakai di seluruh fungsi di bawah sebagai daftar
+        // exclude umum, bukan cuma tugas belajar).
+        $tugasBelajarIds = Dosen::where('status_kepegawaian', Dosen::STATUS_TUGAS_BELAJAR)
+            ->orWhere('nidn', Dosen::NIDN_SUPER_ADMIN_PLACEHOLDER)
+            ->pluck('id')->all();
 
         // ── Busy maps, seeded dari seluruh Sidang yang SUDAH terjadwal (sistem-wide) ──
         $busyDosen = [];      // [dosen_id][Y-m-d] => [[start,end], ...]

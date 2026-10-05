@@ -58,7 +58,7 @@ class SemuaJadwalController extends Controller
                           ->withQueryString();
 
         $ruangs = Ruang::orderBy('kode_ruangan')->get();
-        $dosens = Dosen::orderBy('nama_dosen')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         $hariOptions = [
             0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu',

@@ -26,10 +26,11 @@ class DosenPengujiRuleController extends Controller
 
         // Dosen yang belum punya rule sama sekali, untuk opsi "Tambah Rule"
         $dosenBelumAdaRule = Dosen::whereNotIn('id', DosenPengujiRule::pluck('dosen_id'))
+            ->excludingSuperAdminPlaceholder()
             ->orderBy('nama_dosen')
             ->get();
 
-        $dosens = Dosen::orderBy('nama_dosen')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         return view('master.dosen-penguji-rule.index', compact('rules', 'dosenBelumAdaRule', 'dosens'));
     }
