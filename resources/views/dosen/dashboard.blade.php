@@ -384,24 +384,32 @@
 
                     @if($allWaves->count() > 0)
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Gelombang Ujian (Opsional)</label>
-                            <select name="wave_id" class="w-full text-xs p-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer">
-                                <option value="">-- Tanpa gelombang tertentu --</option>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Gelombang Ujian *</label>
+                            <select name="wave_id" required class="w-full text-xs p-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer">
+                                <option value="">-- Pilih Gelombang --</option>
                                 @foreach($allWaves as $w)
                                     <option value="{{ $w->id }}">Gelombang {{ $w->gelombang }} - {{ ucfirst($w->jenis) }} ({{ $w->tanggal_mulai ? $w->tanggal_mulai->format('d/m/Y') : '' }} s/d {{ $w->tanggal_selesai ? $w->tanggal_selesai->format('d/m/Y') : '' }})</option>
                                 @endforeach
                             </select>
                         </div>
-                    @endif
 
-                    {{-- Kalender multi-pilih tanggal --}}
-                    <x-kesediaan-date-picker
-                        :existing="$existingKesediaan->map(fn ($k) => \Carbon\Carbon::parse($k->tanggal)->format('Y-m-d'))->unique()->values()->all()" />
+                        {{-- Kalender multi-pilih tanggal --}}
+                        <x-kesediaan-date-picker
+                            :existing="$existingKesediaan->map(fn ($k) => \Carbon\Carbon::parse($k->tanggal)->format('Y-m-d'))->unique()->values()->all()" />
+                    @else
+                        {{-- Kesediaan WAJIB ditautkan ke gelombang + periode semester aktif —
+                             tanpa gelombang yang tersedia, form tidak bisa disubmit sama sekali. --}}
+                        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-300 rounded-2xl p-4 text-xs leading-relaxed">
+                            Belum ada Gelombang yang tersedia untuk periode <strong>{{ $activePeriode->nama_periode ?? '-' }}</strong> saat ini. Hubungi Koordinator untuk menambahkan gelombang di menu Master Gelombang terlebih dahulu.
+                        </div>
+                    @endif
 
                     {{-- Modal Footer --}}
                     <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
                         <button type="button" @click="closeModal()" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl cursor-pointer">Batal</button>
-                        <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-600/20 cursor-pointer">Simpan Kesediaan</button>
+                        @if($allWaves->count() > 0)
+                            <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-600/20 cursor-pointer">Simpan Kesediaan</button>
+                        @endif
                     </div>
                 </form>
             </div>

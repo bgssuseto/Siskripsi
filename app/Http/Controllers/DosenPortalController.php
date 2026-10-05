@@ -167,26 +167,22 @@ class DosenPortalController extends Controller
             'slots' => 'required|array|min:1',
             'slots.*.tanggal' => 'required|date',
             'slots.*.keterangan' => 'nullable|string',
-            // Opsional (lihat label "Pilih Gelombang Ujian (Opsional)" di form) —
-            // dosen boleh mengisi kesediaan umum tanpa menautkannya ke gelombang
-            // tertentu, mis. saat periode ini belum/tidak punya gelombang sama sekali.
-            'wave_id' => 'nullable|exists:pendaftaran_periodes,id',
+            // Wajib — kesediaan harus selalu ditautkan ke gelombang + periode
+            // semester aktif yang jelas, bukan "kesediaan umum" tanpa konteks.
+            'wave_id' => 'required|exists:pendaftaran_periodes,id',
         ]);
 
-        // Kalau gelombang dipilih, pastikan itu benar-benar milik periode AKTIF
-        // ini — TIDAK lagi disyaratkan "sedang berjalan" hari ini, supaya dosen
-        // tetap bisa mengisi kesediaan walau jendela pendaftaran gelombang itu
-        // sudah lewat/belum dibuka (admin yang mengatur buka/tutupnya lewat
-        // toggle show_form_kesediaan/lock_form_kesediaan di menu Kesediaan Dosen).
-        $wave = null;
-        if ($request->filled('wave_id')) {
-            $wave = PendaftaranPeriode::where('id', $request->wave_id)
-                ->where('periode_id', $activePeriode->id)
-                ->first();
+        // Pastikan gelombang yang dipilih benar-benar milik periode AKTIF ini —
+        // TIDAK lagi disyaratkan "sedang berjalan" hari ini, supaya dosen tetap
+        // bisa mengisi kesediaan walau jendela pendaftaran gelombang itu sudah
+        // lewat/belum dibuka (admin yang mengatur buka/tutupnya lewat toggle
+        // show_form_kesediaan/lock_form_kesediaan di menu Kesediaan Dosen).
+        $wave = PendaftaranPeriode::where('id', $request->wave_id)
+            ->where('periode_id', $activePeriode->id)
+            ->first();
 
-            if (!$wave) {
-                return redirect()->back()->with('error', 'Gelombang yang dipilih tidak valid untuk periode aktif ini.');
-            }
+        if (!$wave) {
+            return redirect()->back()->with('error', 'Gelombang yang dipilih tidak valid untuk periode aktif ini.');
         }
 
         foreach ($request->slots as $slot) {
@@ -195,7 +191,7 @@ class DosenPortalController extends Controller
             KesediaanDosen::firstOrCreate(
                 [
                     'dosen_id' => $dosen->id,
-                    'wave_id' => $wave?->id,
+                    'wave_id' => $wave->id,
                     'tanggal' => $slot['tanggal'],
                 ],
                 [

@@ -62,9 +62,10 @@ class KesediaanFormBukaTutupTest extends TestCase
         $this->assertDatabaseHas('kesediaan_dosens', ['dosen_id' => $this->dosen->id, 'wave_id' => $wave->id]);
     }
 
-    public function test_dosen_bisa_mengisi_kesediaan_tanpa_memilih_gelombang_sama_sekali(): void
+    public function test_dosen_tidak_bisa_mengisi_kesediaan_tanpa_memilih_gelombang(): void
     {
-        // Periode belum punya gelombang sama sekali -- wave_id harus benar-benar opsional.
+        // Kesediaan WAJIB ditautkan ke gelombang + periode semester aktif.
+        $this->gelombangSudahLewat();
         $dosenUser = User::create([
             'name' => $this->dosen->nama_dosen, 'email' => 'dosen-kesediaan2@example.test',
             'password' => bcrypt('password'), 'role' => User::ROLE_DOSEN, 'dosen_id' => $this->dosen->id,
@@ -72,9 +73,9 @@ class KesediaanFormBukaTutupTest extends TestCase
 
         $this->actingAs($dosenUser)->post(route('dosen.kesediaan.store'), [
             'slots' => [['tanggal' => now()->addDays(5)->format('Y-m-d'), 'keterangan' => 'Siap menguji']],
-        ])->assertSessionHas('success');
+        ])->assertSessionHasErrors('wave_id');
 
-        $this->assertDatabaseHas('kesediaan_dosens', ['dosen_id' => $this->dosen->id, 'wave_id' => null]);
+        $this->assertDatabaseMissing('kesediaan_dosens', ['dosen_id' => $this->dosen->id]);
     }
 
     public function test_dashboard_dosen_menampilkan_semua_gelombang_termasuk_yang_sudah_lewat(): void
@@ -88,7 +89,7 @@ class KesediaanFormBukaTutupTest extends TestCase
         $this->actingAs($dosenUser)->get(route('dosen.dashboard'))
             ->assertOk()
             ->assertSee('Gelombang 1 - Sempro', false)
-            ->assertDontSee('name="wave_id" required', false);
+            ->assertSee('name="wave_id" required', false);
     }
 
     public function test_form_tetap_ditolak_server_side_saat_periode_dikunci_koordinator(): void
@@ -212,8 +213,12 @@ class KesediaanFormBukaTutupTest extends TestCase
             ->assertDontSee('Gelombang 9 · Skripsi', false);
     }
 
-    public function test_form_publik_tetap_bisa_disubmit_tanpa_gelombang_saat_satu_satunya_gelombang_terlalu_panjang(): void
+    public function test_form_publik_tidak_bisa_disubmit_tanpa_gelombang(): void
     {
+        // Kesediaan WAJIB ditautkan ke gelombang + periode semester ini -- kalau
+        // satu-satunya gelombang periode ini "terlalu panjang" (disembunyikan),
+        // form menampilkan pesan "belum ada gelombang" alih-alih bisa disubmit
+        // tanpa gelombang (lihat test rendering fallback-nya di bawah).
         $this->gelombangTerlaluPanjang();
         $this->dosen->update(['can_fill_kesediaan' => true]);
         $token = $this->periode->ensureKesediaanPublicToken();
@@ -221,8 +226,31 @@ class KesediaanFormBukaTutupTest extends TestCase
         $this->post(route('public.kesediaan.store', $token), [
             'dosen_id' => $this->dosen->id,
             'slots'    => [['tanggal' => now()->addDays(3)->format('Y-m-d')]],
-        ])->assertSessionHas('success');
+        ])->assertSessionHasErrors('wave_id');
 
-        $this->assertDatabaseHas('kesediaan_dosens', ['dosen_id' => $this->dosen->id, 'wave_id' => null]);
+        $this->assertDatabaseMissing('kesediaan_dosens', ['dosen_id' => $this->dosen->id]);
+    }
+
+    public function test_form_publik_menampilkan_pesan_saat_belum_ada_gelombang_yang_tersedia(): void
+    {
+        $this->gelombangTerlaluPanjang();
+        $token = $this->periode->ensureKesediaanPublicToken();
+
+        $this->get(route('public.kesediaan.show', $token))
+            ->assertOk()
+            ->assertSee('Belum ada Gelombang yang tersedia');
+    }
+
+    public function test_dashboard_dosen_menampilkan_pesan_saat_belum_ada_gelombang_yang_tersedia(): void
+    {
+        $this->gelombangTerlaluPanjang();
+        $dosenUser = User::create([
+            'name' => $this->dosen->nama_dosen, 'email' => 'dosen-belum-ada-gelombang@example.test',
+            'password' => bcrypt('password'), 'role' => User::ROLE_DOSEN, 'dosen_id' => $this->dosen->id,
+        ]);
+
+        $this->actingAs($dosenUser)->get(route('dosen.dashboard'))
+            ->assertOk()
+            ->assertSee('Belum ada Gelombang yang tersedia');
     }
 }

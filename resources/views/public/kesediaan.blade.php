@@ -73,15 +73,14 @@
 
                 @if($activeWaves->count() > 0)
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Gelombang Ujian (Opsional)</label>
-                    <select name="wave_id" class="w-full text-sm p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">-- Tanpa gelombang tertentu --</option>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Gelombang Ujian *</label>
+                    <select name="wave_id" required class="w-full text-sm p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">-- Pilih Gelombang --</option>
                         @foreach($activeWaves as $w)
                             <option value="{{ $w->id }}" {{ old('wave_id') == $w->id ? 'selected' : '' }}>Gelombang {{ $w->gelombang }} - {{ ucfirst($w->jenis) }}</option>
                         @endforeach
                     </select>
                 </div>
-                @endif
 
                 <x-kesediaan-date-picker
                     :selected="collect(old('slots', []))->pluck('tanggal')->filter()->unique()->values()->all()"
@@ -90,6 +89,13 @@
                 <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all">
                     Simpan Kesediaan
                 </button>
+                @else
+                {{-- Kesediaan WAJIB ditautkan ke gelombang + periode semester ini --
+                     tanpa gelombang yang tersedia, form tidak bisa disubmit sama sekali. --}}
+                <div class="bg-amber-500/10 border border-amber-400/30 text-amber-200 rounded-2xl p-4 text-xs leading-relaxed">
+                    Belum ada Gelombang yang tersedia untuk periode <strong>{{ $periode->nama_periode }}</strong> saat ini. Hubungi Koordinator untuk menambahkan gelombang di menu Master Gelombang terlebih dahulu.
+                </div>
+                @endif
             </form>
         </div>
 
