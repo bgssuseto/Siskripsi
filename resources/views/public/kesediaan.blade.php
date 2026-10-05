@@ -71,14 +71,17 @@
                     </select>
                 </div>
 
+                @if($activeWaves->count() > 0)
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Gelombang Ujian *</label>
-                    <select name="wave_id" required class="w-full text-sm p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Gelombang Ujian (Opsional)</label>
+                    <select name="wave_id" class="w-full text-sm p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">-- Tanpa gelombang tertentu --</option>
                         @foreach($activeWaves as $w)
                             <option value="{{ $w->id }}" {{ old('wave_id') == $w->id ? 'selected' : '' }}>Gelombang {{ $w->gelombang }} - {{ ucfirst($w->jenis) }}</option>
                         @endforeach
                     </select>
                 </div>
+                @endif
 
                 <x-kesediaan-date-picker
                     :selected="collect(old('slots', []))->pluck('tanggal')->filter()->unique()->values()->all()"

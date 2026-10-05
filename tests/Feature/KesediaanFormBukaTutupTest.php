@@ -160,4 +160,69 @@ class KesediaanFormBukaTutupTest extends TestCase
         $this->periode->update(['lock_form_kesediaan' => true]);
         $this->assertFalse($this->periode->isKesediaanPublicLinkActive());
     }
+
+    // ── Gelombang > 1 bulan disembunyikan & nama periode ditampilkan ───────
+
+    private function gelombangTerlaluPanjang(): PendaftaranPeriode
+    {
+        return PendaftaranPeriode::create([
+            'periode_id' => $this->periode->id, 'jenis' => 'skripsi', 'gelombang' => 9,
+            'tanggal_mulai' => '2026-01-01', 'tanggal_selesai' => '2026-04-30', // 4 bulan
+        ]);
+    }
+
+    public function test_dashboard_dosen_menyembunyikan_gelombang_lebih_dari_1_bulan(): void
+    {
+        $this->gelombangTerlaluPanjang();
+        $wajar = PendaftaranPeriode::create([
+            'periode_id' => $this->periode->id, 'jenis' => 'sempro', 'gelombang' => 1,
+            'tanggal_mulai' => '2026-02-01', 'tanggal_selesai' => '2026-02-20',
+        ]);
+        $dosenUser = User::create([
+            'name' => $this->dosen->nama_dosen, 'email' => 'dosen-gel-panjang@example.test',
+            'password' => bcrypt('password'), 'role' => User::ROLE_DOSEN, 'dosen_id' => $this->dosen->id,
+        ]);
+
+        $this->actingAs($dosenUser)->get(route('dosen.dashboard'))
+            ->assertOk()
+            ->assertSee('Gelombang 1 - Sempro', false)
+            ->assertDontSee('Gelombang 9 - Skripsi', false);
+    }
+
+    public function test_dashboard_dosen_menampilkan_nama_periode_semester(): void
+    {
+        $dosenUser = User::create([
+            'name' => $this->dosen->nama_dosen, 'email' => 'dosen-nama-periode@example.test',
+            'password' => bcrypt('password'), 'role' => User::ROLE_DOSEN, 'dosen_id' => $this->dosen->id,
+        ]);
+
+        $this->actingAs($dosenUser)->get(route('dosen.dashboard'))
+            ->assertOk()
+            ->assertSee($this->periode->nama_periode);
+    }
+
+    public function test_form_publik_menyembunyikan_gelombang_lebih_dari_1_bulan(): void
+    {
+        $this->gelombangTerlaluPanjang();
+        $token = $this->periode->ensureKesediaanPublicToken();
+
+        $this->get(route('public.kesediaan.show', $token))
+            ->assertOk()
+            ->assertDontSee('Gelombang 9 - Skripsi', false)
+            ->assertDontSee('Gelombang 9 · Skripsi', false);
+    }
+
+    public function test_form_publik_tetap_bisa_disubmit_tanpa_gelombang_saat_satu_satunya_gelombang_terlalu_panjang(): void
+    {
+        $this->gelombangTerlaluPanjang();
+        $this->dosen->update(['can_fill_kesediaan' => true]);
+        $token = $this->periode->ensureKesediaanPublicToken();
+
+        $this->post(route('public.kesediaan.store', $token), [
+            'dosen_id' => $this->dosen->id,
+            'slots'    => [['tanggal' => now()->addDays(3)->format('Y-m-d')]],
+        ])->assertSessionHas('success');
+
+        $this->assertDatabaseHas('kesediaan_dosens', ['dosen_id' => $this->dosen->id, 'wave_id' => null]);
+    }
 }

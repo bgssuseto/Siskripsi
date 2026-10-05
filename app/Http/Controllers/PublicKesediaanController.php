@@ -33,10 +33,16 @@ class PublicKesediaanController extends Controller
         // Seluruh gelombang periode ini — SENGAJA tidak dibatasi ke yang sedang
         // berjalan hari ini, supaya dosen tetap bisa mengisikan kesediaan untuk
         // gelombang yang jendela pendaftarannya sudah lewat/belum dibuka selama
-        // admin membuka form ini lewat menu Kesediaan Dosen.
+        // admin membuka form ini lewat menu Kesediaan Dosen. Gelombang yang
+        // rentangnya > 1 bulan disembunyikan supaya tidak membingungkan (lihat
+        // PendaftaranPeriode::isTooLongForKesediaanPicker()) -- wave_id karena
+        // itu juga dibuat opsional di bawah, supaya form tetap bisa dipakai
+        // walau semua gelombang periode ini "disembunyikan".
         $activeWaves = $periode->pendaftaranPeriodes()
             ->orderBy('gelombang')
-            ->get();
+            ->get()
+            ->reject(fn ($w) => $w->isTooLongForKesediaanPicker())
+            ->values();
 
         $dosens = Dosen::where('can_fill_kesediaan', true)
             ->excludingSuperAdminPlaceholder()
@@ -62,7 +68,10 @@ class PublicKesediaanController extends Controller
 
         $validated = $request->validate([
             'dosen_id' => ['required', 'integer', 'exists:dosens,id'],
-            'wave_id'  => ['required', 'integer', 'exists:pendaftaran_periodes,id'],
+            // Opsional -- gelombang yang rentangnya > 1 bulan sengaja disembunyikan
+            // dari dropdown (lihat show()), jadi dosen harus tetap bisa submit
+            // tanpa memilih gelombang kalau semua gelombang periode ini tersembunyi.
+            'wave_id'  => ['nullable', 'integer', 'exists:pendaftaran_periodes,id'],
             'slots'    => ['required', 'array', 'min:1'],
             'slots.*.tanggal'    => ['required', 'date'],
             'slots.*.keterangan' => ['nullable', 'string'],
@@ -76,16 +85,19 @@ class PublicKesediaanController extends Controller
             return back()->with('error', 'Dosen tidak ditemukan atau belum diberi akses mengisi kesediaan.')->withInput();
         }
 
-        // Pastikan gelombang yang dipilih benar-benar milik periode ini — tidak
-        // lagi disyaratkan "sedang berjalan" (lihat show() di atas), karena
-        // koordinator boleh membuka form ini untuk gelombang yang sudah lewat/
-        // belum dibuka selama toggle di menu Kesediaan Dosen mengizinkan.
-        $wave = $periode->pendaftaranPeriodes()
-            ->where('id', $validated['wave_id'])
-            ->first();
+        // Kalau gelombang dipilih, pastikan benar-benar milik periode ini --
+        // tidak lagi disyaratkan "sedang berjalan" (lihat show() di atas),
+        // karena koordinator boleh membuka form ini untuk gelombang yang sudah
+        // lewat/belum dibuka selama toggle di menu Kesediaan Dosen mengizinkan.
+        $wave = null;
+        if (!empty($validated['wave_id'])) {
+            $wave = $periode->pendaftaranPeriodes()
+                ->where('id', $validated['wave_id'])
+                ->first();
 
-        if (!$wave) {
-            return back()->with('error', 'Gelombang yang dipilih tidak valid untuk periode ini. Silakan muat ulang halaman.')->withInput();
+            if (!$wave) {
+                return back()->with('error', 'Gelombang yang dipilih tidak valid untuk periode ini. Silakan muat ulang halaman.')->withInput();
+            }
         }
 
         foreach ($validated['slots'] as $slot) {
@@ -94,7 +106,7 @@ class PublicKesediaanController extends Controller
             KesediaanDosen::firstOrCreate(
                 [
                     'dosen_id'    => $dosen->id,
-                    'wave_id'     => $wave->id,
+                    'wave_id'     => $wave?->id,
                     'tanggal'     => $slot['tanggal'],
                 ],
                 [

@@ -122,11 +122,15 @@ class DosenPortalController extends Controller
         // walau jendela pendaftaran gelombangnya sudah lewat/belum dibuka,
         // selama koordinator membuka form ini lewat menu Kesediaan Dosen
         // (lihat storeKesediaan(), yang kini hanya mensyaratkan wave_id-nya
-        // milik periode aktif ini, bukan lagi "sedang berjalan").
+        // milik periode aktif ini, bukan lagi "sedang berjalan"). Gelombang
+        // yang rentangnya > 1 bulan disembunyikan dari dropdown ini supaya
+        // tidak membingungkan (lihat PendaftaranPeriode::isTooLongForKesediaanPicker()).
         $allWaves = $activePeriode
             ? PendaftaranPeriode::where('periode_id', $activePeriode->id)
                 ->orderBy('gelombang')
                 ->get()
+                ->reject(fn ($w) => $w->isTooLongForKesediaanPicker())
+                ->values()
             : collect();
 
         return view('dosen.dashboard', compact('stats', 'dosen', 'showFormKesediaan', 'isLockedKesediaan', 'activeWaveInfo', 'allWaves', 'existingKesediaan', 'isRegistrationClosed', 'activePeriode'));

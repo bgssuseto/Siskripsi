@@ -360,6 +360,11 @@
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">Form Kesediaan Menguji Ujian</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Silakan tentukan hari, tanggal, dan rentang jam ketersediaan Anda untuk Sempro dan Skripsi.</p>
+                        @if($activePeriode)
+                            <span class="inline-flex items-center gap-1 mt-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
+                                📅 {{ $activePeriode->nama_periode }}
+                            </span>
+                        @endif
                     </div>
                     <button type="button" @click="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center font-bold cursor-pointer">✕</button>
                 </div>
