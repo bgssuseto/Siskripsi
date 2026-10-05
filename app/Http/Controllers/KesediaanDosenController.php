@@ -71,7 +71,7 @@ class KesediaanDosenController extends Controller
             ['path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]
         );
 
-        $dosens = Dosen::orderBy('nama_dosen')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $waves = PendaftaranPeriode::with('periode')->orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();

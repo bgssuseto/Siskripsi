@@ -51,9 +51,27 @@ class Dosen extends Model
         self::STATUS_TUGAS_BELAJAR => 'Tugas Belajar',
     ];
 
+    /**
+     * NIDN placeholder dosen "Super Administrator" (lihat
+     * UserController::destroy(), dibuat otomatis sebagai penampung data saat
+     * dosen asli dihapus) — bukan dosen sungguhan, jadi tidak boleh muncul di
+     * daftar pilih dosen untuk menguji (kesediaan, dsb).
+     */
+    public const NIDN_SUPER_ADMIN_PLACEHOLDER = '0000000000';
+
     public function getStatusKepegawaianLabelAttribute(): string
     {
         return self::STATUS_KEPEGAWAIAN_LABELS[$this->status_kepegawaian] ?? 'Aktif';
+    }
+
+    /**
+     * Kecualikan dosen placeholder "Super Administrator" — pakai ini di
+     * daftar pilih dosen yang harus murni berisi dosen sungguhan (mis. form
+     * kesediaan menguji).
+     */
+    public function scopeExcludingSuperAdminPlaceholder($query)
+    {
+        return $query->where('nidn', '!=', self::NIDN_SUPER_ADMIN_PLACEHOLDER);
     }
 
     /**

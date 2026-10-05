@@ -39,6 +39,7 @@ class PublicKesediaanController extends Controller
             ->get();
 
         $dosens = Dosen::where('can_fill_kesediaan', true)
+            ->excludingSuperAdminPlaceholder()
             ->orderBy('nama_dosen')
             ->get();
 
@@ -67,7 +68,10 @@ class PublicKesediaanController extends Controller
             'slots.*.keterangan' => ['nullable', 'string'],
         ]);
 
-        $dosen = Dosen::where('id', $validated['dosen_id'])->where('can_fill_kesediaan', true)->first();
+        $dosen = Dosen::where('id', $validated['dosen_id'])
+            ->where('can_fill_kesediaan', true)
+            ->excludingSuperAdminPlaceholder()
+            ->first();
         if (!$dosen) {
             return back()->with('error', 'Dosen tidak ditemukan atau belum diberi akses mengisi kesediaan.')->withInput();
         }
