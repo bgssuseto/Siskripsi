@@ -156,7 +156,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Link Publik Form Kesediaan (Tanpa Login)</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Bagikan link ini ke dosen (mis. lewat WhatsApp) — otomatis aktif hanya selama ada Gelombang pendaftaran yang sedang berjalan untuk periode <strong class="text-indigo-600 dark:text-indigo-400">{{ $activePeriode->nama_periode }}</strong>, dan nonaktif otomatis di luar jadwal itu.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Bagikan link ini ke dosen (mis. lewat WhatsApp) untuk periode <strong class="text-indigo-600 dark:text-indigo-400">{{ $activePeriode->nama_periode }}</strong> — aktif/nonaktifnya murni ikut pengaturan "Buka/Tutup" &amp; "Kunci" di atas, <strong>tidak tergantung gelombang pendaftaran sedang buka atau tidak</strong>, jadi tetap bisa dipakai mengumpulkan kesediaan walau semua gelombang sudah lewat.</p>
                     </div>
                 </div>
 
@@ -166,7 +166,7 @@
                     </span>
                 @else
                     <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 mb-3">
-                        ⚪ TIDAK AKTIF — di luar jendela gelombang / form ditutup / dikunci
+                        ⚪ TIDAK AKTIF — form ditutup atau dikunci
                     </span>
                 @endif
 

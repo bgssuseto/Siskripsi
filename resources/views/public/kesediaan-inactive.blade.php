@@ -18,12 +18,12 @@
         <h1 class="text-xl font-extrabold text-white mb-2">Link Sedang Tidak Aktif</h1>
         <p class="text-sm text-slate-400 leading-relaxed">
             @if($periode)
-                Form kesediaan menguji untuk periode <strong class="text-slate-200">{{ $periode->nama_periode }}</strong> saat ini tidak dalam jendela gelombang pendaftaran yang berjalan, sudah dikunci, atau disembunyikan oleh admin.
+                Form kesediaan menguji untuk periode <strong class="text-slate-200">{{ $periode->nama_periode }}</strong> saat ini sudah dikunci atau disembunyikan oleh admin.
             @else
                 Link ini tidak valid atau sudah tidak berlaku.
             @endif
         </p>
-        <p class="text-xs text-slate-500 mt-4">Silakan hubungi Koordinator Skripsi/Tugas Akhir untuk informasi jadwal gelombang berikutnya.</p>
+        <p class="text-xs text-slate-500 mt-4">Silakan hubungi Koordinator Skripsi/Tugas Akhir untuk membuka kembali form ini.</p>
     </div>
 </body>
 </html>

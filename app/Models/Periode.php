@@ -65,24 +65,16 @@ class Periode extends Model
     }
 
     /**
-     * Link kesediaan publik hanya aktif kalau: form tidak disembunyikan admin,
-     * tidak dikunci, DAN saat ini benar-benar berada di dalam rentang tanggal
-     * salah satu Gelombang (PendaftaranPeriode) periode ini — begitu tanggal
-     * berjalan keluar dari semua gelombang, link otomatis nonaktif lagi tanpa
-     * perlu tindakan manual ("reset" terjadi otomatis mengikuti tanggal).
+     * Link kesediaan publik aktif murni berdasar toggle admin di menu Kesediaan
+     * Dosen: tidak disembunyikan (show_form_kesediaan) DAN tidak dikunci
+     * (lock_form_kesediaan) — SENGAJA tidak lagi disyaratkan berada di dalam
+     * rentang tanggal gelombang manapun, supaya koordinator bisa tetap membuka
+     * pengisian kesediaan (mis. untuk gelombang susulan/remidi) walau semua
+     * gelombang yang terdaftar sudah lewat atau belum dibuka.
      */
     public function isKesediaanPublicLinkActive(): bool
     {
-        if (!$this->show_form_kesediaan || $this->lock_form_kesediaan) {
-            return false;
-        }
-
-        $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
-
-        return $this->pendaftaranPeriodes()
-            ->whereDate('tanggal_mulai', '<=', $today)
-            ->whereDate('tanggal_selesai', '>=', $today)
-            ->exists();
+        return (bool) $this->show_form_kesediaan && !$this->lock_form_kesediaan;
     }
 
     /**

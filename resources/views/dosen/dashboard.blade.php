@@ -380,7 +380,8 @@
                     @if($allWaves->count() > 0)
                         <div>
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Gelombang Ujian (Opsional)</label>
-                            <select name="wave_id" required class="w-full text-xs p-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer">
+                            <select name="wave_id" class="w-full text-xs p-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer">
+                                <option value="">-- Tanpa gelombang tertentu --</option>
                                 @foreach($allWaves as $w)
                                     <option value="{{ $w->id }}">Gelombang {{ $w->gelombang }} - {{ ucfirst($w->jenis) }} ({{ $w->tanggal_mulai ? $w->tanggal_mulai->format('d/m/Y') : '' }} s/d {{ $w->tanggal_selesai ? $w->tanggal_selesai->format('d/m/Y') : '' }})</option>
                                 @endforeach

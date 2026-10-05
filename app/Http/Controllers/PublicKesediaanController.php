@@ -12,8 +12,11 @@ use Illuminate\View\View;
 
 /**
  * Form kesediaan menguji publik (tanpa login) via link token per-periode.
- * Link ini otomatis aktif/nonaktif mengikuti jendela tanggal Gelombang
- * (PendaftaranPeriode) yang sedang berjalan — lihat Periode::isKesediaanPublicLinkActive().
+ * Aktif/nonaktifnya murni dikontrol admin lewat menu Kesediaan Dosen (toggle
+ * Tampilkan/Kunci) — TIDAK tergantung gelombang (PendaftaranPeriode) sedang
+ * buka atau tutup, supaya koordinator bisa tetap mengumpulkan kesediaan dosen
+ * walau jendela pendaftaran gelombangnya sudah lewat. Lihat
+ * Periode::isKesediaanPublicLinkActive().
  */
 class PublicKesediaanController extends Controller
 {
@@ -27,9 +30,11 @@ class PublicKesediaanController extends Controller
             ]);
         }
 
+        // Seluruh gelombang periode ini — SENGAJA tidak dibatasi ke yang sedang
+        // berjalan hari ini, supaya dosen tetap bisa mengisikan kesediaan untuk
+        // gelombang yang jendela pendaftarannya sudah lewat/belum dibuka selama
+        // admin membuka form ini lewat menu Kesediaan Dosen.
         $activeWaves = $periode->pendaftaranPeriodes()
-            ->whereDate('tanggal_mulai', '<=', now()->timezone('Asia/Jakarta')->format('Y-m-d'))
-            ->whereDate('tanggal_selesai', '>=', now()->timezone('Asia/Jakarta')->format('Y-m-d'))
             ->orderBy('gelombang')
             ->get();
 
@@ -67,16 +72,16 @@ class PublicKesediaanController extends Controller
             return back()->with('error', 'Dosen tidak ditemukan atau belum diberi akses mengisi kesediaan.')->withInput();
         }
 
-        // Pastikan gelombang yang dipilih benar-benar salah satu gelombang yang
-        // SEDANG aktif untuk periode ini (bukan gelombang periode lain / sudah lewat).
+        // Pastikan gelombang yang dipilih benar-benar milik periode ini — tidak
+        // lagi disyaratkan "sedang berjalan" (lihat show() di atas), karena
+        // koordinator boleh membuka form ini untuk gelombang yang sudah lewat/
+        // belum dibuka selama toggle di menu Kesediaan Dosen mengizinkan.
         $wave = $periode->pendaftaranPeriodes()
             ->where('id', $validated['wave_id'])
-            ->whereDate('tanggal_mulai', '<=', now()->timezone('Asia/Jakarta')->format('Y-m-d'))
-            ->whereDate('tanggal_selesai', '>=', now()->timezone('Asia/Jakarta')->format('Y-m-d'))
             ->first();
 
         if (!$wave) {
-            return back()->with('error', 'Gelombang yang dipilih sudah tidak aktif. Silakan muat ulang halaman.')->withInput();
+            return back()->with('error', 'Gelombang yang dipilih tidak valid untuk periode ini. Silakan muat ulang halaman.')->withInput();
         }
 
         foreach ($validated['slots'] as $slot) {

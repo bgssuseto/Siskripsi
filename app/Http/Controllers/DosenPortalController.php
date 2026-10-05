@@ -112,14 +112,14 @@ class DosenPortalController extends Controller
             $existingKesediaan = collect();
         }
 
-        // Hanya gelombang periode aktif yang sedang berjalan — dropdown yang
-        // menampilkan gelombang dari periode lain/basi bisa berujung dosen
-        // memilih gelombang yang sudah tidak relevan (lihat storeKesediaan(),
-        // yang sudah menolak wave_id di luar periode aktif & rentang berjalan).
+        // Seluruh gelombang periode aktif ini — SENGAJA tidak dibatasi ke yang
+        // sedang berjalan hari ini, supaya dosen tetap bisa mengisi kesediaan
+        // walau jendela pendaftaran gelombangnya sudah lewat/belum dibuka,
+        // selama koordinator membuka form ini lewat menu Kesediaan Dosen
+        // (lihat storeKesediaan(), yang kini hanya mensyaratkan wave_id-nya
+        // milik periode aktif ini, bukan lagi "sedang berjalan").
         $allWaves = $activePeriode
             ? PendaftaranPeriode::where('periode_id', $activePeriode->id)
-                ->whereDate('tanggal_mulai', '<=', $todayStr)
-                ->whereDate('tanggal_selesai', '>=', $todayStr)
                 ->orderBy('gelombang')
                 ->get()
             : collect();
@@ -158,21 +158,26 @@ class DosenPortalController extends Controller
             'slots' => 'required|array|min:1',
             'slots.*.tanggal' => 'required|date',
             'slots.*.keterangan' => 'nullable|string',
-            'wave_id' => 'required|exists:pendaftaran_periodes,id',
+            // Opsional (lihat label "Pilih Gelombang Ujian (Opsional)" di form) —
+            // dosen boleh mengisi kesediaan umum tanpa menautkannya ke gelombang
+            // tertentu, mis. saat periode ini belum/tidak punya gelombang sama sekali.
+            'wave_id' => 'nullable|exists:pendaftaran_periodes,id',
         ]);
 
-        // Pastikan gelombang yang dipilih benar-benar gelombang periode AKTIF
-        // ini dan SEDANG berjalan — bukan gelombang periode lain (sudah tidak
-        // aktif) atau gelombang yang sudah lewat tanggalnya.
-        $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
-        $wave = PendaftaranPeriode::where('id', $request->wave_id)
-            ->where('periode_id', $activePeriode->id)
-            ->whereDate('tanggal_mulai', '<=', $today)
-            ->whereDate('tanggal_selesai', '>=', $today)
-            ->first();
+        // Kalau gelombang dipilih, pastikan itu benar-benar milik periode AKTIF
+        // ini — TIDAK lagi disyaratkan "sedang berjalan" hari ini, supaya dosen
+        // tetap bisa mengisi kesediaan walau jendela pendaftaran gelombang itu
+        // sudah lewat/belum dibuka (admin yang mengatur buka/tutupnya lewat
+        // toggle show_form_kesediaan/lock_form_kesediaan di menu Kesediaan Dosen).
+        $wave = null;
+        if ($request->filled('wave_id')) {
+            $wave = PendaftaranPeriode::where('id', $request->wave_id)
+                ->where('periode_id', $activePeriode->id)
+                ->first();
 
-        if (!$wave) {
-            return redirect()->back()->with('error', 'Gelombang yang dipilih sudah tidak aktif. Silakan muat ulang halaman.');
+            if (!$wave) {
+                return redirect()->back()->with('error', 'Gelombang yang dipilih tidak valid untuk periode aktif ini.');
+            }
         }
 
         foreach ($request->slots as $slot) {
@@ -181,7 +186,7 @@ class DosenPortalController extends Controller
             KesediaanDosen::firstOrCreate(
                 [
                     'dosen_id' => $dosen->id,
-                    'wave_id' => $wave->id,
+                    'wave_id' => $wave?->id,
                     'tanggal' => $slot['tanggal'],
                 ],
                 [
