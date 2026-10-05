@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form Kesediaan Menguji - {{ $periode->nama_periode }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    {{-- Halaman ini selalu gelap; varian dark: pada komponen kalender ikut class "dark" di <html>. --}}
+    <script>tailwind.config = { darkMode: 'class' };</script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -55,12 +57,7 @@
         @endif
 
         <!-- Form Card -->
-        <div class="bg-slate-800/80 rounded-3xl p-5 sm:p-6 border border-slate-700/80 shadow-lg"
-             x-data="{
-                slots: [{ tanggal: '{{ now()->format('Y-m-d') }}', keterangan: '' }],
-                addSlot() { this.slots.push({ tanggal: '{{ now()->format('Y-m-d') }}', keterangan: '' }); },
-                removeSlot(i) { if (this.slots.length > 1) this.slots.splice(i, 1); }
-             }">
+        <div class="bg-slate-800/80 rounded-3xl p-5 sm:p-6 border border-slate-700/80 shadow-lg">
             <form method="POST" action="{{ route('public.kesediaan.store', $token) }}" class="space-y-4">
                 @csrf
 
@@ -83,31 +80,9 @@
                     </select>
                 </div>
 
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="text-xs font-extrabold text-slate-300 uppercase tracking-wider">Hari &amp; Tanggal Ketersediaan</label>
-                        <button type="button" @click="addSlot()" class="text-xs font-bold text-indigo-300 hover:text-indigo-200 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-400/30 px-3 py-1.5 rounded-xl transition-colors">
-                            + Tambah Tanggal
-                        </button>
-                    </div>
-
-                    <template x-for="(slot, index) in slots" :key="index">
-                        <div class="bg-slate-900/60 border border-slate-700 rounded-2xl p-4 mb-3 space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-indigo-300 bg-indigo-500/10 px-2.5 py-0.5 rounded-lg" x-text="'Tanggal ' + (index + 1)"></span>
-                                <button type="button" x-show="slots.length > 1" @click="removeSlot(index)" class="text-rose-400 hover:text-rose-300 text-xs font-bold">Hapus</button>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Tanggal *</label>
-                                <input type="date" :name="'slots['+index+'][tanggal]'" x-model="slot.tanggal" required class="w-full text-sm p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Catatan (Opsional)</label>
-                                <input type="text" :name="'slots['+index+'][keterangan]'" x-model="slot.keterangan" placeholder="Contoh: bisa luring/online" class="w-full text-sm p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                        </div>
-                    </template>
-                </div>
+                <x-kesediaan-date-picker
+                    :selected="collect(old('slots', []))->pluck('tanggal')->filter()->unique()->values()->all()"
+                    :keterangan="old('slots.0.keterangan', '')" />
 
                 <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all">
                     Simpan Kesediaan

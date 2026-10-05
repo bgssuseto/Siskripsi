@@ -389,37 +389,9 @@
                         </div>
                     @endif
 
-                    {{-- Slot List --}}
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Rentang Hari & Waktu Ketersediaan</label>
-                            <button type="button" @click="addSlot()" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-700 px-3 py-1.5 rounded-xl transition-colors cursor-pointer">
-                                + Tambah Slot Jam
-                            </button>
-                        </div>
-
-                        <template x-for="(slot, index) in slots" :key="index">
-                            <div class="bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-2xl p-4 mb-3 space-y-3 relative">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/40 px-2.5 py-0.5 rounded-lg" x-text="'Slot ' + (index + 1)"></span>
-                                    <button type="button" x-show="slots.length > 1" @click="removeSlot(index)" class="text-rose-500 hover:text-rose-700 text-xs font-bold cursor-pointer">
-                                        Hapus Slot
-                                    </button>
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Tanggal *</label>
-                                        <input type="date" :name="'slots['+index+'][tanggal]'" x-model="slot.tanggal" required class="w-full text-xs p-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Catatan / Keterangan (Opsional)</label>
-                                        <input type="text" :name="'slots['+index+'][keterangan]'" x-model="slot.keterangan" placeholder="Contoh: Ketersediaan menguji Sempro & Skripsi secara luring/online" class="w-full text-xs p-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400">
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
+                    {{-- Kalender multi-pilih tanggal --}}
+                    <x-kesediaan-date-picker
+                        :existing="$existingKesediaan->map(fn ($k) => \Carbon\Carbon::parse($k->tanggal)->format('Y-m-d'))->unique()->values()->all()" />
 
                     {{-- Modal Footer --}}
                     <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
@@ -435,22 +407,11 @@
         function kesediaanModalHandler() {
             return {
                 isOpen: false,
-                slots: [
-                    { tanggal: '{{ now()->format('Y-m-d') }}', keterangan: '' }
-                ],
                 openModal() {
                     this.isOpen = true;
                 },
                 closeModal() {
                     this.isOpen = false;
-                },
-                addSlot() {
-                    this.slots.push({ tanggal: '{{ now()->format('Y-m-d') }}', keterangan: '' });
-                },
-                removeSlot(index) {
-                    if (this.slots.length > 1) {
-                        this.slots.splice(index, 1);
-                    }
                 }
             }
         }
