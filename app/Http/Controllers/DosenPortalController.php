@@ -7,9 +7,14 @@ use App\Models\Dosen;
 use App\Models\Periode;
 use App\Models\PendaftaranPeriode;
 use App\Models\KesediaanDosen;
+use App\Services\KelulusanService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class DosenPortalController extends Controller
 {
@@ -550,5 +555,206 @@ class DosenPortalController extends Controller
         }
 
         return view('dosen.profil', compact('user', 'dosen', 'stats'));
+    }
+
+    /**
+     * Query dasar Riwayat Menguji: seluruh Sidang (sempro & skripsi, lintas
+     * periode/tahun ajaran — TIDAK dibatasi periode aktif saja seperti
+     * sempro()/skripsi(), supaya riwayat karier menguji dosen tetap utuh) di
+     * mana dosen ini terlibat sebagai pembimbing/penguji, dan tanggal
+     * ujiannya sudah lewat (bukan cuma terjadwal). Dipakai bersama oleh
+     * riwayat() (tampilan) dan riwayatExport() (unduh Excel) agar filternya
+     * selalu identik.
+     */
+    private function riwayatQuery(Request $request, int $dosenId): Builder
+    {
+        $todayStr = now()->timezone('Asia/Jakarta')->format('Y-m-d');
+
+        $query = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang', 'periode'])
+            ->whereNotNull('tanggal')
+            ->whereDate('tanggal', '<=', $todayStr)
+            ->where(function ($q) use ($dosenId) {
+                $q->where('dosen_pembimbing_utama_id', $dosenId)
+                  ->orWhere('dosen_pembimbing_pendamping_id', $dosenId)
+                  ->orWhere('ketua_penguji_id', $dosenId)
+                  ->orWhere('anggota_penguji_1_id', $dosenId)
+                  ->orWhere('anggota_penguji_2_id', $dosenId);
+            });
+
+        if ($request->filled('periode_id')) {
+            $query->where('periode_id', $request->periode_id);
+        }
+
+        if ($request->filled('jenis')) {
+            if ($request->jenis === 'sempro') {
+                $query->where('jenis_tugas_akhir', 'sempro');
+            } elseif ($request->jenis === 'skripsi') {
+                $query->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
+            }
+        }
+
+        if ($request->filled('gelombang')) {
+            $query->where('gelombang', $request->gelombang);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_mahasiswa', 'like', "%{$search}%")
+                  ->orWhere('nim', 'like', "%{$search}%")
+                  ->orWhere('judul_skripsi', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->orderByDesc('tanggal')->orderByDesc('jam');
+    }
+
+    /**
+     * Riwayat Menguji — rekap seluruh sidang/sempro yang SUDAH benar-benar
+     * berlangsung (tanggal & jam ujian sudah lewat) untuk dosen ini, bisa
+     * disaring per tahun ajaran (periode) & gelombang, lengkap dengan hasil
+     * ujian (lulus/tidak lulus) yang selama ini tidak terlihat sama sekali
+     * di halaman jadwal dosen.
+     */
+    public function riwayat(Request $request): View
+    {
+        $user = Auth::user();
+        $dosen = $user->dosen;
+
+        $periodes = Periode::orderByDesc('id')->get();
+        $gelombangOptions = collect();
+        $schedules = collect();
+        $rekap = [
+            'total' => 0,
+            'sempro' => 0,
+            'skripsi' => 0,
+            'lulus' => 0,
+            'tidak_lulus' => 0,
+            'belum' => 0,
+        ];
+
+        if ($dosen) {
+            // Data lama yang tanggal ujiannya sudah lewat tapi belum pernah
+            // dibuka lagi oleh admin/koordinator (satu-satunya tempat yang
+            // memanggil ini sebelumnya) bisa saja masih status_ujian kosong —
+            // sinkronkan dulu supaya riwayat dosen selalu akurat.
+            KelulusanService::autoFinalizePastExams();
+
+            $schedules = $this->riwayatQuery($request, $dosen->id)
+                ->get()
+                ->filter(fn (Sidang $s) => $s->isExamEnded())
+                ->values();
+
+            $rekap['total'] = $schedules->count();
+            $rekap['sempro'] = $schedules->where('jenis_tugas_akhir', 'sempro')->count();
+            $rekap['skripsi'] = $rekap['total'] - $rekap['sempro'];
+            $rekap['lulus'] = $schedules->where('status_ujian', 'lulus')->count();
+            $rekap['tidak_lulus'] = $schedules->where('status_ujian', 'tidak_lulus')->count();
+            $rekap['belum'] = $rekap['total'] - $rekap['lulus'] - $rekap['tidak_lulus'];
+
+            $gelombangOptions = PendaftaranPeriode::when(
+                    $request->filled('periode_id'),
+                    fn ($q) => $q->where('periode_id', $request->periode_id)
+                )
+                ->orderBy('gelombang')
+                ->pluck('gelombang')
+                ->unique()
+                ->values();
+        }
+
+        return view('dosen.riwayat', compact('schedules', 'dosen', 'periodes', 'gelombangOptions', 'rekap'));
+    }
+
+    /**
+     * Unduh rekap Riwayat Menguji (Excel) — filter sama persis dengan riwayat().
+     */
+    public function riwayatExport(Request $request)
+    {
+        $user = Auth::user();
+        $dosen = $user->dosen;
+
+        if (!$dosen) {
+            return redirect()->back()->with('error', 'Akun Anda belum terhubung dengan data Dosen.');
+        }
+
+        KelulusanService::autoFinalizePastExams();
+
+        $schedules = $this->riwayatQuery($request, $dosen->id)
+            ->get()
+            ->filter(fn (Sidang $s) => $s->isExamEnded())
+            ->values();
+
+        if ($schedules->isEmpty()) {
+            return redirect()->back()->with('warning', 'Tidak ada data riwayat menguji untuk diexport.');
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Riwayat Menguji');
+
+        $headers = ['NO', 'NIM', 'NAMA MAHASISWA', 'JUDUL', 'JENIS', 'PERAN', 'TAHUN AJARAN', 'GELOMBANG', 'TANGGAL', 'JAM', 'RUANGAN', 'HASIL UJIAN'];
+        foreach ($headers as $colIdx => $headerText) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
+            $sheet->setCellValue("{$colLetter}1", $headerText);
+        }
+        $headerRange = 'A1:L1';
+        $sheet->getStyle($headerRange)->getFont()->setBold(true);
+        $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $row = 2;
+        foreach ($schedules as $i => $s) {
+            $isSempro = $s->jenis_tugas_akhir === 'sempro';
+
+            $role = 'Penguji';
+            if ($s->dosen_pembimbing_utama_id === $dosen->id) {
+                $role = 'Pembimbing Utama';
+            } elseif ($s->dosen_pembimbing_pendamping_id === $dosen->id) {
+                $role = 'Pembimbing Pendamping';
+            } elseif ($s->ketua_penguji_id === $dosen->id) {
+                $role = 'Ketua Penguji';
+            } elseif ($s->anggota_penguji_1_id === $dosen->id) {
+                $role = 'Anggota Penguji 1';
+            } elseif ($s->anggota_penguji_2_id === $dosen->id) {
+                $role = 'Anggota Penguji 2';
+            }
+
+            $hasil = match ($s->status_ujian) {
+                'lulus' => 'Lulus',
+                'tidak_lulus' => 'Tidak Lulus / Remidi',
+                default => 'Belum Diisi',
+            };
+
+            $sheet->setCellValue("A{$row}", $i + 1);
+            $sheet->setCellValue("B{$row}", $s->nim);
+            $sheet->setCellValue("C{$row}", $s->nama_mahasiswa);
+            $sheet->setCellValue("D{$row}", $s->judul_skripsi);
+            $sheet->setCellValue("E{$row}", $isSempro ? 'Seminar Proposal' : 'Sidang Skripsi');
+            $sheet->setCellValue("F{$row}", $role);
+            $sheet->setCellValue("G{$row}", $s->periode->nama_periode ?? '-');
+            $sheet->setCellValue("H{$row}", $s->gelombang ?? '-');
+            $sheet->setCellValue("I{$row}", $s->tanggal ? $s->tanggal->locale('id')->isoFormat('dddd, D MMMM Y') : '-');
+            $sheet->setCellValue("J{$row}", $s->jam ?? '-');
+            $sheet->setCellValue("K{$row}", $s->ruang->kode_ruangan ?? '-');
+            $sheet->setCellValue("L{$row}", $hasil);
+
+            $row++;
+        }
+
+        foreach (range(1, 12) as $colIdx) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+
+        $cleanName = preg_replace('/[^\w\s,.]/', '', $dosen->nama_dosen);
+        $fileName = 'Riwayat_Menguji_' . str_replace(' ', '_', trim($cleanName)) . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
     }
 }

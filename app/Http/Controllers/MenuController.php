@@ -381,13 +381,27 @@ class MenuController extends Controller
         );
         $skripsiMenu->update(['parent_id' => $jadwalMenu->id]);
 
+        // Seed Riwayat Menguji (top-level, bukan submenu Jadwal — ini rekap/
+        // laporan histori, bukan penjadwalan yang sedang berjalan).
+        Menu::firstOrCreate(
+            ['route' => 'dosen.riwayat'],
+            [
+                'name'         => 'Riwayat Menguji',
+                'parent_id'    => null,
+                'icon'         => 'document',
+                'role_default' => 'dosen',
+                'sort_order'   => 24,
+            ]
+        );
+
         // Seed default role_menu mappings for dosen
         $dosenMenuRoutes = [
             'dosen.dashboard',
             'dosen.kalender',
             'dosen.profil',
             'dosen.jadwal.sempro',
-            'dosen.jadwal.skripsi'
+            'dosen.jadwal.skripsi',
+            'dosen.riwayat',
         ];
 
         $dosenMenus = Menu::whereIn('route', $dosenMenuRoutes)

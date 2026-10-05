@@ -455,7 +455,49 @@
         @endif
     </div>
 </div>
-</x-app-layout>
+
+{{-- ═══════════════════════════════════════════════════════════════ --}}
+{{-- TOAST NOTIFICATION SYSTEM                                        --}}
+{{-- ═══════════════════════════════════════════════════════════════ --}}
+<style>
+    #toast-container {
+        position: fixed; bottom: 1.5rem; right: 1.5rem;
+        z-index: 99999; display: flex; flex-direction: column; gap: .65rem;
+        pointer-events: none;
+    }
+    .toast {
+        display: flex; align-items: flex-start; gap: .85rem;
+        background: #fff; border-radius: 14px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+        padding: .9rem 1.1rem; min-width: 300px; max-width: 400px;
+        border-left: 4px solid #4361ee;
+        pointer-events: all;
+        animation: toastInSkripsi .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    .toast.toast-success { border-color: #10b981; }
+    .toast.toast-error   { border-color: #ef4444; }
+    .toast.toast-warning { border-color: #f59e0b; }
+    @keyframes toastInSkripsi {
+        from { opacity:0; transform: translateX(2rem) scale(.92); }
+        to   { opacity:1; transform: translateX(0) scale(1); }
+    }
+    .toast-icon { font-size:1.4rem; flex-shrink:0; line-height:1; }
+    .toast-body { flex:1; }
+    .toast-title { font-weight:700; font-size:.88rem; color:#0f172a; }
+    .toast-msg   { font-size:.8rem; color:#64748b; margin-top:.15rem; line-height:1.4; }
+    .toast-close {
+        background:none; border:none; color:#94a3b8; cursor:pointer;
+        font-size:1.1rem; line-height:1; padding:.1rem .2rem; flex-shrink:0;
+        transition: color .15s;
+    }
+    .toast-close:hover { color: #475569; }
+    html.dark .toast { background: #1e293b; box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3); }
+    html.dark .toast-title { color: #f8fafc; }
+    html.dark .toast-msg { color: #94a3b8; }
+    html.dark .toast-close { color: #64748b; }
+    html.dark .toast-close:hover { color: #cbd5e1; }
+</style>
+<div id="toast-container"></div>
 
 @push('scripts')
 <script>
@@ -497,16 +539,27 @@
             btn.disabled = true; btn.innerHTML = '⏳ Mengirim…';
             try {
                 const res = await fetch(this.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF_MHS_SKRIPSI, 'Accept': 'application/json' }, body: new FormData(this) });
-                const data = await res.json();
+                let data;
+                try {
+                    data = await res.json();
+                } catch (parseErr) {
+                    // Respons diterima tapi bukan JSON — biasanya berarti request DITOLAK
+                    // sebelum sempat diproses Laravel (mis. webserver/PHP menolak karena
+                    // ukuran file melebihi batas server), sehingga yang kembali adalah
+                    // halaman HTML mentah, bukan JSON error yang biasa kita tampilkan.
+                    showToastSkripsi('error', 'File gagal diunggah — kemungkinan ukurannya terlalu besar untuk server (status ' + res.status + '). Coba kompres file PDF Anda lalu unggah ulang.');
+                    return;
+                }
                 if (res.ok && data.success) {
                     showToastSkripsi('success', data.message || 'Pendaftaran berhasil dikirim!');
                     setTimeout(() => location.reload(), 1200);
                 } else {
                     showToastSkripsi(res.status === 422 ? 'warning' : 'error', extractErrorMessageSkripsi(data, 'Terjadi kesalahan.'));
                 }
-            } catch(err) { showToastSkripsi('error', 'Gagal terhubung ke server.'); }
+            } catch(err) { showToastSkripsi('error', 'Gagal terhubung ke server. Periksa koneksi internet Anda lalu coba lagi.'); }
             finally { btn.disabled = false; btn.innerHTML = orig; }
         });
     }
 </script>
 @endpush
+</x-app-layout>

@@ -35,9 +35,4 @@ return [
         ],
     ],
 
-    'mysql' => [
-        'mysqldump_path' => env('MYSQLDUMP_PATH', 'mysqldump'),
-        'mysql_path'     => env('MYSQL_BIN_PATH', 'mysql'),
-    ],
-
 ];

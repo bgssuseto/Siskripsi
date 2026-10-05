@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dosen;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
@@ -10,6 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class UserController extends Controller
 {
@@ -56,7 +61,9 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
+            // Nama akun mahasiswa diseragamkan HURUF KAPITAL agar konsisten
+            // dengan data pendaftaran sidang/sempro.
+            'name' => $validated['role'] === User::ROLE_MAHASISWA ? mb_strtoupper(trim($validated['name'])) : $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
@@ -106,7 +113,9 @@ class UserController extends Controller
         $before = $user->only(['name', 'email', 'role', 'dosen_id']);
 
         $userData = [
-            'name' => $validated['name'],
+            // Nama akun mahasiswa diseragamkan HURUF KAPITAL agar konsisten
+            // dengan data pendaftaran sidang/sempro.
+            'name' => $validated['role'] === User::ROLE_MAHASISWA ? mb_strtoupper(trim($validated['name'])) : $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
             'dosen_id' => $validated['role'] === User::ROLE_DOSEN ? ($validated['dosen_id'] ?? null) : null,
@@ -229,5 +238,245 @@ class UserController extends Controller
         }
 
         return redirect()->route('users.index')->with('success', 'User berhasil dihapus!');
+    }
+
+    /**
+     * Export the current user list (respecting search/role filter) to Excel —
+     * berfungsi sebagai backup ringan yang bisa direstore lewat importExcel().
+     * Password TIDAK PERNAH diikutkan (baik plaintext maupun hash) — bukan
+     * data yang aman untuk berada di file spreadsheet yang bisa tersimpan di
+     * mana saja. Restore akun baru dari file ini akan memakai password
+     * default, akun yang sudah ada tidak tersentuh passwordnya sama sekali.
+     */
+    public function exportExcel(Request $request)
+    {
+        $query = User::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('role') && in_array($request->role, [User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA, User::ROLE_DOSEN], true)) {
+            $query->where('role', $request->role);
+        }
+
+        $users = $query->with('dosen')->orderBy('name')->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data User');
+
+        $headers = ['NAMA', 'EMAIL', 'ROLE', 'NIM (MAHASISWA)', 'NIDN (DOSEN)', 'NO. HP'];
+        foreach ($headers as $colIdx => $headerText) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
+            $sheet->setCellValue("{$colLetter}1", $headerText);
+        }
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:F1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $row = 2;
+        foreach ($users as $u) {
+            $sheet->setCellValue("A{$row}", $u->name);
+            $sheet->setCellValueExplicit("B{$row}", $u->email, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue("C{$row}", $u->role);
+            $sheet->setCellValueExplicit("D{$row}", $u->nim ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("E{$row}", $u->dosen->nidn ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("F{$row}", $u->no_hp ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $row++;
+        }
+
+        foreach (range(1, 6) as $colIdx) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Data_User_' . now()->format('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    /**
+     * Import/restore user accounts from Excel (format identik dengan
+     * exportExcel()) — dicocokkan lewat EMAIL:
+     * - Email sudah terdaftar: nama/role/nim/tautan dosen diperbarui,
+     *   PASSWORD TIDAK PERNAH disentuh sama sekali (akun tetap bisa login
+     *   dengan password lama).
+     * - Email baru: akun baru dibuat dengan password default "password" —
+     *   wajib diganti setelah login pertama.
+     */
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'extensions:xlsx,xls,csv', 'max:5120'],
+        ], [
+            'file.required'   => 'File Excel wajib diunggah.',
+            'file.extensions' => 'Format file harus .xlsx, .xls, atau .csv.',
+            'file.max'        => 'Ukuran file maksimal 5MB.',
+        ]);
+
+        try {
+            $spreadsheet = IOFactory::load($request->file('file')->getPathname());
+            $rows = $spreadsheet->getActiveSheet()->toArray();
+
+            if (count($rows) < 2) {
+                $message = 'File Excel kosong atau tidak memiliki data.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->with('error', $message);
+            }
+
+            // Deteksi kolom header secara fleksibel (urutan kolom boleh berbeda),
+            // sama seperti pola import Master Dosen.
+            $namaCol = 0;
+            $emailCol = 1;
+            $roleCol = null;
+            $nimCol = null;
+            $nidnCol = null;
+            $noHpCol = null;
+            $headerRowIndex = 0;
+
+            foreach ($rows as $rIdx => $rData) {
+                if (!is_array($rData)) {
+                    continue;
+                }
+                $matched = false;
+                foreach ($rData as $cIdx => $cellVal) {
+                    $valLower = strtolower(trim((string) $cellVal));
+                    if (str_contains($valLower, 'email')) {
+                        $emailCol = $cIdx;
+                        $matched = true;
+                    } elseif (str_contains($valLower, 'role')) {
+                        $roleCol = $cIdx;
+                        $matched = true;
+                    } elseif (str_contains($valLower, 'nim')) {
+                        $nimCol = $cIdx;
+                        $matched = true;
+                    } elseif (str_contains($valLower, 'nidn')) {
+                        $nidnCol = $cIdx;
+                        $matched = true;
+                    } elseif (str_contains($valLower, 'hp') || str_contains($valLower, 'wa') || str_contains($valLower, 'telepon')) {
+                        $noHpCol = $cIdx;
+                        $matched = true;
+                    } elseif (str_contains($valLower, 'nama')) {
+                        $namaCol = $cIdx;
+                        $matched = true;
+                    }
+                }
+                if ($matched) {
+                    $headerRowIndex = $rIdx;
+                    break;
+                }
+            }
+
+            $validRoles = [User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR, User::ROLE_MAHASISWA, User::ROLE_DOSEN];
+
+            $created = 0;
+            $updated = 0;
+            $skipped = [];
+
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                if (!is_array($row)) {
+                    continue;
+                }
+
+                $name = trim((string) ($row[$namaCol] ?? ''));
+                $email = trim((string) ($row[$emailCol] ?? ''));
+
+                if ($name === '' && $email === '') {
+                    continue;
+                }
+
+                if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $skipped[] = ($name ?: "baris " . ($i + 1)) . ' (email kosong/tidak valid)';
+                    continue;
+                }
+
+                $roleRaw = strtolower(trim((string) ($roleCol !== null ? ($row[$roleCol] ?? '') : '')));
+                $role = in_array($roleRaw, $validRoles, true) ? $roleRaw : null;
+
+                $nim = $nimCol !== null ? trim((string) ($row[$nimCol] ?? '')) : '';
+                $nidn = $nidnCol !== null ? trim((string) ($row[$nidnCol] ?? '')) : '';
+                $noHp = $noHpCol !== null ? trim((string) ($row[$noHpCol] ?? '')) : '';
+
+                $dosenId = null;
+                if ($nidn !== '') {
+                    $dosenId = Dosen::where('nidn', $nidn)->value('id');
+                }
+
+                $existing = User::where('email', $email)->first();
+
+                if ($existing) {
+                    $effectiveRole = $role ?? $existing->role;
+                    $existing->update([
+                        'name'     => $effectiveRole === User::ROLE_MAHASISWA && $name !== '' ? mb_strtoupper(trim($name)) : ($name !== '' ? $name : $existing->name),
+                        'role'     => $effectiveRole,
+                        'nim'      => $effectiveRole === User::ROLE_MAHASISWA ? ($nim ?: $existing->nim) : $existing->nim,
+                        'dosen_id' => $effectiveRole === User::ROLE_DOSEN ? ($dosenId ?? $existing->dosen_id) : $existing->dosen_id,
+                        'no_hp'    => $noHp !== '' ? $noHp : $existing->no_hp,
+                    ]);
+                    $updated++;
+                    continue;
+                }
+
+                if ($name === '') {
+                    $skipped[] = "{$email} (nama kosong untuk akun baru)";
+                    continue;
+                }
+
+                $effectiveRole = $role ?? User::ROLE_MAHASISWA;
+
+                User::create([
+                    'name'     => $effectiveRole === User::ROLE_MAHASISWA ? mb_strtoupper(trim($name)) : $name,
+                    'email'    => $email,
+                    // Password default — akun baru hasil import wajib ganti password
+                    // sendiri; tidak pernah menerima/menyimpan password dari file Excel.
+                    'password' => Hash::make('password'),
+                    'role'     => $effectiveRole,
+                    'nim'      => $effectiveRole === User::ROLE_MAHASISWA ? ($nim ?: null) : null,
+                    'dosen_id' => $effectiveRole === User::ROLE_DOSEN ? $dosenId : null,
+                    'no_hp'    => $noHp ?: null,
+                ]);
+                $created++;
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            ActivityLogger::log('created', null, "Import data user dari Excel: {$created} akun baru dibuat, {$updated} akun diperbarui." . (!empty($skipped) ? ' Dilewati: ' . count($skipped) . '.' : ''));
+
+            $message = "{$created} akun baru dibuat, {$updated} akun diperbarui.";
+            if (!empty($skipped)) {
+                $message .= ' Dilewati: ' . implode('; ', array_slice($skipped, 0, 10)) . (count($skipped) > 10 ? ' (dan lainnya)' : '') . '.';
+            }
+            if ($created > 0) {
+                $message .= ' Akun baru menggunakan password default "password" — segera minta pengguna menggantinya.';
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => $message, 'created' => $created, 'updated' => $updated, 'skipped' => $skipped]);
+            }
+
+            return redirect()->route('users.index')->with('success', $message);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            $message = 'Gagal meng-import data user: ' . $e->getMessage();
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
     }
 }
