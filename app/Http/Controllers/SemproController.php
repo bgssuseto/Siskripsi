@@ -346,25 +346,51 @@ class SemproController extends Controller
                             ->where('jenis_tugas_akhir', 'sempro')->get();
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
 
-        $conflictIds = [];
-        foreach ($conflictMap as $sId => $cEntry) {
-            if (!empty($cEntry['schedule']) || !empty($cEntry['rules'])) {
-                $conflictIds[] = $sId;
+        $allMatching = $query->get();
+
+        // Kelompokkan berdasarkan PASANGAN dosen pembimbing (utama & pendamping,
+        // tanpa memandang urutan perannya) — penguji sempro = pembimbing sendiri,
+        // jadi mahasiswa dengan pasangan pembimbing yang sama paling enak diplot
+        // massal bersamaan. Di dalam grup: yang sudah terjadwal (urut tanggal)
+        // dulu, lalu yang belum terjadwal.
+        $pairOf = function ($s) {
+            $dosen = collect([
+                $s->dosen_pembimbing_utama_id ? ['id' => $s->dosen_pembimbing_utama_id, 'nama' => $s->pembimbingUtama->nama_dosen ?? '-'] : null,
+                $s->dosen_pembimbing_pendamping_id ? ['id' => $s->dosen_pembimbing_pendamping_id, 'nama' => $s->pembimbingPendamping->nama_dosen ?? '-'] : null,
+            ])->filter()->unique('id')->sortBy(fn ($d) => mb_strtolower($d['nama']))->values();
+
+            return [
+                'key'   => $dosen->isEmpty() ? 'none' : $dosen->pluck('id')->sort()->implode('-'),
+                'label' => $dosen->isEmpty() ? 'Belum ada pembimbing' : $dosen->pluck('nama')->implode(' & '),
+            ];
+        };
+
+        $pembimbingGroups = [];
+        foreach ($allMatching as $s) {
+            $pair = $pairOf($s);
+            $s->setAttribute('pembimbing_group_key', $pair['key']);
+            $pembimbingGroups[$pair['key']] ??= ['label' => $pair['label'], 'ids' => [], 'belum_terjadwal' => 0];
+            $pembimbingGroups[$pair['key']]['ids'][] = (string) $s->id;
+            if (empty($s->tanggal)) {
+                $pembimbingGroups[$pair['key']]['belum_terjadwal']++;
             }
         }
 
-        $allMatching = $query->get();
+        // Semua id yang belum terjadwal (lintas halaman) — "Pilih Semua di Grup
+        // Ini" bisa memilih mahasiswa di halaman lain, dan Asisten Plotting
+        // Otomatis harus tetap menerimanya.
+        $unscheduledIds = $allMatching->filter(fn ($s) => empty($s->tanggal))->pluck('id')->map(fn ($id) => (string) $id)->values();
 
-        $sortedSidangs = $allMatching->sortBy(function ($s) use ($conflictIds) {
-            $hasConflict = in_array($s->id, $conflictIds);
-            $hasDate     = !empty($s->tanggal) ? 0 : 1;
-            $tglOrder    = $s->tanggal ? $s->tanggal->format('Y-m-d') : '9999-12-31';
+        $sortedSidangs = $allMatching->sortBy(function ($s) use ($pembimbingGroups) {
+            $key = $s->pembimbing_group_key;
 
             return [
-                $hasConflict ? 0 : 1,
-                $hasDate,
-                $tglOrder,
-                $s->id
+                $key === 'none' ? 1 : 0,
+                mb_strtolower($pembimbingGroups[$key]['label']),
+                $key,
+                !empty($s->tanggal) ? 0 : 1,
+                $s->tanggal ? $s->tanggal->format('Y-m-d') . ' ' . $s->jam : '',
+                $s->id,
             ];
         })->values();
 
@@ -457,7 +483,7 @@ class SemproController extends Controller
         return view('sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
             'daftarTanggal', 'totalSempro', 'totalJalurSidang', 'totalJalurJurnal', 'calendarEvents', 'conflictMap', 'kesediaanDosens',
-            'selectedGelombang', 'gelombangOptions'
+            'selectedGelombang', 'gelombangOptions', 'pembimbingGroups', 'unscheduledIds'
         ));
     }
 

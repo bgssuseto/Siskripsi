@@ -210,7 +210,7 @@
         // Dipakai goToAutoPlot() supaya mahasiswa yang SUDAH terjadwal (kini juga
         // bisa dicentang untuk Edit Massal) tidak ikut dikirim ke Asisten Plotting
         // Otomatis — endpoint itu memang hanya memproses yang tanggalnya masih kosong.
-        unscheduledIds: {{ Js::from($sidangs->where('tanggal', null)->pluck('id')->map(fn($id) => (string) $id)->values()) }},
+        unscheduledIds: {{ Js::from($unscheduledIds) }},
         goToAutoPlot() {
             const ids = this.selectedIds.filter(id => this.unscheduledIds.includes(String(id)));
             if (ids.length === 0) {
@@ -453,10 +453,34 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                             </tr>
                         </thead>
                         <tbody>
+                            @php $prevGroupKey = null; @endphp
                             @forelse ($sidangs as $item)
                                 @php
                                     $hasConflict = isset($conflictMap[$item->id]) && !empty($conflictMap[$item->id]['schedule']);
+                                    $groupKey = $item->pembimbing_group_key;
+                                    $group = $pembimbingGroups[$groupKey] ?? null;
                                 @endphp
+                                {{-- Header grup: mahasiswa dikelompokkan per pasangan dosen pembimbing
+                                     (= penguji sempro) supaya mudah dipilih & diplot massal sekaligus. --}}
+                                @if($group && $groupKey !== $prevGroupKey)
+                                    @php $prevGroupKey = $groupKey; @endphp
+                                    <tr class="bg-violet-50/70 dark:bg-violet-950/30">
+                                        <td colspan="12" class="py-2 px-3">
+                                            <div class="flex flex-wrap items-center justify-between gap-2" x-data="{ groupIds: {{ Js::from($group['ids']) }} }">
+                                                <div class="text-xs font-extrabold text-violet-900 dark:text-violet-200">
+                                                    👥 {{ $group['label'] }}
+                                                    <span class="ml-1 font-semibold text-violet-700 dark:text-violet-300">— {{ count($group['ids']) }} mahasiswa</span>
+                                                    @if($group['belum_terjadwal'] > 0)
+                                                        <span class="ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">{{ $group['belum_terjadwal'] }} belum terjadwal</span>
+                                                    @endif
+                                                </div>
+                                                <button type="button" class="btn btn-outline btn-sm"
+                                                    @click="groupIds.every(id => selectedIds.includes(id)) ? (selectedIds = selectedIds.filter(id => !groupIds.includes(id))) : (selectedIds = [...new Set([...selectedIds, ...groupIds])])"
+                                                    x-text="groupIds.every(id => selectedIds.includes(id)) ? 'Batalkan Pilihan Grup' : 'Pilih Semua di Grup Ini'"></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                                 <tr class="{{ $hasConflict ? 'conflict-schedule' : '' }}">
                                     <td style="text-align:center; vertical-align: middle;">
                                         <input type="checkbox" x-model="selectedIds" value="{{ $item->id }}">
