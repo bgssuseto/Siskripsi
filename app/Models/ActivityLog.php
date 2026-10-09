@@ -43,6 +43,7 @@ class ActivityLog extends Model
         return match ($action) {
             'jadwalkan'    => 'Plotting Jadwal',
             'reschedule'   => 'Geser Jadwal',
+            'reset_jadwal' => 'Reset Jadwal',
             'verifikasi'   => 'Verifikasi Pendaftaran',
             'hasil-ujian'  => 'Hasil Ujian',
             'created'    => 'Tambah Data',

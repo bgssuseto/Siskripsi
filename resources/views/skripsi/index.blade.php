@@ -723,6 +723,7 @@
                                                 'anggota_penguji_1_id' => $item->anggota_penguji_1_id,
                                                 'anggota_penguji_2_id' => $item->anggota_penguji_2_id,
                                                 'ruang_id' => $item->ruang_id,
+                                                'ruang_label' => $item->ruang ? $item->ruang->kode_ruangan . ' (' . $item->ruang->nama_ruangan . ')' : null,
                                                 'periode_id' => $item->periode_id,
                                                 'tanggal' => $item->tanggal ? $item->tanggal->format('Y-m-d') : '',
                                                 'tanggal_pendaftaran' => $item->tanggal_pendaftaran ? $item->tanggal_pendaftaran->format('Y-m-d') : '',
@@ -1810,6 +1811,23 @@
         }
 
 
+        // Pilihan ruangan hanya berisi ruangan "Siap Digunakan". Kalau data lama
+        // sudah memakai ruangan yang kini berstatus belum siap, tambahkan opsi
+        // sementara supaya menyimpan form edit tidak diam-diam mengosongkan ruangannya.
+        function setRuangSelectValue(select, ruangId, ruangLabel) {
+            if (!select) return;
+            select.querySelectorAll('option[data-temp-ruang]').forEach(o => o.remove());
+            const id = ruangId ? String(ruangId) : '';
+            if (id && !Array.from(select.options).some(o => o.value === id)) {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = (ruangLabel || 'Ruangan') + ' — belum siap digunakan';
+                opt.dataset.tempRuang = '1';
+                select.appendChild(opt);
+            }
+            select.value = id;
+        }
+
         function openEdit(hashId, data) {
             document.getElementById('form-edit').action = '/master/skripsi/' + hashId;
             document.getElementById('edit-nim').value                             = data.nim || '';
@@ -1820,7 +1838,7 @@
             document.getElementById('edit-ketua').value                           = data.ketua_penguji_id || '';
             document.getElementById('edit-penguji1').value                        = data.anggota_penguji_1_id || '';
             document.getElementById('edit-penguji2').value                        = data.anggota_penguji_2_id || '';
-            document.getElementById('edit-ruangan').value                         = data.ruang_id || '';
+            setRuangSelectValue(document.getElementById('edit-ruangan'), data.ruang_id, data.ruang_label);
             document.getElementById('edit-periode').value                         = data.periode_id || '';
             document.getElementById('edit-tanggal').value                         = data.tanggal || '';
             document.getElementById('edit-tanggal-pendaftaran').value             = data.tanggal_pendaftaran || '';

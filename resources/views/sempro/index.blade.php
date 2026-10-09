@@ -229,7 +229,34 @@
             document.getElementById('bulk-jadwalkan-result').innerHTML = '';
             hideModalAlert('form-bulk-jadwalkan-alert');
             openModal('modal-bulk-jadwalkan');
-            if (typeof refreshBulkKesediaanInfo === 'function') refreshBulkKesediaanInfo();
+            if (typeof refreshBulkKesediaanInfo === 'function') refreshBulkKesediaanInfo(this.selectedIds);
+        },
+        async resetJadwalTerpilih() {
+            if (this.selectedIds.length === 0) return;
+            if (!confirm(`Reset jadwal ${this.selectedIds.length} mahasiswa terpilih?
+
+Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Mahasiswa yang sudah memiliki hasil ujian akan dilewati.`)) return;
+            try {
+                const response = await fetch('{{ route('jadwal.sempro.bulk-reset') }}', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ ids: this.selectedIds })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    let message = result.message;
+                    if (result.gagal && result.gagal.length > 0) {
+                        message += ' ' + result.gagal.length + ' dilewati: ' + result.gagal.map(g => g.nama + ' (' + g.alasan + ')').join(', ');
+                    }
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message, type: (result.gagal && result.gagal.length > 0) ? 'warning' : 'success' } }));
+                    setTimeout(() => location.reload(), (result.gagal && result.gagal.length > 0) ? 3500 : 1200);
+                } else {
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal mereset jadwal.', type: 'error' } }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Gagal terhubung ke server.', type: 'error' } }));
+            }
         },
         async submitBulkJadwalkan() {
             const tanggal = document.getElementById('bulk-tanggal').value;
@@ -399,6 +426,7 @@
                 <div class="flex items-center gap-2">
                     <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm">📅 Jadwalkan Terpilih (Otomatis)</button>
                     <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot / Edit Jadwal (Massal)</button>
+                    <button type="button" @click="resetJadwalTerpilih()" class="btn btn-danger btn-sm" title="Kosongkan tanggal, jam & ruangan untuk dijadwalkan ulang">♻️ Reset Jadwal</button>
                     <button type="button" @click="selectedIds = []" class="btn btn-outline btn-sm">Batalkan Pilihan</button>
                 </div>
             </div>
@@ -498,7 +526,7 @@
                                     </td>
                                     <td class="text-right space-x-1 whitespace-nowrap">
                                         <button class="btn btn-primary btn-sm" title="{{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}"
-                                            onclick="openJadwalkanSempro('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}')">
+                                            onclick="openJadwalkanSempro('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->id }}')">
                                             📅
                                         </button>
                                         <button class="btn btn-outline btn-sm" title="Edit Data"
@@ -510,6 +538,7 @@
                                                 'dosen_pembimbing_utama_id' => $item->dosen_pembimbing_utama_id,
                                                 'dosen_pembimbing_pendamping_id' => $item->dosen_pembimbing_pendamping_id,
                                                 'ruang_id' => $item->ruang_id,
+                                                'ruang_label' => $item->ruang ? $item->ruang->kode_ruangan . ' (' . $item->ruang->nama_ruangan . ')' : null,
                                                 'periode_id' => $item->periode_id,
                                                 'tanggal' => $item->tanggal ? $item->tanggal->format('Y-m-d') : '',
                                                 'tanggal_pendaftaran' => $item->tanggal_pendaftaran ? $item->tanggal_pendaftaran->format('Y-m-d') : '',
@@ -571,37 +600,19 @@
                         <div class="text-slate-500 dark:text-slate-400 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
                     </div>
 
-                    {{-- Info Box Kesediaan Menguji Dosen: awalnya tampilkan semua slot, otomatis
-                         difilter ke dosen yang siap pada tanggal terpilih begitu tanggal diklik --}}
-                    @if(isset($kesediaanDosens) && $kesediaanDosens->count() > 0)
-                        <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
-                            <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
-                                <span class="flex items-center gap-1.5">
-                                    <span>📝</span> Dosen Siap Menguji
-                                </span>
-                                <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="kesediaan-info-count">
-                                    {{ $kesediaanDosens->count() }} Slot Terdaftar
-                                </span>
-                            </div>
-                            <div class="max-h-32 overflow-y-auto space-y-1.5 pr-1" id="kesediaan-info-list">
-                                @foreach($kesediaanDosens as $kd)
-                                    <div class="flex items-center justify-between bg-white dark:bg-slate-800 border border-emerald-100 dark:border-emerald-800 rounded-xl p-2 text-[11px]">
-                                        <div>
-                                            <strong class="text-slate-800 dark:text-slate-100">{{ $kd->dosen->nama_dosen ?? 'Dosen' }}</strong>
-                                            <span class="text-indigo-700 dark:text-indigo-400 font-bold ml-1">({{ \Carbon\Carbon::parse($kd->tanggal)->locale('id')->translatedFormat('l, d F Y') }})</span>
-                                        </div>
-                                        <div class="font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                                            @if($kd->jam_mulai && $kd->jam_selesai)
-                                                ⏰ {{ $kd->jam_mulai }} - {{ $kd->jam_selesai }} WIB
-                                            @else
-                                                ✓ Tersedia (jam fleksibel)
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
+                    {{-- Info Box Kesediaan Pembimbing: penguji sempro = pembimbing mahasiswa itu
+                         sendiri, jadi hanya kesediaan pembimbing utama & pendamping yang ditampilkan
+                         (beserta catatannya). Awalnya semua tanggal, otomatis difilter begitu
+                         tanggal dipilih. Isinya dirender oleh refreshKesediaanInfo(). --}}
+                    <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
+                        <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
+                            <span class="flex items-center gap-1.5">
+                                <span>📝</span> Kesediaan Pembimbing (Penguji Sempro)
+                            </span>
+                            <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="kesediaan-info-count"></span>
                         </div>
-                    @endif
+                        <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1" id="kesediaan-info-list"></div>
+                    </div>
 
                     {{-- NOTE: must be raw json_encode (not Js::from), since the JS below reads
                          this tag's textContent and runs it through JSON.parse() itself; Js::from()
@@ -614,7 +625,17 @@
                         'tanggal'    => optional($kd->tanggal)->format('Y-m-d'),
                         'mulai'      => $kd->jam_mulai,
                         'selesai'    => $kd->jam_selesai,
+                        'keterangan' => $kd->keterangan,
                     ])->values(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+
+                    {{-- Peta sidang id → pembimbing (utama & pendamping), dipakai untuk menyaring
+                         kesediaan di modal plotting satuan maupun massal. --}}
+                    <script type="application/json" id="pembimbing-data">{!! json_encode($sidangs->mapWithKeys(fn($item) => [
+                        (string) $item->id => collect([
+                            $item->pembimbingUtama ? ['dosen_id' => $item->dosen_pembimbing_utama_id, 'nama_dosen' => $item->pembimbingUtama->nama_dosen, 'peran' => 'Pembimbing Utama'] : null,
+                            $item->pembimbingPendamping ? ['dosen_id' => $item->dosen_pembimbing_pendamping_id, 'nama_dosen' => $item->pembimbingPendamping->nama_dosen, 'peran' => 'Pembimbing Pendamping'] : null,
+                        ])->filter()->values(),
+                    ]), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 
                     <div class="form-section mt-0">
                         <div class="form-section-title">Waktu & Tempat Sempro</div>
@@ -677,22 +698,17 @@
                 </div>
                 <p class="text-xs text-slate-500 mb-4"><strong x-text="selectedIds.length"></strong> mahasiswa terpilih akan di-plot/diedit jadwalnya berurutan pada hari &amp; ruangan yang sama — sistem otomatis memberi slot jam berbeda per mahasiswa (mulai dari jam yang dipilih, berurutan sesuai durasi per sesi) supaya tidak bentrok ruangan. Mahasiswa yang sudah punya jadwal sebelumnya akan DITIMPA dengan jadwal baru ini.</p>
 
-                {{-- Info Box Kesediaan Menguji Dosen — sama seperti di modal plotting satuan,
-                     supaya terlihat dosen mana yang sudah mengisi kesediaan sebelum memilih
-                     tanggal untuk penjadwalan massal. --}}
-                @if(isset($kesediaanDosens) && $kesediaanDosens->count() > 0)
-                    <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
-                        <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
-                            <span class="flex items-center gap-1.5">
-                                <span>📝</span> Dosen Siap Menguji
-                            </span>
-                            <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="bulk-kesediaan-info-count">
-                                {{ $kesediaanDosens->count() }} Slot Terdaftar
-                            </span>
-                        </div>
-                        <div class="max-h-32 overflow-y-auto space-y-1.5 pr-1" id="bulk-kesediaan-info-list"></div>
+                {{-- Info Box Kesediaan Pembimbing — sama seperti di modal plotting satuan,
+                     berisi gabungan pembimbing dari semua mahasiswa terpilih. --}}
+                <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
+                    <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
+                        <span class="flex items-center gap-1.5">
+                            <span>📝</span> Kesediaan Pembimbing (Penguji Sempro)
+                        </span>
+                        <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="bulk-kesediaan-info-count"></span>
                     </div>
-                @endif
+                    <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1" id="bulk-kesediaan-info-list"></div>
+                </div>
 
                 <div class="form-section mt-0">
                     <div class="form-section-title">Waktu &amp; Tempat Sempro</div>
@@ -971,60 +987,100 @@
             const tanggalBadge = withTanggal
                 ? `<span class="text-indigo-700 font-bold ml-1">(${formatTanggalIndo(kd.tanggal)})</span>`
                 : '';
+            const peranBadge = kd.peran
+                ? `<span class="ml-1 text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 rounded px-1.5 py-0.5">${escapeHtml(kd.peran)}</span>`
+                : '';
+            const catatan = kd.keterangan
+                ? `<div class="mt-1 text-[10.5px] text-slate-600 italic">📌 Catatan: ${escapeHtml(kd.keterangan)}</div>`
+                : '';
             return `
-                <div class="flex items-center justify-between bg-white border border-emerald-100 rounded-xl p-2 text-[11px]">
-                    <div><strong class="text-slate-800">${escapeHtml(kd.nama_dosen)}</strong>${tanggalBadge}</div>
-                    <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                        ${jamBadgeHtml(kd.mulai, kd.selesai)}
+                <div class="bg-white border border-emerald-100 rounded-xl p-2 text-[11px]">
+                    <div class="flex items-center justify-between gap-2">
+                        <div><strong class="text-slate-800">${escapeHtml(kd.nama_dosen)}</strong>${peranBadge}${tanggalBadge}</div>
+                        <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 whitespace-nowrap">
+                            ${jamBadgeHtml(kd.mulai, kd.selesai)}
+                        </div>
                     </div>
+                    ${catatan}
                 </div>`;
         }
 
-        // Shows the "Dosen Siap Menguji" info box. With no tanggal picked yet it
-        // shows every kesediaan slot (all dates); once a tanggal is picked it
-        // narrows down to just that date's dosen. `idPrefix` lets the same logic
-        // drive both the single-plotting modal and the bulk-plotting modal, which
-        // each have their own tanggal input / list / count-badge elements.
-        function refreshKesediaanInfoFor(tanggalElId, listElId, countElId) {
+        function readJsonScript(id, fallback) {
+            const el = document.getElementById(id);
+            if (!el) return fallback;
+            try { return JSON.parse(el.textContent || '') ?? fallback; } catch (e) { return fallback; }
+        }
+
+        // Penguji sempro = pembimbing mahasiswa itu sendiri, jadi kumpulkan
+        // pembimbing (utama & pendamping) dari sidang-sidang yang sedang diplot.
+        const extraPembimbing = {};
+
+        function pembimbingOf(sidangIds) {
+            const map = { ...readJsonScript('pembimbing-data', {}), ...extraPembimbing };
+            const byDosen = new Map();
+            (sidangIds || []).forEach(id => {
+                (map[String(id)] || []).forEach(p => {
+                    if (!byDosen.has(String(p.dosen_id))) byDosen.set(String(p.dosen_id), p);
+                });
+            });
+            return byDosen;
+        }
+
+        // Shows the "Kesediaan Pembimbing" info box. Only kesediaan entries of
+        // the selected students' pembimbing are listed (with their catatan).
+        // With no tanggal picked yet it shows every date; once a tanggal is
+        // picked it narrows down to just that date. Pembimbing who have not
+        // filled in kesediaan at all are called out explicitly.
+        function refreshKesediaanInfoFor(tanggalElId, listElId, countElId, sidangIds) {
             const tanggal = document.getElementById(tanggalElId)?.value;
             const list = document.getElementById(listElId);
             const countBadge = document.getElementById(countElId);
-            const dataEl = document.getElementById('kesediaan-data');
-            if (!list || !dataEl) return;
+            if (!list) return;
 
-            let kesediaan = [];
-            try { kesediaan = JSON.parse(dataEl.textContent || '[]'); } catch (e) { kesediaan = []; }
-
-            if (!tanggal) {
-                if (countBadge) countBadge.textContent = `${kesediaan.length} Slot Terdaftar`;
-                if (kesediaan.length === 0) {
-                    list.innerHTML = '<div class="text-slate-500 italic px-1 py-2">Belum ada dosen yang mengisi data kesediaan menguji.</div>';
-                    return;
-                }
-                list.innerHTML = kesediaan.map(kd => kesediaanEntryHtml(kd, true)).join('');
+            const pembimbing = pembimbingOf(sidangIds);
+            if (pembimbing.size === 0) {
+                if (countBadge) countBadge.textContent = '0 Slot';
+                list.innerHTML = '<div class="text-slate-500 italic px-1 py-2">Data pembimbing mahasiswa belum diisi.</div>';
                 return;
             }
 
-            const entries = kesediaan.filter(k => k.tanggal === tanggal);
-            if (countBadge) countBadge.textContent = `${entries.length} Dosen Siap`;
+            const kesediaan = readJsonScript('kesediaan-data', [])
+                .filter(k => pembimbing.has(String(k.dosen_id)))
+                .map(k => ({ ...k, peran: pembimbing.get(String(k.dosen_id)).peran }));
 
-            if (entries.length === 0) {
-                list.innerHTML = '<div class="text-slate-500 italic px-1 py-2">Belum ada dosen yang mengisi kesediaan pada tanggal ini.</div>';
-                return;
-            }
+            const belumIsi = [...pembimbing.values()].filter(p => !kesediaan.some(k => String(k.dosen_id) === String(p.dosen_id)));
+            const belumIsiHtml = belumIsi.length
+                ? `<div class="text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-2 py-1.5 text-[11px]">⚠️ Belum mengisi kesediaan: ${belumIsi.map(p => `<strong>${escapeHtml(p.nama_dosen)}</strong> (${escapeHtml(p.peran)})`).join(', ')}</div>`
+                : '';
 
-            list.innerHTML = entries.map(kd => kesediaanEntryHtml(kd, false)).join('');
+            const entries = tanggal ? kesediaan.filter(k => k.tanggal === tanggal) : kesediaan;
+            if (countBadge) countBadge.textContent = tanggal ? `${entries.length} Pembimbing Siap` : `${entries.length} Slot Terdaftar`;
+
+            const emptyHtml = entries.length === 0 && belumIsi.length < pembimbing.size
+                ? `<div class="text-slate-500 italic px-1 py-2">${tanggal ? 'Pembimbing belum mengisi kesediaan pada tanggal ini.' : 'Belum ada kesediaan pembimbing.'}</div>`
+                : '';
+
+            list.innerHTML = entries.map(kd => kesediaanEntryHtml(kd, !tanggal)).join('') + emptyHtml + belumIsiHtml;
         }
+
+        let currentJadwalkanSidangId = null;
 
         function refreshKesediaanInfo() {
-            refreshKesediaanInfoFor('jadwalkan-tanggal', 'kesediaan-info-list', 'kesediaan-info-count');
+            refreshKesediaanInfoFor('jadwalkan-tanggal', 'kesediaan-info-list', 'kesediaan-info-count', currentJadwalkanSidangId ? [currentJadwalkanSidangId] : []);
         }
 
-        function refreshBulkKesediaanInfo() {
-            refreshKesediaanInfoFor('bulk-tanggal', 'bulk-kesediaan-info-list', 'bulk-kesediaan-info-count');
+        let currentBulkSidangIds = [];
+
+        function refreshBulkKesediaanInfo(sidangIds) {
+            if (Array.isArray(sidangIds)) currentBulkSidangIds = [...sidangIds];
+            refreshKesediaanInfoFor('bulk-tanggal', 'bulk-kesediaan-info-list', 'bulk-kesediaan-info-count', currentBulkSidangIds);
         }
 
-        function openJadwalkanSempro(hashId, nama, nim, tgl, jam, ruangId) {
+        function openJadwalkanSempro(hashId, nama, nim, tgl, jam, ruangId, sidangId, pembimbing) {
+            currentJadwalkanSidangId = sidangId || null;
+            // Event kalender bisa berasal dari sidang di luar halaman tabel saat ini,
+            // jadi data pembimbingnya dibawa langsung lewat extendedProps.
+            if (sidangId && Array.isArray(pembimbing)) extraPembimbing[String(sidangId)] = pembimbing;
             const form = document.getElementById('form-jadwalkan');
             form.action = '/jadwal/sempro/' + hashId + '/jadwalkan';
             document.getElementById('jadwalkan-mhs-nama').textContent = nama;
@@ -1038,6 +1094,23 @@
             openModal('modal-jadwalkan');
         }
 
+        // Pilihan ruangan hanya berisi ruangan "Siap Digunakan". Kalau data lama
+        // sudah memakai ruangan yang kini berstatus belum siap, tambahkan opsi
+        // sementara supaya menyimpan form edit tidak diam-diam mengosongkan ruangannya.
+        function setRuangSelectValue(select, ruangId, ruangLabel) {
+            if (!select) return;
+            select.querySelectorAll('option[data-temp-ruang]').forEach(o => o.remove());
+            const id = ruangId ? String(ruangId) : '';
+            if (id && !Array.from(select.options).some(o => o.value === id)) {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = (ruangLabel || 'Ruangan') + ' — belum siap digunakan';
+                opt.dataset.tempRuang = '1';
+                select.appendChild(opt);
+            }
+            select.value = id;
+        }
+
         function openEdit(hashId, data) {
             document.getElementById('form-edit').action = '/master/sempro/' + hashId;
             document.getElementById('edit-nim').value                             = data.nim || '';
@@ -1045,7 +1118,7 @@
             document.getElementById('edit-judul').value                           = data.judul_skripsi || '';
             document.getElementById('edit-dosbing-utama').value                   = data.dosen_pembimbing_utama_id || '';
             document.getElementById('edit-dosbing-pendamping').value              = data.dosen_pembimbing_pendamping_id || '';
-            document.getElementById('edit-ruangan').value                         = data.ruang_id || '';
+            setRuangSelectValue(document.getElementById('edit-ruangan'), data.ruang_id, data.ruang_label);
             document.getElementById('edit-periode').value                         = data.periode_id || '';
             document.getElementById('edit-tanggal').value                         = data.tanggal || '';
             document.getElementById('edit-tanggal-pendaftaran').value             = data.tanggal_pendaftaran || '';
@@ -1192,7 +1265,9 @@
                         props.nim,
                         info.event.startStr ? info.event.startStr.split('T')[0] : '',
                         props.jam,
-                        props.ruang_id
+                        props.ruang_id,
+                        props.sidang_id,
+                        props.pembimbing
                     );
                 },
             });

@@ -184,7 +184,7 @@ class SkripsiController extends Controller
 
         // Dropdown lists
         $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
-        $ruangs = Ruang::orderBy('kode_ruangan')->get();
+        $ruangs = Ruang::siapDigunakan()->orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
 
@@ -611,7 +611,7 @@ class SkripsiController extends Controller
         });
 
         $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
-        $ruangs = Ruang::orderBy('kode_ruangan')->get();
+        $ruangs = Ruang::siapDigunakan()->orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
         $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->orderBy('tanggal')->pluck('tanggal');
@@ -645,7 +645,7 @@ class SkripsiController extends Controller
         $validated = $request->validate([
             'tanggal'              => ['required', 'date'],
             'jam'                  => ['required', 'string', 'max:100'],
-            'ruang_id'             => ['required', 'exists:ruangs,id'],
+            'ruang_id'             => ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)],
             'ketua_penguji_id'     => ['required', 'exists:dosens,id'],
             'anggota_penguji_1_id' => ['required', 'exists:dosens,id'],
             'anggota_penguji_2_id' => ['required', 'exists:dosens,id'],
@@ -653,7 +653,7 @@ class SkripsiController extends Controller
             'tanggal.required'              => 'Tanggal sidang wajib diisi.',
             'jam.required'                  => 'Waktu / Jam sidang wajib dipilih.',
             'ruang_id.required'             => 'Ruangan sidang wajib dipilih.',
-            'ruang_id.exists'               => 'Ruangan yang dipilih tidak valid.',
+            'ruang_id.exists'               => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
             'ketua_penguji_id.required'     => 'Ketua Penguji wajib dipilih.',
             'anggota_penguji_1_id.required' => 'Penguji 1 wajib dipilih.',
             'anggota_penguji_2_id.required' => 'Penguji 2 wajib dipilih.',
@@ -726,7 +726,7 @@ class SkripsiController extends Controller
             'tanggal'              => ['required', 'date'],
             'jam_mulai'            => ['required', 'string'],
             'durasi_menit'         => ['required', 'integer', 'min:15', 'max:240'],
-            'ruang_id'             => ['required', 'exists:ruangs,id'],
+            'ruang_id'             => ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)],
             'ketua_penguji_id'     => ['required', 'exists:dosens,id'],
             'anggota_penguji_1_id' => ['required', 'exists:dosens,id'],
         ], [
@@ -735,6 +735,7 @@ class SkripsiController extends Controller
             'jam_mulai.required'             => 'Jam mulai sesi pertama wajib diisi.',
             'durasi_menit.required'          => 'Durasi per sesi wajib diisi.',
             'ruang_id.required'              => 'Ruangan sidang wajib dipilih.',
+            'ruang_id.exists'                => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
             'ketua_penguji_id.required'      => 'Ketua Penguji wajib dipilih.',
             'anggota_penguji_1_id.required'  => 'Penguji 1 wajib dipilih.',
         ]);

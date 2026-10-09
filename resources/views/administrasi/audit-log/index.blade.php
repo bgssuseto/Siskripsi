@@ -98,7 +98,7 @@
                             <td class="py-3.5 px-4 text-center">
                                 @php
                                     $actionBadgeClass = match($log->action) {
-                                        'jadwalkan', 'reschedule' => 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300',
+                                        'jadwalkan', 'reschedule', 'reset_jadwal' => 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300',
                                         'verifikasi' => 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300',
                                         'created' => 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
                                         'updated' => 'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300',

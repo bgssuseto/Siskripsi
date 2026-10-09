@@ -327,6 +327,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/jadwal/sempro/{sidang}/jadwalkan', [SemproController::class, 'jadwalkan'])->name('jadwal.sempro.jadwalkan');
         Route::patch('/jadwal/sempro/{sidang}/reschedule', [SemproController::class, 'reschedule'])->name('jadwal.sempro.reschedule');
         Route::post('/jadwal/sempro/bulk-jadwalkan', [SemproController::class, 'bulkJadwalkan'])->name('jadwal.sempro.bulk-jadwalkan');
+        Route::post('/jadwal/sempro/bulk-reset', [SemproController::class, 'bulkResetJadwal'])->name('jadwal.sempro.bulk-reset');
 
         // Hasil Ujian (shared by Jadwal Sidang Skripsi & Jadwal Sempro — both are Sidang records)
         Route::post('/jadwal/{sidang}/hasil-ujian', [SkripsiController::class, 'setHasilUjian'])->name('jadwal.hasil-ujian');

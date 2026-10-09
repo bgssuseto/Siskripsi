@@ -24,6 +24,15 @@ class Ruang extends Model
         'status',
     ];
 
+    /**
+     * Hanya ruangan berstatus "Siap Digunakan" — dipakai untuk semua pilihan
+     * ruangan di form penjadwalan sempro & skripsi.
+     */
+    public function scopeSiapDigunakan($query)
+    {
+        return $query->where('status', self::STATUS_SIAP);
+    }
+
     public function isSiapDigunakan(): bool
     {
         return $this->status === self::STATUS_SIAP;

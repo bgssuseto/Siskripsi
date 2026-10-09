@@ -14,6 +14,7 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class SemproController extends Controller
 {
@@ -160,7 +161,7 @@ class SemproController extends Controller
 
         // Dropdown lists
         $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
-        $ruangs = Ruang::orderBy('kode_ruangan')->get();
+        $ruangs = Ruang::siapDigunakan()->orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
 
@@ -204,6 +205,11 @@ class SemproController extends Controller
                     'has_conflict'   => $hasConflict,
                     'conflict_notes' => !empty($conflictEntry['schedule']) ? implode('; ', $conflictEntry['schedule']) : null,
                     'ruang_id'       => $s->ruang_id,
+                    'sidang_id'      => $s->id,
+                    'pembimbing'     => collect([
+                        $s->pembimbingUtama ? ['dosen_id' => $s->dosen_pembimbing_utama_id, 'nama_dosen' => $s->pembimbingUtama->nama_dosen, 'peran' => 'Pembimbing Utama'] : null,
+                        $s->pembimbingPendamping ? ['dosen_id' => $s->dosen_pembimbing_pendamping_id, 'nama_dosen' => $s->pembimbingPendamping->nama_dosen, 'peran' => 'Pembimbing Pendamping'] : null,
+                    ])->filter()->values(),
                 ]
             ];
         });
@@ -427,12 +433,17 @@ class SemproController extends Controller
                     'has_conflict'   => $hasConflict,
                     'conflict_notes' => !empty($conflictEntry['schedule']) ? implode('; ', $conflictEntry['schedule']) : null,
                     'ruang_id'       => $s->ruang_id,
+                    'sidang_id'      => $s->id,
+                    'pembimbing'     => collect([
+                        $s->pembimbingUtama ? ['dosen_id' => $s->dosen_pembimbing_utama_id, 'nama_dosen' => $s->pembimbingUtama->nama_dosen, 'peran' => 'Pembimbing Utama'] : null,
+                        $s->pembimbingPendamping ? ['dosen_id' => $s->dosen_pembimbing_pendamping_id, 'nama_dosen' => $s->pembimbingPendamping->nama_dosen, 'peran' => 'Pembimbing Pendamping'] : null,
+                    ])->filter()->values(),
                 ]
             ];
         });
 
         $dosens  = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
-        $ruangs  = Ruang::orderBy('kode_ruangan')->get();
+        $ruangs  = Ruang::siapDigunakan()->orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
         $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')
@@ -467,12 +478,12 @@ class SemproController extends Controller
         $validated = $request->validate([
             'tanggal'  => ['required', 'date'],
             'jam'      => ['required', 'string', 'max:100'],
-            'ruang_id' => ['required', 'exists:ruangs,id'],
+            'ruang_id' => ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)],
         ], [
             'tanggal.required'  => 'Tanggal sempro wajib diisi.',
             'jam.required'      => 'Waktu / Jam sempro wajib dipilih.',
             'ruang_id.required' => 'Ruangan sempro wajib dipilih.',
-            'ruang_id.exists'   => 'Ruangan yang dipilih tidak valid.',
+            'ruang_id.exists'   => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
         ]);
 
         // Check schedule conflicts
@@ -532,13 +543,14 @@ class SemproController extends Controller
             'tanggal'      => ['required', 'date'],
             'jam_mulai'    => ['required', 'string'],
             'durasi_menit' => ['required', 'integer', 'min:15', 'max:240'],
-            'ruang_id'     => ['required', 'exists:ruangs,id'],
+            'ruang_id'     => ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)],
         ], [
             'ids.required'          => 'Pilih minimal satu mahasiswa.',
             'tanggal.required'      => 'Tanggal sempro wajib diisi.',
             'jam_mulai.required'    => 'Jam mulai sesi pertama wajib diisi.',
             'durasi_menit.required' => 'Durasi per sesi wajib diisi.',
             'ruang_id.required'     => 'Ruangan sempro wajib dipilih.',
+            'ruang_id.exists'       => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
         ]);
 
         $durasi = (int) $validated['durasi_menit'];
@@ -593,6 +605,60 @@ class SemproController extends Controller
             'message'  => count($berhasil) . ' dari ' . count($validated['ids']) . ' mahasiswa berhasil dijadwalkan.',
             'berhasil' => $berhasil,
             'gagal'    => $gagal,
+        ]);
+    }
+
+    // ─── Bulk Reset Jadwal (kosongkan jadwal untuk dijadwalkan ulang) ─────────
+
+    /**
+     * Mengosongkan tanggal, jam & ruangan sempro terpilih supaya bisa
+     * dijadwalkan ulang dari awal — dipakai saat terjadi kesalahan plotting
+     * massal. Sempro yang sudah punya hasil ujian (lulus/tidak lulus) dilewati
+     * karena ujiannya sudah berlangsung.
+     */
+    public function bulkResetJadwal(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:sidangs,id'],
+        ], [
+            'ids.required' => 'Pilih minimal satu mahasiswa.',
+        ]);
+
+        $sidangs = Sidang::whereIn('id', $validated['ids'])
+            ->where('jenis_tugas_akhir', 'sempro')
+            ->get();
+
+        $berhasil = [];
+        $dilewati = [];
+
+        foreach ($sidangs as $sidang) {
+            if (empty($sidang->tanggal) && empty($sidang->jam) && empty($sidang->ruang_id)) {
+                continue;
+            }
+            if (!empty($sidang->status_ujian)) {
+                $dilewati[] = ['nama' => $sidang->nama_mahasiswa, 'alasan' => 'Sudah memiliki hasil ujian.'];
+                continue;
+            }
+
+            $before = $sidang->only(['tanggal', 'jam', 'ruang_id']);
+            $sidang->update(['tanggal' => null, 'jam' => null, 'ruang_id' => null]);
+
+            ActivityLogger::log(
+                'reset_jadwal',
+                $sidang,
+                "Mereset jadwal sempro {$sidang->nama_mahasiswa} ({$sidang->nim}) untuk dijadwalkan ulang.",
+                ['before' => $before, 'after' => $sidang->only(array_keys($before))]
+            );
+
+            $berhasil[] = $sidang->nama_mahasiswa;
+        }
+
+        return response()->json([
+            'success'  => true,
+            'message'  => count($berhasil) . ' jadwal sempro berhasil direset.',
+            'berhasil' => $berhasil,
+            'gagal'    => $dilewati,
         ]);
     }
 
