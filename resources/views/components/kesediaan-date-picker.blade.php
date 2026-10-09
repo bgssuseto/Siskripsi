@@ -144,7 +144,7 @@
 
     <div>
         <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Catatan untuk semua tanggal di atas (Opsional)</label>
-        <input type="text" x-model="keterangan" placeholder="Contoh: bisa luring/online, hanya pagi"
+        <input type="text" x-model="keterangan" placeholder="Opsional"
                class="w-full text-sm p-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500">
     </div>
 
