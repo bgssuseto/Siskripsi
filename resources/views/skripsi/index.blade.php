@@ -290,13 +290,21 @@
     <div class="sidang-page" x-data="{
         currentView: 'table',
         selectedIds: [],
+        // Dipakai goToAutoPlot() supaya mahasiswa yang SUDAH terjadwal (kini juga
+        // bisa dicentang untuk Edit Massal) tidak ikut dikirim ke Asisten Plotting
+        // Otomatis — endpoint itu memang hanya memproses yang tanggalnya masih kosong.
+        unscheduledIds: {{ Js::from($sidangs->where('tanggal', null)->pluck('id')->map(fn($id) => (string) $id)->values()) }},
         goToAutoPlot() {
-            if (this.selectedIds.length === 0) return;
+            const ids = this.selectedIds.filter(id => this.unscheduledIds.includes(String(id)));
+            if (ids.length === 0) {
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Pilih minimal satu mahasiswa yang belum terjadwal untuk Asisten Plotting Otomatis.', type: 'warning' } }));
+                return;
+            }
             const params = new URLSearchParams();
             params.set('generate', '1');
             params.set('periode_id', '{{ request('periode_id', $activePeriode->id ?? '') }}');
             params.set('jenis', 'skripsi');
-            this.selectedIds.forEach(id => params.append('ids[]', id));
+            ids.forEach(id => params.append('ids[]', id));
             window.location.href = '{{ route('jadwal.auto-plot.index') }}?' + params.toString();
         },
         openBulkManual() {
@@ -571,7 +579,7 @@
                 <span class="text-xs font-bold text-violet-800 dark:text-violet-300" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
                 <div class="flex items-center gap-2">
                     <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm">📅 Jadwalkan Terpilih (Otomatis)</button>
-                    <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot Manual (Massal)</button>
+                    <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot / Edit Jadwal (Massal)</button>
                     <button type="button" @click="selectedIds = []" class="btn btn-outline btn-sm">Batalkan Pilihan</button>
                 </div>
             </div>
@@ -583,7 +591,7 @@
                         <thead>
                             <tr>
                                 <th style="width:32px; text-align:center;">
-                                    <input type="checkbox" @click="selectedIds = $event.target.checked ? {{ Js::from($sidangs->where('tanggal', null)->pluck('id')->map(fn($id) => (string) $id)->values()) }} : []">
+                                    <input type="checkbox" @click="selectedIds = $event.target.checked ? {{ Js::from($sidangs->pluck('id')->map(fn($id) => (string) $id)->values()) }} : []">
                                 </th>
                                 <th style="width:42px; text-align:center;">No</th>
                                 <th style="width:90px;">Tgl Daftar</th>
@@ -611,9 +619,7 @@
                                 @endphp
                                 <tr class="{{ $hasSchedule ? 'conflict-schedule' : ($hasRuleViolation ? 'conflict-rule' : '') }}">
                                     <td style="text-align:center; vertical-align: middle;">
-                                        @if(empty($item->tanggal))
-                                            <input type="checkbox" x-model="selectedIds" value="{{ $item->id }}">
-                                        @endif
+                                        <input type="checkbox" x-model="selectedIds" value="{{ $item->id }}">
                                     </td>
                                     <td style="text-align:center; color:#475569; vertical-align: middle;">
                                         <div class="flex flex-col items-center justify-center">
@@ -1347,7 +1353,7 @@
     <div id="modal-bulk-jadwalkan" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-bulk-jadwalkan')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">🗓️ Plot Manual Massal</span>
+                <span class="modal-title">🗓️ Plot / Edit Jadwal Massal</span>
                 <button class="modal-close" onclick="closeModal('modal-bulk-jadwalkan')">✕</button>
             </div>
             <div class="modal-body">
@@ -1355,7 +1361,7 @@
                     <span>⚠️</span>
                     <span id="form-bulk-jadwalkan-alert-text"></span>
                 </div>
-                <p class="text-xs text-slate-500 mb-4"><strong x-text="selectedIds.length"></strong> mahasiswa terpilih akan dijadwalkan berurutan pada hari &amp; ruangan yang sama, dengan tim penguji yang sama — sistem otomatis memberi slot jam berbeda per mahasiswa (mulai dari jam yang dipilih, berurutan sesuai durasi per sesi) supaya tidak bentrok ruangan.</p>
+                <p class="text-xs text-slate-500 mb-4"><strong x-text="selectedIds.length"></strong> mahasiswa terpilih akan di-plot/diedit jadwalnya berurutan pada hari &amp; ruangan yang sama, dengan tim penguji yang sama — sistem otomatis memberi slot jam berbeda per mahasiswa (mulai dari jam yang dipilih, berurutan sesuai durasi per sesi) supaya tidak bentrok ruangan. Mahasiswa yang sudah punya jadwal sebelumnya akan DITIMPA dengan jadwal baru ini.</p>
 
                 {{-- Info Box Kesediaan Menguji Dosen — sama seperti di modal plotting satuan,
                      supaya terlihat dosen mana yang sudah mengisi kesediaan sebelum memilih
