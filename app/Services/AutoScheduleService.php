@@ -81,14 +81,23 @@ class AutoScheduleService
         // ── Kesediaan dosen: [dosen_id][Y-m-d] => [[start,end], ...] ──
         $kesediaanMap = [];
         KesediaanDosen::where('periode_id', $periodeId)->get()->each(function ($k) use (&$kesediaanMap) {
-            if (!$k->tanggal || !$k->jam_mulai || !$k->jam_selesai) {
+            if (!$k->tanggal) {
                 return;
             }
             $tgl = $k->tanggal->format('Y-m-d');
+
+            // Dosen biasanya cuma memilih TANGGAL kesediaan lewat portal dosen atau
+            // link publik — jam_mulai/jam_selesai tetap kosong kecuali datanya hasil
+            // import Excel. Kesediaan tanpa jam dianggap tersedia sepanjang jam
+            // operasional sidang (bukan di-skip), supaya mahasiswa yang pembimbingnya
+            // sudah mengisi kesediaan tetap bisa diusulkan otomatis — sebelumnya baris
+            // seperti ini selalu dibuang sehingga kesediaan yang diisi dosen lewat
+            // portal/link publik tidak pernah terpakai oleh asisten plotting.
             $start = self::timeStringToMinutes((string) $k->jam_mulai);
             $end = self::timeStringToMinutes((string) $k->jam_selesai);
             if ($start === null || $end === null || $end <= $start) {
-                return;
+                $start = self::JAM_OPERASIONAL_MULAI;
+                $end = self::JAM_OPERASIONAL_SELESAI;
             }
 
             // Pangkas ke jam operasional sidang (09.00–17.00) walaupun kesediaan dosen lebih lebar
