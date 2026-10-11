@@ -464,6 +464,14 @@ class SemproController extends Controller
                         $s->pembimbingUtama ? ['dosen_id' => $s->dosen_pembimbing_utama_id, 'nama_dosen' => $s->pembimbingUtama->nama_dosen, 'peran' => 'Pembimbing Utama'] : null,
                         $s->pembimbingPendamping ? ['dosen_id' => $s->dosen_pembimbing_pendamping_id, 'nama_dosen' => $s->pembimbingPendamping->nama_dosen, 'peran' => 'Pembimbing Pendamping'] : null,
                     ])->filter()->values(),
+                    'split_data'     => [
+                        'pembimbingPendampingId' => $s->dosen_pembimbing_pendamping_id,
+                        'jadwalTerpisah'          => (bool) $s->jadwal_terpisah,
+                        'tanggalPendamping'       => $s->tanggal_pendamping ? $s->tanggal_pendamping->format('Y-m-d') : '',
+                        'jamPendamping'           => $s->jam_pendamping ?? '',
+                        'ruangIdPendamping'       => $s->ruang_id_pendamping,
+                        'catatan'                 => $s->catatan_jadwal_terpisah,
+                    ],
                 ]
             ];
         });
@@ -491,30 +499,75 @@ class SemproController extends Controller
 
     public function jadwalkan(Request $request, Sidang $sidang)
     {
+        $jadwalTerpisah = $request->boolean('jadwal_terpisah');
+
         if ($request->filled('jam_mulai') && $request->filled('jam_selesai')) {
             $request->merge(['jam' => $request->input('jam_mulai') . ' - ' . $request->input('jam_selesai')]);
         }
+        if ($jadwalTerpisah && $request->filled('jam_mulai_pendamping') && $request->filled('jam_selesai_pendamping')) {
+            $request->merge(['jam_pendamping' => $request->input('jam_mulai_pendamping') . ' - ' . $request->input('jam_selesai_pendamping')]);
+        }
 
-        foreach (['ruang_id'] as $fk) {
+        foreach (['ruang_id', 'ruang_id_pendamping'] as $fk) {
             if ($request->has($fk) && ($request->input($fk) === '' || $request->input($fk) === 'null')) {
                 $request->merge([$fk => null]);
             }
         }
 
-        $validated = $request->validate([
+        // Jadwal terpisah cuma masuk akal kalau ada Pembimbing Pendamping untuk
+        // dipisah jadwalnya — tanpa pendamping, sempro-nya memang hanya satu
+        // sesi sejak awal.
+        if ($jadwalTerpisah && !$sidang->dosen_pembimbing_pendamping_id) {
+            $msg = 'Jadwal terpisah hanya berlaku untuk mahasiswa yang punya Pembimbing Pendamping.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('warning', $msg);
+        }
+
+        $rules = [
             'tanggal'  => ['required', 'date'],
             'jam'      => ['required', 'string', 'max:100'],
             'ruang_id' => ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)],
-        ], [
+        ];
+        $messages = [
             'tanggal.required'  => 'Tanggal sempro wajib diisi.',
             'jam.required'      => 'Waktu / Jam sempro wajib dipilih.',
             'ruang_id.required' => 'Ruangan sempro wajib dipilih.',
             'ruang_id.exists'   => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
-        ]);
+        ];
 
-        // Check schedule conflicts
+        if ($jadwalTerpisah) {
+            $rules['tanggal_pendamping']      = ['required', 'date'];
+            $rules['jam_pendamping']          = ['required', 'string', 'max:100'];
+            $rules['ruang_id_pendamping']     = ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)];
+            $rules['catatan_jadwal_terpisah'] = ['nullable', 'string', 'max:1000'];
+
+            $messages['tanggal_pendamping.required']  = 'Tanggal sesi Pembimbing Pendamping wajib diisi.';
+            $messages['jam_pendamping.required']      = 'Jam sesi Pembimbing Pendamping wajib dipilih.';
+            $messages['ruang_id_pendamping.required'] = 'Ruangan sesi Pembimbing Pendamping wajib dipilih.';
+            $messages['ruang_id_pendamping.exists']   = 'Ruangan sesi Pembimbing Pendamping tidak valid atau belum siap digunakan.';
+        }
+
+        $validated = $request->validate($rules, $messages);
+        $validated['jadwal_terpisah'] = $jadwalTerpisah;
+
+        if (!$jadwalTerpisah) {
+            // Kosongkan sisa kolom sesi kedua kalau sebelumnya pernah dipisah
+            // lalu digabung kembali jadi satu sesi.
+            $validated['tanggal_pendamping'] = null;
+            $validated['jam_pendamping'] = null;
+            $validated['ruang_id_pendamping'] = null;
+            $validated['catatan_jadwal_terpisah'] = null;
+        }
+
+        // Check schedule conflicts — jadwal terpisah dicek per sesi (Pembimbing
+        // Utama & Pendamping tidak saling membentrok satu sama lain, karena
+        // memang sengaja tidak hadir bersamaan) via checkSplitSemproConflicts().
         $checkData = array_merge($sidang->toArray(), $validated);
-        $scheduleConflicts = SidangConflictService::checkConflicts($checkData, $sidang->id);
+        $scheduleConflicts = $jadwalTerpisah
+            ? SidangConflictService::checkSplitSemproConflicts($checkData, $sidang->id)
+            : SidangConflictService::checkConflicts($checkData, $sidang->id);
         if (!empty($scheduleConflicts)) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)], 422);
@@ -522,11 +575,12 @@ class SemproController extends Controller
             return back()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
 
-        $before = $sidang->only(['tanggal', 'jam', 'ruang_id']);
+        $before = $sidang->only(['tanggal', 'jam', 'ruang_id', 'jadwal_terpisah', 'tanggal_pendamping', 'jam_pendamping', 'ruang_id_pendamping']);
 
-        // Unique DB constraint on (ruang_id, tanggal, jam) is the final
-        // backstop if another request just took this exact slot in the narrow
-        // window between checkConflicts() above and this write.
+        // Unique DB constraint on (ruang_id, tanggal, jam) — dan padanannya untuk
+        // sesi pendamping — adalah backstop terakhir kalau request lain baru saja
+        // mengambil slot yang sama persis di antara checkConflicts() di atas dan
+        // penulisan ini.
         try {
             $sidang->update($validated);
         } catch (\Illuminate\Database\QueryException $e) {
@@ -540,10 +594,14 @@ class SemproController extends Controller
             throw $e;
         }
 
+        $logMessage = $jadwalTerpisah
+            ? "Menetapkan jadwal sempro TERPISAH untuk {$sidang->nama_mahasiswa} ({$sidang->nim}) — sesi Pembimbing Utama: {$validated['tanggal']} {$validated['jam']}, sesi Pembimbing Pendamping: {$validated['tanggal_pendamping']} {$validated['jam_pendamping']}."
+            : "Menetapkan jadwal sempro untuk {$sidang->nama_mahasiswa} ({$sidang->nim}) pada {$validated['tanggal']} {$validated['jam']}.";
+
         ActivityLogger::log(
             'jadwalkan',
             $sidang,
-            "Menetapkan jadwal sempro untuk {$sidang->nama_mahasiswa} ({$sidang->nim}) pada {$validated['tanggal']} {$validated['jam']}.",
+            $logMessage,
             ['before' => $before, 'after' => $sidang->only(array_keys($before))]
         );
 
@@ -659,7 +717,9 @@ class SemproController extends Controller
         $dilewati = [];
 
         foreach ($sidangs as $sidang) {
-            if (empty($sidang->tanggal) && empty($sidang->jam) && empty($sidang->ruang_id)) {
+            $punyaJadwalUtama = !empty($sidang->tanggal) || !empty($sidang->jam) || !empty($sidang->ruang_id);
+            $punyaJadwalPendamping = !empty($sidang->tanggal_pendamping) || !empty($sidang->jam_pendamping) || !empty($sidang->ruang_id_pendamping);
+            if (!$punyaJadwalUtama && !$punyaJadwalPendamping) {
                 continue;
             }
             if (!empty($sidang->status_ujian)) {
@@ -667,8 +727,16 @@ class SemproController extends Controller
                 continue;
             }
 
-            $before = $sidang->only(['tanggal', 'jam', 'ruang_id']);
-            $sidang->update(['tanggal' => null, 'jam' => null, 'ruang_id' => null]);
+            $before = $sidang->only(['tanggal', 'jam', 'ruang_id', 'jadwal_terpisah', 'tanggal_pendamping', 'jam_pendamping', 'ruang_id_pendamping', 'catatan_jadwal_terpisah']);
+            // Reset juga sesi Pembimbing Pendamping (jadwal_terpisah) kalau ada —
+            // kalau tidak, sisa data sesi lama akan nyangkut walau tanggal
+            // utamanya sudah dikosongkan untuk dijadwalkan ulang.
+            $sidang->update([
+                'tanggal' => null, 'jam' => null, 'ruang_id' => null,
+                'jadwal_terpisah' => false, 'tanggal_pendamping' => null,
+                'jam_pendamping' => null, 'ruang_id_pendamping' => null,
+                'catatan_jadwal_terpisah' => null,
+            ]);
 
             ActivityLogger::log(
                 'reset_jadwal',

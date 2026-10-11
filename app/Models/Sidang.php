@@ -43,6 +43,11 @@ class Sidang extends Model
         'tanggal',
         'tanggal_pendaftaran',
         'jam',
+        'jadwal_terpisah',
+        'tanggal_pendamping',
+        'jam_pendamping',
+        'ruang_id_pendamping',
+        'catatan_jadwal_terpisah',
         'jenis_tugas_akhir',
         'jalur_ta',
         'kategori_jurnal',
@@ -62,6 +67,8 @@ class Sidang extends Model
         'tanggal_pendaftaran' => 'date',
         'verifikasi_tanggal' => 'datetime',
         'wa_joined_at' => 'datetime',
+        'jadwal_terpisah' => 'boolean',
+        'tanggal_pendamping' => 'date',
     ];
 
     /**
@@ -270,6 +277,15 @@ class Sidang extends Model
     }
 
     /**
+     * Ruang untuk sesi Pembimbing Pendamping, hanya relevan kalau
+     * jadwal_terpisah=true (lihat isJadwalTerpisah()).
+     */
+    public function ruangPendamping(): BelongsTo
+    {
+        return $this->belongsTo(Ruang::class, 'ruang_id_pendamping');
+    }
+
+    /**
      * Relasi ke Periode Akademik
      */
     public function periode(): BelongsTo
@@ -317,6 +333,9 @@ class Sidang extends Model
      * ini yang jamnya belum lewat tetap tampil "Proses Ujian", bukan langsung
      * "Selesai". Kalau `jam` kosong/tidak bisa diparse, fallback ke perbandingan
      * tanggal saja (jam akhir dianggap akhir hari itu).
+     *
+     * Untuk Sempro berjadwal_terpisah (lihat isJadwalTerpisah()): baru dianggap
+     * selesai kalau KEDUA sesi (Pembimbing Utama & Pendamping) sudah berlangsung.
      */
     public function isExamEnded(): bool
     {
@@ -324,9 +343,39 @@ class Sidang extends Model
             return false;
         }
 
+        $utamaEnded = self::hasSessionEnded($this->tanggal, $this->jam);
+
+        if (!$this->jadwal_terpisah) {
+            return $utamaEnded;
+        }
+
+        return $utamaEnded && $this->isSesiPendampingEnded();
+    }
+
+    public function isJadwalTerpisah(): bool
+    {
+        return (bool) $this->jadwal_terpisah;
+    }
+
+    /**
+     * Khusus Sempro berjadwal_terpisah: apakah sesi Pembimbing Pendamping
+     * (tanggal_pendamping/jam_pendamping) sudah berlangsung — logika sama
+     * seperti isExamEnded() tapi untuk sesi keduanya.
+     */
+    public function isSesiPendampingEnded(): bool
+    {
+        if (empty($this->tanggal_pendamping)) {
+            return false;
+        }
+
+        return self::hasSessionEnded($this->tanggal_pendamping, $this->jam_pendamping);
+    }
+
+    private static function hasSessionEnded($tanggal, ?string $jam): bool
+    {
         $now = now()->timezone('Asia/Jakarta');
         $today = $now->format('Y-m-d');
-        $jadwal = $this->tanggal->format('Y-m-d');
+        $jadwal = $tanggal->format('Y-m-d');
 
         if ($jadwal < $today) {
             return true;
@@ -337,13 +386,13 @@ class Sidang extends Model
         }
 
         // Hari ini — cek jam selesainya betul-betul sudah lewat.
-        $jamRange = \App\Services\SidangConflictService::parseJamRange($this->jam);
+        $jamRange = \App\Services\SidangConflictService::parseJamRange($jam);
         if (!$jamRange) {
             // Tidak ada jam tercatat — anggap belum selesai selama masih hari ini.
             return false;
         }
 
-        $examEndsAt = $this->tanggal->copy()->timezone('Asia/Jakarta')->startOfDay()->addMinutes($jamRange['end']);
+        $examEndsAt = $tanggal->copy()->timezone('Asia/Jakarta')->startOfDay()->addMinutes($jamRange['end']);
 
         return $now->greaterThan($examEndsAt);
     }
@@ -358,6 +407,10 @@ class Sidang extends Model
     {
         if (empty($this->tanggal)) {
             return '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">● Belum Plotting</span>';
+        }
+
+        if ($this->jadwal_terpisah) {
+            return $this->getJadwalStatusHtmlTerpisah();
         }
 
         $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
@@ -390,6 +443,60 @@ class Sidang extends Model
         return '<div class="flex flex-wrap gap-1">' .
                '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">⏳ Proses Ujian</span>' .
                $detailBadges .
+               '</div>';
+    }
+
+    /**
+     * Varian getJadwalStatusHtml() untuk Sempro berjadwal_terpisah — Pembimbing
+     * Utama & Pendamping diuji di tanggal/jam/ruang masing-masing, jadi
+     * ditampilkan sebagai dua baris status terpisah alih-alih satu.
+     */
+    private function getJadwalStatusHtmlTerpisah(): string
+    {
+        $html = '<div class="flex flex-col gap-1">';
+        $html .= '<span class="inline-flex items-center gap-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap w-fit">🔀 Jadwal Terpisah</span>';
+        $html .= $this->sessionStatusBadgeHtml('Pembimbing Utama', $this->tanggal, $this->jam, $this->ruang->kode_ruangan ?? null);
+
+        if ($this->tanggal_pendamping) {
+            $html .= $this->sessionStatusBadgeHtml('Pembimbing Pendamping', $this->tanggal_pendamping, $this->jam_pendamping, $this->ruangPendamping->kode_ruangan ?? null);
+        } else {
+            $html .= '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap w-fit">⚠️ Sesi Pembimbing Pendamping belum dijadwalkan</span>';
+        }
+
+        if ($this->catatan_jadwal_terpisah) {
+            $html .= '<span class="text-[9px] text-slate-500 dark:text-slate-400 italic">📝 ' . e($this->catatan_jadwal_terpisah) . '</span>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    private function sessionStatusBadgeHtml(string $label, $tanggal, ?string $jam, ?string $ruangKode): string
+    {
+        $ended = self::hasSessionEnded($tanggal, $jam);
+        $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
+        $tglYmd = $tanggal->format('Y-m-d');
+
+        if ($ended) {
+            $statusBadge = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">✓ Selesai</span>';
+        } elseif ($tglYmd === $today) {
+            $statusBadge = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">⏳ Proses</span>';
+        } else {
+            $statusBadge = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">● Belum</span>';
+        }
+
+        $detail = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">📅 ' . e($tanggal->locale('id')->translatedFormat('d M Y')) . '</span>';
+        if (!empty($jam)) {
+            $detail .= '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">🕐 ' . e($jam) . '</span>';
+        }
+        if (!empty($ruangKode)) {
+            $detail .= '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">📍 ' . e($ruangKode) . '</span>';
+        }
+
+        return '<div class="flex flex-wrap items-center gap-1">' .
+               '<span class="text-[9px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wide">' . e($label) . ':</span>' .
+               $statusBadge . $detail .
                '</div>';
     }
 
@@ -438,16 +545,29 @@ class Sidang extends Model
             return false;
         }
 
+        if ($this->jadwal_terpisah) {
+            return !empty($this->tanggal_pendamping) && !empty($this->ruang_id_pendamping);
+        }
+
         return $this->jenis_tugas_akhir === 'sempro' || !empty($this->ketua_penguji_id);
     }
 
     /**
      * Whether the exam result (lulus/tidak lulus) can be set for this record yet
      * — only once it has actually been scheduled and the exam date has passed.
+     * Untuk Sempro berjadwal_terpisah, baru bisa diisi setelah KEDUA sesi lewat.
      */
     public function canSetHasilUjian(): bool
     {
-        return !empty($this->tanggal) && $this->tanggal->isPast();
+        if (empty($this->tanggal) || !$this->tanggal->isPast()) {
+            return false;
+        }
+
+        if ($this->jadwal_terpisah) {
+            return !empty($this->tanggal_pendamping) && $this->tanggal_pendamping->isPast();
+        }
+
+        return true;
     }
 
     /**

@@ -335,6 +335,140 @@ class SidangConflictService
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // SEMPRO JADWAL TERPISAH (Pembimbing Utama & Pendamping tidak bisa
+    // menyamakan jadwal — mahasiswa diuji di DUA sesi/tanggal berbeda)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Khusus Sempro dengan jadwal_terpisah=true: Pembimbing Utama (Ketua
+     * Penguji) dan Pembimbing Pendamping (Anggota Penguji 1) menguji
+     * mahasiswa yang sama di DUA tanggal/jam/ruang berbeda. checkConflicts()
+     * biasa mengasumsikan satu tanggal/jam/ruang untuk seluruh dewan penguji,
+     * jadi di sini dijalankan terpisah per sesi — masing-masing TANPA
+     * menyertakan peran dosen dari sesi yang lain (dosen itu memang tidak
+     * hadir di sesi tsb) — ditambah satu pengecekan manual terhadap sesi
+     * PENDAMPING milik sidang lain yang juga berjadwal terpisah, satu-satunya
+     * hal yang tidak terlihat oleh checkConflicts() karena query intinya
+     * hanya melihat kolom `tanggal` utama, bukan `tanggal_pendamping`.
+     *
+     * @param array $data Harus memuat: nim, dosen_pembimbing_utama_id,
+     *   ketua_penguji_id, tanggal, jam, ruang_id (sesi utama) DAN
+     *   dosen_pembimbing_pendamping_id, anggota_penguji_1_id,
+     *   tanggal_pendamping, jam_pendamping, ruang_id_pendamping (sesi kedua).
+     */
+    public static function checkSplitSemproConflicts(array $data, ?int $excludeId = null): array
+    {
+        $conflicts = [];
+
+        $sesiUtama = [
+            'nim'                            => $data['nim'] ?? null,
+            'jenis_tugas_akhir'              => 'sempro',
+            'tanggal'                        => $data['tanggal'] ?? null,
+            'jam'                            => $data['jam'] ?? null,
+            'ruang_id'                       => $data['ruang_id'] ?? null,
+            'dosen_pembimbing_utama_id'      => $data['dosen_pembimbing_utama_id'] ?? null,
+            'dosen_pembimbing_pendamping_id' => null,
+            'ketua_penguji_id'               => $data['ketua_penguji_id'] ?? null,
+            'anggota_penguji_1_id'           => null,
+            'anggota_penguji_2_id'           => null,
+        ];
+
+        $sesiPendamping = [
+            'nim'                            => $data['nim'] ?? null,
+            'jenis_tugas_akhir'              => 'sempro',
+            'tanggal'                        => $data['tanggal_pendamping'] ?? null,
+            'jam'                            => $data['jam_pendamping'] ?? null,
+            'ruang_id'                       => $data['ruang_id_pendamping'] ?? null,
+            'dosen_pembimbing_utama_id'      => null,
+            'dosen_pembimbing_pendamping_id' => $data['dosen_pembimbing_pendamping_id'] ?? null,
+            'ketua_penguji_id'               => null,
+            'anggota_penguji_1_id'           => $data['anggota_penguji_1_id'] ?? null,
+            'anggota_penguji_2_id'           => null,
+        ];
+
+        foreach (self::checkConflicts($sesiUtama, $excludeId) as $msg) {
+            $conflicts[] = "[Sesi Pembimbing Utama] {$msg}";
+        }
+        foreach (self::checkConflicts($sesiPendamping, $excludeId) as $msg) {
+            $conflicts[] = "[Sesi Pembimbing Pendamping] {$msg}";
+        }
+
+        foreach ([
+            ['sesi' => $sesiUtama,      'label' => 'Sesi Pembimbing Utama'],
+            ['sesi' => $sesiPendamping, 'label' => 'Sesi Pembimbing Pendamping'],
+        ] as $check) {
+            $conflicts = array_merge(
+                $conflicts,
+                self::checkAgainstOtherPendampingSessions($check['sesi'], $check['label'], $excludeId)
+            );
+        }
+
+        return array_unique($conflicts);
+    }
+
+    /**
+     * Bagian kedua dari checkSplitSemproConflicts(): bandingkan satu sesi baru
+     * terhadap sesi PENDAMPING milik sidang LAIN yang juga berjadwal terpisah
+     * — satu-satunya kombinasi yang tidak tercakup oleh checkConflicts() biasa.
+     */
+    private static function checkAgainstOtherPendampingSessions(array $sesi, string $label, ?int $excludeId): array
+    {
+        if (!$sesi['tanggal'] || !$sesi['jam']) {
+            return [];
+        }
+
+        $tanggalYmd = $sesi['tanggal'] instanceof Carbon
+            ? $sesi['tanggal']->format('Y-m-d')
+            : Carbon::parse($sesi['tanggal'])->format('Y-m-d');
+
+        $others = Sidang::with('ruangPendamping')
+            ->where('jadwal_terpisah', true)
+            ->whereDate('tanggal_pendamping', $tanggalYmd)
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+            ->get();
+
+        if ($others->isEmpty()) {
+            return [];
+        }
+
+        $tglIndo = Carbon::parse($tanggalYmd)->locale('id')->isoFormat('D MMMM Y');
+        $conflicts = [];
+
+        foreach ($others as $other) {
+            if (!self::isTimeOverlap($sesi['jam'], $other->jam_pendamping)) {
+                continue;
+            }
+
+            if ($sesi['ruang_id'] && (int) $other->ruang_id_pendamping === (int) $sesi['ruang_id']) {
+                $ruangNama = $other->ruangPendamping?->kode_ruangan ?? 'Ruangan';
+                $conflicts[] = "[{$label}] Bentrok Ruangan '{$ruangNama}': Sudah dipakai sesi Pembimbing Pendamping ujian '{$other->nama_mahasiswa}' pada {$tglIndo} jam {$other->jam_pendamping}.";
+            }
+
+            $newDosenRoles = array_filter([
+                'Pembimbing Utama'      => $sesi['dosen_pembimbing_utama_id'] ?? null,
+                'Pembimbing Pendamping' => $sesi['dosen_pembimbing_pendamping_id'] ?? null,
+                'Ketua Penguji'         => $sesi['ketua_penguji_id'] ?? null,
+                'Penguji 1'             => $sesi['anggota_penguji_1_id'] ?? null,
+            ]);
+            $otherDosenRoles = array_filter([
+                'Pembimbing Pendamping' => $other->dosen_pembimbing_pendamping_id,
+                'Penguji 1'             => $other->anggota_penguji_1_id,
+            ]);
+
+            foreach ($newDosenRoles as $newRole => $newDosenId) {
+                foreach ($otherDosenRoles as $otherRole => $otherDosenId) {
+                    if ((int) $newDosenId === (int) $otherDosenId) {
+                        $dosenNama = Dosen::find($newDosenId)?->nama_dosen ?? 'Dosen';
+                        $conflicts[] = "[{$label}] Bentrok Dosen '{$dosenNama}' (sebagai {$newRole}): Sedang bertugas sebagai {$otherRole} (sesi Pembimbing Pendamping) untuk ujian '{$other->nama_mahasiswa}' pada {$tglIndo} jam {$other->jam_pendamping}.";
+                    }
+                }
+            }
+        }
+
+        return $conflicts;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // DETECT ALL CONFLICTS (full list, for table badges + edit modal)
     // ─────────────────────────────────────────────────────────────────────────
 

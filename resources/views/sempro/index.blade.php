@@ -550,7 +550,14 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                     </td>
                                     <td class="text-right space-x-1 whitespace-nowrap">
                                         <button class="btn btn-primary btn-sm" title="{{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}"
-                                            onclick="openJadwalkanSempro('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->id }}')">
+                                            onclick="openJadwalkanSempro('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->id }}', undefined, {{ Js::from([
+                                                'pembimbingPendampingId' => $item->dosen_pembimbing_pendamping_id,
+                                                'jadwalTerpisah' => (bool) $item->jadwal_terpisah,
+                                                'tanggalPendamping' => $item->tanggal_pendamping ? $item->tanggal_pendamping->format('Y-m-d') : '',
+                                                'jamPendamping' => $item->jam_pendamping ?? '',
+                                                'ruangIdPendamping' => $item->ruang_id_pendamping,
+                                                'catatan' => $item->catatan_jadwal_terpisah,
+                                            ]) }})">
                                             📅
                                         </button>
                                         <button class="btn btn-outline btn-sm" title="Edit Data"
@@ -697,6 +704,60 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                     <option value="{{ $r->id }}">{{ $r->kode_ruangan }} ({{ $r->nama_ruangan }})</option>
                                 @endforeach
                             </select>
+                        </div>
+                    </div>
+
+                    {{-- Toggle "Pisahkan Jadwal": khusus Sempro — kalau Pembimbing Utama &
+                         Pembimbing Pendamping tidak bisa menyamakan jadwal, mahasiswa bisa
+                         diuji di 2 sesi terpisah (tanggal/jam/ruang masing-masing). Hanya
+                         ditampilkan untuk mahasiswa yang punya Pembimbing Pendamping — lihat
+                         toggleJadwalTerpisah() & openJadwalkanSempro(). --}}
+                    <div id="jadwalkan-terpisah-wrapper" class="form-section" style="display:none;">
+                        <label class="flex items-start gap-2.5 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-700 rounded-xl cursor-pointer">
+                            <input type="checkbox" name="jadwal_terpisah" id="jadwalkan-terpisah-toggle" value="1" class="mt-0.5" onchange="toggleJadwalTerpisah()">
+                            <span class="text-xs">
+                                <span class="font-bold text-amber-900 dark:text-amber-300">Pisahkan Jadwal (Pembimbing Tidak Bisa Bertemu)</span>
+                                <span class="block text-amber-700 dark:text-amber-400 mt-0.5">Jadwal di atas berlaku untuk sesi Pembimbing Utama. Aktifkan kalau Pembimbing Pendamping perlu diuji di sesi lain.</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div id="jadwalkan-terpisah-section" class="form-section" style="display:none;">
+                        <div class="form-section-title">Sesi Pembimbing Pendamping (Terpisah)</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
+                                <input type="date" name="tanggal_pendamping" id="jadwalkan-tanggal-pendamping" class="form-control text-xs p-2.5">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai *</label>
+                                <select name="jam_mulai_pendamping" id="jadwalkan-jam-mulai-pendamping" class="form-control text-xs p-2.5 bg-white cursor-pointer">
+                                    @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
+                                        <option value="{{ $t }}">{{ $t }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Selesai *</label>
+                                <select name="jam_selesai_pendamping" id="jadwalkan-jam-selesai-pendamping" class="form-control text-xs p-2.5 bg-white cursor-pointer">
+                                    @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
+                                        <option value="{{ $t }}">{{ $t }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Ruangan Sesi Pendamping <span style="color:red">*</span></label>
+                            <select name="ruang_id_pendamping" id="jadwalkan-ruang-pendamping" class="form-control">
+                                <option value="">-- Pilih Ruangan --</option>
+                                @foreach ($ruangs as $r)
+                                    <option value="{{ $r->id }}">{{ $r->kode_ruangan }} ({{ $r->nama_ruangan }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan Pemisahan Jadwal</label>
+                            <textarea name="catatan_jadwal_terpisah" id="jadwalkan-catatan-terpisah" rows="2" placeholder="Contoh: Pembimbing Utama &amp; Pendamping tidak punya hari yang sama tersedia minggu ini." class="form-control text-xs p-2.5"></textarea>
                         </div>
                     </div>
                 </div>
@@ -1100,7 +1161,19 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
             refreshKesediaanInfoFor('bulk-tanggal', 'bulk-kesediaan-info-list', 'bulk-kesediaan-info-count', currentBulkSidangIds);
         }
 
-        function openJadwalkanSempro(hashId, nama, nim, tgl, jam, ruangId, sidangId, pembimbing) {
+        // Tampil/sembunyi sesi Pembimbing Pendamping terpisah, dan tandai field-nya
+        // required hanya saat toggle aktif (biar validasi browser tidak memaksa
+        // sesi kedua diisi waktu mahasiswa memang diuji satu sesi saja).
+        function toggleJadwalTerpisah() {
+            const checked = document.getElementById('jadwalkan-terpisah-toggle').checked;
+            document.getElementById('jadwalkan-terpisah-section').style.display = checked ? 'block' : 'none';
+            ['jadwalkan-tanggal-pendamping', 'jadwalkan-jam-mulai-pendamping', 'jadwalkan-jam-selesai-pendamping', 'jadwalkan-ruang-pendamping'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.required = checked;
+            });
+        }
+
+        function openJadwalkanSempro(hashId, nama, nim, tgl, jam, ruangId, sidangId, pembimbing, splitData) {
             currentJadwalkanSidangId = sidangId || null;
             // Event kalender bisa berasal dari sidang di luar halaman tabel saat ini,
             // jadi data pembimbingnya dibawa langsung lewat extendedProps.
@@ -1114,6 +1187,27 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
             if (document.getElementById('jadwalkan-jam-mulai')) document.getElementById('jadwalkan-jam-mulai').value = parsed.mulai;
             if (document.getElementById('jadwalkan-jam-selesai')) document.getElementById('jadwalkan-jam-selesai').value = parsed.selesai;
             document.getElementById('jadwalkan-ruang').value = ruangId || '';
+
+            // Toggle "Pisahkan Jadwal" hanya bisa dipakai kalau mahasiswa punya
+            // Pembimbing Pendamping — tanpa itu, sempro memang hanya satu sesi.
+            const punyaPendamping = !!(splitData && splitData.pembimbingPendampingId);
+            document.getElementById('jadwalkan-terpisah-wrapper').style.display = punyaPendamping ? 'block' : 'none';
+            const toggle = document.getElementById('jadwalkan-terpisah-toggle');
+            toggle.checked = punyaPendamping && !!(splitData && splitData.jadwalTerpisah);
+            toggleJadwalTerpisah();
+            if (punyaPendamping && splitData) {
+                document.getElementById('jadwalkan-tanggal-pendamping').value = splitData.tanggalPendamping || '';
+                const parsedPendamping = parseJamRange(splitData.jamPendamping);
+                document.getElementById('jadwalkan-jam-mulai-pendamping').value = parsedPendamping.mulai;
+                document.getElementById('jadwalkan-jam-selesai-pendamping').value = parsedPendamping.selesai;
+                document.getElementById('jadwalkan-ruang-pendamping').value = splitData.ruangIdPendamping || '';
+                document.getElementById('jadwalkan-catatan-terpisah').value = splitData.catatan || '';
+            } else {
+                document.getElementById('jadwalkan-tanggal-pendamping').value = '';
+                document.getElementById('jadwalkan-ruang-pendamping').value = '';
+                document.getElementById('jadwalkan-catatan-terpisah').value = '';
+            }
+
             refreshKesediaanInfo();
             openModal('modal-jadwalkan');
         }
@@ -1291,7 +1385,8 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                         props.jam,
                         props.ruang_id,
                         props.sidang_id,
-                        props.pembimbing
+                        props.pembimbing,
+                        props.split_data
                     );
                 },
             });
