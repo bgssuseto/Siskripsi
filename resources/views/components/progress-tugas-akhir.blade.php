@@ -7,26 +7,24 @@
     $title    = $isSempro ? 'Progress Seminar Proposal (Sempro)' : 'Progress Sidang Skripsi';
 
     // Kelas ditulis literal (bukan interpolasi) supaya terdeteksi Tailwind.
+    // Warna solid (bukan gradient) sesuai permintaan — tampilan progress
+    // sempro & skripsi dibuat lebih flat/sederhana.
     $accent = $isSempro
         ? [
-            'header' => 'from-indigo-600 via-violet-600 to-indigo-700',
-            'glow'   => 'bg-violet-400/30',
+            'header' => 'bg-indigo-600',
             'active' => 'bg-indigo-600 text-white ring-indigo-200 dark:ring-indigo-900/70',
             'ping'   => 'bg-indigo-400',
             'card'   => 'bg-indigo-50/80 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30',
             'text'   => 'text-indigo-600 dark:text-indigo-300',
-            'bar'    => 'from-indigo-500 to-violet-500',
-            'cta'    => 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30',
+            'cta'    => 'bg-indigo-600 hover:bg-indigo-700',
         ]
         : [
-            'header' => 'from-purple-600 via-fuchsia-600 to-purple-700',
-            'glow'   => 'bg-fuchsia-400/30',
+            'header' => 'bg-purple-600',
             'active' => 'bg-purple-600 text-white ring-purple-200 dark:ring-purple-900/70',
             'ping'   => 'bg-purple-400',
             'card'   => 'bg-purple-50/80 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30',
             'text'   => 'text-purple-600 dark:text-purple-300',
-            'bar'    => 'from-purple-500 to-fuchsia-500',
-            'cta'    => 'bg-purple-600 hover:bg-purple-700 shadow-purple-600/30',
+            'cta'    => 'bg-purple-600 hover:bg-purple-700',
         ];
 
     $tones = [
@@ -54,7 +52,6 @@
     }
 
     $headlineDot = $progress['failed'] ? 'bg-rose-300' : ($progress['complete'] ? 'bg-emerald-300' : 'bg-white');
-    $barColor    = $progress['failed'] ? 'from-rose-500 to-rose-400' : ($progress['complete'] ? 'from-emerald-500 to-teal-400' : $accent['bar']);
 
     // Cincin persentase (SVG): keliling lingkaran r=26.
     $circumference = 2 * M_PI * 26;
@@ -63,15 +60,12 @@
 
 <section aria-label="{{ $title }}" class="relative overflow-hidden bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-3xl shadow-sm">
 
-    {{-- ── Header bergradien ── --}}
-    <div class="relative overflow-hidden bg-gradient-to-br {{ $accent['header'] }} px-5 py-5 sm:px-6 text-white">
-        <div aria-hidden="true" class="absolute -right-10 -top-12 w-40 h-40 rounded-full blur-2xl {{ $accent['glow'] }}"></div>
-        <div aria-hidden="true" class="absolute right-24 -bottom-16 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
-
+    {{-- ── Header (warna solid) ── --}}
+    <div class="relative {{ $accent['header'] }} px-5 py-5 sm:px-6 text-white">
         <div class="relative flex items-center gap-4">
             <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2.5">
-                    <span class="w-10 h-10 shrink-0 rounded-2xl bg-white/15 border border-white/25 backdrop-blur flex items-center justify-center text-lg shadow-inner">
+                    <span class="w-10 h-10 shrink-0 rounded-2xl bg-white/15 border border-white/25 flex items-center justify-center text-lg">
                         {{ $isSempro ? '📝' : '🎓' }}
                     </span>
                     <div class="min-w-0">
@@ -118,9 +112,9 @@
                     $st = $step['status'];
                     $isFocus = in_array($st, ['active', 'failed'], true);
                     $circle = match ($st) {
-                        'done'   => 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md shadow-emerald-500/30',
-                        'active' => 'ring-4 shadow-lg ' . $accent['active'],
-                        'failed' => 'bg-rose-500 text-white ring-4 ring-rose-200 dark:ring-rose-900/60 shadow-lg shadow-rose-500/30',
+                        'done'   => 'bg-emerald-600 text-white',
+                        'active' => 'ring-4 ' . $accent['active'],
+                        'failed' => 'bg-rose-500 text-white ring-4 ring-rose-200 dark:ring-rose-900/60',
                         default  => 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700',
                     };
                     $labelColor = $st === 'pending' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100';
@@ -137,7 +131,7 @@
                         $isFocus         => $accent['card'],
                         default          => 'border-transparent',
                     };
-                    $connector = $st === 'done' ? 'bg-gradient-to-b lg:bg-gradient-to-r from-emerald-400 to-emerald-300 dark:from-emerald-500/80 dark:to-emerald-600/60' : 'bg-slate-200 dark:bg-slate-700';
+                    $connector = $st === 'done' ? 'bg-emerald-400 dark:bg-emerald-600/70' : 'bg-slate-200 dark:bg-slate-700';
                 @endphp
                 <li class="relative" @if($isFocus) aria-current="step" @endif>
 
@@ -187,12 +181,12 @@
                                     $registrationUrl = $isSempro ? route('mahasiswa.sempro.index') : route('mahasiswa.skripsi.index');
                                     [$ctaUrl, $ctaLabel, $ctaColor, $ctaExternal] = match ($step['cta']) {
                                         'daftar'  => [$registrationUrl, 'Daftar sekarang →', $accent['cta'], false],
-                                        'revisi'  => [$registrationUrl, 'Revisi pendaftaran →', 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/30', false],
-                                        'join_wa' => [route('mahasiswa.sidang.join-wa', $progress['sidang']), '💬 Join Grup WA', 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30', true],
+                                        'revisi'  => [$registrationUrl, 'Revisi pendaftaran →', 'bg-rose-600 hover:bg-rose-700', false],
+                                        'join_wa' => [route('mahasiswa.sidang.join-wa', $progress['sidang']), '💬 Join Grup WA', 'bg-emerald-600 hover:bg-emerald-700', true],
                                     };
                                 @endphp
                                 <a href="{{ $ctaUrl }}" @if($ctaExternal) target="_blank" rel="noopener noreferrer" @endif
-                                   class="mt-2.5 flex w-full sm:inline-flex sm:w-auto items-center justify-center px-4 py-2.5 sm:py-2 rounded-xl text-xs font-extrabold text-white shadow-lg transition-all active:scale-[.98] whitespace-nowrap {{ $ctaColor }}">
+                                   class="mt-2.5 flex w-full sm:inline-flex sm:w-auto items-center justify-center px-4 py-2.5 sm:py-2 rounded-xl text-xs font-extrabold text-white shadow-sm transition-all active:scale-[.98] whitespace-nowrap {{ $ctaColor }}">
                                     {{ $ctaLabel }}
                                 </a>
                             @endif
