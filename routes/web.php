@@ -298,7 +298,9 @@ Route::middleware('auth')->group(function () {
 
         // Bebas Prodi — verifikasi pengajuan & cetak surat (hapus/upload TTD dicek super_admin di controller)
         Route::get('/bebas-prodi', [BebasProdiController::class, 'index'])->name('bebas-prodi.index');
-        Route::post('/bebas-prodi/ttd', [BebasProdiController::class, 'uploadTtd'])->name('bebas-prodi.ttd');
+        Route::post('/bebas-prodi/kaprodi', [BebasProdiController::class, 'kaprodiStore'])->name('bebas-prodi.kaprodi.store');
+        Route::put('/bebas-prodi/kaprodi/{kaprodi}', [BebasProdiController::class, 'kaprodiUpdate'])->name('bebas-prodi.kaprodi.update');
+        Route::delete('/bebas-prodi/kaprodi/{kaprodi}', [BebasProdiController::class, 'kaprodiDestroy'])->name('bebas-prodi.kaprodi.destroy');
         Route::post('/bebas-prodi/{bebasProdi}/verifikasi', [BebasProdiController::class, 'verifikasi'])->name('bebas-prodi.verifikasi');
         Route::get('/bebas-prodi/{bebasProdi}/cetak', [BebasProdiController::class, 'cetak'])->name('bebas-prodi.cetak');
         Route::delete('/bebas-prodi/{bebasProdi}', [BebasProdiController::class, 'destroy'])->name('bebas-prodi.destroy');

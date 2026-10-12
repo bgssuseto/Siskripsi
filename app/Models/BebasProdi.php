@@ -27,7 +27,7 @@ class BebasProdi extends Model
 
     protected $fillable = [
         'user_id', 'nim', 'nama_mahasiswa', 'jalur', 'link_poster', 'link_linkedin', 'link_program',
-        'link_jurnal', 'file_berkas', 'status', 'komentar', 'nomor_surat', 'tanggal_surat',
+        'link_jurnal', 'file_berkas', 'status', 'komentar', 'nomor_surat', 'tanggal_surat', 'kaprodi_id',
         'verified_by', 'verified_at', 'submitted_at',
     ];
 
@@ -41,6 +41,11 @@ class BebasProdi extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function kaprodi(): BelongsTo
+    {
+        return $this->belongsTo(Kaprodi::class);
     }
 
     public function verifier(): BelongsTo
@@ -97,11 +102,14 @@ class BebasProdi extends Model
      * Setujui pengajuan & terbitkan nomor surat berurutan. Nomor yang sudah
      * pernah terbit untuk pengajuan ini dipakai lagi (tidak loncat nomor saat
      * pengajuan disetujui ulang). Dikunci dalam transaksi supaya dua admin yang
-     * menyetujui bersamaan tidak mendapat nomor yang sama.
+     * menyetujui bersamaan tidak mendapat nomor yang sama. Kaprodi penandatangan
+     * dipilih manual, atau otomatis yang menjabat pada tanggal surat.
      */
-    public function setujui(int $verifierId, ?string $tanggalSurat = null): void
+    public function setujui(int $verifierId, ?string $tanggalSurat = null, ?int $kaprodiId = null): void
     {
-        DB::transaction(function () use ($verifierId, $tanggalSurat) {
+        DB::transaction(function () use ($verifierId, $tanggalSurat, $kaprodiId) {
+            $tanggal = $tanggalSurat ?? $this->tanggal_surat?->toDateString() ?? now()->timezone('Asia/Jakarta')->toDateString();
+
             $nomor = $this->nomor_surat;
             if (!$nomor) {
                 $max   = static::lockForUpdate()->max('nomor_surat');
@@ -112,7 +120,8 @@ class BebasProdi extends Model
                 'status'        => self::STATUS_DISETUJUI,
                 'komentar'      => null,
                 'nomor_surat'   => $nomor,
-                'tanggal_surat' => $tanggalSurat ?? $this->tanggal_surat ?? now()->timezone('Asia/Jakarta')->toDateString(),
+                'tanggal_surat' => $tanggal,
+                'kaprodi_id'    => $kaprodiId ?? Kaprodi::untukTanggal($tanggal)?->id,
                 'verified_by'   => $verifierId,
                 'verified_at'   => now(),
             ]);

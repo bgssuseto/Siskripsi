@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\BebasProdi;
 use App\Models\Dosen;
+use App\Models\Kaprodi;
 use App\Models\Periode;
 use App\Models\Sidang;
 use App\Models\User;
@@ -162,7 +163,7 @@ class BebasProdiTest extends TestCase
 
         $html = view('bebas-prodi.surat', [
             'p' => $p, 'nama' => 'Oesama Hakim Adsandi', 'tanggal' => '22 September 2026',
-            'kaprodi' => config('bebas_prodi.kaprodi_nama'), 'kopBase64' => '', 'ttdBase64' => '',
+            'kaprodi' => 'Dr. Ahmad Abdul Chamid, S.Kom., M.Kom', 'kopBase64' => '', 'ttdBase64' => '',
         ])->render();
         $this->assertStringContainsString('NO:TI/BP/' . $expected, $html);
         $this->assertStringContainsString('Bebas Peminjaman Perangkat Lab TI', $html);
@@ -189,5 +190,45 @@ class BebasProdiTest extends TestCase
         ]);
         $this->actingAs($other)->get(route('bebas-prodi.berkas', $p))->assertForbidden();
         $this->actingAs($this->student)->get(route('bebas-prodi.berkas', $p))->assertOk();
+    }
+
+    public function test_pergantian_kaprodi_surat_lama_tetap_kaprodi_lama(): void
+    {
+        Kaprodi::query()->update(['selesai_menjabat' => '2026-12-31']);
+        $lama = Kaprodi::create(['nama' => 'Kaprodi Lama Uji', 'mulai_menjabat' => '2022-01-01', 'selesai_menjabat' => '2026-12-31']);
+
+        $this->luluskan();
+        $this->actingAs($this->student)->post(route('mahasiswa.bebas-prodi.store'), $this->payload());
+        $p = BebasProdi::where('nim', $this->student->nim)->firstOrFail();
+        $this->actingAs($this->admin)->post(route('bebas-prodi.verifikasi', $p), ['status' => 'disetujui', 'tanggal_surat' => '2026-10-01']);
+        $this->assertSame($lama->id, $p->fresh()->kaprodi_id);
+
+        // Super admin menambah kaprodi baru — surat yang sudah terbit tidak berubah.
+        $this->actingAs($this->admin)->post(route('bebas-prodi.kaprodi.store'), [
+            'nama' => 'Kaprodi Baru Uji', 'mulai_menjabat' => '2027-01-01',
+            'ttd' => UploadedFile::fake()->image('ttd.png', 200, 80),
+        ])->assertSessionHas('success');
+        $baru = Kaprodi::where('nama', 'Kaprodi Baru Uji')->firstOrFail();
+        Storage::disk('local')->assertExists($baru->ttd_path);
+
+        $this->assertSame($lama->id, $p->fresh()->kaprodi_id);
+        $this->assertSame($baru->id, Kaprodi::untukTanggal('2027-03-01')->id);
+        $this->assertSame($lama->id, Kaprodi::untukTanggal('2026-06-01')->id);
+
+        // Kaprodi yang sudah menandatangani surat tidak bisa dihapus.
+        $this->actingAs($this->admin)->delete(route('bebas-prodi.kaprodi.destroy', $lama))->assertSessionHas('error');
+        $this->assertNotNull($lama->fresh());
+
+        $this->actingAs($this->student)->get(route('mahasiswa.bebas-prodi.cetak'))->assertOk();
+        $this->actingAs($this->admin)->get(route('bebas-prodi.index'))->assertOk()->assertSee('Kaprodi Baru Uji');
+    }
+
+    public function test_hanya_super_admin_yang_bisa_kelola_kaprodi(): void
+    {
+        $koor = User::create([
+            'name' => 'Koor BP', 'email' => 'koor-bp@example.test', 'password' => bcrypt('x'), 'role' => User::ROLE_KOORDINATOR,
+        ]);
+        $this->actingAs($koor)->post(route('bebas-prodi.kaprodi.store'), ['nama' => 'X', 'mulai_menjabat' => '2027-01-01'])
+            ->assertForbidden();
     }
 }

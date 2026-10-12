@@ -9,7 +9,7 @@
     $isSuperAdmin = Auth::user()->isSuperAdmin();
 @endphp
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6"
-     x-data="{ modal: false, mode: 'disetujui', action: '', nama: '' }">
+     x-data="{ modal: false, mode: 'disetujui', action: '', nama: '', kaprodiModal: {{ $errors->hasAny(['nama', 'mulai_menjabat', 'selesai_menjabat', 'ttd']) ? 'true' : 'false' }} }">
 
     <div class="bg-gradient-to-r from-teal-900 via-slate-900 to-emerald-950 p-6 rounded-2xl text-white shadow-xl flex flex-wrap gap-3 justify-between items-center">
         <div>
@@ -38,21 +38,21 @@
             @endforeach
         </div>
 
-        @if($isSuperAdmin)
-        <form method="POST" action="{{ route('bebas-prodi.ttd') }}" enctype="multipart/form-data"
-              class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-4 border border-slate-200/80 dark:border-slate-700 space-y-2">
-            @csrf
-            <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Tanda Tangan Kaprodi</p>
-            <p class="text-[11px] {{ $hasTtd ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }} font-bold">
-                {{ $hasTtd ? '✓ Sudah diunggah — tampil di surat.' : '✕ Belum ada — surat tercetak tanpa tanda tangan.' }}
-            </p>
-            <div class="flex gap-2">
-                <input type="file" name="ttd" accept="image/png" required class="flex-1 min-w-0 text-[11px] text-slate-600 dark:text-slate-300 file:mr-2 file:px-2 file:py-1 file:rounded-md file:border-0 file:bg-slate-200 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 file:text-[11px]">
-                <button class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg shrink-0">Unggah</button>
-            </div>
-            <p class="text-[10px] text-slate-400">PNG latar transparan, maks. 2 MB.</p>
-        </form>
-        @endif
+        <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-4 border border-slate-200/80 dark:border-slate-700 space-y-1.5">
+            <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Kaprodi Penandatangan</p>
+            @if($kaprodiSekarang)
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200">{{ $kaprodiSekarang->nama }}</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Masa jabatan: {{ $kaprodiSekarang->masa_jabatan }}</p>
+                <p class="text-[11px] font-bold {{ $kaprodiSekarang->ttd_path ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                    {{ $kaprodiSekarang->ttd_path ? '✓ Tanda tangan sudah diunggah' : '✕ Belum ada tanda tangan — surat tercetak tanpa TTD' }}
+                </p>
+            @else
+                <p class="text-[11px] font-bold text-rose-600 dark:text-rose-400">Belum ada data Kaprodi.</p>
+            @endif
+            @if($isSuperAdmin)
+                <button type="button" @click="kaprodiModal = true" class="mt-1 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg">Kelola Kaprodi</button>
+            @endif
+        </div>
     </div>
 
     <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 overflow-hidden">
@@ -99,6 +99,7 @@
                                 @if($p->status === 'disetujui')
                                     <p class="mt-1 font-mono text-[10px] text-slate-600 dark:text-slate-400">{{ $p->nomor_surat_lengkap }}</p>
                                     <p class="text-[10px] text-slate-500">{{ $p->tanggal_surat?->locale('id')->translatedFormat('j M Y') }}</p>
+                                    @if($p->kaprodi)<p class="text-[10px] text-slate-500" title="Penandatangan">✍️ {{ $p->kaprodi->nama }}</p>@endif
                                 @elseif($p->status === 'ditolak' && $p->komentar)
                                     <p class="mt-1 text-[10px] text-rose-700 dark:text-rose-400 max-w-[200px]">{{ $p->komentar }}</p>
                                 @endif
@@ -153,6 +154,13 @@
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Tanggal Surat</label>
                     <input type="date" name="tanggal_surat" value="{{ now()->timezone('Asia/Jakarta')->toDateString() }}"
                            class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                    <label class="block pt-1 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Penandatangan</label>
+                    <select name="kaprodi_id" class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                        <option value="">Otomatis — Kaprodi yang menjabat pada tanggal surat</option>
+                        @foreach($kaprodis as $k)
+                            <option value="{{ $k->id }}">{{ $k->nama }} ({{ $k->masa_jabatan }})</option>
+                        @endforeach
+                    </select>
                     <p class="text-[11px] text-slate-500">Nomor surat diterbitkan otomatis (berikutnya: <span class="font-mono">TI/BP/{{ $nextNomor }}</span>). Mahasiswa langsung bisa mencetak surat.</p>
                 </div>
             </template>
@@ -172,5 +180,98 @@
             </div>
         </form>
     </div>
+
+    @if($isSuperAdmin)
+    {{-- Modal kelola Kaprodi --}}
+    <div x-show="kaprodiModal" x-cloak class="fixed inset-0 z-50 flex items-start justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div @click.away="kaprodiModal = false" class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl border border-slate-100 dark:border-slate-700 my-6">
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Kelola Kaprodi Penandatangan</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Surat otomatis ditandatangani Kaprodi yang menjabat pada tanggal surat. Surat yang sudah terbit tetap memakai Kaprodi saat itu.</p>
+                </div>
+                <button type="button" @click="kaprodiModal = false" class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-500 text-xs font-bold shrink-0">✕</button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                @php $fieldCls = 'w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200'; @endphp
+
+                @foreach($kaprodis as $k)
+                    <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-4" x-data="{ edit: false }">
+                        <div class="flex flex-wrap gap-3 items-start justify-between">
+                            <div class="flex gap-3 items-center">
+                                @if($k->ttd_path)
+                                    <img src="{{ $k->ttdBase64() }}" alt="TTD" class="h-10 w-auto bg-white rounded border border-slate-200 p-0.5">
+                                @else
+                                    <span class="h-10 px-2 flex items-center rounded border border-dashed border-rose-300 text-[10px] text-rose-500">Tanpa TTD</span>
+                                @endif
+                                <div>
+                                    <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200">{{ $k->nama }}
+                                        @if($kaprodiSekarang && $kaprodiSekarang->id === $k->id)<span class="ml-1 px-1.5 py-0.5 rounded bg-emerald-600 text-white text-[9px] uppercase">Menjabat</span>@endif
+                                    </p>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ $k->masa_jabatan }} · {{ $k->bebas_prodis_count }} surat</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-1.5">
+                                <button type="button" @click="edit = !edit" class="px-2.5 py-1.5 bg-slate-800 dark:bg-slate-600 text-white text-[11px] font-bold rounded-lg">Ubah</button>
+                                <form method="POST" action="{{ route('bebas-prodi.kaprodi.destroy', $k) }}" onsubmit="return confirm('Hapus Kaprodi {{ addslashes($k->nama) }}?')">
+                                    @csrf @method('DELETE')
+                                    <button class="px-2.5 py-1.5 border border-slate-300 dark:border-slate-600 text-slate-500 hover:text-rose-600 text-[11px] font-bold rounded-lg">Hapus</button>
+                                </form>
+                            </div>
+                        </div>
+                        <form x-show="edit" x-cloak method="POST" action="{{ route('bebas-prodi.kaprodi.update', $k) }}" enctype="multipart/form-data" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            @csrf @method('PUT')
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Nama lengkap &amp; gelar</label>
+                                <input type="text" name="nama" required value="{{ $k->nama }}" class="{{ $fieldCls }}">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Mulai menjabat</label>
+                                <input type="date" name="mulai_menjabat" value="{{ $k->mulai_menjabat?->toDateString() }}" class="{{ $fieldCls }}">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Selesai menjabat <span class="font-normal text-slate-400">(kosongkan bila masih menjabat)</span></label>
+                                <input type="date" name="selesai_menjabat" value="{{ $k->selesai_menjabat?->toDateString() }}" class="{{ $fieldCls }}">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Ganti tanda tangan <span class="font-normal text-slate-400">(PNG transparan, maks. 2 MB — kosongkan bila tidak diganti)</span></label>
+                                <input type="file" name="ttd" accept="image/png" class="w-full text-[11px] text-slate-600 dark:text-slate-300">
+                            </div>
+                            <div class="sm:col-span-2 flex justify-end">
+                                <button class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                @endforeach
+
+                <form method="POST" action="{{ route('bebas-prodi.kaprodi.store') }}" enctype="multipart/form-data" class="rounded-xl border-2 border-dashed border-teal-300 dark:border-teal-800 p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    @csrf
+                    <p class="sm:col-span-2 text-xs font-extrabold text-teal-800 dark:text-teal-300">+ Tambah Kaprodi baru (pergantian jabatan)</p>
+                    <div class="sm:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Nama lengkap &amp; gelar <span class="text-rose-500">*</span></label>
+                        <input type="text" name="nama" required value="{{ old('nama') }}" placeholder="Contoh: Dr. Nama Kaprodi, S.Kom., M.Kom" class="{{ $fieldCls }}">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Mulai menjabat <span class="text-rose-500">*</span></label>
+                        <input type="date" name="mulai_menjabat" required value="{{ old('mulai_menjabat') }}" class="{{ $fieldCls }}">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Selesai menjabat</label>
+                        <input type="date" name="selesai_menjabat" value="{{ old('selesai_menjabat') }}" class="{{ $fieldCls }}">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Tanda tangan (PNG transparan, maks. 2 MB)</label>
+                        <input type="file" name="ttd" accept="image/png" class="w-full text-[11px] text-slate-600 dark:text-slate-300">
+                    </div>
+                    <p class="sm:col-span-2 text-[10px] text-slate-500">Tips: isi juga tanggal <strong>selesai menjabat</strong> pada Kaprodi sebelumnya.</p>
+                    <div class="sm:col-span-2 flex justify-end">
+                        <button class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg">Tambah Kaprodi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 </x-app-layout>

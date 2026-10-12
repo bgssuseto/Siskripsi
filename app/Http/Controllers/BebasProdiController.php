@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BebasProdi;
+use App\Models\Kaprodi;
 use App\Services\ActivityLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -123,7 +124,7 @@ class BebasProdiController extends Controller
         $status = $request->get('status');
         $search = trim((string) $request->get('q', ''));
 
-        $query = BebasProdi::with('verifier')
+        $query = BebasProdi::with(['verifier', 'kaprodi'])
             ->when(in_array($status, ['menunggu', 'disetujui', 'ditolak'], true), fn ($q) => $q->where('status', $status))
             ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
                 ->where('nim', 'like', "%{$search}%")
@@ -142,9 +143,10 @@ class BebasProdiController extends Controller
             (int) BebasProdi::max('nomor_surat') + 1,
             (int) config('bebas_prodi.nomor_awal')
         );
-        $hasTtd = is_file(config('bebas_prodi.ttd_path'));
+        $kaprodis       = Kaprodi::withCount('bebasProdis')->orderByRaw('mulai_menjabat IS NULL')->orderByDesc('mulai_menjabat')->orderByDesc('id')->get();
+        $kaprodiSekarang = Kaprodi::untukTanggal();
 
-        return view('bebas-prodi.index', compact('pengajuans', 'counts', 'status', 'search', 'nextNomor', 'hasTtd'));
+        return view('bebas-prodi.index', compact('pengajuans', 'counts', 'status', 'search', 'nextNomor', 'kaprodis', 'kaprodiSekarang'));
     }
 
     public function verifikasi(Request $request, BebasProdi $bebasProdi): RedirectResponse
@@ -153,6 +155,7 @@ class BebasProdiController extends Controller
             'status'        => ['required', 'in:disetujui,ditolak'],
             'komentar'      => ['nullable', 'required_if:status,ditolak', 'string', 'max:1000'],
             'tanggal_surat' => ['nullable', 'date'],
+            'kaprodi_id'    => ['nullable', 'exists:kaprodis,id'],
         ], [
             'komentar.required_if' => 'Catatan penolakan wajib diisi agar mahasiswa tahu apa yang perlu diperbaiki.',
         ]);
@@ -160,7 +163,7 @@ class BebasProdiController extends Controller
         $before = $bebasProdi->status;
 
         if ($validated['status'] === BebasProdi::STATUS_DISETUJUI) {
-            $bebasProdi->setujui(Auth::id(), $validated['tanggal_surat'] ?? null);
+            $bebasProdi->setujui(Auth::id(), $validated['tanggal_surat'] ?? null, isset($validated['kaprodi_id']) ? (int) $validated['kaprodi_id'] : null);
             $message = "Bebas Prodi {$bebasProdi->nama_mahasiswa} disetujui dengan nomor surat {$bebasProdi->nomor_surat_lengkap}.";
         } else {
             $bebasProdi->update([
@@ -204,25 +207,76 @@ class BebasProdiController extends Controller
         return $this->renderSurat($bebasProdi);
     }
 
-    public function uploadTtd(Request $request): RedirectResponse
+    // ───────────────────────── Kaprodi (super admin) ─────────────────────────
+
+    public function kaprodiStore(Request $request): RedirectResponse
     {
         abort_unless(Auth::user()->isSuperAdmin(), 403);
 
-        $request->validate([
-            'ttd' => ['required', 'file', 'mimes:png', 'max:2048'],
-        ], [
-            'ttd.required' => 'Pilih file gambar tanda tangan.',
-            'ttd.mimes'    => 'Tanda tangan harus berformat PNG (sebaiknya latar transparan).',
-            'ttd.max'      => 'Ukuran gambar tanda tangan maksimal 2 MB.',
-        ]);
+        $data = $this->validateKaprodi($request, true);
+        $kaprodi = Kaprodi::create(collect($data)->except('ttd')->all());
+        $this->simpanTtd($request, $kaprodi);
 
-        $target = config('bebas_prodi.ttd_path');
-        if (!is_dir(dirname($target))) {
-            @mkdir(dirname($target), 0775, true);
+        ActivityLogger::log('created', $kaprodi, "Menambah Kaprodi penandatangan {$kaprodi->nama} ({$kaprodi->masa_jabatan}).");
+
+        return back()->with('success', "Kaprodi {$kaprodi->nama} berhasil ditambahkan.");
+    }
+
+    public function kaprodiUpdate(Request $request, Kaprodi $kaprodi): RedirectResponse
+    {
+        abort_unless(Auth::user()->isSuperAdmin(), 403);
+
+        $data = $this->validateKaprodi($request, false);
+        $kaprodi->update(collect($data)->except('ttd')->all());
+        $this->simpanTtd($request, $kaprodi);
+
+        ActivityLogger::log('updated', $kaprodi, "Mengubah data Kaprodi penandatangan {$kaprodi->nama} ({$kaprodi->masa_jabatan}).");
+
+        return back()->with('success', "Data Kaprodi {$kaprodi->nama} berhasil diperbarui.");
+    }
+
+    public function kaprodiDestroy(Kaprodi $kaprodi): RedirectResponse
+    {
+        abort_unless(Auth::user()->isSuperAdmin(), 403);
+
+        if ($kaprodi->bebasProdis()->exists()) {
+            return back()->with('error', "Kaprodi {$kaprodi->nama} sudah menandatangani surat sehingga tidak bisa dihapus. Isi tanggal selesai menjabat saja.");
         }
-        $request->file('ttd')->move(dirname($target), basename($target));
 
-        return back()->with('success', 'Tanda tangan Kaprodi berhasil diperbarui.');
+        Storage::disk('local')->delete((string) $kaprodi->ttd_path);
+        $nama = $kaprodi->nama;
+        $kaprodi->delete();
+
+        ActivityLogger::log('deleted', null, "Menghapus Kaprodi penandatangan {$nama}.");
+
+        return back()->with('success', "Kaprodi {$nama} dihapus.");
+    }
+
+    private function validateKaprodi(Request $request, bool $isNew): array
+    {
+        return $request->validate([
+            'nama'             => ['required', 'string', 'max:255'],
+            'mulai_menjabat'   => [$isNew ? 'required' : 'nullable', 'date'],
+            'selesai_menjabat' => ['nullable', 'date', 'after_or_equal:mulai_menjabat'],
+            'ttd'              => ['nullable', 'file', 'mimes:png', 'max:2048'],
+        ], [
+            'nama.required'                   => 'Nama Kaprodi (lengkap dengan gelar) wajib diisi.',
+            'mulai_menjabat.required'         => 'Tanggal mulai menjabat wajib diisi.',
+            'selesai_menjabat.after_or_equal' => 'Tanggal selesai menjabat tidak boleh sebelum tanggal mulai.',
+            'ttd.mimes'                       => 'Tanda tangan harus berformat PNG (sebaiknya latar transparan).',
+            'ttd.max'                         => 'Ukuran gambar tanda tangan maksimal 2 MB.',
+        ]);
+    }
+
+    private function simpanTtd(Request $request, Kaprodi $kaprodi): void
+    {
+        if (!$request->hasFile('ttd')) {
+            return;
+        }
+
+        Storage::disk('local')->delete((string) $kaprodi->ttd_path);
+        $path = $request->file('ttd')->storeAs('bebas-prodi/ttd', $kaprodi->id . '_' . time() . '.png', 'local');
+        $kaprodi->update(['ttd_path' => $path]);
     }
 
     // ───────────────────────── Shared ─────────────────────────
@@ -245,13 +299,16 @@ class BebasProdiController extends Controller
 
     private function renderSurat(BebasProdi $bebasProdi): Response
     {
+        // Surat lama (sebelum ada data kaprodi) jatuh ke kaprodi yang menjabat pada tanggal surat.
+        $kaprodi = $bebasProdi->kaprodi ?? Kaprodi::untukTanggal($bebasProdi->tanggal_surat);
+
         $pdf = Pdf::loadView('bebas-prodi.surat', [
             'p'           => $bebasProdi,
             'nama'        => mb_convert_case(mb_strtolower($bebasProdi->nama_mahasiswa), MB_CASE_TITLE, 'UTF-8'),
             'tanggal'     => $bebasProdi->tanggal_surat->locale('id')->translatedFormat('j F Y'),
-            'kaprodi'     => config('bebas_prodi.kaprodi_nama'),
+            'kaprodi'     => $kaprodi?->nama ?? '',
             'kopBase64'   => $this->imageBase64(public_path('images/kop_surat.png')),
-            'ttdBase64'   => $this->imageBase64(config('bebas_prodi.ttd_path')),
+            'ttdBase64'   => $kaprodi?->ttdBase64() ?? '',
         ])->setPaper('a4', 'portrait');
 
         $filename = 'Surat_Bebas_Prodi_' . $bebasProdi->nim . '.pdf';
