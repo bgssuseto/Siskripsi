@@ -60,6 +60,7 @@ class BebasProdiTest extends TestCase
     private function payload(array $extra = []): array
     {
         return array_merge([
+            'link_poster' => 'https://drive.google.com/file/d/poster',
             'link_linkedin' => 'https://www.linkedin.com/in/oesama',
             'follow_instagram' => '1',
             'follow_linkedin' => '1',
@@ -79,6 +80,26 @@ class BebasProdiTest extends TestCase
         $this->actingAs($this->student)->post(route('mahasiswa.bebas-prodi.store'), $this->payload())
             ->assertSessionHas('error');
         $this->assertDatabaseMissing('bebas_prodis', ['nim' => $this->student->nim]);
+    }
+
+    public function test_nim_bypass_bisa_mengajukan_tanpa_lulus(): void
+    {
+        config(['bebas_prodi.bypass_nims' => [$this->student->nim]]);
+
+        $this->actingAs($this->student)->get(route('mahasiswa.bebas-prodi.index'))
+            ->assertOk()->assertSee('Akun testing')->assertSee('Formulir Pengajuan Bebas Prodi');
+
+        $this->actingAs($this->student)->post(route('mahasiswa.bebas-prodi.store'), $this->payload())
+            ->assertRedirect(route('mahasiswa.bebas-prodi.index'));
+        $this->assertDatabaseHas('bebas_prodis', ['nim' => $this->student->nim, 'jalur' => 'sidang']);
+    }
+
+    public function test_link_poster_wajib(): void
+    {
+        $this->luluskan();
+
+        $this->actingAs($this->student)->post(route('mahasiswa.bebas-prodi.store'), $this->payload(['link_poster' => '']))
+            ->assertSessionHasErrors('link_poster');
     }
 
     public function test_menu_bebas_prodi_muncul_di_sidebar_mahasiswa(): void

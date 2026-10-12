@@ -88,8 +88,9 @@
                             <td class="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold">{{ $p->jalur === 'jurnal' ? 'Jurnal' : 'Sidang' }}</td>
                             <td class="px-4 py-3 space-y-1">
                                 <a href="{{ route('bebas-prodi.berkas', $p) }}" target="_blank" class="block font-bold text-teal-700 dark:text-teal-400 hover:underline">📄 Berkas PDF</a>
+                                @if($p->link_poster)<a href="{{ $p->link_poster }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">Poster Skripsi</a>@endif
                                 <a href="{{ $p->link_linkedin }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">LinkedIn</a>
-                                @if($p->link_program)<a href="{{ $p->link_program }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">Google Drive Program</a>@endif
+                                @if($p->link_program)<a href="{{ $p->link_program }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">Program Aplikasi</a>@endif
                                 @if($p->link_jurnal)<a href="{{ $p->link_jurnal }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">Artikel Jurnal</a>@endif
                             </td>
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ $p->submitted_at?->timezone('Asia/Jakarta')->format('d M Y H:i') }}</td>

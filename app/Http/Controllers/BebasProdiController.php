@@ -46,6 +46,7 @@ class BebasProdiController extends Controller
         $isJurnal = $kelayakan['jalur'] === 'jurnal';
 
         $validated = $request->validate([
+            'link_poster'     => ['required', 'url', 'max:500'],
             'link_linkedin'   => ['required', 'url', 'max:500'],
             'link_program'    => ['nullable', 'url', 'max:500'],
             'link_jurnal'     => [$isJurnal ? 'required' : 'nullable', 'url', 'max:500'],
@@ -53,9 +54,11 @@ class BebasProdiController extends Controller
             'follow_linkedin' => ['accepted'],
             'file_berkas'     => [$pengajuan ? 'nullable' : 'required', 'file', 'mimes:pdf', 'max:4096'],
         ], [
+            'link_poster.required'     => 'Link Google Drive poster skripsi wajib diisi.',
+            'link_poster.url'          => 'Link poster harus berupa URL yang valid (diawali https://).',
             'link_linkedin.required'   => 'Link profil LinkedIn wajib diisi.',
             'link_linkedin.url'        => 'Link LinkedIn harus berupa URL yang valid (diawali https://).',
-            'link_program.url'         => 'Link Google Drive program harus berupa URL yang valid.',
+            'link_program.url'         => 'Link program aplikasi harus berupa URL yang valid.',
             'link_jurnal.required'     => 'Link artikel jurnal yang telah terbit wajib diisi untuk jalur Jurnal.',
             'link_jurnal.url'          => 'Link artikel jurnal harus berupa URL yang valid.',
             'follow_instagram.accepted'=> 'Anda wajib follow Instagram @ti.umk sebelum mengirim.',
@@ -82,6 +85,7 @@ class BebasProdiController extends Controller
             'user_id'        => $user->id,
             'nama_mahasiswa' => $user->name,
             'jalur'          => $kelayakan['jalur'],
+            'link_poster'    => $validated['link_poster'],
             'link_linkedin'  => $validated['link_linkedin'],
             'link_program'   => $validated['link_program'] ?? null,
             'link_jurnal'    => $isJurnal ? $validated['link_jurnal'] : null,

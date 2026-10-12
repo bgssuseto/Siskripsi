@@ -26,7 +26,7 @@ class BebasProdi extends Model
     ];
 
     protected $fillable = [
-        'user_id', 'nim', 'nama_mahasiswa', 'jalur', 'link_linkedin', 'link_program',
+        'user_id', 'nim', 'nama_mahasiswa', 'jalur', 'link_poster', 'link_linkedin', 'link_program',
         'link_jurnal', 'file_berkas', 'status', 'komentar', 'nomor_surat', 'tanggal_surat',
         'verified_by', 'verified_at', 'submitted_at',
     ];
@@ -56,12 +56,13 @@ class BebasProdi extends Model
     /**
      * Status kelulusan Sempro & Skripsi seorang mahasiswa (by NIM), plus jalur
      * skripsi (sidang/jurnal) dari pendaftaran skripsi yang lulus. Bebas Prodi
-     * baru terbuka bila keduanya lulus.
+     * baru terbuka bila keduanya lulus — kecuali NIM di config
+     * bebas_prodi.bypass_nims (akun testing).
      */
     public static function kelayakan(?string $nim): array
     {
         if (!$nim) {
-            return ['lulus_sempro' => false, 'lulus_skripsi' => false, 'eligible' => false, 'jalur' => null];
+            return ['lulus_sempro' => false, 'lulus_skripsi' => false, 'eligible' => false, 'bypass' => false, 'jalur' => null];
         }
 
         $lulusSempro = Sidang::where('nim', $nim)
@@ -75,11 +76,20 @@ class BebasProdi extends Model
             ->orderByDesc('id')
             ->first();
 
+        $bypass = in_array($nim, config('bebas_prodi.bypass_nims', []), true);
+
+        // Akun bypass yang belum punya skripsi lulus: jalur diambil dari
+        // pendaftaran skripsi terakhir, atau default ke jalur Sidang.
+        $skripsiRef = $skripsiLulus ?? ($bypass
+            ? Sidang::where('nim', $nim)->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->orderByDesc('id')->first()
+            : null);
+
         return [
             'lulus_sempro'  => $lulusSempro,
             'lulus_skripsi' => (bool) $skripsiLulus,
-            'eligible'      => $lulusSempro && $skripsiLulus,
-            'jalur'         => $skripsiLulus ? ($skripsiLulus->jenis_tugas_akhir === 'jurnal' ? 'jurnal' : 'sidang') : null,
+            'eligible'      => ($lulusSempro && $skripsiLulus) || $bypass,
+            'bypass'        => $bypass && !($lulusSempro && $skripsiLulus),
+            'jalur'         => $skripsiRef ? ($skripsiRef->jenis_tugas_akhir === 'jurnal' ? 'jurnal' : 'sidang') : ($bypass ? 'sidang' : null),
         ];
     }
 

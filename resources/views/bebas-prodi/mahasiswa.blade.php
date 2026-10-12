@@ -1,17 +1,19 @@
 <x-app-layout title="Bebas Prodi">
 @php
+    // Kolom ke-3: cara pengumpulan — 'pdf' (digabung di berkas), 'link' (input
+    // link di formulir), 'cek' (konfirmasi checkbox di formulir).
     $dokumenWajib = [
-        ['Halaman Persetujuan Skripsi', 'Ditandatangani dosen pembimbing'],
-        ['Halaman Pengesahan Skripsi', 'Ditandatangani tim penguji, Ketua Progdi, dan Dekan'],
-        ['Halaman Pernyataan Keaslian', 'Bermaterai, menyatakan skripsi bebas plagiasi'],
-        ['Poster Skripsi', 'Sesuai Panduan Poster di halaman Panduan Skripsi'],
-        ['Berita Acara Sidang', 'Ditandatangani tim penguji saat sidang'],
-        ['Program Full termasuk Database (jika ada)', 'Upload di Google Drive pribadi masing-masing mahasiswa, pastikan dapat diakses (share sebagai Editor/Publik)'],
-        ['Scan Sertifikat ESQ/SAPAMABA & KW', 'Komputer, Bahasa Inggris & Kewirausahaan'],
-        ['Scan Transkrip Nilai', 'Minimal lulus 144 SKS, tanpa nilai E, dan nilai D maksimal 10% dari total SKS'],
-        ['Sertifikat Keahlian Bidang TI (jika ada)', 'Contoh: Cisco, Oracle, Microsoft, Jaringan, Pemrograman, dsb'],
-        ['Link Profil LinkedIn Pribadi', 'Cantumkan link profil LinkedIn pribadi Anda pada form — dan follow LinkedIn resmi UMK'],
-        ['Follow Instagram @ti.umk', 'Wajib follow sebelum submit form'],
+        ['Halaman Persetujuan Skripsi', 'Ditandatangani dosen pembimbing', 'pdf'],
+        ['Halaman Pengesahan Skripsi', 'Ditandatangani tim penguji, Ketua Progdi, dan Dekan', 'pdf'],
+        ['Halaman Pernyataan Keaslian', 'Bermaterai, menyatakan skripsi bebas plagiasi', 'pdf'],
+        ['Poster Skripsi', 'Sesuai Panduan Poster di halaman Panduan Skripsi. Upload di Google Drive, lalu isi link-nya pada formulir', 'link'],
+        ['Berita Acara Sidang', 'Ditandatangani tim penguji saat sidang', 'pdf'],
+        ['Program Full termasuk Database (jika ada)', 'Upload di Google Drive pribadi masing-masing mahasiswa, pastikan dapat diakses (share sebagai Editor/Publik), lalu isi link-nya pada formulir', 'link'],
+        ['Scan Sertifikat ESQ/SAPAMABA & KW', 'Komputer, Bahasa Inggris & Kewirausahaan', 'pdf'],
+        ['Scan Transkrip Nilai', 'Minimal lulus 144 SKS, tanpa nilai E, dan nilai D maksimal 10% dari total SKS', 'pdf'],
+        ['Sertifikat Keahlian Bidang TI (jika ada)', 'Contoh: Cisco, Oracle, Microsoft, Jaringan, Pemrograman, dsb', 'pdf'],
+        ['Link Profil LinkedIn Pribadi', 'Cantumkan link profil LinkedIn pribadi Anda pada formulir — dan follow LinkedIn resmi UMK', 'link'],
+        ['Follow Instagram @ti.umk', 'Wajib follow sebelum submit form', 'cek'],
     ];
     $syaratJalur = [
         'sidang' => ['label' => 'Jalur Sidang', 'items' => ['File Laporan Skripsi lengkap', 'File PPT / materi presentasi Sidang', 'Scan buku konsultasi/bimbingan skripsi']],
@@ -48,6 +50,9 @@
                         </li>
                     @endforeach
                 </ul>
+                @if($kelayakan['bypass'])
+                    <p class="mt-3 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] font-bold text-amber-800 dark:text-amber-300">🧪 Akun testing — akses Bebas Prodi dibuka tanpa syarat kelulusan.</p>
+                @endif
                 @if($jalur)
                     <p class="mt-3 text-[11px] text-slate-500 dark:text-slate-400">Jalur skripsi Anda: <strong class="text-slate-800 dark:text-slate-200">{{ $syaratJalur[$jalur]['label'] }}</strong></p>
                 @endif
@@ -101,11 +106,15 @@
             </div>
 
             <ol class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                @foreach($dokumenWajib as $i => [$judul, $ket])
+                @foreach($dokumenWajib as $i => [$judul, $ket, $cara])
                     <li class="flex gap-3">
                         <span class="w-6 h-6 rounded-lg bg-teal-600 text-white text-[11px] font-extrabold flex items-center justify-center shrink-0">{{ $i + 1 }}</span>
                         <div>
-                            <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200">{{ $judul }}</p>
+                            <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200">{{ $judul }}
+                                @if($cara === 'link')<span class="ml-1 px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 text-[9px] font-extrabold uppercase align-middle">Isi Link</span>
+                                @elseif($cara === 'cek')<span class="ml-1 px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 text-[9px] font-extrabold uppercase align-middle">Centang di Form</span>
+                                @else<span class="ml-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 text-[9px] font-extrabold uppercase align-middle">PDF</span>@endif
+                            </p>
                             <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{{ $ket }}</p>
                         </div>
                     </li>
@@ -124,7 +133,7 @@
                 @endforeach
             </div>
 
-            <p class="mt-4 text-[11px] text-slate-500 dark:text-slate-400">Semua dokumen digabung menjadi <strong>1 file PDF (maks. 4 MB)</strong>. Format nama file: <code class="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-teal-700 dark:text-teal-300 font-mono">NIM_NAMA_BEBASPRODI.pdf</code></p>
+            <p class="mt-4 text-[11px] text-slate-500 dark:text-slate-400">Poin <strong>4 (Poster)</strong>, <strong>6 (Program)</strong>, dan <strong>10 (LinkedIn)</strong> diisi berupa <strong>link</strong> pada formulir. Dokumen lainnya (termasuk syarat khusus jalur) digabung menjadi <strong>1 file PDF (maks. 4 MB)</strong>. Format nama file: <code class="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-teal-700 dark:text-teal-300 font-mono">NIM_NAMA_BEBASPRODI.pdf</code></p>
         </div>
     </div>
 
@@ -156,11 +165,16 @@
                     <input type="text" value="{{ $user->name }}" readonly class="w-full px-3.5 py-2 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs text-slate-600 dark:text-slate-300 font-semibold cursor-not-allowed">
                 </div>
                 <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Link Google Drive Poster Skripsi <span class="text-rose-500">*</span></label>
+                    <input type="url" name="link_poster" required value="{{ old('link_poster', $pengajuan->link_poster ?? '') }}" placeholder="https://drive.google.com/..." class="{{ $inputCls }}">
+                    <p class="text-[10px] text-slate-400 mt-1">Pastikan dapat diakses (share sebagai Publik).</p>
+                </div>
+                <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Link Profil LinkedIn Pribadi <span class="text-rose-500">*</span></label>
                     <input type="url" name="link_linkedin" required value="{{ old('link_linkedin', $pengajuan->link_linkedin ?? '') }}" placeholder="https://www.linkedin.com/in/username" class="{{ $inputCls }}">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Link Google Drive Program &amp; Database <span class="text-[9px] text-slate-400 font-normal normal-case">(jika ada)</span></label>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Link Program Aplikasi &amp; Database <span class="text-[9px] text-slate-400 font-normal normal-case">(jika ada)</span></label>
                     <input type="url" name="link_program" value="{{ old('link_program', $pengajuan->link_program ?? '') }}" placeholder="https://drive.google.com/..." class="{{ $inputCls }}">
                     <p class="text-[10px] text-slate-400 mt-1">Pastikan dapat diakses (share sebagai Editor/Publik).</p>
                 </div>
@@ -173,7 +187,7 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Berkas Bebas Prodi (1 file PDF, maks. 4 MB) @unless($pengajuan)<span class="text-rose-500">*</span>@endunless</label>
+                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Berkas Bebas Prodi — dokumen selain Poster, Program &amp; LinkedIn (1 file PDF, maks. 4 MB) @unless($pengajuan)<span class="text-rose-500">*</span>@endunless</label>
                 <input type="file" name="file_berkas" accept="application/pdf" @unless($pengajuan) required @endunless
                        class="w-full text-xs text-slate-600 dark:text-slate-300 file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-teal-600 file:text-white file:font-bold file:cursor-pointer border border-slate-300 dark:border-slate-600 rounded-xl p-1.5 bg-white dark:bg-slate-700"
                        @change="if ($event.target.files[0] && $event.target.files[0].size > 4 * 1024 * 1024) { alert('Ukuran file melebihi 4 MB. Silakan kompres PDF terlebih dahulu.'); $event.target.value = ''; }">
