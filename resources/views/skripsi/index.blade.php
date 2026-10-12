@@ -2166,6 +2166,8 @@
                                     input.parentNode.appendChild(errEl);
                                 }
                             });
+                        } else if (Array.isArray(result.conflicts) && result.conflicts.length > 0 && typeof window.showBentrokModal === 'function') {
+                            window.showBentrokModal(result.conflicts);
                         } else {
                             showModalAlert('form-edit-alert', 'form-edit-alert-text', result.message || 'Terjadi kesalahan.');
                         }
@@ -2237,6 +2239,8 @@
                     closeModal('modal-jadwalkan');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || '✅ Jadwal berhasil disimpan!', type: 'success' } }));
                     setTimeout(() => location.reload(), 800);
+                } else if (Array.isArray(result.conflicts) && result.conflicts.length > 0 && typeof window.showBentrokModal === 'function') {
+                    window.showBentrokModal(result.conflicts);
                 } else {
                     showModalAlert('form-jadwalkan-alert', 'form-jadwalkan-alert-text', result.message || 'Terjadi kesalahan saat menyimpan jadwal.');
                 }

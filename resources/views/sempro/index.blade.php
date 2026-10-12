@@ -1434,6 +1434,8 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                     input.parentNode.appendChild(errEl);
                                 }
                             });
+                        } else if (response.status === 422 && Array.isArray(result.conflicts) && result.conflicts.length > 0 && typeof window.showBentrokModal === 'function') {
+                            window.showBentrokModal(result.conflicts);
                         } else if (alertBox && alertText) {
                             alertText.textContent = result.message || 'Terjadi kesalahan.';
                             alertBox.style.display = 'flex';

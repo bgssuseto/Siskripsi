@@ -664,7 +664,7 @@ class SkripsiController extends Controller
         $scheduleConflicts = SidangConflictService::checkConflicts($checkData, $sidang->id);
         if (!empty($scheduleConflicts)) {
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)], 422);
+                return response()->json(['success' => false, 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts), 'conflicts' => $scheduleConflicts], 422);
             }
             return back()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
@@ -830,6 +830,7 @@ class SkripsiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+                'conflicts' => $scheduleConflicts,
             ], 422);
         }
 
@@ -908,7 +909,8 @@ class SkripsiController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)
+                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+                    'conflicts' => $scheduleConflicts,
                 ], 422);
             }
             return back()->withInput()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
@@ -986,7 +988,8 @@ class SkripsiController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)
+                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+                    'conflicts' => $scheduleConflicts,
                 ], 422);
             }
             return back()->withInput()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
