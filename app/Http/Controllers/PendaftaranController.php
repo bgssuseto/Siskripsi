@@ -256,6 +256,41 @@ class PendaftaranController extends Controller
     }
 
     /**
+     * Ubah tanggal pendaftaran oleh admin/koordinator (mis. salah input, atau
+     * pendaftaran manual yang sebenarnya masuk di hari lain). Gelombang ikut
+     * dihitung ulang otomatis oleh hook updating() di model Sidang.
+     */
+    public function updateTanggalPendaftaran(Request $request, Sidang $sidang)
+    {
+        $validated = $request->validate([
+            'tanggal_pendaftaran' => ['required', 'date'],
+        ], [
+            'tanggal_pendaftaran.required' => 'Tanggal pendaftaran wajib diisi.',
+            'tanggal_pendaftaran.date'     => 'Format tanggal pendaftaran tidak valid.',
+        ]);
+
+        $before = $sidang->tanggal_pendaftaran?->format('Y-m-d');
+        $gelombangBefore = $sidang->gelombang;
+        $sidang->update(['tanggal_pendaftaran' => $validated['tanggal_pendaftaran']]);
+        $after = $sidang->tanggal_pendaftaran?->format('Y-m-d');
+
+        ActivityLogger::log(
+            'updated',
+            $sidang,
+            "Mengubah tanggal pendaftaran {$sidang->nama_mahasiswa} ({$sidang->nim}) dari " . ($before ?? '-') . " menjadi {$after}.",
+            ['before' => ['tanggal_pendaftaran' => $before, 'gelombang' => $gelombangBefore], 'after' => ['tanggal_pendaftaran' => $after, 'gelombang' => $sidang->gelombang]]
+        );
+
+        $message = "Tanggal pendaftaran {$sidang->nama_mahasiswa} berhasil diubah.";
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message, 'gelombang' => $sidang->gelombang]);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
      * Delete pendaftaran record so student can re-register
      */
     public function destroy(Request $request, Sidang $sidang)
@@ -299,6 +334,7 @@ class PendaftaranController extends Controller
             'dosen_pembimbing_pendamping_id'  => ['nullable', 'exists:dosens,id'],
             'no_wa_aktif'                     => ['nullable', 'string', 'max:20'],
             'periode_id'                      => ['nullable', 'exists:periodes,id'],
+            'tanggal_pendaftaran'             => ['nullable', 'date'],
         ]);
 
         $periode = $validated['periode_id']
@@ -351,7 +387,7 @@ class PendaftaranController extends Controller
             'jenis_tugas_akhir'               => $actualJenis,
             'jalur_ta'                        => $validated['jenis_tugas_akhir'] === 'sempro' ? ($validated['jenis_ta_pilihan'] ?? null) : null,
             'periode_id'                      => $periode->id,
-            'tanggal_pendaftaran'             => now()->timezone('Asia/Jakarta')->format('Y-m-d'),
+            'tanggal_pendaftaran'             => $validated['tanggal_pendaftaran'] ?? now()->timezone('Asia/Jakarta')->format('Y-m-d'),
             'no_wa_aktif'                     => $validated['no_wa_aktif'] ?? null,
             'verifikasi_status'               => 'disetujui',
             'verifikasi_tanggal'              => now(),

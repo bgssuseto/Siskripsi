@@ -304,6 +304,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/pendaftaran/bulk-destroy', [PendaftaranController::class, 'bulkDestroy'])->name('pendaftaran.bulk-destroy');
         Route::post('/pendaftaran/admin-store', [PendaftaranController::class, 'adminStore'])->name('pendaftaran.admin-store');
         Route::post('/pendaftaran/{sidang}/verifikasi', [PendaftaranController::class, 'verifikasi'])->name('pendaftaran.verifikasi');
+        Route::patch('/pendaftaran/{sidang}/tanggal-pendaftaran', [PendaftaranController::class, 'updateTanggalPendaftaran'])->name('pendaftaran.tanggal-pendaftaran');
         Route::delete('/pendaftaran/{sidang}', [PendaftaranController::class, 'destroy'])->name('pendaftaran.destroy');
 
         Route::get('/master/kesediaan-dosen', [KesediaanDosenController::class, 'index'])->name('master.kesediaan-dosen.index');

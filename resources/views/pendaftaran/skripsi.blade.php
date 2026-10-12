@@ -14,6 +14,9 @@
          bulkRejectKomentar: '',
          bulkDeleteModal: false,
          adminModal: false,
+         tglModal: false,
+         tglSidang: null,
+         tglValue: '',
      }">
     
     <!-- Hero Header Banner -->
@@ -298,6 +301,9 @@
                                 @endif
                                 <div class="text-[10px] text-slate-600 dark:text-slate-300 font-semibold mt-1">
                                     Tgl Daftar: {{ $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->isoFormat('dddd, D MMMM Y') : '-' }}
+                                    <button type="button" title="Ubah tanggal pendaftaran"
+                                            @click="tglSidang = {{ Js::from(['hash_id' => $s->hash_id, 'nama' => $s->nama_mahasiswa, 'nim' => $s->nim]) }}; tglValue = '{{ $s->tanggal_pendaftaran?->format('Y-m-d') }}'; tglModal = true"
+                                            class="ml-1 text-indigo-600 dark:text-indigo-400 hover:underline font-bold">✏️ Ubah</button>
                                 </div>
                             </td>
 
@@ -690,10 +696,41 @@
                         </select>
                     </div>
                 </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Tanggal Pendaftaran</label>
+                    <input type="date" name="tanggal_pendaftaran" value="{{ now()->timezone('Asia/Jakarta')->format('Y-m-d') }}" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                    <p class="text-[10px] text-slate-400 mt-1">Menentukan gelombang pendaftaran. Default: hari ini.</p>
+                </div>
                 <p class="text-[10.5px] text-slate-400 leading-relaxed">Pendaftaran akan langsung berstatus <strong>Terverifikasi</strong>. Data boleh duplikat NIM asalkan periodenya berbeda dari pendaftaran sebelumnya.</p>
                 <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                     <button type="button" @click="adminModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">Batal</button>
                     <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md">Daftarkan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Ubah Tanggal Pendaftaran -->
+    <div x-show="tglModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+         @keydown.escape.window="tglModal = false" @click.self="tglModal = false">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-700 p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">📅 Ubah Tanggal Pendaftaran</h3>
+                <button type="button" @click="tglModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs">✕</button>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 mb-3">
+                <strong x-text="tglSidang ? tglSidang.nama : ''"></strong>
+                <span class="text-slate-400" x-text="tglSidang ? '(' + tglSidang.nim + ')' : ''"></span>
+            </p>
+            <form method="POST" :action="'{{ url('/pendaftaran') }}/' + (tglSidang ? tglSidang.hash_id : '') + '/tanggal-pendaftaran'" class="space-y-3">
+                @csrf
+                @method('PATCH')
+                <input type="date" name="tanggal_pendaftaran" x-model="tglValue" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-xs bg-white dark:bg-slate-800">
+                <p class="text-[10.5px] text-slate-400">Gelombang pendaftaran akan otomatis disesuaikan dengan tanggal baru.</p>
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" @click="tglModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md">Simpan</button>
                 </div>
             </form>
         </div>

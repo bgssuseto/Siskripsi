@@ -898,7 +898,23 @@ class SemproController extends Controller
             return back()->withInput()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
 
-        $sidang->update($validated);
+        // Unique constraint (nim, jenis_tugas_akhir, periode_id) & (ruang, tanggal,
+        // jam) bisa terlanggar di sini — tampilkan pesan yang jelas alih-alih
+        // "Server Error" mentah.
+        try {
+            $sidang->update($validated);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ((int) $e->getCode() !== 23000) {
+                throw $e;
+            }
+            $msg = str_contains($e->getMessage(), 'nim_jenis_periode')
+                ? '⚠️ Mahasiswa dengan NIM ini sudah memiliki data sempro lain pada periode yang dipilih.'
+                : '⚠️ Ruang/jam ini sudah dipakai jadwal lain. Silakan pilih ruang atau jam yang berbeda.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->withInput()->with('warning', $msg);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
