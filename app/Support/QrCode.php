@@ -3,17 +3,25 @@
 namespace App\Support;
 
 /**
- * Generator QR Code minimal (mode byte, koreksi galat level M) tanpa dependensi
+ * Generator QR Code minimal (mode byte, koreksi galat level M atau H) tanpa dependensi
  * Composer — server produksi tidak bisa menjalankan composer install. Mengikuti
  * spesifikasi ISO/IEC 18004 (diadaptasi dari pustaka QR Nayuki, lisensi MIT).
  * Output berupa SVG yang bisa langsung dipakai dompdf maupun browser.
  */
 class QrCode
 {
-    // Level M — indeks = versi (1..40)
-    private const ECC_PER_BLOCK = [-1, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28];
-    private const NUM_BLOCKS    = [-1, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9, 10, 10, 11, 13, 14, 16, 17, 17, 18, 20, 21, 23, 25, 26, 28, 29, 31, 33, 35, 37, 38, 40, 43, 45, 47, 49];
-    private const ECC_FORMAT_BITS = 0; // M
+    // Indeks = versi (1..40). M ≈ 15% pemulihan, H ≈ 30% (cukup untuk logo di tengah).
+    private const ECC_PER_BLOCK = [
+        'M' => [-1, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28],
+        'H' => [-1, 17, 28, 22, 16, 22, 28, 26, 26, 24, 28, 24, 28, 22, 24, 24, 30, 28, 28, 26, 28, 30, 24, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+    ];
+    private const NUM_BLOCKS = [
+        'M' => [-1, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9, 10, 10, 11, 13, 14, 16, 17, 17, 18, 20, 21, 23, 25, 26, 28, 29, 31, 33, 35, 37, 38, 40, 43, 45, 47, 49],
+        'H' => [-1, 1, 1, 2, 4, 4, 4, 5, 6, 8, 8, 11, 11, 16, 16, 18, 16, 19, 21, 25, 25, 25, 34, 30, 32, 35, 37, 40, 42, 45, 48, 51, 54, 57, 60, 63, 66, 70, 74, 77, 81],
+    ];
+    private const ECC_FORMAT_BITS = ['M' => 0, 'H' => 2];
+
+    private string $ecc;
 
     private int $version;
     private int $size;
@@ -22,8 +30,9 @@ class QrCode
     /** @var array<int, array<int, bool>> */
     private array $isFunction = [];
 
-    private function __construct(string $data)
+    private function __construct(string $data, string $ecc = 'M')
     {
+        $this->ecc = $ecc;
         $bytes = array_values(unpack('C*', $data) ?: []);
 
         // Pilih versi terkecil yang muat
@@ -33,7 +42,7 @@ class QrCode
             }
             $countBits = $ver < 10 ? 8 : 16;
             $needed = 4 + $countBits + count($bytes) * 8;
-            if ($needed <= self::numDataCodewords($ver) * 8) {
+            if ($needed <= $this->numDataCodewords($ver) * 8) {
                 break;
             }
         }
@@ -52,7 +61,7 @@ class QrCode
         foreach ($bytes as $b) {
             $append($b, 8);
         }
-        $capacity = self::numDataCodewords($ver) * 8;
+        $capacity = $this->numDataCodewords($ver) * 8;
         $append(0, min(4, $capacity - count($bits)));
         $append(0, (8 - count($bits) % 8) % 8);
         for ($pad = 0xEC; count($bits) < $capacity; $pad ^= 0xEC ^ 0x11) {
@@ -90,30 +99,68 @@ class QrCode
     /**
      * SVG QR Code (dengan quiet zone 4 modul). Koordinat ditulis langsung dalam
      * ukuran akhir — renderer SVG dompdf tidak menskalakan viewBox dengan benar.
+     *
+     * $kosongTengah: rasio lebar area tengah yang dikosongkan (untuk ditimpa
+     * logo). Hanya aman dengan $ecc = 'H' dan rasio ≤ 0.3.
      */
-    public static function svg(string $data, int $moduleSize = 8): string
+    public static function svg(string $data, int $moduleSize = 8, string $ecc = 'M', float $kosongTengah = 0.0): string
     {
-        $qr = new self($data);
+        return self::bangun($data, $moduleSize, $ecc, $kosongTengah)['svg'];
+    }
+
+    /**
+     * QR level H dengan area tengah dikosongkan untuk logo. Mengembalikan data
+     * URI SVG dan rasio lebar area kosong terhadap lebar gambar (termasuk
+     * quiet zone) — dipakai untuk mengukur & memusatkan logo di atasnya.
+     *
+     * @return array{uri: string, rasio_logo: float}
+     */
+    public static function denganRuangLogo(string $data, float $kosongTengah = 0.26, int $moduleSize = 8): array
+    {
+        $hasil = self::bangun($data, $moduleSize, 'H', $kosongTengah);
+
+        return [
+            'uri'        => 'data:image/svg+xml;base64,' . base64_encode($hasil['svg']),
+            'rasio_logo' => $hasil['lebar_kosong'] / $hasil['lebar_total'],
+        ];
+    }
+
+    /** @return array{svg: string, lebar_kosong: int, lebar_total: int} */
+    private static function bangun(string $data, int $moduleSize, string $ecc, float $kosongTengah): array
+    {
+        $qr = new self($data, $ecc);
         $border = 4;
         $dim = ($qr->size + $border * 2) * $moduleSize;
+
+        $lebarKosong = (int) round($qr->size * $kosongTengah);
+        if ($lebarKosong > 0 && ($qr->size - $lebarKosong) % 2 !== 0) {
+            $lebarKosong++; // jaga agar area kosong tepat di tengah
+        }
+        $awalKosong = intdiv($qr->size - $lebarKosong, 2);
+        $akhirKosong = $awalKosong + $lebarKosong;
 
         $path = '';
         for ($y = 0; $y < $qr->size; $y++) {
             for ($x = 0; $x < $qr->size; $x++) {
-                if ($qr->modules[$y][$x]) {
+                $diTengah = $lebarKosong > 0 && $x >= $awalKosong && $x < $akhirKosong && $y >= $awalKosong && $y < $akhirKosong;
+                if ($qr->modules[$y][$x] && !$diTengah) {
                     $path .= 'M' . (($x + $border) * $moduleSize) . ',' . (($y + $border) * $moduleSize)
                         . 'h' . $moduleSize . 'v' . $moduleSize . 'h-' . $moduleSize . 'z';
                 }
             }
         }
 
-        return '<svg xmlns="http://www.w3.org/2000/svg" width="' . $dim . '" height="' . $dim . '" viewBox="0 0 ' . $dim . ' ' . $dim . '" shape-rendering="crispEdges">'
-            . '<rect x="0" y="0" width="' . $dim . '" height="' . $dim . '" fill="#ffffff"/><path d="' . $path . '" fill="#000000"/></svg>';
+        return [
+            'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="' . $dim . '" height="' . $dim . '" viewBox="0 0 ' . $dim . ' ' . $dim . '" shape-rendering="crispEdges">'
+                . '<rect x="0" y="0" width="' . $dim . '" height="' . $dim . '" fill="#ffffff"/><path d="' . $path . '" fill="#000000"/></svg>',
+            'lebar_kosong' => $lebarKosong,
+            'lebar_total'  => $qr->size + $border * 2,
+        ];
     }
 
-    public static function svgDataUri(string $data, int $moduleSize = 8): string
+    public static function svgDataUri(string $data, int $moduleSize = 8, string $ecc = 'M', float $kosongTengah = 0.0): string
     {
-        return 'data:image/svg+xml;base64,' . base64_encode(self::svg($data, $moduleSize));
+        return 'data:image/svg+xml;base64,' . base64_encode(self::svg($data, $moduleSize, $ecc, $kosongTengah));
     }
 
     // ───────────── Pola fungsi ─────────────
@@ -180,7 +227,7 @@ class QrCode
 
     private function drawFormatBits(int $mask): void
     {
-        $data = (self::ECC_FORMAT_BITS << 3) | $mask;
+        $data = (self::ECC_FORMAT_BITS[$this->ecc] << 3) | $mask;
         $rem = $data;
         for ($i = 0; $i < 10; $i++) {
             $rem = ($rem << 1) ^ (($rem >> 9) * 0x537);
@@ -247,15 +294,15 @@ class QrCode
         return $result;
     }
 
-    private static function numDataCodewords(int $ver): int
+    private function numDataCodewords(int $ver): int
     {
-        return intdiv(self::numRawDataModules($ver), 8) - self::ECC_PER_BLOCK[$ver] * self::NUM_BLOCKS[$ver];
+        return intdiv(self::numRawDataModules($ver), 8) - self::ECC_PER_BLOCK[$this->ecc][$ver] * self::NUM_BLOCKS[$this->ecc][$ver];
     }
 
     private function addEccAndInterleave(array $data): array
     {
-        $numBlocks = self::NUM_BLOCKS[$this->version];
-        $blockEccLen = self::ECC_PER_BLOCK[$this->version];
+        $numBlocks = self::NUM_BLOCKS[$this->ecc][$this->version];
+        $blockEccLen = self::ECC_PER_BLOCK[$this->ecc][$this->version];
         $rawCodewords = intdiv(self::numRawDataModules($this->version), 8);
         $numShortBlocks = $numBlocks - $rawCodewords % $numBlocks;
         $shortBlockLen = intdiv($rawCodewords, $numBlocks);
@@ -374,7 +421,7 @@ class QrCode
         }
     }
 
-    /** Penalti sederhana (aturan 1, 2, dan 4 dari spesifikasi). */
+    /** Penalti pemilihan mask (aturan 1–4 spesifikasi). */
     private function penaltyScore(): int
     {
         $n = $this->size;
@@ -412,6 +459,27 @@ class QrCode
                     $c = $this->modules[$y][$x];
                     if ($c === $this->modules[$y][$x + 1] && $c === $this->modules[$y + 1][$x] && $c === $this->modules[$y + 1][$x + 1]) {
                         $result += 3;
+                    }
+                }
+            }
+        }
+
+        // Aturan 3: pola mirip finder (1:1:3:1:1 diapit 4 modul terang) — bisa
+        // mengecoh detektor pemindai, jadi mask yang memunculkannya dihindari.
+        $pola1 = '10111010000';
+        $pola2 = '00001011101';
+        for ($a = 0; $a < $n; $a++) {
+            $baris = '';
+            $kolom = '';
+            for ($b = 0; $b < $n; $b++) {
+                $baris .= $this->modules[$a][$b] ? '1' : '0';
+                $kolom .= $this->modules[$b][$a] ? '1' : '0';
+            }
+            foreach ([$baris, $kolom] as $garis) {
+                for ($i = 0; $i + 11 <= $n; $i++) {
+                    $potong = substr($garis, $i, 11);
+                    if ($potong === $pola1 || $potong === $pola2) {
+                        $result += 40;
                     }
                 }
             }

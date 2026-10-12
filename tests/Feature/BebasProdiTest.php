@@ -268,5 +268,11 @@ class BebasProdiTest extends TestCase
         $svg = \App\Support\QrCode::svg('https://contoh.test/verifikasi/abc');
         $this->assertStringStartsWith('<svg', $svg);
         $this->assertStringContainsString('viewBox="0 0 296 296"', $svg); // versi 3: (29 + 2x4 quiet zone) modul x 8px
+
+        // Versi bertanda logo: level H, area tengah kosong ±26% lebar QR untuk logo TI UMK.
+        $qr = \App\Support\QrCode::denganRuangLogo('https://contoh.test/verifikasi/' . str_repeat('a', 32));
+        $this->assertStringStartsWith('data:image/svg+xml;base64,', $qr['uri']);
+        $this->assertGreaterThan(0.15, $qr['rasio_logo']);
+        $this->assertLessThan(0.3, $qr['rasio_logo']);
     }
 }
