@@ -1,16 +1,18 @@
 <x-app-layout title="Dashboard Mahasiswa">
-<div class="max-w-7xl mx-auto p-6 space-y-6">
+<div class="max-w-7xl mx-auto space-y-5 sm:space-y-6">
     
     <!-- Welcome Header -->
-    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center">
-        <div>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/30 mb-2">
+    <div class="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-5 sm:p-7 rounded-3xl text-white shadow-xl flex justify-between items-center gap-4 border border-slate-800">
+        <div aria-hidden="true" class="absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl"></div>
+        <div aria-hidden="true" class="absolute left-1/3 -bottom-16 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl"></div>
+        <div class="relative min-w-0">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] sm:text-xs font-semibold border border-emerald-500/30 mb-2.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Role: Mahasiswa
             </span>
-            <h1 class="text-2xl font-extrabold tracking-tight">Halo, {{ $user->name }}!</h1>
-            <p class="text-xs text-slate-300 mt-1">Selamat datang di Sistem Informasi Skripsi TI. Kelola tugas akhir, pendaftaran, dan jadwal sidang Anda.</p>
+            <h1 class="text-xl sm:text-3xl font-extrabold tracking-tight leading-tight break-words">Halo, {{ $user->name }}! 👋</h1>
+            <p class="text-[12px] sm:text-sm text-slate-300 mt-1.5 leading-relaxed max-w-2xl">Selamat datang di Sistem Informasi Skripsi TI. Kelola tugas akhir, pendaftaran, dan jadwal sidang Anda.</p>
         </div>
-        <div class="hidden sm:flex w-12 h-12 bg-indigo-500/20 border border-indigo-400/30 rounded-2xl items-center justify-center">
+        <div class="relative hidden sm:flex w-14 h-14 shrink-0 bg-indigo-500/20 border border-indigo-400/30 rounded-2xl items-center justify-center">
             <svg class="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
@@ -183,7 +185,7 @@
     @endif
 
     {{-- Progress pendaftaran Sempro & Skripsi (5 tahap per track) --}}
-    <div class="space-y-4">
+    <div class="grid grid-cols-1 gap-5 sm:gap-6">
         <x-progress-tugas-akhir :progress="$progressSempro" />
         <x-progress-tugas-akhir :progress="$progressSkripsi" />
     </div>
@@ -192,7 +194,7 @@
     <x-info-persiapan-sidang />
 
     <!-- Status Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <!-- Active Period Card -->
         <div class="bg-white dark:bg-slate-800/80 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-2">
             <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Periode Akademik Aktif</p>
@@ -211,7 +213,7 @@
         <div class="bg-white dark:bg-slate-800/80 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-2">
             <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status Sidang Skripsi</p>
             @if($sidangSkripsi)
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                     @php
                         $statusText = 'Belum Diverifikasi';
                         $statusClass = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-250 dark:border-amber-700/50';
@@ -241,7 +243,7 @@
         <div class="bg-white dark:bg-slate-800/80 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-2">
             <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status Sidang Jurnal</p>
             @if($sidangJurnal)
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                     @php
                         $statusText = 'Belum Diverifikasi';
                         $statusClass = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-250 dark:border-amber-700/50';
@@ -269,17 +271,35 @@
     </div>
 
     <!-- Recent Sidang List -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
-        <h2 class="text-lg font-bold text-slate-800 mb-4">Riwayat Sidang & Tugas Akhir</h2>
+    <div class="bg-white dark:bg-slate-800/80 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-700 p-4 sm:p-6">
+        <h2 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100 mb-4">Riwayat Sidang &amp; Tugas Akhir</h2>
         @if($sidangs->isEmpty())
-            <div class="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                <p class="text-sm text-slate-500 italic">Belum ada data riwayat sidang.</p>
+            <div class="text-center py-8 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                <p class="text-sm text-slate-500 dark:text-slate-400 italic">Belum ada data riwayat sidang.</p>
             </div>
         @else
-            <div class="overflow-x-auto">
+            {{-- Mobile: kartu --}}
+            <div class="space-y-3 md:hidden">
+                @foreach($sidangs as $i => $s)
+                    <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/40 p-3.5">
+                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">{{ $s->jenis_tugas_akhir }}</span>
+                            {!! $s->getVerifikasiStatusHtml() !!}
+                        </div>
+                        <p class="text-[13px] font-bold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">{{ $s->judul_skripsi }}</p>
+                        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            <span>📅 {{ optional($s->tanggal)->format('d M Y') ?? 'Belum dijadwalkan' }}</span>
+                            <span>🏫 {{ $s->ruang->kode_ruangan ?? $s->ruang->nama ?? '-' }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Desktop: tabel --}}
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                        <tr class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
                             <th class="py-3 px-4 font-bold">#</th>
                             <th class="py-3 px-4 font-bold">Jenis</th>
                             <th class="py-3 px-4 font-bold">Judul</th>
@@ -288,14 +308,14 @@
                             <th class="py-3 px-4 font-bold text-center">Status</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-sm font-medium">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-sm font-medium">
                         @foreach($sidangs as $i => $s)
-                            <tr class="hover:bg-slate-50/80">
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-900/40">
                                 <td class="py-3 px-4 text-slate-400 text-xs">{{ $i + 1 }}</td>
-                                <td class="py-3 px-4 font-bold text-slate-800 capitalize">{{ $s->jenis_tugas_akhir }}</td>
-                                <td class="py-3 px-4 text-slate-700 max-w-xs truncate" title="{{ $s->judul_skripsi }}">{{ $s->judul_skripsi }}</td>
-                                <td class="py-3 px-4 text-slate-600">{{ optional($s->tanggal)->format('d M Y') ?? '-' }}</td>
-                                <td class="py-3 px-4 text-slate-600">{{ $s->ruang->kode_ruangan ?? $s->ruang->nama ?? '-' }}</td>
+                                <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-100 capitalize">{{ $s->jenis_tugas_akhir }}</td>
+                                <td class="py-3 px-4 text-slate-700 dark:text-slate-300 max-w-xs truncate" title="{{ $s->judul_skripsi }}">{{ $s->judul_skripsi }}</td>
+                                <td class="py-3 px-4 text-slate-600 dark:text-slate-400">{{ optional($s->tanggal)->format('d M Y') ?? '-' }}</td>
+                                <td class="py-3 px-4 text-slate-600 dark:text-slate-400">{{ $s->ruang->kode_ruangan ?? $s->ruang->nama ?? '-' }}</td>
                                 <td class="py-3 px-4 text-center">
                                     {!! $s->getVerifikasiStatusHtml() !!}
                                 </td>

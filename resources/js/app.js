@@ -1,4 +1,8 @@
 import Alpine from 'alpinejs';
+import morph from '@alpinejs/morph';
+import { initLiveFilter } from './live-filter';
+
+Alpine.plugin(morph);
 
 window.Alpine = Alpine;
 
@@ -42,3 +46,4 @@ document.addEventListener('wheel', function (event) {
 }, { passive: false });
 
 Alpine.start();
+initLiveFilter();

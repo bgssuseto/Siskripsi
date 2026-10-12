@@ -126,3 +126,16 @@ html.dark .fc {
     --fc-button-hover-border-color: #4361ee !important;
     --fc-button-active-bg-color: #4361ee !important;
 }
+
+/* ── Live search / filter ── */
+.live-filter-progress {
+    position: fixed; top: 0; left: 0; z-index: 9999;
+    height: 3px; width: 0; opacity: 0;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    box-shadow: 0 0 8px rgba(139, 92, 246, .6);
+    transition: width .4s ease, opacity .3s ease;
+    pointer-events: none;
+}
+.live-filter-progress.is-active { width: 75%; opacity: 1; transition: width 2.5s cubic-bezier(.1, .7, .2, 1), opacity .1s; }
+#page-content.live-filter-loading table tbody,
+#page-content.live-filter-loading [data-live-results] { opacity: .55; transition: opacity .15s; }

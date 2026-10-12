@@ -1919,7 +1919,9 @@
                 </div>
                 @endif
 
-                {{ $slot }}
+                <div id="page-content">
+                    {{ $slot }}
+                </div>
             </main>
 
             <!-- Footer -->
