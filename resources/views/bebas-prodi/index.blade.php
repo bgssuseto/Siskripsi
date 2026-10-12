@@ -1,0 +1,175 @@
+<x-app-layout title="Bebas Prodi">
+@php
+    $badge = [
+        'menunggu'  => 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+        'disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
+        'ditolak'   => 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800',
+    ];
+    $label = ['menunggu' => 'Menunggu', 'disetujui' => 'Disetujui', 'ditolak' => 'Ditolak'];
+    $isSuperAdmin = Auth::user()->isSuperAdmin();
+@endphp
+<div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6"
+     x-data="{ modal: false, mode: 'disetujui', action: '', nama: '' }">
+
+    <div class="bg-gradient-to-r from-teal-900 via-slate-900 to-emerald-950 p-6 rounded-2xl text-white shadow-xl flex flex-wrap gap-3 justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-extrabold mb-1">Bebas Prodi</h1>
+            <p class="text-xs text-teal-200">Verifikasi pengajuan Surat Keterangan Bebas Prodi mahasiswa.</p>
+        </div>
+        <span class="px-3.5 py-1.5 bg-teal-500/30 border border-teal-400/30 text-teal-100 text-xs font-bold rounded-xl">
+            Nomor berikutnya: <span class="font-mono">TI/BP/{{ $nextNomor }}</span>
+        </span>
+    </div>
+
+    @if($errors->any())
+        <div class="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl p-3 text-xs text-rose-800 dark:text-rose-300">
+            <ul class="list-disc pl-4">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
+    @endif
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 grid grid-cols-3 gap-3">
+            @foreach(['menunggu' => 'ring-amber-500', 'disetujui' => 'ring-emerald-500', 'ditolak' => 'ring-rose-500'] as $st => $ring)
+                <a href="{{ route('bebas-prodi.index', ['status' => $status === $st ? null : $st, 'q' => $search ?: null]) }}"
+                   class="stat-card rounded-2xl p-4 shadow-sm transition-all {{ $status === $st ? 'ring-2 ' . $ring : '' }}">
+                    <p class="stat-label text-[11px] uppercase tracking-wider">{{ $label[$st] }}</p>
+                    <p class="stat-value text-2xl mt-1">{{ $counts[$st] ?? 0 }}</p>
+                </a>
+            @endforeach
+        </div>
+
+        @if($isSuperAdmin)
+        <form method="POST" action="{{ route('bebas-prodi.ttd') }}" enctype="multipart/form-data"
+              class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-4 border border-slate-200/80 dark:border-slate-700 space-y-2">
+            @csrf
+            <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Tanda Tangan Kaprodi</p>
+            <p class="text-[11px] {{ $hasTtd ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }} font-bold">
+                {{ $hasTtd ? '✓ Sudah diunggah — tampil di surat.' : '✕ Belum ada — surat tercetak tanpa tanda tangan.' }}
+            </p>
+            <div class="flex gap-2">
+                <input type="file" name="ttd" accept="image/png" required class="flex-1 min-w-0 text-[11px] text-slate-600 dark:text-slate-300 file:mr-2 file:px-2 file:py-1 file:rounded-md file:border-0 file:bg-slate-200 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 file:text-[11px]">
+                <button class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg shrink-0">Unggah</button>
+            </div>
+            <p class="text-[10px] text-slate-400">PNG latar transparan, maks. 2 MB.</p>
+        </form>
+        @endif
+    </div>
+
+    <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 overflow-hidden">
+        <form method="GET" class="p-4 border-b border-slate-100 dark:border-slate-700 flex flex-wrap gap-2 items-center">
+            @if($status)<input type="hidden" name="status" value="{{ $status }}">@endif
+            <input type="search" name="q" value="{{ $search }}" placeholder="Cari nama, NIM, atau nomor surat..."
+                   class="flex-1 min-w-[200px] px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+            <button class="px-4 py-2 bg-slate-800 dark:bg-slate-600 text-white text-xs font-bold rounded-xl">Cari</button>
+            @if($status || $search)
+                <a href="{{ route('bebas-prodi.index') }}" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white">Reset</a>
+            @endif
+        </form>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase text-[10px] tracking-wider">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Mahasiswa</th>
+                        <th class="px-4 py-3 text-left">Jalur</th>
+                        <th class="px-4 py-3 text-left">Berkas &amp; Link</th>
+                        <th class="px-4 py-3 text-left">Diajukan</th>
+                        <th class="px-4 py-3 text-left">Status</th>
+                        <th class="px-4 py-3 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    @forelse($pengajuans as $p)
+                        <tr class="align-top">
+                            <td class="px-4 py-3">
+                                <p class="font-extrabold text-slate-800 dark:text-slate-200">{{ $p->nama_mahasiswa }}</p>
+                                <span class="nim-pill inline-block mt-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono text-[10px]">{{ $p->nim }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold">{{ $p->jalur === 'jurnal' ? 'Jurnal' : 'Sidang' }}</td>
+                            <td class="px-4 py-3 space-y-1">
+                                <a href="{{ route('bebas-prodi.berkas', $p) }}" target="_blank" class="block font-bold text-teal-700 dark:text-teal-400 hover:underline">📄 Berkas PDF</a>
+                                <a href="{{ $p->link_linkedin }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">LinkedIn</a>
+                                @if($p->link_program)<a href="{{ $p->link_program }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">Google Drive Program</a>@endif
+                                @if($p->link_jurnal)<a href="{{ $p->link_jurnal }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">Artikel Jurnal</a>@endif
+                            </td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ $p->submitted_at?->timezone('Asia/Jakarta')->format('d M Y H:i') }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-block px-2 py-0.5 rounded-lg border text-[10px] font-extrabold {{ $badge[$p->status] ?? '' }}">{{ $label[$p->status] ?? $p->status }}</span>
+                                @if($p->status === 'disetujui')
+                                    <p class="mt-1 font-mono text-[10px] text-slate-600 dark:text-slate-400">{{ $p->nomor_surat_lengkap }}</p>
+                                    <p class="text-[10px] text-slate-500">{{ $p->tanggal_surat?->locale('id')->translatedFormat('j M Y') }}</p>
+                                @elseif($p->status === 'ditolak' && $p->komentar)
+                                    <p class="mt-1 text-[10px] text-rose-700 dark:text-rose-400 max-w-[200px]">{{ $p->komentar }}</p>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap justify-end gap-1.5">
+                                    @if($p->status !== 'disetujui')
+                                        <button type="button" @click="modal = true; mode = 'disetujui'; action = '{{ route('bebas-prodi.verifikasi', $p) }}'; nama = @js($p->nama_mahasiswa)"
+                                                class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg">Setujui</button>
+                                    @endif
+                                    @if($p->status !== 'ditolak')
+                                        <button type="button" @click="modal = true; mode = 'ditolak'; action = '{{ route('bebas-prodi.verifikasi', $p) }}'; nama = @js($p->nama_mahasiswa)"
+                                                class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg">Tolak</button>
+                                    @endif
+                                    @if($p->status === 'disetujui')
+                                        <a href="{{ route('bebas-prodi.cetak', $p) }}" target="_blank" class="px-2.5 py-1.5 bg-slate-800 dark:bg-slate-600 hover:bg-slate-900 text-white text-[11px] font-bold rounded-lg">🖨️ Cetak</a>
+                                    @endif
+                                    @if($isSuperAdmin)
+                                        <form method="POST" action="{{ route('bebas-prodi.destroy', $p) }}" onsubmit="return confirm('Hapus pengajuan Bebas Prodi {{ addslashes($p->nama_mahasiswa) }}? Berkas juga akan dihapus.')">
+                                            @csrf @method('DELETE')
+                                            <button class="px-2.5 py-1.5 border border-slate-300 dark:border-slate-600 text-slate-500 hover:text-rose-600 text-[11px] font-bold rounded-lg">Hapus</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6" class="px-4 py-10 text-center text-slate-400 italic">Belum ada pengajuan Bebas Prodi.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($pengajuans->hasPages())
+            <div class="p-4 border-t border-slate-100 dark:border-slate-700">{{ $pengajuans->links() }}</div>
+        @endif
+    </div>
+
+    {{-- Modal verifikasi --}}
+    <div x-show="modal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <form method="POST" :action="action" @click.away="modal = false"
+              class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-700 p-6 space-y-4">
+            @csrf
+            <input type="hidden" name="status" :value="mode">
+            <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-slate-100" x-text="mode === 'disetujui' ? 'Setujui Bebas Prodi' : 'Tolak Pengajuan'"></h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400" x-text="nama"></p>
+            </div>
+
+            <template x-if="mode === 'disetujui'">
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Tanggal Surat</label>
+                    <input type="date" name="tanggal_surat" value="{{ now()->timezone('Asia/Jakarta')->toDateString() }}"
+                           class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                    <p class="text-[11px] text-slate-500">Nomor surat diterbitkan otomatis (berikutnya: <span class="font-mono">TI/BP/{{ $nextNomor }}</span>). Mahasiswa langsung bisa mencetak surat.</p>
+                </div>
+            </template>
+            <template x-if="mode === 'ditolak'">
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Catatan untuk mahasiswa <span class="text-rose-500">*</span></label>
+                    <textarea name="komentar" rows="3" required placeholder="Contoh: Halaman pengesahan belum ditandatangani Dekan."
+                              class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"></textarea>
+                </div>
+            </template>
+
+            <div class="flex justify-end gap-2">
+                <button type="button" @click="modal = false" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 rounded-xl border border-slate-300 dark:border-slate-600">Batal</button>
+                <button type="submit" class="px-4 py-2 text-xs font-extrabold text-white rounded-xl"
+                        :class="mode === 'disetujui' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'"
+                        x-text="mode === 'disetujui' ? 'Setujui & Terbitkan Nomor' : 'Tolak'"></button>
+            </div>
+        </form>
+    </div>
+</div>
+</x-app-layout>

@@ -28,6 +28,7 @@ use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\AnalitikController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AutoScheduleController;
+use App\Http\Controllers\BebasProdiController;
 use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\DosenPengujiRuleController;
 use App\Http\Controllers\PublicKesediaanController;
@@ -70,6 +71,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dokumen/{sidang}/{type}', [DokumenController::class, 'show'])
         ->name('dokumen.show')
         ->where('type', 'persyaratan|bukti-pembayaran');
+
+    // Berkas pengajuan Bebas Prodi (pemilik atau admin/koordinator — dicek di controller)
+    Route::get('/bebas-prodi/{bebasProdi}/berkas', [BebasProdiController::class, 'berkas'])->name('bebas-prodi.berkas');
 
     Route::get('/dashboard', function () {
         $user = auth()->user();
@@ -291,6 +295,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/administrasi/audit-log', [AuditLogController::class, 'index'])->name('administrasi.audit-log.index');
         Route::get('/administrasi/analitik', [AnalitikController::class, 'index'])->name('administrasi.analitik.index');
         Route::get('/master/dosen-penguji-rule', [DosenPengujiRuleController::class, 'index'])->name('master.dosen-penguji-rule.index');
+
+        // Bebas Prodi — verifikasi pengajuan & cetak surat (hapus/upload TTD dicek super_admin di controller)
+        Route::get('/bebas-prodi', [BebasProdiController::class, 'index'])->name('bebas-prodi.index');
+        Route::post('/bebas-prodi/ttd', [BebasProdiController::class, 'uploadTtd'])->name('bebas-prodi.ttd');
+        Route::post('/bebas-prodi/{bebasProdi}/verifikasi', [BebasProdiController::class, 'verifikasi'])->name('bebas-prodi.verifikasi');
+        Route::get('/bebas-prodi/{bebasProdi}/cetak', [BebasProdiController::class, 'cetak'])->name('bebas-prodi.cetak');
+        Route::delete('/bebas-prodi/{bebasProdi}', [BebasProdiController::class, 'destroy'])->name('bebas-prodi.destroy');
     });
 
     // Pendaftaran & Kesediaan Dosen Management (Super Admin & Koordinator)
@@ -351,6 +362,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/mahasiswa/daftar', [MahasiswaController::class, 'storeRegistration'])->name('mahasiswa.daftar.store');
         Route::post('/mahasiswa/sidang/{sidang}/update-bukti', [MahasiswaController::class, 'updateBukti'])->name('mahasiswa.sidang.update-bukti');
         Route::get('/mahasiswa/sidang/{sidang}/join-wa', [MahasiswaController::class, 'joinWa'])->name('mahasiswa.sidang.join-wa');
+        Route::get('/mahasiswa/bebas-prodi', [BebasProdiController::class, 'mahasiswaIndex'])->name('mahasiswa.bebas-prodi.index');
+        Route::post('/mahasiswa/bebas-prodi', [BebasProdiController::class, 'mahasiswaStore'])->name('mahasiswa.bebas-prodi.store');
+        Route::get('/mahasiswa/bebas-prodi/cetak', [BebasProdiController::class, 'mahasiswaCetak'])->name('mahasiswa.bebas-prodi.cetak');
     });
     // Dosen routes
     Route::middleware(['role:dosen', 'menu.permission'])->group(function () {

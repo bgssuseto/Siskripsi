@@ -486,13 +486,26 @@ class MenuController extends Controller
         );
         $mhsJadwalSkripsi->update(['parent_id' => $mhsPenjadwalanParent->id]);
 
+        Menu::firstOrCreate(
+            ['route' => 'mahasiswa.bebas-prodi.index'],
+            ['name' => 'Bebas Prodi', 'icon' => 'badge', 'role_default' => 'mahasiswa', 'sort_order' => 8]
+        );
+
+        // Halaman admin Bebas Prodi — koordinator baru bisa membuka bila
+        // diberi akses lewat "Atur Akses Role Koordinator" (tidak di-default).
+        Menu::firstOrCreate(
+            ['route' => 'bebas-prodi.index'],
+            ['name' => 'Bebas Prodi', 'icon' => 'badge', 'role_default' => 'koordinator', 'sort_order' => 45]
+        );
+
         // Seed default role_menu mappings for mahasiswa
         $mhsMenuRoutes = [
             'mahasiswa.dashboard',
             'mahasiswa.sempro.index',
             'mahasiswa.skripsi.index',
             'mahasiswa.jadwal.sempro',
-            'mahasiswa.jadwal.skripsi'
+            'mahasiswa.jadwal.skripsi',
+            'mahasiswa.bebas-prodi.index',
         ];
 
         $mhsMenus = Menu::whereIn('route', $mhsMenuRoutes)
