@@ -499,7 +499,7 @@ class PendaftaranController extends Controller
                 $i + 1, $s->nim, $s->nama_mahasiswa, $s->no_wa_aktif ?? '-', $s->judul_skripsi,
                 $s->pembimbingUtama?->nama_dosen ?? '-', $s->pembimbingPendamping?->nama_dosen ?? '-',
                 $s->periode?->nama_periode ?? '-',
-                $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->translatedFormat('l, d/m/Y') : '-',
+                \App\Support\TanggalIndo::lengkap($s->tanggal_pendaftaran),
                 ucfirst($s->verifikasi_status ?? 'menunggu'),
                 $s->verifikasi_komentar ?? '-',
             ];
@@ -525,7 +525,7 @@ class PendaftaranController extends Controller
                 ucfirst($s->jenis_tugas_akhir),
                 $s->pembimbingUtama?->nama_dosen ?? '-', $s->pembimbingPendamping?->nama_dosen ?? '-',
                 $s->periode?->nama_periode ?? '-',
-                $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->translatedFormat('l, d/m/Y') : '-',
+                \App\Support\TanggalIndo::lengkap($s->tanggal_pendaftaran),
                 ucfirst($s->verifikasi_status ?? 'menunggu'),
                 $s->verifikasi_komentar ?? '-',
             ];

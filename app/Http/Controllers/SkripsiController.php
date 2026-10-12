@@ -332,7 +332,7 @@ class SkripsiController extends Controller
             $sheet->setCellValue("C{$row}", $s->nama_mahasiswa);
             $sheet->setCellValue("D{$row}", implode(', ', $tipe));
             $sheet->setCellValue("E{$row}", implode("\n", $keterangan));
-            $sheet->setCellValue("F{$row}", $s->tanggal ? $s->tanggal->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("F{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal));
             $sheet->setCellValue("G{$row}", $s->jam ?? '-');
             $sheet->setCellValue("H{$row}", $s->ruang?->kode_ruangan ?? '-');
             
@@ -389,14 +389,14 @@ class SkripsiController extends Controller
             $sheet->setCellValue("D{$row}", $s->judul_skripsi);
             $sheet->setCellValue("E{$row}", ucfirst($s->jenis_tugas_akhir));
             $sheet->setCellValue("F{$row}", $s->periode?->nama_periode ?? '-');
-            $sheet->setCellValue("G{$row}", $s->tanggal_pendaftaran ? $s->tanggal_pendaftaran->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("G{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal_pendaftaran));
             $sheet->setCellValue("H{$row}", $s->pembimbingUtama?->nama_dosen ?? '-');
             $sheet->setCellValue("I{$row}", $s->pembimbingPendamping?->nama_dosen ?? '-');
             $sheet->setCellValue("J{$row}", $s->ketuaPenguji?->nama_dosen ?? '-');
             $sheet->setCellValue("K{$row}", $s->anggotaPenguji1?->nama_dosen ?? '-');
             $sheet->setCellValue("L{$row}", $s->anggotaPenguji2?->nama_dosen ?? '-');
             $sheet->setCellValue("M{$row}", $s->ruang?->kode_ruangan ?? '-');
-            $sheet->setCellValue("N{$row}", $s->tanggal ? $s->tanggal->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("N{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal));
             $sheet->setCellValue("O{$row}", $s->jam ?? '-');
         }
 

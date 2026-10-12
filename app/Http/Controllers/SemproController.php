@@ -263,11 +263,11 @@ class SemproController extends Controller
             $sheet->setCellValue("C{$row}", $s->nama_mahasiswa);
             $sheet->setCellValue("D{$row}", $s->judul_skripsi);
             $sheet->setCellValue("E{$row}", $s->periode?->nama_periode ?? '-');
-            $sheet->setCellValue("F{$row}", $s->tanggal_pendaftaran ? $s->tanggal_pendaftaran->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("F{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal_pendaftaran));
             $sheet->setCellValue("G{$row}", $s->pembimbingUtama?->nama_dosen ?? '-');
             $sheet->setCellValue("H{$row}", $s->pembimbingPendamping?->nama_dosen ?? '-');
             $sheet->setCellValue("I{$row}", $s->ruang?->kode_ruangan ?? '-');
-            $sheet->setCellValue("J{$row}", $s->tanggal ? $s->tanggal->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("J{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal));
             $sheet->setCellValue("K{$row}", $s->jam ?? '-');
         }
 
