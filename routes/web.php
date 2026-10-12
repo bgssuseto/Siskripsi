@@ -32,6 +32,7 @@ use App\Http\Controllers\BebasProdiController;
 use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\DosenPengujiRuleController;
 use App\Http\Controllers\PublicKesediaanController;
+use App\Http\Controllers\VerifikasiDokumenController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -51,6 +52,12 @@ Route::get('/j/{alias}/pdf', [AdministrasiController::class, 'publicJadwalDosenB
 // otomatis aktif/nonaktif mengikuti jendela tanggal Gelombang yang berjalan.
 Route::get('/kesediaan-publik/{token}', [PublicKesediaanController::class, 'show'])->name('public.kesediaan.show');
 Route::post('/kesediaan-publik/{token}', [PublicKesediaanController::class, 'store'])->name('public.kesediaan.store')->middleware('throttle:20,1');
+
+// Verifikasi keaslian surat (tujuan QR tanda tangan elektronik) — publik, tanpa login
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/verifikasi/{kode}', [VerifikasiDokumenController::class, 'bebasProdi'])->name('verifikasi.bebas-prodi');
+    Route::get('/verifikasi/{kode}/surat', [VerifikasiDokumenController::class, 'bebasProdiSurat'])->name('verifikasi.bebas-prodi.surat');
+});
 
 // Guest routes
 Route::middleware('guest')->group(function () {

@@ -6,13 +6,12 @@ use App\Concerns\HasHashedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 class Kaprodi extends Model
 {
     use HasHashedRouteKey;
 
-    protected $fillable = ['nama', 'mulai_menjabat', 'selesai_menjabat', 'ttd_path'];
+    protected $fillable = ['nama', 'mulai_menjabat', 'selesai_menjabat'];
 
     protected $casts = [
         'mulai_menjabat'   => 'date',
@@ -47,15 +46,5 @@ class Kaprodi extends Model
         $fmt = fn ($d) => $d ? $d->locale('id')->translatedFormat('j M Y') : null;
 
         return ($fmt($this->mulai_menjabat) ?? '…') . ' – ' . ($fmt($this->selesai_menjabat) ?? 'sekarang');
-    }
-
-    public function ttdBase64(): string
-    {
-        $disk = Storage::disk('local');
-        if (!$this->ttd_path || !$disk->exists($this->ttd_path)) {
-            return '';
-        }
-
-        return 'data:image/png;base64,' . base64_encode($disk->get($this->ttd_path));
     }
 }

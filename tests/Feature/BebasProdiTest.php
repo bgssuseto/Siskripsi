@@ -163,7 +163,7 @@ class BebasProdiTest extends TestCase
 
         $html = view('bebas-prodi.surat', [
             'p' => $p, 'nama' => 'Oesama Hakim Adsandi', 'tanggal' => '22 September 2026',
-            'kaprodi' => 'Dr. Ahmad Abdul Chamid, S.Kom., M.Kom', 'kopBase64' => '', 'ttdBase64' => '',
+            'kaprodi' => 'Dr. Ahmad Abdul Chamid, S.Kom., M.Kom', 'kopBase64' => '', 'qrBase64' => 'data:image/svg+xml;base64,AAAA',
         ])->render();
         $this->assertStringContainsString('NO:TI/BP/' . $expected, $html);
         $this->assertStringContainsString('Bebas Peminjaman Perangkat Lab TI', $html);
@@ -206,10 +206,8 @@ class BebasProdiTest extends TestCase
         // Super admin menambah kaprodi baru — surat yang sudah terbit tidak berubah.
         $this->actingAs($this->admin)->post(route('bebas-prodi.kaprodi.store'), [
             'nama' => 'Kaprodi Baru Uji', 'mulai_menjabat' => '2027-01-01',
-            'ttd' => UploadedFile::fake()->image('ttd.png', 200, 80),
         ])->assertSessionHas('success');
         $baru = Kaprodi::where('nama', 'Kaprodi Baru Uji')->firstOrFail();
-        Storage::disk('local')->assertExists($baru->ttd_path);
 
         $this->assertSame($lama->id, $p->fresh()->kaprodi_id);
         $this->assertSame($baru->id, Kaprodi::untukTanggal('2027-03-01')->id);
@@ -230,5 +228,45 @@ class BebasProdiTest extends TestCase
         ]);
         $this->actingAs($koor)->post(route('bebas-prodi.kaprodi.store'), ['nama' => 'X', 'mulai_menjabat' => '2027-01-01'])
             ->assertForbidden();
+    }
+
+    public function test_qr_tanda_tangan_elektronik_dan_halaman_verifikasi_publik(): void
+    {
+        $this->luluskan();
+        $this->actingAs($this->student)->post(route('mahasiswa.bebas-prodi.store'), $this->payload());
+        $p = BebasProdi::where('nim', $this->student->nim)->firstOrFail();
+        $this->assertNull($p->kode_verifikasi);
+
+        $this->actingAs($this->admin)->post(route('bebas-prodi.verifikasi', $p), ['status' => 'disetujui']);
+        $p->refresh();
+        $this->assertSame(32, strlen($p->kode_verifikasi));
+        $kode = $p->kode_verifikasi;
+
+        // Halaman verifikasi bisa dibuka tanpa login (dipindai pihak luar).
+        auth()->logout();
+        $this->get(route('verifikasi.bebas-prodi', $kode))
+            ->assertOk()->assertSee('DOKUMEN ASLI')->assertSee($p->nomor_surat_lengkap)->assertSee($this->student->nim);
+        $surat = $this->get(route('verifikasi.bebas-prodi.surat', $kode));
+        $surat->assertOk();
+        $this->assertSame('application/pdf', $surat->headers->get('Content-Type'));
+
+        $this->get(route('verifikasi.bebas-prodi', 'kode-palsu-123'))->assertOk()->assertSee('TIDAK TERDAFTAR');
+        $this->get(route('verifikasi.bebas-prodi.surat', 'kode-palsu-123'))->assertNotFound();
+
+        // Dibatalkan → QR lama menyatakan tidak berlaku; disetujui ulang → kode tetap sama.
+        $this->actingAs($this->admin)->post(route('bebas-prodi.verifikasi', $p), ['status' => 'ditolak', 'komentar' => 'Dibatalkan']);
+        auth()->logout();
+        $this->get(route('verifikasi.bebas-prodi', $kode))->assertOk()->assertSee('TIDAK BERLAKU');
+        $this->get(route('verifikasi.bebas-prodi.surat', $kode))->assertNotFound();
+
+        $this->actingAs($this->admin)->post(route('bebas-prodi.verifikasi', $p), ['status' => 'disetujui']);
+        $this->assertSame($kode, $p->fresh()->kode_verifikasi);
+    }
+
+    public function test_qr_berisi_url_verifikasi(): void
+    {
+        $svg = \App\Support\QrCode::svg('https://contoh.test/verifikasi/abc');
+        $this->assertStringStartsWith('<svg', $svg);
+        $this->assertStringContainsString('viewBox="0 0 296 296"', $svg); // versi 3: (29 + 2x4 quiet zone) modul x 8px
     }
 }

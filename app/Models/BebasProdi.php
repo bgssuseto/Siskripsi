@@ -6,6 +6,7 @@ use App\Concerns\HasHashedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class BebasProdi extends Model
 {
@@ -27,7 +28,7 @@ class BebasProdi extends Model
 
     protected $fillable = [
         'user_id', 'nim', 'nama_mahasiswa', 'jalur', 'link_poster', 'link_linkedin', 'link_program',
-        'link_jurnal', 'file_berkas', 'status', 'komentar', 'nomor_surat', 'tanggal_surat', 'kaprodi_id',
+        'link_jurnal', 'file_berkas', 'status', 'komentar', 'nomor_surat', 'kode_verifikasi', 'tanggal_surat', 'kaprodi_id',
         'verified_by', 'verified_at', 'submitted_at',
     ];
 
@@ -51,6 +52,12 @@ class BebasProdi extends Model
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    /** URL halaman verifikasi publik yang dituju QR tanda tangan elektronik. */
+    public function getUrlVerifikasiAttribute(): ?string
+    {
+        return $this->kode_verifikasi ? route('verifikasi.bebas-prodi', $this->kode_verifikasi) : null;
     }
 
     public function getNomorSuratLengkapAttribute(): ?string
@@ -120,6 +127,8 @@ class BebasProdi extends Model
                 'status'        => self::STATUS_DISETUJUI,
                 'komentar'      => null,
                 'nomor_surat'   => $nomor,
+                // Kode QR tetap sama saat disetujui ulang, supaya surat yang sudah dicetak tetap bisa diverifikasi.
+                'kode_verifikasi' => $this->kode_verifikasi ?? Str::random(32),
                 'tanggal_surat' => $tanggal,
                 'kaprodi_id'    => $kaprodiId ?? Kaprodi::untukTanggal($tanggal)?->id,
                 'verified_by'   => $verifierId,

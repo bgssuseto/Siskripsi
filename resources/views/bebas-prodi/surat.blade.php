@@ -34,8 +34,14 @@
 
         .ttd { margin: 18px 0 0 96mm; white-space: nowrap; }
         .ttd p { margin: 0; }
-        .ttd .ruang { height: 70px; position: relative; }
-        .ttd .ruang img { height: 70px; width: auto; }
+        .ttd .ruang { height: 92px; padding: 4px 0; }
+        .ttd .ruang img { width: 88px; height: 88px; }
+
+        .catatan-tte {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            border-top: 1px solid #999; padding-top: 5px;
+            font-size: 8.5pt; color: #444; font-style: italic; line-height: 1.35;
+        }
     </style>
 </head>
 <body>
@@ -75,9 +81,16 @@
         <div class="ttd">
             <p>Kudus, {{ $tanggal }}</p>
             <p>Ka. Prodi Teknik Informatika</p>
-            <div class="ruang">@if($ttdBase64)<img src="{{ $ttdBase64 }}" alt="TTD">@endif</div>
+            <div class="ruang">@if($qrBase64)<img src="{{ $qrBase64 }}" alt="QR Tanda Tangan Elektronik">@endif</div>
             <p>{{ $kaprodi }}</p>
         </div>
     </div>
+
+    @if($qrBase64)
+    <div class="catatan-tte">
+        Dokumen ini telah ditandatangani secara elektronik oleh Ka. Prodi Teknik Informatika Universitas Muria Kudus.
+        Keaslian dan keabsahan surat dapat diverifikasi dengan memindai QR Code di atas.
+    </div>
+    @endif
 </body>
 </html>
