@@ -523,7 +523,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                             {!! $item->getJadwalStatusHtml() !!}
                                             {!! $item->hasil_ujian_html !!}
                                             @if($item->canSetHasilUjian())
-                                                <button type="button" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 underline" onclick="openHasilUjian('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}')">{{ $item->status_ujian ? 'Ubah' : 'Set Hasil' }}</button>
+                                                <button type="button" title="Ubah hasil ujian (Lulus / Tidak Lulus)" class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors" onclick="openHasilUjian('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->status_ujian }}')">✏️ {{ $item->status_ujian ? 'Ubah Hasil' : 'Set Hasil' }}</button>
                                             @endif
                                         </div>
                                     </td>
@@ -985,13 +985,15 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
             </div>
             <div class="modal-body">
                 <p>Hasil ujian sempro untuk <strong id="hasil-ujian-nama">?</strong></p>
+                <p class="text-xs mt-1">Status saat ini: <strong id="hasil-ujian-sekarang">-</strong></p>
+                <p class="text-[11px] text-slate-500 mt-1">Setelah waktu ujian lewat, status otomatis <strong>Lulus</strong>. Pilih <strong>Tidak Lulus / Remidi</strong> bila mahasiswa harus mengulang — perubahan langsung tampil di progress mahasiswa.</p>
                 <div id="form-hasil-ujian-alert" class="modal-alert" style="display:none;">
                     <span>⚠️</span>
                     <span id="form-hasil-ujian-alert-text"></span>
                 </div>
                 <div class="flex gap-3 mt-4">
-                    <button type="button" class="btn btn-success" style="flex:1;" onclick="submitHasilUjian('lulus')">🎓 Lulus</button>
-                    <button type="button" class="btn btn-danger" style="flex:1;" onclick="submitHasilUjian('tidak_lulus')">✕ Tidak Lulus / Remidi</button>
+                    <button type="button" id="btn-hasil-lulus" class="btn btn-success" style="flex:1;" onclick="submitHasilUjian('lulus')">🎓 Lulus</button>
+                    <button type="button" id="btn-hasil-tidak-lulus" class="btn btn-danger" style="flex:1;" onclick="submitHasilUjian('tidak_lulus')">✕ Tidak Lulus / Remidi</button>
                 </div>
             </div>
         </div>
@@ -1253,9 +1255,18 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
         }
 
         let _hasilUjianHashId = null;
-        function openHasilUjian(hashId, nama) {
+        function openHasilUjian(hashId, nama, statusSekarang) {
             _hasilUjianHashId = hashId;
             document.getElementById('hasil-ujian-nama').textContent = nama;
+            const label = { lulus: 'Lulus', tidak_lulus: 'Tidak Lulus / Remidi' }[statusSekarang] || 'Belum ditentukan';
+            document.getElementById('hasil-ujian-sekarang').textContent = label;
+            [['btn-hasil-lulus', 'lulus'], ['btn-hasil-tidak-lulus', 'tidak_lulus']].forEach(([id, val]) => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                btn.style.opacity = (statusSekarang && statusSekarang !== val) ? '.55' : '1';
+                btn.style.outline = statusSekarang === val ? '3px solid rgba(99,102,241,.45)' : 'none';
+                btn.style.outlineOffset = '2px';
+            });
             hideModalAlert('form-hasil-ujian-alert');
             openModal('modal-hasil-ujian');
         }

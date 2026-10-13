@@ -202,4 +202,32 @@ class MahasiswaProgressTest extends TestCase
 
         $this->assertNull($sidang->fresh()->wa_joined_at);
     }
+
+    public function test_admin_ubah_hasil_tidak_lulus_dari_menu_penjadwalan_tampil_di_progress(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Hasil', 'email' => 'admin-hasil-' . uniqid() . '@example.test',
+            'password' => bcrypt('password'), 'role' => User::ROLE_SUPER_ADMIN,
+        ]);
+        $ruang = \App\Models\Ruang::create(['kode_ruangan' => 'RH-' . uniqid(), 'nama_ruangan' => 'R', 'status' => 'siap_digunakan']);
+        $sidang = $this->registerSempro([
+            'tanggal' => now()->subDays(3)->format('Y-m-d'), 'jam' => '08.00 - 09.00', 'ruang_id' => $ruang->id,
+        ]);
+
+        // Default setelah ujian lewat: Lulus.
+        $this->actingAs($this->student)->get(route('mahasiswa.dashboard'))
+            ->assertOk()->assertSee('Status Kelulusan')->assertSee('Dinyatakan lulus');
+
+        // Tombol ubah hasil tersedia di menu penjadwalan sempro.
+        $this->actingAs($admin)->get(route('jadwal-sempro.index', ['periode_id' => $this->periode->id, 'per_page' => 100]))
+            ->assertOk()->assertSee('Ubah Hasil');
+        $this->actingAs($admin)->get(route('jadwal-ujian.index'))->assertOk();
+
+        $this->actingAs($admin)
+            ->postJson(route('jadwal.hasil-ujian', $sidang), ['status_ujian' => 'tidak_lulus'])
+            ->assertOk()->assertJson(['success' => true]);
+
+        $this->actingAs($this->student)->get(route('mahasiswa.dashboard'))
+            ->assertOk()->assertSee('Dinyatakan tidak lulus')->assertDontSee('Dinyatakan lulus');
+    }
 }
