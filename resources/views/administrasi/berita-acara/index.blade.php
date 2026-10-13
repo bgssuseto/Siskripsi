@@ -34,15 +34,15 @@
             @if($sidangs->count() > $maksCetakGabungan)
                 <div class="flex items-start gap-2 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-xs text-amber-800 dark:text-amber-300">
                     <span>⚠️</span>
-                    <span>Ada <strong>{{ $sidangs->count() }}</strong> mahasiswa pada filter ini — terlalu banyak untuk diunduh sebagai satu PDF (maksimal {{ $maksCetakGabungan }}). <strong>Pratinjau / Cetak Semua</strong> tetap bisa dipakai; untuk file PDF pilih <strong>Gelombang</strong> dulu atau gunakan <strong>Unduh Semua (ZIP)</strong>.</span>
+                    <span>Ada <strong>{{ $sidangs->count() }}</strong> mahasiswa pada filter ini — terlalu banyak untuk satu PDF gabungan (maksimal {{ $maksCetakGabungan }}). Pilih <strong>Gelombang</strong> terlebih dahulu untuk "Cetak Semua", atau gunakan <strong>Unduh Semua (ZIP)</strong>.</span>
                 </div>
             @endif
 
             @if($sidangs->count() > 0)
             <div class="flex items-center gap-2 flex-wrap">
                 <!-- Preview All Button -->
-                <a href="{{ route('administrasi.berita-acara.mass-print', request()->all()) }}"
-                   target="_blank" title="Tampil instan sebagai halaman siap cetak"
+                <a href="{{ route('administrasi.berita-acara.mass-preview', request()->all()) }}"
+                   target="_blank"
                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl border border-slate-300 transition-all duration-200">
                     <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -51,27 +51,14 @@
                     Pratinjau Semua
                 </a>
 
-                <!-- Cetak Semua: halaman siap cetak + dialog print otomatis (tanpa menunggu PDF) -->
-                <a href="{{ route('administrasi.berita-acara.mass-print', array_merge(request()->all(), ['print' => 1])) }}"
-                   target="_blank"
+                <!-- Print/Download All Button -->
+                <a href="{{ route('administrasi.berita-acara.mass-pdf', request()->all()) }}"
                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                     </svg>
                     Cetak Semua
                 </a>
-
-                @if($sidangs->count() <= $maksCetakGabungan)
-                <!-- Unduh PDF gabungan (di-cache) -->
-                <a href="{{ route('administrasi.berita-acara.mass-pdf', request()->all()) }}"
-                   title="PDF gabungan — pertama kali butuh waktu, berikutnya langsung dari cache"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 font-semibold text-sm rounded-xl border border-indigo-200 dark:border-indigo-800 transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M6 20h12a2 2 0 002-2V8l-6-6H6a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                    </svg>
-                    Unduh PDF
-                </a>
-                @endif
 
                 <!-- Download ZIP Button -->
                 <a href="{{ route('administrasi.berita-acara.zip', request()->all()) }}"
