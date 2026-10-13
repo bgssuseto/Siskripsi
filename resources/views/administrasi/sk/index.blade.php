@@ -12,15 +12,11 @@
                     <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         Modul Administrasi Surat Keputusan (SK)
-                        @if(($jenis ?? '') === 'sempro')
-                            &nbsp;— <span class="text-amber-300">Seminar Proposal</span>
-                        @elseif(($jenis ?? '') === 'skripsi')
-                            &nbsp;— <span class="text-blue-300">Skripsi</span>
-                        @endif
+                        &nbsp;— <span class="text-blue-300">Ujian Skripsi</span>
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Generate SK Dekan (Excel Output)</h1>
                     <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                        Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian dalam format Excel (.xlsx).
+                        Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian Skripsi. Hanya ujian skripsi (sidang &amp; jurnal) yang dihitung — sempro tidak termasuk.
                     </p>
                 </div>
 
@@ -107,7 +103,7 @@
                     <div>
                         <h2 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">1. SK Dekan - Dosen Pembimbing Skripsi</h2>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                            Generate file Excel (.xlsx) Surat Keputusan penetapan <strong>Pembimbing Utama</strong> dan <strong>Pembimbing Pendamping</strong> bagi seluruh mahasiswa terdaftar pada periode terpilih. Dilengkapi sheet Rekapitulasi Jumlah Bimbingan per Dosen.
+                            Generate file Excel (.xlsx) Surat Keputusan penetapan <strong>Pembimbing Utama</strong> dan <strong>Pembimbing Pendamping</strong> bagi mahasiswa ujian skripsi (sidang &amp; jurnal) pada periode terpilih — sempro tidak dihitung. Dilengkapi sheet Rekapitulasi Jumlah Bimbingan per Dosen.
                         </p>
                     </div>
 
@@ -156,18 +152,18 @@
                     <div>
                         <h2 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">2. SK Dekan - Tim Dosen Penguji Ujian</h2>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                            Generate file Excel (.xlsx) Surat Keputusan penetapan tim penguji: <strong>Ketua Penguji</strong>, <strong>Anggota Penguji 1</strong>, dan <strong>Anggota Penguji 2</strong>. Dilengkapi sheet Rekapitulasi Beban Penguji per Dosen.
+                            Generate file Excel (.xlsx) Surat Keputusan penetapan tim penguji: <strong>Ketua Penguji</strong>, <strong>Anggota Penguji 1</strong>, dan <strong>Anggota Penguji 2</strong>. Hanya ujian skripsi (sidang &amp; jurnal) — sempro tidak dihitung. Dilengkapi sheet Rekapitulasi Beban Penguji per Dosen.
                         </p>
                     </div>
 
                     <div class="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-600 grid grid-cols-3 gap-2 text-center">
                         <div>
-                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Sempro</p>
-                            <p class="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-0.5">{{ $totalSempro }}</p>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Sidang</p>
+                            <p class="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-0.5">{{ $totalSidangReguler }}</p>
                         </div>
                         <div>
-                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Skripsi</p>
-                            <p class="text-lg font-extrabold text-purple-600 dark:text-purple-400 mt-0.5">{{ $totalSkripsi }}</p>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Jurnal</p>
+                            <p class="text-lg font-extrabold text-purple-600 dark:text-purple-400 mt-0.5">{{ $totalJurnal }}</p>
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Dosen Penguji</p>
@@ -200,7 +196,7 @@
                 <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
                 Infografis Beban Bimbingan &amp; Penguji
             </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">Mengikuti filter periode &amp; jenis TA yang sedang aktif di atas.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">Mengikuti filter periode &amp; gelombang di atas — hanya ujian skripsi.</p>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div>
@@ -236,9 +232,9 @@
             new Chart(document.getElementById('chartJalur').getContext('2d'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Sempro', 'Skripsi'],
+                    labels: ['Sidang Skripsi', 'Jurnal'],
                     datasets: [{
-                        data: [{{ $totalSempro }}, {{ $totalSkripsi }}],
+                        data: [{{ $totalSidangReguler }}, {{ $totalJurnal }}],
                         backgroundColor: ['#f59e0b', '#7c3aed'],
                         borderWidth: 0,
                     }]

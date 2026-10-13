@@ -1575,7 +1575,7 @@ class AdministrasiController extends Controller
         $jenis = $request->get('jenis'); // 'skripsi' | 'sempro' | null
 
         $selectedGelombang = $request->get('gelombang');
-        $gelombangOptions  = $this->gelombangOptions($selectedPeriodeId ? (int) $selectedPeriodeId : null, $jenis);
+        $gelombangOptions  = $this->gelombangOptions($selectedPeriodeId ? (int) $selectedPeriodeId : null, 'skripsi');
 
         $query = Sidang::query();
         if ($selectedPeriodeId) {
@@ -1585,16 +1585,12 @@ class AdministrasiController extends Controller
             $query->where('gelombang', $selectedGelombang);
         }
 
-        // Filter berdasarkan jenis tugas akhir
-        if ($jenis === 'sempro') {
-            $query->where('jenis_tugas_akhir', 'sempro');
-        } elseif ($jenis === 'skripsi') {
-            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
-        }
+        // SK Pembimbing & Penguji hanya dihitung dari ujian skripsi — sempro tidak ikut.
+        $query->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
 
-        $totalSidangs = (clone $query)->count();
-        $totalSempro  = ($jenis === 'skripsi') ? 0 : (clone $query)->where('jenis_tugas_akhir', 'sempro')->count();
-        $totalSkripsi = ($jenis === 'sempro') ? 0 : (clone $query)->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count();
+        $totalSidangs       = (clone $query)->count();
+        $totalJurnal        = (clone $query)->where('jenis_tugas_akhir', 'jurnal')->count();
+        $totalSidangReguler = $totalSidangs - $totalJurnal;
 
         // Unique lecturers count (sesuai jenis yang ditampilkan)
         $dosenPembimbingIds = (clone $query)->pluck('dosen_pembimbing_utama_id')
@@ -1628,7 +1624,7 @@ class AdministrasiController extends Controller
 
         return view('administrasi.sk.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId',
-            'totalSidangs', 'totalSempro', 'totalSkripsi',
+            'totalSidangs', 'totalJurnal', 'totalSidangReguler',
             'dosenPembimbingIds', 'dosenPengujiIds', 'jenis',
             'pembimbingChart', 'pengujiChart', 'selectedGelombang', 'gelombangOptions'
         ));
@@ -1666,8 +1662,6 @@ class AdministrasiController extends Controller
         $selectedPeriodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
-        $jenisTa = $request->get('jenis_tugas_akhir');
-
         $query = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'periode']);
 
         if ($selectedPeriodeId) {
@@ -1687,13 +1681,9 @@ class AdministrasiController extends Controller
             $query->where('gelombang', $selectedGelombang);
         }
 
-        if ($jenisTa) {
-            if ($jenisTa === 'sempro') {
-                $query->where('jenis_tugas_akhir', 'sempro');
-            } else {
-                $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
-            }
-        }
+        // SK Pembimbing & Penguji hanya dihitung dari ujian skripsi (skripsi /
+        // sidang / jurnal) — sempro tidak ikut dihitung.
+        $query->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
 
         $sidangs = $query->orderBy('nama_mahasiswa')->get();
 
@@ -1935,8 +1925,6 @@ class AdministrasiController extends Controller
         $selectedPeriodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
-        $jenisTa = $request->get('jenis_tugas_akhir');
-
         $query = Sidang::with([
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'pembimbingUtama', 'pembimbingPendamping',
@@ -1960,13 +1948,9 @@ class AdministrasiController extends Controller
             $query->where('gelombang', $selectedGelombang);
         }
 
-        if ($jenisTa) {
-            if ($jenisTa === 'sempro') {
-                $query->where('jenis_tugas_akhir', 'sempro');
-            } else {
-                $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
-            }
-        }
+        // SK Pembimbing & Penguji hanya dihitung dari ujian skripsi (skripsi /
+        // sidang / jurnal) — sempro tidak ikut dihitung.
+        $query->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
 
         $sidangs = $query->orderBy('tanggal', 'asc')->orderBy('jam', 'asc')->get();
 
@@ -2314,15 +2298,14 @@ class AdministrasiController extends Controller
     private function exportSkPdf(Request $request, string $mode)
     {
         $periodeId = $this->resolvePeriodeId($request);
-        $jenisTa   = $request->get('jenis_tugas_akhir');
 
         $sidangs = Sidang::query()
             ->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))
             ->when($request->filled('gelombang'), fn ($q) => $q->where('gelombang', $request->get('gelombang')))
             ->when($request->filled('tanggal_pendaftaran_mulai'), fn ($q) => $q->whereDate('tanggal_pendaftaran', '>=', $request->get('tanggal_pendaftaran_mulai')))
             ->when($request->filled('tanggal_pendaftaran_selesai'), fn ($q) => $q->whereDate('tanggal_pendaftaran', '<=', $request->get('tanggal_pendaftaran_selesai')))
-            ->when($jenisTa === 'sempro', fn ($q) => $q->where('jenis_tugas_akhir', 'sempro'))
-            ->when($jenisTa && $jenisTa !== 'sempro', fn ($q) => $q->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET))
+            // SK Pembimbing & Penguji hanya dihitung dari ujian skripsi — sempro tidak ikut.
+            ->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
             ->orderByRaw('tanggal IS NULL')->orderBy('tanggal')->orderBy('jam')->orderBy('nama_mahasiswa')
             ->get();
 
@@ -2360,11 +2343,7 @@ class AdministrasiController extends Controller
             ->values();
 
         $namaPeriode = Periode::find($periodeId)?->nama_periode ?? 'Semua Periode';
-        $kegiatan = match (true) {
-            $jenisTa === 'sempro' => ['nama' => 'Seminar Proposal Skripsi', 'hal' => 'Seminar Proposal Skripsi'],
-            (bool) $jenisTa       => ['nama' => 'Sidang Skripsi', 'hal' => 'Skripsi'],
-            default               => ['nama' => 'Seminar Proposal dan Sidang Skripsi', 'hal' => 'Skripsi'],
-        };
+        $kegiatan = ['nama' => 'Sidang Skripsi', 'hal' => 'Skripsi'];
         $tanggalSurat = now()->timezone('Asia/Jakarta');
 
         $this->siapkanCetakBesar();

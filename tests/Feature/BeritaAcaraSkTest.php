@@ -75,12 +75,39 @@ class BeritaAcaraSkTest extends TestCase
         $this->actingAs($this->admin)->get(route('administrasi.berita-acara.zip', $params))->assertOk();
     }
 
-    public function test_sk_pembimbing_dan_penguji_pdf_mengikuti_format_pengajuan(): void
+    public function test_sk_hanya_menghitung_ujian_skripsi_bukan_sempro(): void
     {
+        $routes = ['administrasi.sk.export-penguji-pdf', 'administrasi.sk.export-pembimbing-pdf',
+                   'administrasi.sk.export-penguji', 'administrasi.sk.export-pembimbing'];
+
+        // Periode ini hanya berisi sempro → SK tidak boleh mencetak apa pun.
+        foreach ($routes as $route) {
+            $this->actingAs($this->admin)
+                ->from(route('administrasi.sk.index'))
+                ->get(route($route, ['periode_id' => $this->periode->id, 'jenis_tugas_akhir' => 'sempro']))
+                ->assertRedirect()
+                ->assertSessionHas('warning');
+        }
+
+        // Tambah satu ujian skripsi → SK tercetak.
+        PendaftaranPeriode::create([
+            'periode_id' => $this->periode->id, 'jenis' => 'skripsi', 'gelombang' => 1,
+            'tanggal_mulai' => '2026-09-01', 'tanggal_selesai' => '2026-09-30',
+        ]);
+        $ketua = Dosen::create(['nama_dosen' => 'Ketua Skripsi BA', 'nidn' => 'BAK' . uniqid()]);
+        $sempro = Sidang::where('periode_id', $this->periode->id)->first();
+        Sidang::create([
+            'nim' => 'BASKR' . substr(uniqid(), -6), 'nama_mahasiswa' => 'Mhs Skripsi', 'judul_skripsi' => 'Judul',
+            'jenis_tugas_akhir' => 'sidang', 'verifikasi_status' => 'disetujui',
+            'periode_id' => $this->periode->id, 'tanggal_pendaftaran' => '2026-09-10',
+            'dosen_pembimbing_utama_id' => $sempro->dosen_pembimbing_utama_id,
+            'ketua_penguji_id' => $ketua->id, 'anggota_penguji_1_id' => $sempro->dosen_pembimbing_pendamping_id,
+        ]);
+
         $this->actingAs($this->admin)
-            ->get(route('administrasi.sk.index', ['jenis' => 'sempro', 'periode_id' => $this->periode->id]))
+            ->get(route('administrasi.sk.index', ['periode_id' => $this->periode->id]))
             ->assertOk()
-            ->assertSee('Gelombang 2');
+            ->assertSee('Hanya ujian skripsi', false);
 
         foreach (['administrasi.sk.export-penguji-pdf', 'administrasi.sk.export-pembimbing-pdf'] as $route) {
             $res = $this->actingAs($this->admin)->get(route($route, [
@@ -89,6 +116,12 @@ class BeritaAcaraSkTest extends TestCase
             $res->assertOk();
             $this->assertStringStartsWith('%PDF', $res->getContent());
             $this->assertStringContainsString('Pengajuan_SK_', $res->headers->get('content-disposition'));
+        }
+
+        foreach (['administrasi.sk.export-penguji', 'administrasi.sk.export-pembimbing'] as $route) {
+            $this->actingAs($this->admin)
+                ->get(route($route, ['periode_id' => $this->periode->id]))
+                ->assertOk();
         }
     }
 }
