@@ -53,7 +53,7 @@
                 @endif
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
-                    <select name="periode_id" onchange="this.form.submit()" class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                    <select name="periode_id" onchange="this.form.gelombang.value=''; this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">
                         @foreach($periodes as $p)
                             <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>
                                 {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
@@ -63,21 +63,23 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Tanggal Pendaftaran Mulai</label>
-                    <input type="date" name="tanggal_pendaftaran_mulai" value="{{ request('tanggal_pendaftaran_mulai') }}" class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Gelombang</label>
+                    <select name="gelombang" class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                        <option value="">-- Semua Gelombang --</option>
+                        @foreach($gelombangOptions as $g)
+                            <option value="{{ $g['value'] }}" {{ (string) $selectedGelombang === $g['value'] ? 'selected' : '' }}>{{ $g['label'] }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Tanggal Pendaftaran Selesai</label>
-                    <input type="date" name="tanggal_pendaftaran_selesai" value="{{ request('tanggal_pendaftaran_selesai') }}" class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500">
-                </div>
+                <div class="hidden lg:block"></div>
 
                 <div class="flex items-end gap-2">
                     <button type="submit" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer">
                         Terapkan Filter
                     </button>
-                    @if(request()->anyFilled(['tanggal_pendaftaran_mulai', 'tanggal_pendaftaran_selesai']))
-                        <a href="{{ route('administrasi.sk.index', ['periode_id' => $selectedPeriodeId]) }}" class="px-3.5 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+                    @if(request()->anyFilled(['gelombang', 'tanggal_pendaftaran_mulai', 'tanggal_pendaftaran_selesai']))
+                        <a href="{{ route('administrasi.sk.index', array_filter(['periode_id' => $selectedPeriodeId, 'jenis' => $jenis])) }}" class="px-3.5 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
                             Reset
                         </a>
                     @endif

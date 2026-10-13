@@ -26,10 +26,17 @@
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Generate Berita Acara</h1>
                 <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                    Generate berita acara sidang, baik per mahasiswa secara individual maupun cetak massal berdasarkan rentang tanggal pendaftaran.
+                    Generate berita acara sidang, baik per mahasiswa secara individual maupun cetak massal per periode &amp; gelombang.
                 </p>
             </div>
         </div>
+
+            @if($sidangs->count() > $maksCetakGabungan)
+                <div class="flex items-start gap-2 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-xs text-amber-800 dark:text-amber-300">
+                    <span>⚠️</span>
+                    <span>Ada <strong>{{ $sidangs->count() }}</strong> mahasiswa pada filter ini — terlalu banyak untuk satu PDF gabungan (maksimal {{ $maksCetakGabungan }}). Pilih <strong>Gelombang</strong> terlebih dahulu untuk "Cetak Semua", atau gunakan <strong>Unduh Semua (ZIP)</strong>.</span>
+                </div>
+            @endif
 
             @if($sidangs->count() > 0)
             <div class="flex items-center gap-2 flex-wrap">
@@ -66,7 +73,7 @@
 
         <!-- Filter Range Tanggal Pendaftaran & Periode -->
         <div class="bg-white dark:bg-slate-800/80 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <form method="GET" action="{{ route('administrasi.berita-acara.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <form method="GET" action="{{ route('administrasi.berita-acara.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
                 @if(($jenis ?? '') !== '')
                     <input type="hidden" name="jenis" value="{{ $jenis }}">
                 @endif
@@ -74,8 +81,7 @@
                 <!-- Periode -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
-                    <select name="periode_id" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
-                        <option value="">-- Semua Periode --</option>
+                    <select name="periode_id" onchange="this.form.gelombang.value=''; this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
                         @foreach($periodes as $p)
                         <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>
                             {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
@@ -84,19 +90,21 @@
                     </select>
                 </div>
 
-                <!-- Range Tanggal Pendaftaran Mulai -->
+                <!-- Gelombang -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pendaftaran Dari Tanggal</label>
-                    <input type="date" name="tanggal_pendaftaran_mulai" value="{{ $tglMulai }}"
-                           class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Gelombang</label>
+                    <select name="gelombang" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
+                        <option value="">-- Semua Gelombang --</option>
+                        @foreach($gelombangOptions as $g)
+                            <option value="{{ $g['value'] }}" {{ (string) $selectedGelombang === $g['value'] ? 'selected' : '' }}>{{ $g['label'] }}</option>
+                        @endforeach
+                    </select>
+                    @if($gelombangOptions->isEmpty())
+                        <p class="text-[10.5px] text-amber-600 dark:text-amber-400 mt-1">Belum ada gelombang di Master Gelombang untuk periode ini.</p>
+                    @endif
                 </div>
 
-                <!-- Range Tanggal Pendaftaran Selesai -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pendaftaran Sampai Tanggal</label>
-                    <input type="date" name="tanggal_pendaftaran_selesai" value="{{ $tglSelesai }}"
-                           class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                </div>
+                <div class="hidden md:block"></div>
 
                 <!-- Submit Filter -->
                 <div class="flex gap-2">
@@ -108,8 +116,8 @@
                         Filter Data
                     </button>
 
-                    @if($tglMulai || $tglSelesai || $selectedPeriodeId)
-                    <a href="{{ route('administrasi.berita-acara.index') }}"
+                    @if(request()->hasAny(['periode_id', 'gelombang', 'tanggal_pendaftaran_mulai', 'tanggal_pendaftaran_selesai']))
+                    <a href="{{ route('administrasi.berita-acara.index', array_filter(['jenis' => $jenis])) }}"
                        class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-medium text-sm rounded-xl transition-all flex items-center justify-center" title="Reset Filter">
                         Reset
                     </a>
