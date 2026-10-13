@@ -180,11 +180,55 @@
         /* ── PAGE BREAK ── */
         .page-break { page-break-before: always; }
     </style>
+    @if(!empty($htmlPreview))
+    <style>
+        @media screen {
+            html { background: #cbd5e1; }
+            body {
+                width: 210mm; min-height: 297mm; margin: 64px auto 32px; background: #fff;
+                padding: 15mm 20mm 15mm 25mm; box-sizing: border-box;
+                box-shadow: 0 10px 30px rgba(15, 23, 42, .25);
+            }
+            .page-break {
+                height: 0; border-top: 24px solid #cbd5e1;
+                margin: 15mm -20mm 15mm -25mm;
+            }
+        }
+        @media print { .ba-toolbar { display: none !important; } }
+        .ba-toolbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            padding: 10px 18px; background: #0f172a; color: #e2e8f0;
+            font: 600 13px/1.3 'Segoe UI', Arial, sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,.25);
+        }
+        .ba-toolbar a, .ba-toolbar button {
+            font: inherit; color: #fff; text-decoration: none; cursor: pointer;
+            border: 0; border-radius: 10px; padding: 8px 14px; background: #4f46e5;
+        }
+        .ba-toolbar .sec { background: #334155; }
+    </style>
+    @endif
 </head>
 <body>
+    @if(!empty($htmlPreview))
+        <div class="ba-toolbar">
+            <span>📄 Berita Acara — {{ $sidangs->count() }} mahasiswa</span>
+            <span style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+                @if(!empty($pdfUrl))
+                    <a class="sec" href="{{ $pdfUrl }}">⬇️ Unduh PDF</a>
+                @endif
+            </span>
+        </div>
+        @if(request()->boolean('print'))
+            <script>window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 300); });</script>
+        @endif
+    @endif
     @php
         $logoPath = public_path('images/logo_umk.jpeg');
-        $logoBase64 = file_exists($logoPath) ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoPath)) : '';
+        $logoBase64 = !empty($htmlPreview)
+            ? asset('images/logo_umk.jpeg')
+            : (file_exists($logoPath) ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoPath)) : '');
     @endphp
 
     @foreach($sidangs as $sidang)

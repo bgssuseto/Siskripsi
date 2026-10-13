@@ -68,10 +68,23 @@ class BeritaAcaraSkTest extends TestCase
 
         $res = $this->actingAs($this->admin)->get(route('administrasi.berita-acara.mass-pdf', $params));
         $res->assertOk();
-        $this->assertStringStartsWith('%PDF', $res->getContent());
+        $this->assertStringStartsWith('%PDF', file_get_contents($res->getFile()->getPathname()));
         $this->assertStringContainsString('Gelombang_1', $res->headers->get('content-disposition'));
 
+        // Unduh kedua kali diambil dari cache — hasilnya identik.
+        $lagi = $this->actingAs($this->admin)->get(route('administrasi.berita-acara.mass-pdf', $params));
+        $lagi->assertOk();
+        $this->assertSame($res->getFile()->getPathname(), $lagi->getFile()->getPathname());
+
         $this->actingAs($this->admin)->get(route('administrasi.berita-acara.mass-preview', $params))->assertOk();
+
+        // Pratinjau / Cetak Semua: halaman HTML siap cetak (instan, tanpa DomPDF).
+        $this->actingAs($this->admin)
+            ->get(route('administrasi.berita-acara.mass-print', $params + ['print' => 1]))
+            ->assertOk()
+            ->assertSee('BERITA ACARA SEMINAR PROPOSAL SKRIPSI')
+            ->assertSee('window.print()', false)
+            ->assertSee(route('administrasi.berita-acara.mass-pdf', $params));
         $this->actingAs($this->admin)->get(route('administrasi.berita-acara.zip', $params))->assertOk();
     }
 

@@ -1430,15 +1430,27 @@ class AdministrasiController extends Controller
         return max(10, min(250, intdiv(min($this->memoriMb(), 4096) - 64, 3)));
     }
 
-    private function renderBeritaAcaraGabungan(Request $request)
+    private function beritaAcaraGabunganSidangs(Request $request)
     {
-        $periodeId = $this->resolvePeriodeId($request);
-
-        $sidangs = $this->beritaAcaraQuery($request, $periodeId)
+        return $this->beritaAcaraQuery($request, $this->resolvePeriodeId($request))
             ->orderBy('tanggal', 'asc')
             ->orderBy('jam', 'asc')
             ->orderBy('nama_mahasiswa', 'asc')
             ->get();
+    }
+
+    /**
+     * Buat (atau ambil dari cache) PDF gabungan berita acara. DomPDF butuh
+     * ±0,1 detik per mahasiswa, jadi hasilnya disimpan di storage dengan kunci
+     * dari data yang dicetak (id, updated_at sidang & dosen/ruang terkait, dan
+     * versi template) — klik berikutnya dengan data yang sama langsung jadi,
+     * dan cache otomatis basi begitu ada data/template yang berubah.
+     *
+     * @return string|RedirectResponse path file PDF
+     */
+    private function renderBeritaAcaraGabungan(Request $request)
+    {
+        $sidangs = $this->beritaAcaraGabunganSidangs($request);
 
         if ($sidangs->isEmpty()) {
             return back()->with('warning', 'Tidak ada data sidang mahasiswa pada filter yang dipilih.');
@@ -1446,13 +1458,58 @@ class AdministrasiController extends Controller
 
         $maks = $this->maksBeritaAcaraGabungan();
         if ($sidangs->count() > $maks) {
-            return back()->with('warning', "Terlalu banyak data untuk dicetak dalam satu PDF ({$sidangs->count()} mahasiswa, maksimal {$maks}). Pilih Gelombang terlebih dahulu, atau gunakan \"Unduh Semua (ZIP)\".");
+            return back()->with('warning', "Terlalu banyak data untuk dijadikan satu PDF ({$sidangs->count()} mahasiswa, maksimal {$maks}). Pilih Gelombang terlebih dahulu, gunakan \"Pratinjau / Cetak Semua\", atau \"Unduh Semua (ZIP)\".");
         }
 
-        return Pdf::loadView('administrasi.berita-acara.pdf', [
-            'sidangs'   => $sidangs,
-            'kopBase64' => $this->kopSuratBase64(),
-        ])->setPaper('a4', 'portrait');
+        $dir = storage_path('app/berita-acara-cache');
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        $path = $dir . '/' . $this->kunciCacheBeritaAcara($sidangs) . '.pdf';
+
+        if (!is_file($path)) {
+            // Bersihkan cache lama (> 2 hari) supaya folder tidak membengkak.
+            foreach (glob($dir . '/*.pdf') ?: [] as $old) {
+                if (filemtime($old) < time() - 2 * 86400) {
+                    @unlink($old);
+                }
+            }
+
+            $pdf = Pdf::loadView('administrasi.berita-acara.pdf', [
+                'sidangs'   => $sidangs,
+                'kopBase64' => $this->kopSuratBase64(),
+            ])->setPaper('a4', 'portrait');
+
+            $tmp = $path . '.' . uniqid('', true) . '.tmp';
+            file_put_contents($tmp, $pdf->output());
+            @rename($tmp, $path);
+        }
+
+        return $path;
+    }
+
+    private function kunciCacheBeritaAcara($sidangs): string
+    {
+        $versi = collect([
+            resource_path('views/administrasi/berita-acara/pdf.blade.php'),
+            resource_path('views/administrasi/berita-acara/_sempro.blade.php'),
+            public_path('images/logo_umk.jpeg'),
+            public_path('images/kop_surat.png'),
+        ])->map(fn ($f) => is_file($f) ? filemtime($f) : 0)->implode('-');
+
+        $data = $sidangs->map(fn ($s) => implode('|', [
+            $s->id,
+            $s->updated_at?->timestamp,
+            $s->pembimbingUtama?->updated_at?->timestamp,
+            $s->pembimbingPendamping?->updated_at?->timestamp,
+            $s->ketuaPenguji?->updated_at?->timestamp,
+            $s->anggotaPenguji1?->updated_at?->timestamp,
+            $s->anggotaPenguji2?->updated_at?->timestamp,
+            $s->ruang?->updated_at?->timestamp,
+            $s->ruangPendamping?->updated_at?->timestamp,
+        ]))->implode(',');
+
+        return sha1($versi . '#' . $data);
     }
 
     private function namaFileBeritaAcara(Request $request, string $ext): string
@@ -1495,23 +1552,52 @@ class AdministrasiController extends Controller
     }
 
     /**
-     * Generate & Download Berita Acara PDF Massal (Combined PDF)
+     * Generate & Download Berita Acara PDF Massal (Combined PDF, di-cache)
      */
-    public function generateBeritaAcaraMassPdf(Request $request): Response|RedirectResponse
+    public function generateBeritaAcaraMassPdf(Request $request): Response|RedirectResponse|BinaryFileResponse
     {
-        $pdf = $this->renderBeritaAcaraGabungan($request);
+        $path = $this->renderBeritaAcaraGabungan($request);
 
-        return $pdf instanceof RedirectResponse ? $pdf : $pdf->download($this->namaFileBeritaAcara($request, 'pdf'));
+        return $path instanceof RedirectResponse
+            ? $path
+            : response()->download($path, $this->namaFileBeritaAcara($request, 'pdf'), ['Content-Type' => 'application/pdf']);
     }
 
     /**
-     * Preview Berita Acara PDF Massal (Combined PDF) di Browser
+     * Preview Berita Acara PDF Massal di Browser (PDF, di-cache)
      */
-    public function previewBeritaAcaraMassPdf(Request $request): Response|RedirectResponse
+    public function previewBeritaAcaraMassPdf(Request $request): Response|RedirectResponse|BinaryFileResponse
     {
-        $pdf = $this->renderBeritaAcaraGabungan($request);
+        $path = $this->renderBeritaAcaraGabungan($request);
 
-        return $pdf instanceof RedirectResponse ? $pdf : $pdf->stream($this->namaFileBeritaAcara($request, 'pdf'));
+        return $path instanceof RedirectResponse
+            ? $path
+            : response()->file($path, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $this->namaFileBeritaAcara($request, 'pdf') . '"',
+            ]);
+    }
+
+    /**
+     * Pratinjau / Cetak Semua berita acara sebagai halaman HTML siap cetak —
+     * template yang sama persis dengan PDF, tetapi langsung tampil (tanpa
+     * DomPDF) dan dicetak lewat dialog print browser. ?print=1 membuka dialog
+     * cetak otomatis.
+     */
+    public function printBeritaAcaraMass(Request $request): View|RedirectResponse
+    {
+        $sidangs = $this->beritaAcaraGabunganSidangs($request);
+
+        if ($sidangs->isEmpty()) {
+            return back()->with('warning', 'Tidak ada data sidang mahasiswa pada filter yang dipilih.');
+        }
+
+        return view('administrasi.berita-acara.pdf', [
+            'sidangs'     => $sidangs,
+            'kopBase64'   => asset('images/kop_surat.png'),
+            'htmlPreview' => true,
+            'pdfUrl'      => route('administrasi.berita-acara.mass-pdf', $request->except('print')),
+        ]);
     }
 
     /**
