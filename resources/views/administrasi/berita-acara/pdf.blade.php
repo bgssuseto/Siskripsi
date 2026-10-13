@@ -150,13 +150,47 @@
         }
         .revisi-table td.catatan { min-height: 55px; height: 65px; }
 
+        /* ── BERITA ACARA SEMPRO (format BA SEMPRO.docx) ── */
+        .ba-kop { width: 100%; border-collapse: collapse; }
+        .ba-kop td { border: none; vertical-align: middle; }
+        .ba-kop-logo { width: 18%; text-align: center; }
+        .ba-kop-logo img { width: 62px; height: auto; }
+        .ba-kop-text { width: 64%; text-align: center; font-size: 13pt; font-weight: bold; line-height: 1.15; }
+        .ba-kop-line { border-top: 2.5px solid #4f81bd; margin-top: 6px; }
+        .ba-title { text-align: center; font-size: 11pt; font-weight: bold; text-transform: uppercase; margin-bottom: 18px; }
+        .ba-body { line-height: 1.75; }
+        .ba-justify { text-align: justify; }
+        .ba-fields { width: 100%; border-collapse: collapse; line-height: 1.75; }
+        .ba-fields td { border: none; vertical-align: top; padding: 0; }
+        .ba-fields-tight { line-height: 1.2; margin-bottom: 14px; }
+        .ba-f-label { width: 34%; }
+        .ba-f-colon { width: 3%; }
+        .ba-keputusan { text-align: center; font-size: 15pt; font-weight: bold; margin: 30px 0 46px; }
+        .ba-sign { width: 100%; border-collapse: collapse; }
+        .ba-sign td { border: none; text-align: center; vertical-align: top; padding: 0 6px; }
+        .ba-sign-name { padding-top: 78px !important; }
+        .ba-nilai, .ba-revisi { width: 100%; border-collapse: collapse; }
+        .ba-nilai th, .ba-nilai td, .ba-revisi th, .ba-revisi td { border: 1px solid #000; text-align: center; vertical-align: middle; }
+        .ba-nilai th, .ba-nilai td { padding: 4px 8px; height: 22px; }
+        .ba-revisi th { padding: 4px 8px; }
+        .ba-revisi-body td { height: 600px; }
+        .ba-revisi-sign { text-align: center; margin-top: 14px; }
+        .ba-bold { font-weight: bold; }
+
         /* ── PAGE BREAK ── */
         .page-break { page-break-before: always; }
     </style>
 </head>
 <body>
+    @php
+        $logoPath = public_path('images/logo_umk.jpeg');
+        $logoBase64 = file_exists($logoPath) ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoPath)) : '';
+    @endphp
 
     @foreach($sidangs as $sidang)
+        @if($sidang->jenis_tugas_akhir === 'sempro')
+            @include('administrasi.berita-acara._sempro', ['sidang' => $sidang, 'logoBase64' => $logoBase64])
+        @else
         @php
             $isJurnalOrSempro = ($sidang->jenis_tugas_akhir === 'jurnal');
             $jenisLabel = $sidang->jenis_label;
@@ -321,6 +355,7 @@
                 </tr>
             </table>
         @endforeach
+        @endif
 
         @if (!$loop->last)
             <div class="page-break"></div>
