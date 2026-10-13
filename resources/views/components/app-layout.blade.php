@@ -1231,12 +1231,6 @@
                                         <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.berita-acara.*') && $jenisSkripsi ? 'bg-blue-300' : 'bg-slate-600 group-hover:bg-blue-400' }} transition-colors"></span>
                                         Berita Acara
                                     </a>
-                                    <a href="{{ route('administrasi.sk.index', ['jenis' => 'skripsi']) }}"
-                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
-                                              {{ request()->routeIs('administrasi.sk.*') && $jenisSkripsi ? 'bg-blue-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.sk.*') && $jenisSkripsi ? 'bg-blue-300' : 'bg-slate-600 group-hover:bg-blue-400' }} transition-colors"></span>
-                                        Surat Keputusan (SK)
-                                    </a>
                                 </div>
                             </div>
 
@@ -1281,14 +1275,18 @@
                                         <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.berita-acara.*') && $jenisSempro ? 'bg-amber-300' : 'bg-slate-600 group-hover:bg-amber-400' }} transition-colors"></span>
                                         Berita Acara
                                     </a>
-                                    <a href="{{ route('administrasi.sk.index', ['jenis' => 'sempro']) }}"
-                                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group
-                                              {{ request()->routeIs('administrasi.sk.*') && $jenisSempro ? 'bg-amber-600/70 text-white' : 'text-slate-500 hover:bg-white/[0.06] hover:text-white' }}">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('administrasi.sk.*') && $jenisSempro ? 'bg-amber-300' : 'bg-slate-600 group-hover:bg-amber-400' }} transition-colors"></span>
-                                        Surat Keputusan (SK)
-                                    </a>
                                 </div>
                             </div>
+
+                            {{-- ── Surat Keputusan (SK) — satu menu tersendiri; SK hanya untuk ujian skripsi ── --}}
+                            <a href="{{ route('administrasi.sk.index') }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 group
+                                      {{ request()->routeIs('administrasi.sk.*') ? 'bg-indigo-600/70 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}">
+                                <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('administrasi.sk.*') ? 'text-white' : 'text-slate-500 group-hover:text-white' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                                </svg>
+                                <span class="flex-1 text-left">Surat Keputusan (SK)</span>
+                            </a>
 
                             {{-- ── Dashboard Analitik ── --}}
                             <a href="{{ route('administrasi.analitik.index') }}"
