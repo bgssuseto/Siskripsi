@@ -137,4 +137,28 @@ class BeritaAcaraSkTest extends TestCase
                 ->assertOk();
         }
     }
+
+    public function test_berita_acara_jalur_jurnal_memakai_kata_jurnal_dan_skripsi_memakai_kata_skripsi(): void
+    {
+        $dosen = Dosen::create(['nama_dosen' => 'Dosen Sidang BA', 'nidn' => 'BAS' . uniqid()]);
+        $buat = fn (string $jenis) => Sidang::create([
+            'nim' => strtoupper($jenis) . substr(uniqid(), -6), 'nama_mahasiswa' => "Mhs {$jenis}", 'judul_skripsi' => 'Judul',
+            'jenis_tugas_akhir' => $jenis, 'verifikasi_status' => 'disetujui', 'periode_id' => $this->periode->id,
+            'dosen_pembimbing_utama_id' => $dosen->id, 'ketua_penguji_id' => $dosen->id,
+        ]);
+        $jurnal = $buat('jurnal');
+        $skripsi = $buat('sidang');
+
+        $html = view('administrasi.berita-acara.pdf', ['sidangs' => collect([$jurnal->fresh()]), 'kopBase64' => ''])->render();
+        $this->assertStringContainsString('BERITA ACARA SIDANG JURNAL', $html);
+        $this->assertStringContainsString('PENILAIAN SIDANG JURNAL', $html);
+        $this->assertStringContainsString('LEMBAR REVISI SIDANG JURNAL', $html);
+        $this->assertStringContainsString('telah dilaksanakan Sidang Jurnal', $html);
+        $this->assertStringNotContainsString('SKRIPSI', strtoupper(strip_tags(str_replace('judul_skripsi', '', $html))));
+
+        $html = view('administrasi.berita-acara.pdf', ['sidangs' => collect([$skripsi->fresh()]), 'kopBase64' => ''])->render();
+        $this->assertStringContainsString('BERITA ACARA SIDANG SKRIPSI', $html);
+        $this->assertStringContainsString('LEMBAR REVISI SIDANG SKRIPSI', $html);
+        $this->assertStringNotContainsString('JURNAL', strtoupper(strip_tags($html)));
+    }
 }

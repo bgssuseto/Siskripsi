@@ -236,7 +236,10 @@
             @include('administrasi.berita-acara._sempro', ['sidang' => $sidang, 'logoBase64' => $logoBase64])
         @else
         @php
-            $isJurnalOrSempro = ($sidang->jenis_tugas_akhir === 'jurnal');
+            // Sidang skripsi & sidang jurnal memakai format yang sama — bedanya hanya
+            // kata "Skripsi" / "Jurnal" sesuai jalur yang dipilih mahasiswa.
+            $istilah      = $sidang->jenis_tugas_akhir === 'jurnal' ? 'Jurnal' : 'Skripsi';
+            $istilahUpper = strtoupper($istilah);
             $jenisLabel = $sidang->jenis_label;
             $jenisUpper = strtoupper($jenisLabel);
 
@@ -280,13 +283,13 @@
         <hr class="kop-divider-thick">
         <hr class="kop-divider-thin">
 
-        <div class="doc-title">BERITA ACARA {{ $isJurnalOrSempro ? 'SEMINAR PROPOSAL SKRIPSI' : 'SIDANG SKRIPSI' }}</div>
+        <div class="doc-title">BERITA ACARA SIDANG {{ $istilahUpper }}</div>
 
         <p style="margin-bottom:12px; line-height:1.6;">
             Pada hari ini <strong>{{ $hari }}</strong>, {{ $tanggalIndo }}
             Jam <strong>{{ $jamTeks }}</strong>
             di <strong>{{ $ruangTeks }}</strong>
-            telah dilaksanakan {{ $isJurnalOrSempro ? 'Seminar Proposal Skripsi' : 'Sidang Skripsi' }}.
+            telah dilaksanakan Sidang {{ $istilah }}.
         </p>
 
         <table class="field-table">
@@ -309,11 +312,11 @@
         </table>
 
         <p class="result-para">
-            Berdasarkan hasil {{ $isJurnalOrSempro ? 'seminar proposal' : 'pengujian pada Sidang Skripsi' }} yang telah dipaparkan, maka {{ $isJurnalOrSempro ? 'proposal skripsi' : 'mahasiswa' }} ini dinyatakan:
+            Berdasarkan hasil pengujian pada Sidang {{ $istilah }} yang telah dipaparkan, maka mahasiswa ini dinyatakan:
         </p>
 
         <p style="text-align:center; font-size:12pt; font-weight:bold; border: 1px solid #000; padding: 8px; margin-bottom:14px; letter-spacing:2px;">
-            {{ $isJurnalOrSempro ? 'DITERIMA  /  DITOLAK' : 'LULUS  /  TIDAK LULUS' }}
+            LULUS  /  TIDAK LULUS
         </p>
 
         {{-- Signatures Table --}}
@@ -335,7 +338,7 @@
         @foreach($evaluators as $ev)
             <div class="page-break"></div>
 
-            <div class="penilaian-title">PENILAIAN {{ $isJurnalOrSempro ? 'SEMINAR PROPOSAL' : 'SIDANG SKRIPSI' }}</div>
+            <div class="penilaian-title">PENILAIAN SIDANG {{ $istilahUpper }}</div>
             <table class="field-table">
                 <tr><td class="field-label">Nama</td><td class="field-colon">:</td><td class="field-value"><strong>{{ strtoupper($nama) }}</strong></td></tr>
                 <tr><td class="field-label">NIM</td><td class="field-colon">:</td><td class="field-value">{{ $nim }}</td></tr>
@@ -348,21 +351,15 @@
                     <tr><th>PENILAIAN</th><th style="width:25%;">PROSENTASE</th><th style="width:25%;">NILAI</th></tr>
                 </thead>
                 <tbody>
-                    @if($isJurnalOrSempro)
-                        <tr><td>Sikap</td><td>20 %</td><td></td></tr>
-                        <tr><td>Presentasi</td><td>30 %</td><td></td></tr>
-                        <tr><td>Penguasaan Teori</td><td>50 %</td><td></td></tr>
-                    @else
-                        <tr><td>Sikap</td><td>10 %</td><td></td></tr>
-                        <tr><td>Presentasi</td><td>10 %</td><td></td></tr>
-                        <tr><td>Penguasaan Teori</td><td>40 %</td><td></td></tr>
-                        <tr><td>Penguasaan Program</td><td>40 %</td><td></td></tr>
-                    @endif
+                    <tr><td>Sikap</td><td>10 %</td><td></td></tr>
+                    <tr><td>Presentasi</td><td>10 %</td><td></td></tr>
+                    <tr><td>Penguasaan Teori</td><td>40 %</td><td></td></tr>
+                    <tr><td>Penguasaan Program</td><td>40 %</td><td></td></tr>
                     <tr><td colspan="2" style="font-weight:bold; text-align:right;">JUMLAH</td><td></td></tr>
                 </tbody>
             </table>
 
-            <p style="margin-top:8px; font-weight:bold;">KETERANGAN: {{ $isJurnalOrSempro ? 'DITERIMA / DITOLAK' : 'LULUS / TIDAK LULUS' }}</p>
+            <p style="margin-top:8px; font-weight:bold;">KETERANGAN: LULUS / TIDAK LULUS</p>
             
             <div class="penilaian-footer">
                 <p>Kudus, {{ $tanggalIndo }}</p>
@@ -376,7 +373,7 @@
         @foreach($evaluators as $ev)
             <div class="page-break"></div>
 
-            <div class="revisi-title">LEMBAR REVISI {{ $isJurnalOrSempro ? 'SEMINAR PROPOSAL SKRIPSI' : 'SIDANG SKRIPSI' }}</div>
+            <div class="revisi-title">LEMBAR REVISI SIDANG {{ $istilahUpper }}</div>
             <table class="field-table">
                 <tr><td class="field-label">Nama</td><td class="field-colon">:</td><td class="field-value"><strong>{{ strtoupper($nama) }}</strong></td></tr>
                 <tr><td class="field-label">NIM</td><td class="field-colon">:</td><td class="field-value">{{ $nim }}</td></tr>
