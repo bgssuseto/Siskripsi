@@ -35,10 +35,14 @@
         'neutral' => 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600',
     ];
 
-    if ($progress['failed']) {
+    $kelulusan = collect($steps)->firstWhere('key', 'kelulusan');
+
+    if (($kelulusan['status'] ?? null) === 'failed') {
+        $headline = ['Tidak Lulus', 'Hasil ujian dinyatakan tidak lulus — silakan hubungi koordinator.'];
+    } elseif ($progress['failed']) {
         $headline = ['Perlu revisi', 'Berkas perlu direvisi'];
     } elseif ($progress['complete']) {
-        $headline = ['Selesai', 'Seluruh tahap telah dilalui'];
+        $headline = ['Lulus', 'Selamat! Ujian Anda dinyatakan lulus.'];
     } elseif (!$progress['registered']) {
         // Tahap "Pendaftaran" sendiri sudah dinamis (lihat ProgressTugasAkhirService):
         // "Sedang Buka" (gelombang buka, tombol Daftar tersedia di bawah) atau
@@ -106,7 +110,7 @@
 
     {{-- ── Stepper: timeline vertikal di mobile, horizontal mulai lg ── --}}
     <div class="px-4 py-5 sm:px-6 sm:py-6">
-        <ol class="relative grid grid-cols-1 gap-y-3 lg:grid-cols-5 lg:gap-x-3 lg:gap-y-0">
+        <ol class="relative grid grid-cols-1 gap-y-3 lg:grid-cols-6 lg:gap-x-3 lg:gap-y-0">
             @foreach($steps as $step)
                 @php
                     $st = $step['status'];

@@ -10,7 +10,7 @@ use Carbon\Carbon;
 use Tests\TestCase;
 
 /**
- * Logika murni 5 tahap progress (tanpa query DB): semua relasi di-set manual.
+ * Logika murni 6 tahap progress (tanpa query DB): semua relasi di-set manual.
  */
 class ProgressTugasAkhirServiceTest extends TestCase
 {
@@ -52,7 +52,7 @@ class ProgressTugasAkhirServiceTest extends TestCase
         $this->assertFalse($p['registered']);
         $this->assertSame([
             'pendaftaran' => 'active', 'verifikasi' => 'pending', 'join_wa' => 'pending',
-            'penjadwalan' => 'pending', 'ujian' => 'pending',
+            'penjadwalan' => 'pending', 'ujian' => 'pending', 'kelulusan' => 'pending',
         ], $this->statuses($p));
         $this->assertSame('Sedang Buka', $p['steps'][0]['detail']);
         $this->assertSame('daftar', $p['steps'][0]['cta']);
@@ -82,7 +82,7 @@ class ProgressTugasAkhirServiceTest extends TestCase
         $this->assertSame('active', $p['steps'][1]['status']);
         $this->assertSame('Sedang Diverifikasi', $p['steps'][1]['detail']);
         $this->assertSame('pending', $p['steps'][2]['status']);
-        $this->assertSame(20, $p['percent']);
+        $this->assertSame(17, $p['percent']);
         $this->assertSame(1, $p['current_index']);
         $this->assertFalse($p['failed']);
     }
@@ -106,10 +106,10 @@ class ProgressTugasAkhirServiceTest extends TestCase
         $this->assertSame('failed', $p['steps'][1]['status']);
         $this->assertSame('revisi', $p['steps'][1]['cta']);
         $this->assertStringContainsString('PDF tidak terbaca', $p['steps'][1]['note']);
-        $this->assertSame(['pending', 'pending', 'pending'], array_column(array_slice($p['steps'], 2), 'status'));
+        $this->assertSame(['pending', 'pending', 'pending', 'pending'], array_column(array_slice($p['steps'], 2), 'status'));
         $this->assertTrue($p['failed']);
         $this->assertSame(1, $p['current_index']);
-        $this->assertSame(20, $p['percent']);
+        $this->assertSame(17, $p['percent']);
     }
 
     public function test_diterima_belum_join_wa_dan_belum_dijadwalkan(): void
@@ -122,7 +122,7 @@ class ProgressTugasAkhirServiceTest extends TestCase
         $this->assertSame('active', $p['steps'][3]['status']);
         $this->assertSame('Sedang dijadwalkan', $p['steps'][3]['detail']);
         $this->assertSame('pending', $p['steps'][4]['status']);
-        $this->assertSame(40, $p['percent']);
+        $this->assertSame(33, $p['percent']);
         $this->assertSame(2, $p['current_index']);
     }
 
@@ -134,7 +134,7 @@ class ProgressTugasAkhirServiceTest extends TestCase
         $this->assertStringContainsString('Bergabung', $p['steps'][2]['detail']);
         $this->assertNull($p['steps'][2]['cta']);
         $this->assertSame('active', $p['steps'][3]['status']);
-        $this->assertSame(60, $p['percent']);
+        $this->assertSame(50, $p['percent']);
         $this->assertSame(3, $p['current_index']);
     }
 
@@ -208,21 +208,60 @@ class ProgressTugasAkhirServiceTest extends TestCase
         $this->assertFalse($hariIni['complete']);
     }
 
-    public function test_ujian_sudah_lewat_selesai_dengan_hasil(): void
+    public function test_ujian_sudah_lewat_status_kelulusan_default_lulus(): void
     {
         $base = ['tanggal' => '2026-10-01', 'ruang_id' => 1, 'wa_joined_at' => '2026-09-25 09:00:00'];
 
-        $lulus   = Progress::build($this->sidang($base + ['status_ujian' => 'lulus']), 'sempro', $this->today());
-        $remidi  = Progress::build($this->sidang($base + ['status_ujian' => 'tidak_lulus']), 'sempro', $this->today());
+        $lulus      = Progress::build($this->sidang($base + ['status_ujian' => 'lulus']), 'sempro', $this->today());
+        $remidi     = Progress::build($this->sidang($base + ['status_ujian' => 'tidak_lulus']), 'sempro', $this->today());
         $belumDiisi = Progress::build($this->sidang($base), 'sempro', $this->today());
 
+        // Tahap ujian cukup "Selesai"; hasilnya ada di tahap Status Kelulusan.
         $this->assertSame('done', $lulus['steps'][4]['status']);
-        $this->assertSame(['Lulus', 'success'], [$lulus['steps'][4]['badge'], $lulus['steps'][4]['badge_tone']]);
-        $this->assertSame(['Tidak lulus', 'danger'], [$remidi['steps'][4]['badge'], $remidi['steps'][4]['badge_tone']]);
-        $this->assertSame('Selesai', $belumDiisi['steps'][4]['badge']);
+        $this->assertSame('Selesai', $lulus['steps'][4]['badge']);
+
+        $this->assertSame('kelulusan', $lulus['steps'][5]['key']);
+        $this->assertSame(['done', 'Lulus', 'success'], [$lulus['steps'][5]['status'], $lulus['steps'][5]['badge'], $lulus['steps'][5]['badge_tone']]);
+        $this->assertSame(['done', 'Dinyatakan lulus'], [$belumDiisi['steps'][5]['status'], $belumDiisi['steps'][5]['detail']]);
+        $this->assertSame(['failed', 'Tidak Lulus', 'danger'], [$remidi['steps'][5]['status'], $remidi['steps'][5]['badge'], $remidi['steps'][5]['badge_tone']]);
+
         $this->assertTrue($lulus['complete']);
+        $this->assertTrue($belumDiisi['complete']);
         $this->assertSame(100, $lulus['percent']);
-        $this->assertSame(4, $lulus['current_index']);
+        $this->assertSame(5, $lulus['current_index']);
+
+        $this->assertFalse($remidi['complete']);
+        $this->assertTrue($remidi['failed']);
+        $this->assertSame(5, $remidi['current_index']);
+    }
+
+    public function test_status_kelulusan_lulus_begitu_jam_ujian_hari_ini_lewat(): void
+    {
+        $sidang = $this->sidang(['tanggal' => '2026-10-05', 'ruang_id' => 1, 'jam' => '08.00 - 09.00']);
+
+        $sebelum = Progress::build($sidang, 'sempro', $this->today(), now: Carbon::parse('2026-10-05 08:30', 'Asia/Jakarta'));
+        $sesudah = Progress::build($sidang, 'sempro', $this->today(), now: Carbon::parse('2026-10-05 09:01', 'Asia/Jakarta'));
+
+        $this->assertSame(['active', 'Hari ini'], [$sebelum['steps'][4]['status'], $sebelum['steps'][4]['badge']]);
+        $this->assertSame(['pending', 'Menunggu pelaksanaan ujian'], [$sebelum['steps'][5]['status'], $sebelum['steps'][5]['detail']]);
+
+        $this->assertSame('done', $sesudah['steps'][4]['status']);
+        $this->assertSame(['done', 'Dinyatakan lulus'], [$sesudah['steps'][5]['status'], $sesudah['steps'][5]['detail']]);
+    }
+
+    public function test_jadwal_terpisah_lulus_setelah_kedua_sesi_selesai(): void
+    {
+        $sidang = $this->sidang([
+            'tanggal' => '2026-10-01', 'ruang_id' => 1, 'jam' => '08.00 - 09.00',
+            'jadwal_terpisah' => true, 'tanggal_pendamping' => '2026-10-07', 'jam_pendamping' => '10.00 - 11.00', 'ruang_id_pendamping' => 2,
+        ]);
+
+        $p = Progress::build($sidang, 'sempro', $this->today());
+        $this->assertSame(['active', 'Berlangsung'], [$p['steps'][4]['status'], $p['steps'][4]['badge']]);
+        $this->assertSame('pending', $p['steps'][5]['status']);
+
+        $p = Progress::build($sidang, 'sempro', Carbon::parse('2026-10-08', 'Asia/Jakarta'));
+        $this->assertSame('done', $p['steps'][5]['status']);
     }
 
     public function test_ujian_lewat_tanpa_join_wa_tetap_selesai_dan_tidak_menawarkan_join(): void
@@ -233,6 +272,6 @@ class ProgressTugasAkhirServiceTest extends TestCase
         $this->assertSame('Tidak tercatat bergabung', $p['steps'][2]['detail']);
         $this->assertNull($p['steps'][2]['cta']);
         $this->assertSame(100, $p['percent']);
-        $this->assertSame(4, $p['current_index']);
+        $this->assertSame(5, $p['current_index']);
     }
 }
