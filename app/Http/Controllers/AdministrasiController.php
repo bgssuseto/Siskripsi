@@ -2297,71 +2297,20 @@ class AdministrasiController extends Controller
      */
     private function exportSkPdf(Request $request, string $mode)
     {
-        $periodeId = $this->resolvePeriodeId($request);
+        $this->siapkanCetakBesar();
 
-        $sidangs = Sidang::query()
-            ->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))
-            ->when($request->filled('gelombang'), fn ($q) => $q->where('gelombang', $request->get('gelombang')))
-            ->when($request->filled('tanggal_pendaftaran_mulai'), fn ($q) => $q->whereDate('tanggal_pendaftaran', '>=', $request->get('tanggal_pendaftaran_mulai')))
-            ->when($request->filled('tanggal_pendaftaran_selesai'), fn ($q) => $q->whereDate('tanggal_pendaftaran', '<=', $request->get('tanggal_pendaftaran_selesai')))
-            // SK Pembimbing & Penguji hanya dihitung dari ujian skripsi — sempro tidak ikut.
-            ->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
-            ->orderByRaw('tanggal IS NULL')->orderBy('tanggal')->orderBy('jam')->orderBy('nama_mahasiswa')
-            ->get();
+        $hasil = \App\Services\SkPdfService::build($mode, [
+            'periode_id'      => $this->resolvePeriodeId($request),
+            'gelombang'       => $request->get('gelombang'),
+            'tanggal_mulai'   => $request->get('tanggal_pendaftaran_mulai'),
+            'tanggal_selesai' => $request->get('tanggal_pendaftaran_selesai'),
+        ]);
 
-        if ($sidangs->isEmpty()) {
+        if (!$hasil) {
             return back()->with('warning', 'Tidak ada data pada filter yang dipilih.');
         }
 
-        // [kolom peran => label di tabel rincian, indeks kolom rekap]
-        $peranMap = $mode === 'penguji'
-            ? ['ketua_penguji_id' => ['KETUA PENGUJI', 0], 'anggota_penguji_1_id' => ['ANGGOTA PENGUJI', 1], 'anggota_penguji_2_id' => ['ANGGOTA PENGUJI', 1]]
-            : ['dosen_pembimbing_utama_id' => ['PEMBIMBING UTAMA', 0], 'dosen_pembimbing_pendamping_id' => ['PEMBIMBING PENDAMPING', 1]];
-
-        $dosenRincian = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get()
-            ->map(function ($d) use ($sidangs, $peranMap) {
-                $jumlah = [0, 0];
-                $mahasiswa = [[], []];
-                foreach ($sidangs as $s) {
-                    foreach ($peranMap as $kolom => [$label, $idx]) {
-                        if ((int) $s->{$kolom} === $d->id) {
-                            $jumlah[$idx]++;
-                            $mahasiswa[$idx][] = ['nim' => $s->nim, 'nama' => $s->nama_mahasiswa, 'peran' => $label];
-                            break;
-                        }
-                    }
-                }
-
-                return [
-                    'nama_dosen' => $d->nama_dosen,
-                    'jumlah'     => $jumlah,
-                    // Ketua / Pembimbing Utama dulu, lalu Anggota / Pendamping.
-                    'mahasiswa'  => array_merge($mahasiswa[0], $mahasiswa[1]),
-                ];
-            })
-            ->filter(fn ($d) => $d['jumlah'][0] + $d['jumlah'][1] > 0)
-            ->values();
-
-        $namaPeriode = Periode::find($periodeId)?->nama_periode ?? 'Semua Periode';
-        $kegiatan = ['nama' => 'Sidang Skripsi', 'hal' => 'Skripsi'];
-        $tanggalSurat = now()->timezone('Asia/Jakarta');
-
-        $this->siapkanCetakBesar();
-
-        $pdf = Pdf::loadView('administrasi.sk.pdf', [
-            'mode'         => $mode,
-            'namaPeriode'  => $namaPeriode,
-            'kegiatan'     => $kegiatan,
-            'dosenRincian' => $dosenRincian,
-            'tanggalSurat' => $tanggalSurat->copy()->locale('id')->translatedFormat('j F Y'),
-            'kaprodi'      => rescue(fn () => \App\Models\Kaprodi::untukTanggal($tanggalSurat)?->nama, null, false),
-            'kopBase64'    => $this->kopSuratBase64(),
-        ])->setPaper('a4', 'portrait');
-
-        $gelombang = $request->filled('gelombang') ? '_Gelombang_' . $request->get('gelombang') : '';
-        $nama = trim(preg_replace('/[^\w\.-]+/', '_', 'Pengajuan_SK_' . ucfirst($mode) . "_{$namaPeriode}{$gelombang}"), '_');
-
-        return $pdf->download("{$nama}.pdf");
+        return $hasil['pdf']->download($hasil['filename']);
     }
 
     /**

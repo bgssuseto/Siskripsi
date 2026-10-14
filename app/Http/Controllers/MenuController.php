@@ -394,6 +394,18 @@ class MenuController extends Controller
             ]
         );
 
+        // Seed menu SK (unduh SK Pembimbing & Penguji per periode).
+        Menu::firstOrCreate(
+            ['route' => 'dosen.sk.index'],
+            [
+                'name'         => 'SK',
+                'parent_id'    => null,
+                'icon'         => 'badge',
+                'role_default' => 'dosen',
+                'sort_order'   => 25,
+            ]
+        );
+
         // Seed default role_menu mappings for dosen
         $dosenMenuRoutes = [
             'dosen.dashboard',
@@ -402,6 +414,7 @@ class MenuController extends Controller
             'dosen.jadwal.sempro',
             'dosen.jadwal.skripsi',
             'dosen.riwayat',
+            'dosen.sk.index',
         ];
 
         $dosenMenus = Menu::whereIn('route', $dosenMenuRoutes)

@@ -757,4 +757,64 @@ class DosenPortalController extends Controller
             'Cache-Control' => 'max-age=0',
         ]);
     }
+
+    /**
+     * Menu SK: daftar periode tempat dosen ini menjadi pembimbing / penguji
+     * ujian skripsi (sidang & jurnal — sempro tidak dihitung), lengkap dengan
+     * jumlahnya, dan tombol unduh SK Pembimbing & SK Penguji per periode.
+     */
+    public function sk(): View
+    {
+        $dosen = Auth::user()->dosen;
+        $rows = collect();
+
+        if ($dosen) {
+            $id = $dosen->id;
+            $sidangs = Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
+                ->whereNotNull('periode_id')
+                ->where(fn ($q) => $q->where('dosen_pembimbing_utama_id', $id)
+                    ->orWhere('dosen_pembimbing_pendamping_id', $id)
+                    ->orWhere('ketua_penguji_id', $id)
+                    ->orWhere('anggota_penguji_1_id', $id)
+                    ->orWhere('anggota_penguji_2_id', $id))
+                ->get(['periode_id', 'dosen_pembimbing_utama_id', 'dosen_pembimbing_pendamping_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
+
+            $periodes = Periode::whereIn('id', $sidangs->pluck('periode_id')->unique())->orderByDesc('id')->get();
+
+            $rows = $periodes->map(function (Periode $p) use ($sidangs, $id) {
+                $ps = $sidangs->where('periode_id', $p->id);
+                $hitung = fn (string $kolom) => $ps->filter(fn ($s) => (int) $s->{$kolom} === $id)->count();
+
+                return [
+                    'periode'    => $p,
+                    'utama'      => $hitung('dosen_pembimbing_utama_id'),
+                    'pendamping' => $hitung('dosen_pembimbing_pendamping_id'),
+                    'ketua'      => $hitung('ketua_penguji_id'),
+                    'anggota'    => $hitung('anggota_penguji_1_id') + $hitung('anggota_penguji_2_id'),
+                ];
+            });
+        }
+
+        return view('dosen.sk', compact('dosen', 'rows'));
+    }
+
+    /**
+     * Unduh SK Pembimbing / Penguji satu periode — hanya bagian dosen yang login.
+     */
+    public function skDownload(Periode $periode, string $mode)
+    {
+        abort_unless(in_array($mode, \App\Services\SkPdfService::MODES, true), 404);
+
+        $dosen = Auth::user()->dosen;
+        abort_unless($dosen, 403, 'Akun Anda belum terhubung dengan data dosen.');
+
+        $hasil = \App\Services\SkPdfService::build($mode, ['periode_id' => $periode->id], $dosen->id);
+
+        if (!$hasil) {
+            $peran = $mode === 'penguji' ? 'penguji' : 'pembimbing';
+            return back()->with('warning', "Anda tidak tercatat sebagai {$peran} ujian skripsi pada {$periode->nama_periode}.");
+        }
+
+        return $hasil['pdf']->download($hasil['filename']);
+    }
 }
