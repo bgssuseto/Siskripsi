@@ -128,24 +128,46 @@ class BeritaAcaraSkTest extends TestCase
     public function test_berita_acara_jalur_jurnal_memakai_kata_jurnal_dan_skripsi_memakai_kata_skripsi(): void
     {
         $dosen = Dosen::create(['nama_dosen' => 'Dosen Sidang BA', 'nidn' => 'BAS' . uniqid()]);
+        $ruang = \App\Models\Ruang::create(['kode_ruangan' => 'J.4.' . substr(uniqid(), -4), 'nama_ruangan' => 'R', 'status' => 'siap_digunakan']);
         $buat = fn (string $jenis) => Sidang::create([
-            'nim' => strtoupper($jenis) . substr(uniqid(), -6), 'nama_mahasiswa' => "Mhs {$jenis}", 'judul_skripsi' => 'Judul',
+            'nim' => strtoupper($jenis) . substr(uniqid(), -6), 'nama_mahasiswa' => "Mhs {$jenis}", 'judul_skripsi' => '  Rancang   bangun sistem web ',
             'jenis_tugas_akhir' => $jenis, 'verifikasi_status' => 'disetujui', 'periode_id' => $this->periode->id,
             'dosen_pembimbing_utama_id' => $dosen->id, 'ketua_penguji_id' => $dosen->id,
+            'tanggal' => '2026-07-13', 'jam' => $jenis === 'jurnal' ? '08.00 - 09.00' : '10.00 - 11.00', 'ruang_id' => $ruang->id,
         ]);
         $jurnal = $buat('jurnal');
+
+        // Nama & judul disimpan kapital (spasi berlebih dirapikan).
+        $this->assertSame(['MHS JURNAL', 'RANCANG BANGUN SISTEM WEB'], [$jurnal->fresh()->nama_mahasiswa, $jurnal->fresh()->judul_skripsi]);
         $skripsi = $buat('sidang');
 
         $html = view('administrasi.berita-acara.pdf', ['sidangs' => collect([$jurnal->fresh()]), 'kopBase64' => ''])->render();
         $this->assertStringContainsString('BERITA ACARA SIDANG JURNAL', $html);
         $this->assertStringContainsString('PENILAIAN SIDANG JURNAL', $html);
         $this->assertStringContainsString('LEMBAR REVISI SIDANG JURNAL', $html);
-        $this->assertStringContainsString('telah dilaksanakan Sidang Jurnal', $html);
-        $this->assertStringNotContainsString('SKRIPSI', strtoupper(strip_tags(str_replace('judul_skripsi', '', $html))));
+        $this->assertStringContainsString("di Ruang {$ruang->kode_ruangan} telah dilaksanakan Sidang JURNAL.", $html);
+        $this->assertStringContainsString('Senin, 13 Juli 2026', $html);
+        $this->assertStringContainsString('atas nama <strong>MHS JURNAL</strong> dinyatakan', $html);
+        $this->assertStringContainsString('RANCANG BANGUN SISTEM WEB', $html);
+        $this->assertStringContainsString('KETERANGAN', $html);
+        $this->assertStringNotContainsString('SKRIPSI', strtoupper(strip_tags($html)));
 
         $html = view('administrasi.berita-acara.pdf', ['sidangs' => collect([$skripsi->fresh()]), 'kopBase64' => ''])->render();
         $this->assertStringContainsString('BERITA ACARA SIDANG SKRIPSI', $html);
         $this->assertStringContainsString('LEMBAR REVISI SIDANG SKRIPSI', $html);
+        $this->assertStringContainsString('telah dilaksanakan Sidang SKRIPSI.', $html);
         $this->assertStringNotContainsString('JURNAL', strtoupper(strip_tags($html)));
+    }
+
+    public function test_berita_acara_sempro_menulis_di_ruang_dan_nama_judul_kapital(): void
+    {
+        $ruang = \App\Models\Ruang::create(['kode_ruangan' => 'I.3.' . substr(uniqid(), -4), 'nama_ruangan' => 'R', 'status' => 'siap_digunakan']);
+        $sidang = Sidang::where('periode_id', $this->periode->id)->first();
+        $sidang->update(['ruang_id' => $ruang->id, 'judul_skripsi' => 'analisis sentimen opini publik']);
+
+        $html = view('administrasi.berita-acara.pdf', ['sidangs' => collect([$sidang->fresh()]), 'kopBase64' => ''])->render();
+        $this->assertStringContainsString("di Ruang {$ruang->kode_ruangan} telah dilaksanakan Seminar Proposal Skripsi", $html);
+        $this->assertStringContainsString('ANALISIS SENTIMEN OPINI PUBLIK', $html);
+        $this->assertStringContainsString(mb_strtoupper($sidang->nama_mahasiswa), $html);
     }
 }

@@ -10,9 +10,9 @@
     $kosong = '___________';
     $tglLengkap = fn ($tgl) => $tgl ? \App\Support\TanggalIndo::lengkap($tgl) : $kosong;
 
-    $nama  = strtoupper($sidang->nama_mahasiswa);
+    $nama  = mb_strtoupper($sidang->nama_mahasiswa);
     $nim   = $sidang->nim;
-    $judul = $sidang->judul_skripsi;
+    $judul = mb_strtoupper($sidang->judul_skripsi);
     $utama = $sidang->pembimbingUtama?->nama_dosen;
     $pend  = $sidang->pembimbingPendamping?->nama_dosen;
 
@@ -38,34 +38,18 @@
 @endphp
 
 {{-- ═══════════════ HALAMAN 1: BERITA ACARA ═══════════════ --}}
-<table class="ba-kop">
-    <tr>
-        <td class="ba-kop-logo">
-            @if(!empty($logoBase64))
-                <img src="{{ $logoBase64 }}" alt="Logo UMK">
-            @endif
-        </td>
-        <td class="ba-kop-text">
-            FAKULTAS TEKNIK<br>
-            PROGRAM STUDI TEKNIK INFORMATIKA<br>
-            UNIVERSITAS MURIA KUDUS<br>
-            Jl. Gondang Manis Kudus
-        </td>
-        <td class="ba-kop-logo"></td>
-    </tr>
-</table>
-<div class="ba-kop-line"></div>
+@include('administrasi.berita-acara._kop')
 
 <div class="ba-title" style="margin-top: 22px;">BERITA ACARA SEMINAR PROPOSAL SKRIPSI</div>
 
 <div class="ba-body">
     <p class="ba-justify">
         @if($terpisah)
-            Pada hari {{ $sesiUtama['tanggal'] }} Pukul {{ $sesiUtama['jam'] }} di {{ $sesiUtama['ruang'] }} (Pembimbing Utama)
-            dan hari {{ $sesiPend['tanggal'] }} Pukul {{ $sesiPend['jam'] }} di {{ $sesiPend['ruang'] }} (Pembimbing Pendamping)
+            Pada hari {{ $sesiUtama['tanggal'] }} Pukul {{ $sesiUtama['jam'] }} di Ruang {{ $sesiUtama['ruang'] }} (Pembimbing Utama)
+            dan hari {{ $sesiPend['tanggal'] }} Pukul {{ $sesiPend['jam'] }} di Ruang {{ $sesiPend['ruang'] }} (Pembimbing Pendamping)
             telah dilaksanakan Seminar Proposal Skripsi dengan:
         @else
-            Pada hari {{ $sesiUtama['tanggal'] }} Pukul {{ $sesiUtama['jam'] }} di {{ $sesiUtama['ruang'] }} telah dilaksanakan Seminar Proposal Skripsi dengan:
+            Pada hari {{ $sesiUtama['tanggal'] }} Pukul {{ $sesiUtama['jam'] }} di Ruang {{ $sesiUtama['ruang'] }} telah dilaksanakan Seminar Proposal Skripsi dengan:
         @endif
     </p>
 

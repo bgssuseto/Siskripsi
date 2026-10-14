@@ -82,6 +82,17 @@ class Sidang extends Model
     }
 
     /**
+     * Judul skripsi/proposal juga selalu HURUF KAPITAL (dan spasi berlebih
+     * dirapikan) — pendaftaran sempro & skripsi, edit admin, maupun impor.
+     */
+    public function setJudulSkripsiAttribute($value): void
+    {
+        $this->attributes['judul_skripsi'] = $value === null
+            ? null
+            : mb_strtoupper(preg_replace('/\s+/u', ' ', trim($value)));
+    }
+
+    /**
      * Booted model events.
      * Default anggota_penguji_2_id to dosen_pembimbing_utama_id if empty.
      * Only applies to skripsi/sidang, NOT sempro.
