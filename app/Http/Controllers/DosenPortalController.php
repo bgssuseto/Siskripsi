@@ -770,31 +770,41 @@ class DosenPortalController extends Controller
 
         if ($dosen) {
             $id = $dosen->id;
-            // Penguji: hanya ujian skripsi (sidang & jurnal).
-            $ujian = Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
+            $sidangs = Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
                 ->whereNotNull('periode_id')
-                ->where(fn ($q) => $q->where('ketua_penguji_id', $id)
+                ->where(fn ($q) => $q->where('dosen_pembimbing_utama_id', $id)
+                    ->orWhere('dosen_pembimbing_pendamping_id', $id)
+                    ->orWhere('ketua_penguji_id', $id)
                     ->orWhere('anggota_penguji_1_id', $id)
                     ->orWhere('anggota_penguji_2_id', $id))
-                ->get(['periode_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
-            // Pembimbing: sejak Sempro, tiap mahasiswa di periode pertama bimbingan
-            // — SK Pembimbing tidak perlu menunggu periode sidang skripsi.
-            $bimbingan = \App\Services\SkPdfService::bimbinganDosen($id);
+                ->get(['periode_id', 'gelombang', 'dosen_pembimbing_utama_id', 'dosen_pembimbing_pendamping_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
 
-            $periodes = Periode::whereIn('id', $ujian->pluck('periode_id')->merge($bimbingan->pluck('periode_id'))->unique())
-                ->orderByDesc('id')->get();
+            $periodes = Periode::whereIn('id', $sidangs->pluck('periode_id')->unique())->orderByDesc('id')->get();
 
-            $rows = $periodes->map(function (Periode $p) use ($ujian, $bimbingan, $id) {
-                $u = $ujian->where('periode_id', $p->id);
-                $b = $bimbingan->where('periode_id', $p->id);
+            $rows = $periodes->map(function (Periode $p) use ($sidangs, $id) {
+                $ps = $sidangs->where('periode_id', $p->id);
                 $hitung = fn ($koleksi, string $kolom) => $koleksi->filter(fn ($s) => (int) $s->{$kolom} === $id)->count();
 
+                // SK Pembimbing per gelombang — terbit begitu gelombang itu punya
+                // mahasiswa, tanpa menunggu gelombang terakhir / ganti semester.
+                $perGelombang = $ps
+                    ->groupBy(fn ($s) => $s->gelombang ?? 'tanpa')
+                    ->map(fn ($g, $kunci) => [
+                        'gelombang'  => $kunci,
+                        'utama'      => $hitung($g, 'dosen_pembimbing_utama_id'),
+                        'pendamping' => $g->filter(fn ($s) => (int) $s->dosen_pembimbing_utama_id !== $id && (int) $s->dosen_pembimbing_pendamping_id === $id)->count(),
+                    ])
+                    ->filter(fn ($g) => $g['utama'] + $g['pendamping'] > 0)
+                    ->sortBy(fn ($g) => $g['gelombang'] === 'tanpa' ? PHP_INT_MAX : (int) $g['gelombang'])
+                    ->values();
+
                 return [
-                    'periode'    => $p,
-                    'utama'      => $hitung($b, 'dosen_pembimbing_utama_id'),
-                    'pendamping' => $b->filter(fn ($s) => (int) $s->dosen_pembimbing_utama_id !== $id && (int) $s->dosen_pembimbing_pendamping_id === $id)->count(),
-                    'ketua'      => $hitung($u, 'ketua_penguji_id'),
-                    'anggota'    => $hitung($u, 'anggota_penguji_1_id') + $hitung($u, 'anggota_penguji_2_id'),
+                    'periode'       => $p,
+                    'utama'         => $hitung($ps, 'dosen_pembimbing_utama_id'),
+                    'pendamping'    => $perGelombang->sum('pendamping'),
+                    'ketua'         => $hitung($ps, 'ketua_penguji_id'),
+                    'anggota'       => $hitung($ps, 'anggota_penguji_1_id') + $hitung($ps, 'anggota_penguji_2_id'),
+                    'per_gelombang' => $perGelombang,
                 ];
             });
         }
@@ -805,18 +815,23 @@ class DosenPortalController extends Controller
     /**
      * Unduh SK Pembimbing / Penguji satu periode — hanya bagian dosen yang login.
      */
-    public function skDownload(Periode $periode, string $mode)
+    public function skDownload(Request $request, Periode $periode, string $mode)
     {
         abort_unless(in_array($mode, \App\Services\SkPdfService::MODES, true), 404);
 
         $dosen = Auth::user()->dosen;
         abort_unless($dosen, 403, 'Akun Anda belum terhubung dengan data dosen.');
 
-        $hasil = \App\Services\SkPdfService::build($mode, ['periode_id' => $periode->id], $dosen->id);
+        // ?gelombang=1|2|3|tanpa — kosong = seluruh periode.
+        $gelombang = $request->query('gelombang');
+        abort_unless($gelombang === null || $gelombang === 'tanpa' || ctype_digit((string) $gelombang), 404);
+
+        $hasil = \App\Services\SkPdfService::build($mode, ['periode_id' => $periode->id, 'gelombang' => $gelombang], $dosen->id);
 
         if (!$hasil) {
             $peran = $mode === 'penguji' ? 'penguji' : 'pembimbing';
-            return back()->with('warning', "Anda tidak tercatat sebagai {$peran} ujian skripsi pada {$periode->nama_periode}.");
+            $lingkup = $periode->nama_periode . (ctype_digit((string) $gelombang) ? " gelombang {$gelombang}" : '');
+            return back()->with('warning', "Anda tidak tercatat sebagai {$peran} ujian skripsi pada {$lingkup}.");
         }
 
         return $hasil['pdf']->download($hasil['filename']);

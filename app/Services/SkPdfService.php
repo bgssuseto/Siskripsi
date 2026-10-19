@@ -15,10 +15,8 @@ use Illuminate\Support\Collection;
  * mahasiswa per dosen). Dipakai menu Administrasi > SK (seluruh dosen) dan menu
  * SK di portal dosen (hanya bagian dosen yang login).
  *
- * SK hanya dihitung dari ujian skripsi (skripsi / sidang / jurnal) — sempro tidak —
- * KECUALI SK Pembimbing di portal dosen (lihat bimbinganDosen()): pembimbing
- * sudah membimbing sejak Sempro, jadi SK-nya bisa terbit tanpa menunggu
- * periode sidang skripsi.
+ * SK hanya dihitung dari ujian skripsi (skripsi / sidang / jurnal) — sempro tidak.
+ * Filter gelombang 'tanpa' = pendaftaran tanpa gelombang (input manual admin).
  */
 class SkPdfService
 {
@@ -42,34 +40,13 @@ class SkPdfService
 
         return Sidang::query()
             ->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))
-            ->when($gelombang !== null && $gelombang !== '', fn ($q) => $q->where('gelombang', $gelombang))
+            ->when($gelombang === 'tanpa', fn ($q) => $q->whereNull('gelombang'))
+            ->when($gelombang !== null && $gelombang !== '' && $gelombang !== 'tanpa', fn ($q) => $q->where('gelombang', $gelombang))
             ->when($filter['tanggal_mulai'] ?? null, fn ($q, $tgl) => $q->whereDate('tanggal_pendaftaran', '>=', $tgl))
             ->when($filter['tanggal_selesai'] ?? null, fn ($q, $tgl) => $q->whereDate('tanggal_pendaftaran', '<=', $tgl))
             ->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
             ->orderByRaw('tanggal IS NULL')->orderBy('tanggal')->orderBy('jam')->orderBy('nama_mahasiswa')
             ->get();
-    }
-
-    /**
-     * Mahasiswa bimbingan satu dosen untuk SK Pembimbing di portal dosen —
-     * dihitung sejak Sempro (pendaftaran disetujui) maupun ujian skripsi. Tiap
-     * mahasiswa hanya masuk SK SEKALI, yaitu pada periode PERTAMA dosen ini
-     * tercatat sebagai pembimbingnya (supaya tidak terbit dobel ketika mahasiswa
-     * yang sama lanjut sidang skripsi di periode berikutnya).
-     *
-     * @return Collection<int, Sidang>  satu record per mahasiswa (punya periode_id)
-     */
-    public static function bimbinganDosen(int $dosenId): Collection
-    {
-        return Sidang::query()
-            ->whereNotNull('periode_id')
-            ->where(fn ($q) => $q->where('dosen_pembimbing_utama_id', $dosenId)->orWhere('dosen_pembimbing_pendamping_id', $dosenId))
-            ->where(fn ($q) => $q->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
-                ->orWhere(fn ($w) => $w->where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'disetujui')))
-            ->orderBy('periode_id')->orderBy('id')
-            ->get()
-            ->unique(fn ($s) => $s->nim ?: 'nama:' . $s->nama_mahasiswa)
-            ->values();
     }
 
     /**
@@ -111,13 +88,7 @@ class SkPdfService
      */
     public static function build(string $mode, array $filter, ?int $hanyaDosenId = null): ?array
     {
-        // SK Pembimbing satu dosen (portal dosen) memakai bimbingan sejak Sempro.
-        $bimbingan = $mode === 'pembimbing' && $hanyaDosenId;
-        $sidangs = $bimbingan
-            ? self::bimbinganDosen($hanyaDosenId)->when($filter['periode_id'] ?? null, fn ($c, $pid) => $c->where('periode_id', $pid))->values()
-            : self::sidangs($filter);
-
-        $dosenRincian = self::dosenRincian($sidangs, $mode, $hanyaDosenId);
+        $dosenRincian = self::dosenRincian(self::sidangs($filter), $mode, $hanyaDosenId);
 
         if ($dosenRincian->isEmpty()) {
             return null;
@@ -126,12 +97,16 @@ class SkPdfService
         @set_time_limit(600);
 
         $namaPeriode  = Periode::find($filter['periode_id'] ?? null)?->nama_periode ?? 'Semua Periode';
+        // SK satu dosen per gelombang (portal dosen): sebut gelombangnya di isi surat.
+        $namaPeriodeSurat = $hanyaDosenId && is_numeric($filter['gelombang'] ?? null)
+            ? $namaPeriode . ' Gelombang ' . $filter['gelombang']
+            : $namaPeriode;
         $tanggalSurat = now()->timezone('Asia/Jakarta');
 
         $pdf = Pdf::loadView('administrasi.sk.pdf', [
             'mode'         => $mode,
-            'namaPeriode'  => $namaPeriode,
-            'kegiatan'     => $bimbingan ? ['nama' => 'Skripsi', 'hal' => 'Skripsi'] : ['nama' => 'Sidang Skripsi', 'hal' => 'Skripsi'],
+            'namaPeriode'  => $namaPeriodeSurat,
+            'kegiatan'     => ['nama' => 'Sidang Skripsi', 'hal' => 'Skripsi'],
             'dosenRincian' => $dosenRincian,
             'tanggalSurat' => $tanggalSurat->copy()->locale('id')->translatedFormat('j F Y'),
             'kaprodi'      => rescue(fn () => Kaprodi::untukTanggal($tanggalSurat)?->nama, null, false),

@@ -17,7 +17,7 @@
     <div class="mb-6">
         <h2 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">SK Pembimbing &amp; Penguji</h2>
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            SK Pembimbing terbit sejak mahasiswa bimbingan Anda disetujui mendaftar Sempro (tanpa menunggu periode sidang skripsi); SK Penguji dihitung dari ujian skripsi (sidang &amp; jurnal). Dokumen berisi surat permohonan SK beserta rekap dan rincian mahasiswa Anda.
+            Unduh SK Pembimbing dan SK Penguji ujian skripsi (sidang skripsi &amp; jurnal) Anda. SK Pembimbing tersedia <strong>per gelombang</strong> — bisa langsung diunduh tanpa menunggu gelombang terakhir atau pergantian semester. Dokumen berisi surat permohonan SK beserta rekap dan rincian mahasiswa Anda.
         </p>
     </div>
 
@@ -59,13 +59,26 @@
                                 </p>
                             </div>
                             @if($totalPembimbing > 0)
-                                <a href="{{ route('dosen.sk.download', [$p, 'pembimbing']) }}"
-                                   class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow-md transition-all">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M6 20h12a2 2 0 002-2V8l-6-6H6a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                    Unduh SK Pembimbing (PDF)
-                                </a>
+                                <ul class="space-y-2">
+                                    @foreach($row['per_gelombang'] as $g)
+                                        <li class="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white dark:bg-slate-900/60 ring-1 ring-inset ring-indigo-100 dark:ring-indigo-500/20 px-3 py-2.5">
+                                            <div class="min-w-0">
+                                                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-100">{{ $g['gelombang'] === 'tanpa' ? 'Tanpa Gelombang' : 'Gelombang ' . $g['gelombang'] }}</p>
+                                                <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ $g['utama'] }} Utama · {{ $g['pendamping'] }} Pendamping</p>
+                                            </div>
+                                            <a href="{{ route('dosen.sk.download', [$p, 'pembimbing']) }}?gelombang={{ $g['gelombang'] }}"
+                                               class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-extrabold shadow-sm transition-all">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M6 20h12a2 2 0 002-2V8l-6-6H6a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                                Unduh PDF
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                @if($row['per_gelombang']->count() > 1)
+                                    <a href="{{ route('dosen.sk.download', [$p, 'pembimbing']) }}" class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:underline">Unduh SK Pembimbing seluruh periode →</a>
+                                @endif
                             @else
-                                <span class="text-xs text-slate-400 dark:text-slate-500 italic">Tidak ada mahasiswa bimbingan baru pada periode ini.</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-500 italic">Tidak ada bimbingan ujian skripsi pada periode ini.</span>
                             @endif
                         </div>
 
