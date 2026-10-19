@@ -23,7 +23,7 @@ class PeriodeController extends Controller
             $query->where('nama_periode', 'like', '%' . $request->search . '%');
         }
 
-        $periodes = $query->orderBy('id', 'desc')->paginate(5)->withQueryString();
+        $periodes = $query->orderBy('id', 'desc')->paginate(25)->withQueryString();
 
         // Fetch all registration waves/periods
         $pendaftaranPeriodes = PendaftaranPeriode::with('periode')->orderBy('id', 'desc')->get();

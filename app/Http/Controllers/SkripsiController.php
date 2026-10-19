@@ -166,9 +166,9 @@ class SkripsiController extends Controller
         })->values();
 
         // Paginate (per_page options: 5, 10, 25, 100)
-        $perPage = (int) $request->get('per_page', 5);
+        $perPage = (int) $request->get('per_page', 25);
         if (!in_array($perPage, [5, 10, 25, 100])) {
-            $perPage = 5;
+            $perPage = 25;
         }
 
         $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('page') ?: 1;
@@ -554,9 +554,9 @@ class SkripsiController extends Controller
             ];
         })->values();
 
-        $perPage = (int) $request->get('per_page', 5);
+        $perPage = (int) $request->get('per_page', 25);
         if (!in_array($perPage, [5, 10, 25, 100])) {
-            $perPage = 5;
+            $perPage = 25;
         }
 
         $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('page') ?: 1;

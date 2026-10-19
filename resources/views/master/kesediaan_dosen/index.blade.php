@@ -239,8 +239,8 @@
                     <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tampilkan</label>
                     <select name="per_page" class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                         <option value="5" {{ request('per_page') == 5 ? 'selected' : '' }}>5 per halaman</option>
-                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 per halaman</option>
-                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 per halaman</option>
+                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10 per halaman</option>
+                        <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25 per halaman</option>
                         <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 per halaman</option>
                     </select>
                 </div>

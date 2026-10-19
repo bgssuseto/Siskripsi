@@ -153,7 +153,8 @@ html.dark .fc {
 }
 
 @layer components {
-    .ui-btn-primary   { @apply ui-btn bg-indigo-600 text-white shadow-sm hover:bg-indigo-700; }
+    .ui-btn-primary   { @apply ui-btn text-white bg-gradient-to-r from-indigo-600 to-violet-600 shadow-md shadow-indigo-500/25
+                               hover:from-indigo-700 hover:to-violet-700 hover:shadow-lg; }
     .ui-btn-secondary { @apply ui-btn bg-white text-slate-700 ring-1 ring-inset ring-slate-200 shadow-sm hover:bg-slate-50 hover:text-slate-900
                                dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-700 dark:hover:text-white; }
     .ui-btn-success   { @apply ui-btn bg-emerald-600 text-white shadow-sm hover:bg-emerald-700; }
@@ -162,19 +163,28 @@ html.dark .fc {
                                  dark:bg-slate-800 dark:text-rose-300 dark:ring-rose-500/30 dark:hover:bg-rose-500/10; }
 
     /* Chip info ringkas di header halaman (mis. periode aktif, nomor berikutnya) */
-    .ui-chip { @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-slate-600 ring-1 ring-inset ring-slate-200
-                      dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700; }
+    .ui-chip { @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white/80 text-indigo-700 ring-1 ring-inset ring-indigo-200
+                      dark:bg-slate-800 dark:text-indigo-200 dark:ring-indigo-500/30; }
 }
 
-/* Ikon SVG di kartu statistik lama (.stat-icon) mengikuti warna varian. */
+/* Ikon kartu statistik lama (.stat-icon): tile gradient berwarna + ikon putih. */
 .stat-icon svg { width: 22px; height: 22px; }
-.stat-icon.blue   { color: #2563eb; }
-.stat-icon.green  { color: #059669; }
-.stat-icon.violet { color: #7c3aed; }
-.stat-icon.amber  { color: #d97706; }
-.stat-icon.rose   { color: #e11d48; }
-html.dark .stat-icon.blue   { color: #93c5fd; }
-html.dark .stat-icon.green  { color: #6ee7b7; }
-html.dark .stat-icon.violet { color: #c4b5fd; }
-html.dark .stat-icon.amber  { color: #fcd34d; }
-html.dark .stat-icon.rose   { color: #fda4af; }
+.stat-icon.blue, .stat-icon.green, .stat-icon.violet, .stat-icon.purple, .stat-icon.amber, .stat-icon.rose { color: #fff !important; }
+.stat-icon.blue   { background: linear-gradient(135deg, #3b82f6, #4f46e5) !important; box-shadow: 0 6px 14px -4px rgba(79,70,229,.45); }
+.stat-icon.green  { background: linear-gradient(135deg, #10b981, #0d9488) !important; box-shadow: 0 6px 14px -4px rgba(13,148,136,.45); }
+.stat-icon.violet,
+.stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #c026d3) !important; box-shadow: 0 6px 14px -4px rgba(139,92,246,.45); }
+.stat-icon.amber  { background: linear-gradient(135deg, #fbbf24, #f97316) !important; box-shadow: 0 6px 14px -4px rgba(249,115,22,.45); }
+.stat-icon.rose   { background: linear-gradient(135deg, #f43f5e, #db2777) !important; box-shadow: 0 6px 14px -4px rgba(219,39,119,.45); }
+
+/* Header tabel data di seluruh halaman: tint indigo lembut (kalender FullCalendar dikecualikan). */
+#page-content table:not([class*="fc-"]) > thead > tr > th {
+    background-color: #eef2ff !important;
+    color: #4338ca !important;
+    border-bottom: 1px solid #e0e7ff !important;
+}
+html.dark #page-content table:not([class*="fc-"]) > thead > tr > th {
+    background-color: rgba(67, 97, 238, 0.14) !important;
+    color: #a5b4fc !important;
+    border-bottom-color: rgba(99, 102, 241, 0.25) !important;
+}

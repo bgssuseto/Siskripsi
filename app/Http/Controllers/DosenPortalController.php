@@ -292,7 +292,7 @@ class DosenPortalController extends Controller
                 });
             }
 
-            $schedules = $query->orderBy('tanggal', 'desc')->orderBy('jam', 'asc')->paginate(10)->withQueryString();
+            $schedules = $query->orderBy('tanggal', 'desc')->orderBy('jam', 'asc')->paginate(25)->withQueryString();
         }
 
         return view('dosen.sempro', compact('schedules', 'dosen'));
@@ -362,7 +362,7 @@ class DosenPortalController extends Controller
                 });
             }
 
-            $schedules = $query->orderBy('tanggal', 'desc')->orderBy('jam', 'asc')->paginate(10)->withQueryString();
+            $schedules = $query->orderBy('tanggal', 'desc')->orderBy('jam', 'asc')->paginate(25)->withQueryString();
         }
 
         return view('dosen.skripsi', compact('schedules', 'dosen'));

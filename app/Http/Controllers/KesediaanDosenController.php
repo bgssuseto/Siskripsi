@@ -37,9 +37,9 @@ class KesediaanDosenController extends Controller
             });
         }
 
-        $perPage = (int) $request->get('per_page', 10);
+        $perPage = (int) $request->get('per_page', 25);
         if (!in_array($perPage, [5, 10, 25, 100])) {
-            $perPage = 10;
+            $perPage = 25;
         }
 
         $rawKesediaans = $query->orderBy('tanggal', 'asc')->get();

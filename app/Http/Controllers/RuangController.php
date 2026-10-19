@@ -21,7 +21,7 @@ class RuangController extends Controller
             });
         }
 
-        $ruangs = $query->latest()->paginate(5)->withQueryString();
+        $ruangs = $query->latest()->paginate(25)->withQueryString();
 
         return view('master.ruang.index', compact('ruangs'));
     }

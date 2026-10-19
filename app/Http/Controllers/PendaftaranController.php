@@ -88,7 +88,7 @@ class PendaftaranController extends Controller
 
         $sidangs = $query->orderByRaw("CASE WHEN verifikasi_status = 'menunggu' THEN 1 WHEN verifikasi_status = 'ditolak' THEN 2 ELSE 3 END")
             ->orderByDesc('id')
-            ->paginate(10)
+            ->paginate(25)
             ->withQueryString();
 
         $periodes = Periode::orderBy('id', 'desc')->get();
@@ -193,7 +193,7 @@ class PendaftaranController extends Controller
 
         $sidangs = $query->orderByRaw("CASE WHEN verifikasi_status = 'menunggu' THEN 1 WHEN verifikasi_status = 'ditolak' THEN 2 ELSE 3 END")
             ->orderByDesc('id')
-            ->paginate(10)
+            ->paginate(25)
             ->withQueryString();
 
         $periodes = Periode::orderBy('id', 'desc')->get();

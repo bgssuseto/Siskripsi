@@ -134,7 +134,7 @@ class BebasProdiController extends Controller
         $pengajuans = $query
             ->orderByRaw("CASE status WHEN 'menunggu' THEN 0 WHEN 'ditolak' THEN 1 ELSE 2 END")
             ->orderByDesc('submitted_at')
-            ->paginate(20)
+            ->paginate(25)
             ->withQueryString();
 
         $counts = BebasProdi::selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');

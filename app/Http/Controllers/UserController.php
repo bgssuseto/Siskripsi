@@ -34,7 +34,7 @@ class UserController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->with('additionalRoles')->latest()->paginate(5)->withQueryString();
+        $users = $query->with('additionalRoles')->latest()->paginate(25)->withQueryString();
 
         $stats = [
             'total' => User::count(),

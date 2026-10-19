@@ -4,7 +4,7 @@
     <div class="space-y-6">
 
         <!-- Header -->
-        <x-page-header title="Riwayat Aktivitas (Audit Log)" icon="clock" accent="slate" class="!mb-0">
+        <x-page-header title="Riwayat Aktivitas (Audit Log)" icon="clock" accent="sky" class="!mb-0">
             <x-slot:description>Jejak perubahan jadwal, verifikasi pendaftaran, dan data dosen — siapa mengubah apa dan kapan.</x-slot:description>
         </x-page-header>
 

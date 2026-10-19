@@ -28,7 +28,7 @@ class DosenController extends Controller
             });
         }
 
-        $dosens = $query->latest()->paginate(5)->withQueryString();
+        $dosens = $query->latest()->paginate(25)->withQueryString();
 
         return view('master.dosen.index', compact('dosens'));
     }

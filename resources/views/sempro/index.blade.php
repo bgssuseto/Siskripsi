@@ -358,9 +358,9 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tampilkan</label>
                     <select name="per_page" class="filter-select w-full">
-                        <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
+                        <option value="5" {{ request('per_page') == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
                         <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>Tampilkan 10 data</option>
-                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
+                        <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
                         <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Tampilkan 100 data</option>
                     </select>
                 </div>

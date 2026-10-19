@@ -175,7 +175,7 @@
         },
     }">
 
-        <x-page-header title="Manajemen Menu" icon="cog" accent="slate">
+        <x-page-header title="Manajemen Menu" icon="cog" accent="violet">
             <x-slot:description>Kelola hak akses menu dinamis per-user dan struktur menu sistem.</x-slot:description>
             <x-slot:actions>
                 @php
