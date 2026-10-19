@@ -3,27 +3,17 @@
 
     <div class="space-y-6">
 
-        {{-- Header Title --}}
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" x-data="{ importModal: false }">
-            <div>
-                <h2 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Data Kesediaan Dosen Menguji</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Informasi ketersediaan hari, tanggal, dan rentang jam dosen untuk penjadwalan ujian sempro dan skripsi.</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <button @click="importModal = true"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-lg shadow-emerald-600/25 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                    </svg>
-                    Import Excel Kesediaan
-                </button>
+        <div x-data="{ importModal: false }">
+        <x-page-header title="Data Kesediaan Dosen Menguji" icon="calendar" accent="emerald">
+            <x-slot:description>Informasi ketersediaan hari, tanggal, dan rentang jam dosen untuk penjadwalan ujian sempro dan skripsi.</x-slot:description>
+            <x-slot:actions>
+                <div class="flex items-center gap-2">
+                <button @click="importModal = true" class="ui-btn-secondary"><x-icon name="upload" class="w-4 h-4" /> Import Excel Kesediaan</button>
                 <form action="{{ route('master.kesediaan-dosen.destroy-all') }}" method="POST"
                       onsubmit="return confirm('⚠️ KONFIRMASI HAPUS SEMUA DATA:\nApakah Anda yakin ingin menghapus SELURUH data kesediaan dosen (semua dosen, semua periode/gelombang)?\n\nTindakan ini tidak dapat dibatalkan!');" class="inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm shadow-lg shadow-rose-600/25 transition-all">
-                        🗑️ Hapus Semua
-                    </button>
+                    <button type="submit" class="ui-btn-danger-soft"><x-icon name="trash" class="w-4 h-4" /> Hapus Semua</button>
                 </form>
             </div>
 
@@ -35,11 +25,9 @@
                     <div class="inline-block relative z-10 w-full max-w-md my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
                         <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                             <h3 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">Import Kesediaan dari Excel</h3>
-                            <button @click="importModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button @click="importModal = false" class="ui-btn-secondary"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
+                                </svg> </button>
                         </div>
 
                         <form method="POST" action="{{ route('master.kesediaan-dosen.import') }}" enctype="multipart/form-data" class="p-6 space-y-4">
@@ -84,26 +72,28 @@
                             </div>
 
                             <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-700">
-                                <button type="button" @click="importModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">Batal</button>
-                                <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md shadow-emerald-600/30">Import Data</button>
+                                <button type="button" @click="importModal = false" class="ui-btn-secondary">Batal</button>
+                                <button type="submit" class="ui-btn-secondary"><x-icon name="upload" class="w-4 h-4" /> Import Data</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
+            </x-slot:actions>
+        </x-page-header>
         </div>
 
         @if(session('success'))
             <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-semibold flex items-center justify-between shadow-xs">
                 <span>{{ session('success') }}</span>
-                <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800">✕</button>
+                <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
         @endif
 
         @if(session('error'))
             <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm font-semibold flex items-center justify-between shadow-xs">
                 <span>{{ session('error') }}</span>
-                <button onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-800">✕</button>
+                <button onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-800"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
         @endif
 
@@ -111,8 +101,8 @@
         @if($activePeriode)
             <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm mb-6">
                 <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700 mb-5">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg border border-indigo-100 dark:border-indigo-700 shadow-xs shrink-0">
-                        ⚙️
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold border border-indigo-100 dark:border-indigo-700 shadow-xs shrink-0">
+                        <x-icon name="cog" class="w-5 h-5" />
                     </div>
                     <div>
                         <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Pengaturan Akses Form Kesediaan Dosen</h3>
@@ -126,23 +116,23 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Status Akses Form Dosen</label>
                             <select name="show_form_kesediaan" class="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200 transition-all cursor-pointer">
-                                <option value="1" {{ $activePeriode->show_form_kesediaan ? 'selected' : '' }}>🟢 Buka (Form Tampil di Dashboard Dosen)</option>
-                                <option value="0" {{ !$activePeriode->show_form_kesediaan ? 'selected' : '' }}>🔴 Tutup (Form Disembunyikan)</option>
+                                <option value="1" {{ $activePeriode->show_form_kesediaan ? 'selected' : '' }}> Buka (Form Tampil di Dashboard Dosen)</option>
+                                <option value="0" {{ !$activePeriode->show_form_kesediaan ? 'selected' : '' }}> Tutup (Form Disembunyikan)</option>
                             </select>
                         </div>
 
                         <div>
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Status Penguncian Input</label>
                             <select name="lock_form_kesediaan" class="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200 transition-all cursor-pointer">
-                                <option value="0" {{ !$activePeriode->lock_form_kesediaan ? 'selected' : '' }}>🔓 Buka Kunci (Dosen Bisa Tambah/Hapus Slot)</option>
-                                <option value="1" {{ $activePeriode->lock_form_kesediaan ? 'selected' : '' }}>🔒 Kunci Form (Input Dinonaktifkan/Terkunci)</option>
+                                <option value="0" {{ !$activePeriode->lock_form_kesediaan ? 'selected' : '' }}> Buka Kunci (Dosen Bisa Tambah/Hapus Slot)</option>
+                                <option value="1" {{ $activePeriode->lock_form_kesediaan ? 'selected' : '' }}> Kunci Form (Input Dinonaktifkan/Terkunci)</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="flex justify-end pt-2">
                         <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                            <span>💾</span> Simpan Pengaturan
+                            <span><x-icon name="save" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Simpan Pengaturan
                         </button>
                     </div>
                 </form>
@@ -151,8 +141,8 @@
             {{-- Link Publik Form Kesediaan (Tanpa Login) --}}
             <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm mb-6" x-data="{ copied: false }">
                 <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700 mb-5">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-100 dark:border-emerald-700 shadow-xs shrink-0">
-                        🔗
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold border border-emerald-100 dark:border-emerald-700 shadow-xs shrink-0">
+                        <x-icon name="link" class="w-5 h-5" />
                     </div>
                     <div>
                         <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Link Publik Form Kesediaan (Tanpa Login)</h3>
@@ -162,11 +152,11 @@
 
                 @if($activePeriode->isKesediaanPublicLinkActive())
                     <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 mb-3">
-                        🟢 AKTIF SEKARANG
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 align-middle"></span> AKTIF SEKARANG
                     </span>
                 @else
                     <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 mb-3">
-                        ⚪ TIDAK AKTIF — form ditutup atau dikunci
+                        <span class="inline-block w-2 h-2 rounded-full bg-slate-300 align-middle"></span> TIDAK AKTIF — form ditutup atau dikunci
                     </span>
                 @endif
 
@@ -176,20 +166,20 @@
                     <button type="button"
                             @click="navigator.clipboard.writeText(document.getElementById('kesediaan-public-link').value); copied = true; setTimeout(() => copied = false, 1500)"
                             class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shrink-0">
-                        <span x-show="!copied">📋 Salin Link</span>
-                        <span x-show="copied">✅ Tersalin</span>
+                        <span x-show="!copied"><x-icon name="clipboard-list" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Salin Link</span>
+                        <span x-show="copied"><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tersalin</span>
                     </button>
                     <form method="POST" action="{{ route('master.kesediaan-dosen.reset-public-token') }}" onsubmit="return confirm('Reset link publik? Link lama yang sudah dibagikan akan langsung tidak berlaku.')" class="shrink-0">
                         @csrf
                         <button type="submit" class="w-full px-4 py-2.5 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-xs font-bold transition-all">
-                            🔄 Reset Link
+                            <x-icon name="refresh" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset Link
                         </button>
                     </form>
                 </div>
             </div>
         @else
             <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-xs font-bold shadow-xs mb-6 flex items-center gap-3">
-                <span class="text-lg">⚠️</span>
+                <span class="text-lg"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                 <span>Tidak ada periode akademik aktif saat ini. Silakan aktifkan salah satu periode akademik di menu Master Periode terlebih dahulu untuk dapat mengatur akses form kesediaan dosen.</span>
             </div>
         @endif
@@ -197,8 +187,8 @@
         {{-- Hak Akses Pengisian Dosen Section --}}
         <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm mb-6">
             <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700 mb-5">
-                <div class="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold text-lg border border-violet-100 dark:border-violet-700 shadow-xs shrink-0">
-                    🔑
+                <div class="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold border border-violet-100 dark:border-violet-700 shadow-xs shrink-0">
+                    <x-icon name="lock" class="w-5 h-5" />
                 </div>
                 <div>
                     <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Manajemen Hak Akses Pengisian Dosen</h3>
@@ -215,11 +205,11 @@
                             <div class="mt-2">
                                 @if($d->can_fill_kesediaan)
                                     <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        🟢 Akses Aktif
+                                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 align-middle"></span> Akses Aktif
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
-                                        🔴 Dibatasi
+                                        <span class="inline-block w-2 h-2 rounded-full bg-rose-500 align-middle"></span> Dibatasi
                                     </span>
                                 @endif
                             </div>
@@ -280,7 +270,7 @@
 
             <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-xs transition-colors cursor-pointer">Filter</button>
             @if(request()->hasAny(['search','dosen_id','periode_id','per_page']))
-                <a href="{{ route('master.kesediaan-dosen.index') }}" class="px-4 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-sm rounded-xl transition-colors">✕ Reset</a>
+                <a href="{{ route('master.kesediaan-dosen.index') }}" class="px-4 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-sm rounded-xl transition-colors"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset</a>
             @endif
         </form>
 
@@ -314,7 +304,7 @@
                                     <div class="flex flex-wrap gap-1.5 max-w-md">
                                         @foreach($item['dates'] as $date)
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-xs font-bold whitespace-nowrap">
-                                                📅 {{ \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('l, d F Y') }}
+                                                <x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('l, d F Y') }}
                                             </span>
                                         @endforeach
                                     </div>
@@ -351,7 +341,7 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="text-center py-12 text-slate-400 dark:text-slate-500">
-                                    <div class="text-3xl mb-2">📝</div>
+                                    <div class="text-3xl mb-2"><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></div>
                                     <div class="font-bold text-slate-600 dark:text-slate-400">Belum Ada Data Kesediaan Dosen</div>
                                     <div class="text-xs text-slate-400 dark:text-slate-500 mt-1">Dosen akan mengisi kesediaan menguji melalui dashboard portal dosen.</div>
                                 </td>

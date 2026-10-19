@@ -175,40 +175,24 @@
         },
     }">
 
-        <!-- Page Header & Action Button -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div>
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Manajemen Menu</h2>
-                <p class="text-sm text-slate-500 mt-1">Kelola hak akses menu dinamis per-user dan struktur menu sistem.</p>
-            </div>
-            @php
+        <x-page-header title="Manajemen Menu" icon="cog" accent="slate">
+            <x-slot:description>Kelola hak akses menu dinamis per-user dan struktur menu sistem.</x-slot:description>
+            <x-slot:actions>
+                @php
                 $dosenMenuIds = \Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'dosen')->pluck('menu_id')->toArray();
                 $koordinatorMenuIds = \Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'koordinator')->pluck('menu_id')->toArray();
             @endphp
             <div class="flex gap-2 flex-wrap">
-                <button @click="openRoleAccessModal('koordinator', {{ json_encode($koordinatorMenuIds) }})"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm shadow-md shadow-blue-500/20 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button @click="openRoleAccessModal('koordinator', {{ json_encode($koordinatorMenuIds) }})" class="ui-btn-secondary"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-4.13a4 4 0 100-8 4 4 0 000 8zm-8 8a4 4 0 018 0"/>
-                    </svg>
-                    Atur Akses Role Koordinator
-                </button>
-                <button @click="openRoleAccessModal('dosen', {{ json_encode($dosenMenuIds) }})"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-sm shadow-md shadow-orange-500/20 hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </svg> Atur Akses Role Koordinator</button>
+                <button @click="openRoleAccessModal('dosen', {{ json_encode($dosenMenuIds) }})" class="ui-btn-secondary"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
-                    Atur Akses Role Dosen
-                </button>
-                <button @click="createMenuModal = true"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tambah Menu Baru
-                </button>
+                    </svg> Atur Akses Role Dosen</button>
+                <button @click="createMenuModal = true" class="ui-btn-primary"><x-icon name="plus" class="w-4 h-4" /> Tambah Menu Baru</button>
             </div>
-        </div>
+            </x-slot:actions>
+        </x-page-header>
 
         <!-- Summary Stat Cards (5 Grid Cards) -->
         <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">

@@ -139,3 +139,42 @@ html.dark .fc {
 .live-filter-progress.is-active { width: 75%; opacity: 1; transition: width 2.5s cubic-bezier(.1, .7, .2, 1), opacity .1s; }
 #page-content.live-filter-loading table tbody,
 #page-content.live-filter-loading [data-live-results] { opacity: .55; transition: opacity .15s; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   UI kit seragam (dipakai header halaman, toolbar, dan kartu statistik).
+   Gaya: kartu netral + aksen warna seperlunya — selaras dengan x-page-header,
+   kartu progress mahasiswa, dan agenda dosen.
+   ══════════════════════════════════════════════════════════════════════ */
+@utility ui-btn {
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap
+           transition-all duration-150 cursor-pointer select-none active:scale-[.98]
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500
+           dark:focus-visible:ring-offset-slate-900 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+@layer components {
+    .ui-btn-primary   { @apply ui-btn bg-indigo-600 text-white shadow-sm hover:bg-indigo-700; }
+    .ui-btn-secondary { @apply ui-btn bg-white text-slate-700 ring-1 ring-inset ring-slate-200 shadow-sm hover:bg-slate-50 hover:text-slate-900
+                               dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-700 dark:hover:text-white; }
+    .ui-btn-success   { @apply ui-btn bg-emerald-600 text-white shadow-sm hover:bg-emerald-700; }
+    .ui-btn-danger    { @apply ui-btn bg-rose-600 text-white shadow-sm hover:bg-rose-700; }
+    .ui-btn-danger-soft { @apply ui-btn bg-white text-rose-600 ring-1 ring-inset ring-rose-200 hover:bg-rose-50
+                                 dark:bg-slate-800 dark:text-rose-300 dark:ring-rose-500/30 dark:hover:bg-rose-500/10; }
+
+    /* Chip info ringkas di header halaman (mis. periode aktif, nomor berikutnya) */
+    .ui-chip { @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-slate-600 ring-1 ring-inset ring-slate-200
+                      dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700; }
+}
+
+/* Ikon SVG di kartu statistik lama (.stat-icon) mengikuti warna varian. */
+.stat-icon svg { width: 22px; height: 22px; }
+.stat-icon.blue   { color: #2563eb; }
+.stat-icon.green  { color: #059669; }
+.stat-icon.violet { color: #7c3aed; }
+.stat-icon.amber  { color: #d97706; }
+.stat-icon.rose   { color: #e11d48; }
+html.dark .stat-icon.blue   { color: #93c5fd; }
+html.dark .stat-icon.green  { color: #6ee7b7; }
+html.dark .stat-icon.violet { color: #c4b5fd; }
+html.dark .stat-icon.amber  { color: #fcd34d; }
+html.dark .stat-icon.rose   { color: #fda4af; }

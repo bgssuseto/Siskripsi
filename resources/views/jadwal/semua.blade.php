@@ -2,31 +2,12 @@
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
 
     <!-- Header -->
-    <div class="relative overflow-hidden rounded-3xl bg-slate-900 dark:bg-slate-950 p-6 sm:p-7 text-white shadow-xl border border-slate-800">
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-extrabold border border-indigo-400/30 mb-2.5">
-                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-                    Khusus Super Admin
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Semua Jadwal</h1>
-                <p class="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                    Seluruh jadwal Seminar Proposal dan Sidang Skripsi/Jurnal yang telah diplotting, digabung dalam satu tampilan.
-                    Saring berdasarkan hari, penguji/pembimbing, atau ruang.
-                </p>
-            </div>
-            <div class="flex gap-3 shrink-0">
-                <div class="px-4 py-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center shadow-md">
-                    <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Sempro</p>
-                    <p class="text-lg font-extrabold text-white mt-0.5">{{ $totalSempro }}</p>
-                </div>
-                <div class="px-4 py-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center shadow-md">
-                    <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Skripsi/Jurnal</p>
-                    <p class="text-lg font-extrabold text-white mt-0.5">{{ $totalSkripsi }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <x-page-header title="Semua Jadwal" subtitle="Seluruh jadwal Seminar Proposal dan Sidang Skripsi/Jurnal yang telah diplotting, digabung dalam satu tampilan. Saring berdasarkan hari, penguji/pembimbing, atau ruang." icon="calendar" accent="indigo">
+            <x-slot:actions>
+                <span class="ui-chip">Sempro: <strong class="text-slate-900 dark:text-white">{{ $totalSempro }}</strong></span>
+                <span class="ui-chip">Skripsi/Jurnal: <strong class="text-slate-900 dark:text-white">{{ $totalSkripsi }}</strong></span>
+            </x-slot:actions>
+        </x-page-header>
 
     <!-- Filter -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-5">
@@ -72,10 +53,10 @@
             </x-filter-popover>
 
             <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md hover:bg-indigo-700 border border-indigo-500 cursor-pointer">
-                🔍 Cari &amp; Filter
+                <x-icon name="search" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Cari &amp; Filter
             </button>
             @if(request()->hasAny(['search','hari','ruang_id','penguji_id']))
-                <a href="{{ route('jadwal.semua.index') }}" class="px-4 py-2.5 bg-slate-600 text-white font-extrabold text-xs rounded-2xl hover:bg-slate-700 transition-colors border border-slate-500">✕ Reset</a>
+                <a href="{{ route('jadwal.semua.index') }}" class="px-4 py-2.5 bg-slate-600 text-white font-extrabold text-xs rounded-2xl hover:bg-slate-700 transition-colors border border-slate-500"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset</a>
             @endif
         </form>
     </div>
@@ -133,7 +114,7 @@
                     @empty
                         <tr>
                             <td colspan="6" class="py-14 px-6 text-center bg-slate-50/40 dark:bg-slate-900/40">
-                                <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl">📅</div>
+                                <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-2"><x-icon name="calendar" class="w-5 h-5" /></div>
                                 <h3 class="text-xs font-extrabold text-slate-800 dark:text-slate-200">Tidak Ada Jadwal Ditemukan</h3>
                                 <p class="text-[11px] text-slate-400 mt-1">Coba ubah atau reset filter yang digunakan.</p>
                             </td>

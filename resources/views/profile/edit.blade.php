@@ -1,65 +1,43 @@
 <x-app-layout title="Kelola Profil Saya">
 <div class="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
     
-    <!-- Profile Summary Card Header -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
-        <div class="absolute -right-10 -top-10 w-52 h-52 bg-indigo-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute right-32 -bottom-10 w-40 h-40 bg-violet-500/10 rounded-full blur-2xl"></div>
-
-        <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="flex flex-col sm:flex-row items-center sm:items-center gap-5 text-center sm:text-left">
-                
-                <!-- Avatar Thumbnail -->
-                <div class="relative shrink-0">
-                    @if($user->foto_profil)
-                        <img src="{{ asset($user->foto_profil) }}" alt="{{ $user->name }}" 
-                             class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-indigo-400/30 shadow-lg ring-4 ring-white/10">
-                    @else
-                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white font-extrabold flex items-center justify-center text-3xl sm:text-4xl border-2 border-indigo-400/30 shadow-lg ring-4 ring-white/10">
-                            {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
-                        </div>
-                    @endif
-                    <span class="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 shadow-xs" title="Terverifikasi"></span>
-                </div>
-
-                <!-- User Meta Information -->
-                <div class="space-y-1">
-                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                            {{ $user->role_label }}
-                        </span>
-                        <span class="text-[11px] text-indigo-300/80 font-bold">
-                            ID: #{{ $user->id }}
-                        </span>
-                    </div>
-
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{{ $user->name }}</h1>
-                    <p class="text-xs text-indigo-200/90 font-medium">📧 {{ $user->email }}</p>
-                </div>
-            </div>
-
-            <!-- Right Status & NIM Badge -->
-            <div class="flex flex-col items-center md:items-end gap-2 shrink-0">
-                <div class="px-3.5 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/15 text-[11px] text-indigo-200 font-extrabold flex items-center gap-2 shadow-inner">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Status: Akun Aktif
-                </div>
-                @if($user->nim)
-                    <div class="px-3.5 py-1.5 bg-indigo-500/20 rounded-2xl border border-indigo-400/30 text-center md:text-right">
-                        <p class="text-[9.5px] text-indigo-300 font-bold uppercase tracking-wider">NIM Mahasiswa</p>
-                        <p class="text-xs font-mono font-extrabold text-white mt-0.5">{{ $user->nim }}</p>
+    <!-- Ringkasan Profil -->
+    <section class="bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-3xl shadow-sm p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-5">
+            <div class="relative shrink-0 self-start sm:self-auto">
+                @if($user->foto_profil)
+                    <img src="{{ asset($user->foto_profil) }}" alt="{{ $user->name }}" class="w-20 h-20 rounded-2xl object-cover ring-1 ring-slate-200 dark:ring-slate-700">
+                @else
+                    <div class="w-20 h-20 rounded-2xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 ring-1 ring-inset ring-indigo-100 dark:ring-indigo-500/20 font-extrabold flex items-center justify-center text-3xl">
+                        {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
                     </div>
                 @endif
+                <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-slate-900" title="Akun aktif"></span>
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 break-words">{{ $user->name }}</h1>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 min-w-0">
+                    <x-icon name="mail" class="w-4 h-4 shrink-0" /> <span class="truncate">{{ $user->email }}</span>
+                </p>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold border {{ $user->role_badge_class }}">{{ $user->role_label }}</span>
+                    @if($user->nim)
+                        <span class="ui-chip">NIM: <strong class="font-mono text-slate-900 dark:text-white">{{ $user->nim }}</strong></span>
+                    @endif
+                    <span class="ui-chip"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Akun aktif</span>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
     @if(session('success'))
         <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xs">
             <div class="flex items-center gap-2">
-                <span class="text-base">✅</span>
+                <span class="text-base"><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                 <span>{{ session('success') }}</span>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 font-bold">✕</button>
+            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 font-bold"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
         </div>
     @endif
 
@@ -71,8 +49,8 @@
             <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-6">
                 
                 <div class="pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-lg shrink-0 border border-indigo-100 dark:border-indigo-900">
-                        👤
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900">
+                        <x-icon name="user" class="w-5 h-5" />
                     </div>
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Informasi Pribadi & Kontak</h2>
@@ -116,7 +94,7 @@
                             <!-- Upload Button Trigger -->
                             <div class="space-y-1.5 text-center sm:text-left flex-1">
                                 <label for="foto_profil" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl border border-slate-300 dark:border-slate-600 shadow-2xs cursor-pointer transition-colors">
-                                    <span>📁 Pilih Foto Baru</span>
+                                    <span><x-icon name="folder" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Pilih Foto Baru</span>
                                 </label>
                                 <input type="file" id="foto_profil" name="foto_profil" @change="handleFile($event)" accept="image/*" class="sr-only">
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium" x-text="fileName ? 'File terpilih: ' + fileName : 'Format: JPG, PNG, WEBP (Maks 2MB)'"></p>
@@ -204,8 +182,8 @@
             <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-6">
                 
                 <div class="pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center text-lg shrink-0 border border-amber-100 dark:border-amber-900">
-                        🔒
+                    <div class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-900">
+                        <x-icon name="lock" class="w-5 h-5" />
                     </div>
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Perbarui Kata Sandi</h2>

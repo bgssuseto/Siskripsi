@@ -1,15 +1,7 @@
 <x-app-layout title="Daftar Sempro">
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6" x-data="{ regModal: false }">
     <!-- Hero Banner Header -->
-    <div class="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-extrabold mb-1">Pendaftaran Seminar Proposal (Sempro)</h1>
-            <p class="text-xs text-indigo-200">Kelola riwayat dan pengajuan Seminar Proposal Anda dari halaman ini.</p>
-        </div>
-        <span class="px-3.5 py-1.5 bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 text-xs font-bold rounded-xl shrink-0">
-            Sempro Mahasiswa
-        </span>
-    </div>
+    <x-page-header title="Pendaftaran Seminar Proposal (Sempro)" subtitle="Kelola riwayat dan pengajuan Seminar Proposal Anda dari halaman ini." icon="document" accent="indigo"></x-page-header>
 
 @php
     $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
@@ -69,29 +61,29 @@
                     <div class="mt-4">
                         @if($user->status_kelulusan === 'lulus')
                             <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
-                                <span>🎓</span> Anda telah dinyatakan LULUS. Pendaftaran ditutup.
+                                <span><x-icon name="academic" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Anda telah dinyatakan LULUS. Pendaftaran ditutup.
                             </div>
                         @elseif($needsCoordinator)
                             <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 font-extrabold flex items-center gap-2">
-                                <span>⚠️</span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
+                                <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
                             </div>
                         @elseif(!$mySidang)
                             <button @click="regModal = true" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer">
-                                <span>📝</span> Ajukan Pendaftaran Sempro
+                                <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Ajukan Pendaftaran Sempro
                             </button>
                         @elseif($mySidang->verifikasi_status === 'ditolak')
                             <button @click="regModal = true" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer">
-                                <span>✏️</span> Revisi Pendaftaran Sempro
+                                <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Revisi Pendaftaran Sempro
                             </button>
                         @elseif($mySidang->verifikasi_status === 'disetujui')
                             @php $waLink = optional($mySidang->periode)->link_grup_wa_sempro; @endphp
                             <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 space-y-2">
                                 <p class="text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
-                                    <span>✅</span> Pendaftaran Anda telah terverifikasi.
+                                    <span><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Pendaftaran Anda telah terverifikasi.
                                 </p>
                                 @if($waLink)
                                     <a href="{{ route('mahasiswa.sidang.join-wa', $mySidang) }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
-                                        <span>💬</span> Join Grup WhatsApp
+                                        <span><x-icon name="chat" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Join Grup WhatsApp
                                     </a>
                                 @else
                                     <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-semibold italic">Link grup WA belum diatur oleh admin.</p>
@@ -99,7 +91,7 @@
                             </div>
                         @else
                             <div class="bg-indigo-100 dark:bg-indigo-900/60 border border-indigo-300 dark:border-indigo-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white font-extrabold flex items-center gap-2">
-                                <span>ℹ️</span> Pendaftaran Anda telah terkirim dan sedang diproses.
+                                <span><x-icon name="info" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Pendaftaran Anda telah terkirim dan sedang diproses.
                             </div>
                         @endif
                     </div>
@@ -111,8 +103,8 @@
         <div class="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-6 border border-slate-200/80 dark:border-slate-700 flex flex-col gap-5">
             <!-- Header -->
             <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700">
-                <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg font-bold shrink-0 border border-indigo-200 dark:border-indigo-800">
-                    📋
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold shrink-0 border border-indigo-200 dark:border-indigo-800">
+                    <x-icon name="clipboard-list" class="w-5 h-5" />
                 </div>
                 <div>
                     <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Syarat & Ketentuan Pendaftaran Seminar Proposal</h2>
@@ -159,7 +151,7 @@
             <!-- Box Informasi Pembayaran BSI -->
             <div class="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/80 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-200 mt-auto">
                 <div class="flex items-center gap-3">
-                    <span class="text-xl">💳</span>
+                    <span class="text-xl"><x-icon name="credit-card" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <div>
                         <p class="font-extrabold">Pembayaran Administrasi (Bank BSI)</p>
                         <p class="text-[11px] text-indigo-700 dark:text-indigo-300 mt-0.5">No. Rek: <strong class="font-mono font-bold">7318709593</strong> (A.n. Ahmad Abdul Chamid / Alvin R)</p>
@@ -177,8 +169,8 @@
     <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 overflow-hidden">
         <!-- Card Header -->
         <div class="flex items-center gap-3 px-6 py-4 bg-rose-50/60 dark:bg-rose-950/30 border-b border-rose-100 dark:border-rose-900/60">
-            <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base font-bold shrink-0 border border-rose-200 dark:border-rose-800">
-                📂
+            <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold shrink-0 border border-rose-200 dark:border-rose-800">
+                <x-icon name="folder" class="w-4 h-4" />
             </div>
             <div>
                 <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Dokumen Wajib Pendaftaran Sempro</h2>
@@ -191,7 +183,7 @@
             <!-- Dok 1 -->
             <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-base border border-indigo-200 dark:border-indigo-800 shrink-0">📝</div>
+                    <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-800 shrink-0"><x-icon name="pencil" class="w-4 h-4" /></div>
                     <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 1</span>
                 </div>
                 <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Surat Persetujuan Judul</p>
@@ -202,7 +194,7 @@
             <!-- Dok 2 -->
             <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base border border-emerald-200 dark:border-emerald-800 shrink-0">💳</div>
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-800 shrink-0"><x-icon name="credit-card" class="w-4 h-4" /></div>
                     <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 2</span>
                 </div>
                 <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Bukti Pembayaran Sempro</p>
@@ -213,7 +205,7 @@
             <!-- Dok 3 -->
             <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-amber-200 dark:hover:border-amber-800 transition-colors">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base border border-amber-200 dark:border-amber-800 shrink-0">📊</div>
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200 dark:border-amber-800 shrink-0"><x-icon name="chart" class="w-4 h-4" /></div>
                     <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 3</span>
                 </div>
                 <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Transkrip Nilai Lengkap</p>
@@ -224,7 +216,7 @@
             <!-- Dok 4 -->
             <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-rose-200 dark:hover:border-rose-800 transition-colors">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base border border-rose-200 dark:border-rose-800 shrink-0">📋</div>
+                    <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200 dark:border-rose-800 shrink-0"><x-icon name="clipboard-list" class="w-4 h-4" /></div>
                     <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 4</span>
                 </div>
                 <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Bukti KRS Sempro</p>
@@ -236,7 +228,7 @@
         <!-- Footer Info -->
         <div class="px-6 pb-6">
             <div class="flex items-center gap-3 px-5 py-4 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 rounded-2xl text-sm text-indigo-800 dark:text-indigo-300 font-semibold">
-                <span class="text-xl shrink-0">💡</span>
+                <span class="text-xl shrink-0"><x-icon name="lightning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                 <span class="leading-relaxed">Gabungkan seluruh dokumen di atas menjadi <strong>1 file PDF</strong> sebelum diunggah (maks. 4 MB). Scan bukan foto untuk hasil terbaik.</span>
             </div>
         </div>
@@ -259,15 +251,15 @@
             {{-- Modal Header --}}
             <div class="px-5 py-3.5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/50">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-xs">
-                        📝
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold shadow-xs">
+                        <x-icon name="pencil" class="w-4 h-4" />
                     </div>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Form Pendaftaran Seminar Proposal</h3>
                         <p class="text-[10px] text-slate-500 dark:text-slate-400">Isi formulir dengan data yang lengkap dan valid</p>
                     </div>
                 </div>
-                <button @click="regModal = false" class="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center text-xs font-bold transition-all">✕</button>
+                <button @click="regModal = false" class="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center text-xs font-bold transition-all"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
 
             {{-- Compact Form Body --}}
@@ -389,8 +381,8 @@
 
                         <template x-if="!fileName">
                             <div class="flex items-center justify-center gap-2 py-0.5">
-                                <div class="w-6 h-6 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs shrink-0 font-bold border border-indigo-200 dark:border-indigo-800">
-                                    📄
+                                <div class="w-6 h-6 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 font-bold border border-indigo-200 dark:border-indigo-800">
+                                    <x-icon name="document" class="w-4 h-4" />
                                 </div>
                                 <div class="text-left">
                                     <p class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Pilih berkas PDF persyaratan</p>
@@ -409,7 +401,7 @@
                                     <span class="text-[9px] text-slate-400 font-medium shrink-0" x-text="fileSize"></span>
                                 </div>
                                 <button type="button" @click.stop="clearFile()" class="p-0.5 text-slate-400 hover:text-rose-500 rounded transition-colors z-20" title="Batal">
-                                    ✕
+                                    <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                 </button>
                             </div>
                         </template>
@@ -419,7 +411,7 @@
 
                     <template x-if="!fileName && existingFile">
                         <div class="mt-1.5 flex items-center justify-between px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold">
-                            <span>📄 File Persyaratan Terunggah:</span>
+                            <span><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> File Persyaratan Terunggah:</span>
                             <a :href="existingFile" target="_blank" class="text-indigo-600 dark:text-indigo-400 hover:underline font-extrabold" @click.stop>
                                 Preview File ↗
                             </a>
@@ -430,7 +422,7 @@
                 <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
                     <button type="button" @click="regModal = false" class="px-3.5 py-1.5 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl transition-all">Batal</button>
                     <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5 cursor-pointer">
-                        <span>🚀</span> Kirim Pendaftaran
+                        <span></span> Kirim Pendaftaran
                     </button>
                 </div>
             </form>
@@ -475,11 +467,11 @@
                                 <td class="py-3 px-4 text-center">
                                     @if($s->file_persyaratan)
                                         <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}" target="_blank" class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold rounded-lg border border-indigo-200 dark:border-indigo-700 transition-all flex items-center gap-1 shadow-2xs justify-center">
-                                            <span>📄</span> Preview
+                                            <span><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Preview
                                         </a>
                                     @elseif($s->bukti_pembayaran)
                                         <a href="{{ route('dokumen.show', [$s, 'bukti-pembayaran']) }}" target="_blank" class="px-2.5 py-1 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-600 transition-all flex items-center gap-1 shadow-2xs justify-center">
-                                            <span>📄</span> Lihat Bukti
+                                            <span><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Lihat Bukti
                                         </a>
                                     @else
                                         <span class="text-xs text-slate-400 font-normal italic">Belum diupload</span>

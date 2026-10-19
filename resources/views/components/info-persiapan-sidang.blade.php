@@ -1,68 +1,38 @@
-<div class="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 rounded-3xl p-6 text-white shadow-xl border border-indigo-500/30 relative overflow-hidden my-6">
-    <!-- Subtle Glow Circle -->
-    <div class="absolute -top-12 -right-12 w-44 h-44 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-    <div class="flex items-center gap-3 pb-4 border-b border-indigo-500/30 mb-4">
-        <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-xl shrink-0 text-indigo-300">
-            📌
-        </div>
+@php
+    // Kelas ditulis literal supaya terdeteksi Tailwind.
+    $items = [
+        ['clock', 'Kehadiran', 'bg-amber-50 text-amber-600 ring-amber-100 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-500/20',
+            'Datang ke ruangan ujian pada <strong>pukul 07.00 WIB</strong> untuk mengecek kesiapan ruangan, proyektor, dan peralatan ujian lainnya sebelum sidang dimulai agar pelaksanaan berjalan lancar.'],
+        ['user', 'Pakaian & Atribut', 'bg-indigo-50 text-indigo-600 ring-indigo-100 dark:bg-indigo-500/15 dark:text-indigo-300 dark:ring-indigo-500/20',
+            'Berpakaian rapi: jas almamater UMK, dalaman baju putih berkerah, dasi hitam, dan sepatu pantofel hitam.'],
+        ['document', 'Manuskrip Skripsi', 'bg-emerald-50 text-emerald-600 ring-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/20',
+            'Membawa cetak manuskrip skripsi sebanyak <strong>4 eksemplar</strong>.'],
+        ['refresh', 'Waktu Pelaksanaan', 'bg-sky-50 text-sky-600 ring-sky-100 dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-500/20',
+            'Jadwal sidang <strong>dapat maju atau mundur</strong> dari jam yang ditetapkan, tergantung kondisi masing-masing penguji.'],
+    ];
+@endphp
+<section class="bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-3xl shadow-sm p-5 sm:p-6 my-6">
+    <div class="flex items-start gap-3 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
+        <span class="w-10 h-10 shrink-0 rounded-2xl ring-1 ring-inset flex items-center justify-center bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+            <x-icon name="info" class="w-5 h-5" />
+        </span>
         <div>
-            <h3 class="text-base font-extrabold tracking-tight text-white">Informasi & Tata Tertib Persiapan Sidang</h3>
-            <p class="text-xs text-indigo-200">Harap diperhatikan dan dipersiapkan oleh seluruh mahasiswa sebelum pelaksanaan sidang.</p>
+            <h3 class="text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Informasi & Tata Tertib Persiapan Sidang</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Harap diperhatikan dan dipersiapkan oleh seluruh mahasiswa sebelum pelaksanaan sidang.</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Item 1: Kehadiran -->
-        <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-start gap-3">
-            <div class="p-2 bg-amber-500/20 text-amber-300 rounded-xl text-lg shrink-0">
-                ⏰
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        @foreach($items as [$ikon, $judul, $warna, $isi])
+            <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4 flex items-start gap-3">
+                <span class="w-9 h-9 shrink-0 rounded-xl ring-1 ring-inset flex items-center justify-center {{ $warna }}">
+                    <x-icon :name="$ikon" class="w-[18px] h-[18px]" />
+                </span>
+                <div class="min-w-0">
+                    <h4 class="text-xs font-extrabold text-slate-900 dark:text-slate-100">{{ $judul }}</h4>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed [&_strong]:text-slate-900 dark:[&_strong]:text-slate-100">{!! $isi !!}</p>
+                </div>
             </div>
-            <div>
-                <h4 class="text-xs font-extrabold text-amber-300 uppercase tracking-wider">Kehadiran</h4>
-                <p class="text-xs text-slate-200 mt-1 font-medium leading-relaxed">
-                    Datang ke ruangan ujian pada <strong class="text-white">pukul 07.00 WIB</strong> untuk mengecek kesiapan ruangan, proyektor, dan peralatan ujian lainnya sebelum sidang dimulai agar pelaksanaan berjalan lancar.
-                </p>
-            </div>
-        </div>
-
-        <!-- Item 2: Pakaian -->
-        <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-start gap-3">
-            <div class="p-2 bg-indigo-500/20 text-indigo-300 rounded-xl text-lg shrink-0">
-                👔
-            </div>
-            <div>
-                <h4 class="text-xs font-extrabold text-indigo-300 uppercase tracking-wider">Pakaian & Atribut</h4>
-                <p class="text-xs text-slate-200 mt-1 font-medium leading-relaxed">
-                    Berpakaian rapi: jas almamater UMK, dalaman baju putih berkerah, dasi hitam, dan sepatu pantofel hitam.
-                </p>
-            </div>
-        </div>
-
-        <!-- Item 3: Dokumen -->
-        <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-start gap-3">
-            <div class="p-2 bg-emerald-500/20 text-emerald-300 rounded-xl text-lg shrink-0">
-                📄
-            </div>
-            <div>
-                <h4 class="text-xs font-extrabold text-emerald-300 uppercase tracking-wider">Manuskrip Skripsi</h4>
-                <p class="text-xs text-slate-200 mt-1 font-medium leading-relaxed">
-                    Membawa cetak manuskrip skripsi sebanyak <strong class="text-white">4 eksemplar</strong>.
-                </p>
-            </div>
-        </div>
-
-        <!-- Item 4: Fleksibilitas Jadwal -->
-        <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-start gap-3">
-            <div class="p-2 bg-sky-500/20 text-sky-300 rounded-xl text-lg shrink-0">
-                🔄
-            </div>
-            <div>
-                <h4 class="text-xs font-extrabold text-sky-300 uppercase tracking-wider">Waktu Pelaksanaan</h4>
-                <p class="text-xs text-slate-200 mt-1 font-medium leading-relaxed">
-                    Jadwal sidang <strong class="text-white">dapat maju atau mundur</strong> dari jam yang ditetapkan, tergantung kondisi masing-masing penguji.
-                </p>
-            </div>
-        </div>
+        @endforeach
     </div>
-</div>
+</section>

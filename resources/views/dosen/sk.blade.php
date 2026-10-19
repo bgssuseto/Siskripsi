@@ -13,13 +13,9 @@
         </a>
     </div>
 
-    <!-- Page Header -->
-    <div class="mb-6">
-        <h2 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">SK Pembimbing &amp; Penguji</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Unduh SK Pembimbing dan SK Penguji ujian skripsi (sidang skripsi &amp; jurnal) Anda. SK Pembimbing tersedia <strong>per gelombang</strong> — bisa langsung diunduh tanpa menunggu gelombang terakhir atau pergantian semester. Dokumen berisi surat permohonan SK beserta rekap dan rincian mahasiswa Anda.
-        </p>
-    </div>
+    <x-page-header title="SK Pembimbing & Penguji" icon="badge-check" accent="indigo">
+            <x-slot:description>Unduh SK Pembimbing dan SK Penguji ujian skripsi (sidang skripsi &amp; jurnal) Anda. SK Pembimbing tersedia <strong>per gelombang</strong> — bisa langsung diunduh tanpa menunggu gelombang terakhir atau pergantian semester. Dokumen berisi surat permohonan SK beserta rekap dan rincian mahasiswa Anda.</x-slot:description>
+        </x-page-header>
 
     @if(!$dosen)
         <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-sm text-amber-800 dark:text-amber-300">
@@ -27,7 +23,7 @@
         </div>
     @elseif($rows->isEmpty())
         <div class="bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 p-10 text-center">
-            <p class="text-3xl mb-2">📄</p>
+            <p class="text-3xl mb-2"><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></p>
             <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Belum ada SK</p>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Anda belum tercatat sebagai pembimbing atau penguji ujian skripsi pada periode mana pun.</p>
         </div>

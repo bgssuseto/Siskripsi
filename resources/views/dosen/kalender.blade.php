@@ -104,19 +104,7 @@
 
     @if(!$dosen)
         <!-- Hero Banner Header -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-8">
-            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-            <div class="relative z-10">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Modul Agenda & Kalender Ujian
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Agenda & Kalender Ujian</h1>
-                <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">Timeline menyeluruh jadwal ujian Seminar Proposal, Sidang Skripsi, dan kegiatan akademik Anda.</p>
-            </div>
-        </div>
+        <x-page-header title="Agenda & Kalender Ujian" subtitle="Timeline menyeluruh jadwal ujian Seminar Proposal, Sidang Skripsi, dan kegiatan akademik Anda." icon="calendar" accent="indigo"></x-page-header>
         <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400 shadow-sm">
             <h3 class="font-extrabold text-slate-800 dark:text-slate-200 text-base">Akun Belum Terhubung</h3>
             <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Hubungkan akun Anda dengan Master Dosen untuk melihat kalender agenda.</p>
@@ -206,19 +194,7 @@
         }" x-init="$nextTick(() => initCalendar())">
 
             <!-- Header Section -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-5 sm:p-8 text-white shadow-xl border border-slate-800 mb-5 sm:mb-6">
-                <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-                <div class="relative z-10">
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Modul Agenda & Kalender Ujian
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Agenda & Kalender Ujian</h1>
-                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">Timeline menyeluruh jadwal ujian Seminar Proposal, Sidang Skripsi, dan kegiatan akademik Anda.</p>
-                </div>
-            </div>
+            <x-page-header title="Agenda & Kalender Ujian" subtitle="Timeline menyeluruh jadwal ujian Seminar Proposal, Sidang Skripsi, dan kegiatan akademik Anda." icon="calendar" accent="indigo"></x-page-header>
 
             <!-- View Toggle Buttons -->
             <div class="flex sm:justify-end mb-6">
@@ -376,10 +352,9 @@
                     </div>
 
                     <!-- Academic Info box -->
-                    <div class="bg-gradient-to-tr from-slate-900 to-indigo-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-                        <div class="absolute -right-10 -bottom-10 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
-                        <h3 class="font-extrabold text-sm uppercase tracking-wider text-indigo-300 mb-3">Informasi Tambahan</h3>
-                        <p class="text-xs text-slate-300 leading-relaxed font-semibold">
+                    <div class="bg-indigo-50/60 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-3xl p-5 sm:p-6">
+                        <h3 class="flex items-center gap-2 font-extrabold text-sm text-indigo-900 dark:text-indigo-200 mb-2"><x-icon name="info" class="w-4 h-4" /> Informasi Tambahan</h3>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                             Jadwal yang tertera di atas disinkronisasi langsung oleh Koordinator Program Studi. Silakan berkoordinasi jika terdapat bentrok jadwal antar penguji.
                         </p>
                     </div>
@@ -390,8 +365,8 @@
             <div id="modal-detail" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-detail')">
                 <div class="modal-box">
                     <div class="modal-header bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                        <span class="modal-title font-bold">📄 Detail Agenda Ujian</span>
-                        <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+                        <span class="modal-title font-bold"><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Detail Agenda Ujian</span>
+                        <button class="modal-close" onclick="closeModal('modal-detail')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
                     </div>
                     <div class="modal-body space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">

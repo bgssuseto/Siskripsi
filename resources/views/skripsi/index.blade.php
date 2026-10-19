@@ -16,6 +16,7 @@
             gap: .25rem;
         }
         .view-toggle-btn {
+            display: inline-flex; align-items: center; gap: .4rem;
             padding: .5rem 1rem;
             border-radius: 10px;
             font-size: .85rem;
@@ -45,6 +46,7 @@
         }
         .stat-icon.blue  { background: #eff6ff; }
         .stat-icon.green { background: #f0fdf4; }
+        .stat-icon.violet { background: #f3e8ff; }
         .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; }
         .stat-label { font-size: .8rem; font-weight: 600; margin-top: .2rem; }
 
@@ -96,8 +98,9 @@
         .table-scroll { overflow-x: auto; }
         table.sidang-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
         table.sidang-table thead th {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            color: #e2e8f0; font-weight: 600; padding: .75rem .85rem;
+            background: #f8fafc;
+            color: #64748b; font-weight: 700; padding: .75rem .85rem;
+            border-bottom: 1px solid #e2e8f0;
             text-align: left; font-size: .78rem; letter-spacing: .03em; text-transform: uppercase;
         }
         table.sidang-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
@@ -282,6 +285,7 @@
         .fc-daygrid-day-number { font-size: .82rem !important; font-weight: 700 !important; color: #334155 !important; }
 
         @media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
+            html.dark table.sidang-table thead th { background: #0f172a !important; color: #94a3b8 !important; border-bottom-color: #334155 !important; }
     </style>
 
     {{-- FullCalendar v6 CDN --}}
@@ -401,16 +405,16 @@
                         <strong>Perhatian: Terdeteksi Masalah Jadwal Skripsi</strong>
                         <ul class="text-xs mt-1 list-disc list-inside space-y-0.5">
                             @if($scheduleConflictCount > 0)
-                                <li>⚠️ <strong>{{ $scheduleConflictCount }}</strong> skripsi memiliki <em>bentrok jadwal</em> (ruangan atau penguji bersamaan). Ditandai badge merah di tabel.</li>
+                                <li><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> <strong>{{ $scheduleConflictCount }}</strong> skripsi memiliki <em>bentrok jadwal</em> (ruangan atau penguji bersamaan). Ditandai badge merah di tabel.</li>
                             @endif
                             @if($ruleViolationCount > 0)
-                                <li>❌ <strong>{{ $ruleViolationCount }}</strong> skripsi memiliki <em>pelanggaran aturan</em> (Pembimbing Utama bukan Penguji 2, atau Pembimbing Pendamping menguji). Ditandai badge oranye di tabel.</li>
+                                <li><x-icon name="x-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> <strong>{{ $ruleViolationCount }}</strong> skripsi memiliki <em>pelanggaran aturan</em> (Pembimbing Utama bukan Penguji 2, atau Pembimbing Pendamping menguji). Ditandai badge oranye di tabel.</li>
                             @endif
                         </ul>
-                        <p class="text-xs mt-1.5 opacity-75">Klik ✏️ pada baris tersebut untuk melihat detail dan memperbaiki.</p>
+                        <p class="text-xs mt-1.5 opacity-75">Klik <x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> pada baris tersebut untuk melihat detail dan memperbaiki.</p>
                         <div class="mt-2">
                             <a href="{{ route('jadwal-ujian.export-bentrok') }}" class="btn btn-danger btn-sm">
-                                📥 Download Data Jadwal Bentrok (Excel)
+                                <x-icon name="download" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Download Data Jadwal Bentrok (Excel)
                             </a>
                         </div>
                     </div>
@@ -419,63 +423,48 @@
         </div>
 
 
-        {{-- Page header --}}
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-6">
-            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Modul Penjadwalan Sidang Skripsi
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Jadwal Sidang Skripsi</h1>
-                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">Plotting, kelola jadwal, dan visualisasikan sidang skripsi mahasiswa.</p>
+        {{-- Header halaman --}}
+        <x-page-header title="Jadwal Sidang Skripsi" subtitle="Plotting, kelola jadwal, dan visualisasikan sidang skripsi mahasiswa." icon="calendar" accent="violet">
+            <x-slot:actions>
+                @if(Auth::user()->isSuperAdmin())
+                    <a href="{{ route('jadwal.semua.index') }}" class="ui-btn-secondary">
+                        <x-icon name="calendar" class="w-4 h-4" /> Lihat Semua Jadwal
+                    </a>
+                @endif
+                @if(($scheduleConflictCount ?? 0) > 0 || ($ruleViolationCount ?? 0) > 0)
+                    <a href="{{ route('jadwal-ujian.export-bentrok') }}" class="ui-btn-danger-soft">
+                        <x-icon name="warning" class="w-4 h-4" /> Export Jadwal Bentrok
+                    </a>
+                @endif
+                <div class="view-toggle">
+                    <button type="button" class="view-toggle-btn" :class="{ 'active': currentView === 'table' }" @click="currentView = 'table'">
+                        <x-icon name="list" class="w-4 h-4" /> Tabel
+                    </button>
+                    <button type="button" class="view-toggle-btn" :class="{ 'active': currentView === 'calendar' }" @click="currentView = 'calendar'; $nextTick(() => initCalendar())">
+                        <x-icon name="calendar" class="w-4 h-4" /> Kalender
+                    </button>
                 </div>
-
-                <div class="flex items-center gap-3 flex-wrap shrink-0">
-                    @if(Auth::user()->isSuperAdmin())
-                        <a href="{{ route('jadwal.semua.index') }}" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-md font-semibold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer">
-                            📅 Lihat Semua Jadwal
-                        </a>
-                    @endif
-                    @if(($scheduleConflictCount ?? 0) > 0 || ($ruleViolationCount ?? 0) > 0)
-                        <a href="{{ route('jadwal-ujian.export-bentrok') }}" class="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg cursor-pointer">
-                            ⚠️ Export Jadwal Bentrok
-                        </a>
-                    @endif
-                    {{-- View Toggle --}}
-                    <div class="view-toggle">
-                        <button @click="currentView = 'table'" :class="currentView === 'table' ? 'active' : ''" class="view-toggle-btn">
-                            📋 Tabel
-                        </button>
-                        <button @click="currentView = 'calendar'; $nextTick(() => initCalendar())" :class="currentView === 'calendar' ? 'active' : ''" class="view-toggle-btn">
-                            📅 Kalender
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </x-slot:actions>
+        </x-page-header>
 
         {{-- Stats --}}
         <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
             <div class="stat-card">
-                <div class="stat-icon blue">📋</div>
+                <div class="stat-icon blue"><x-icon name="clipboard-list" /></div>
                 <div>
                     <div class="stat-value">{{ $totalSkripsi + $totalJurnal }}</div>
                     <div class="stat-label">Total Mahasiswa</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon blue">🎓</div>
+                <div class="stat-icon violet"><x-icon name="academic" /></div>
                 <div>
                     <div class="stat-value">{{ $totalSkripsi }}</div>
                     <div class="stat-label">Skripsi</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon green">📰</div>
+                <div class="stat-icon green"><x-icon name="book" /></div>
                 <div>
                     <div class="stat-value">{{ $totalJurnal }}</div>
                     <div class="stat-label">Jurnal / Artikel</div>
@@ -570,7 +559,7 @@
 
                 <button type="submit" class="btn btn-primary">Filter</button>
                 @if(request()->hasAny(['search','jenis','status','tanggal','periode_id','gelombang','dosen_pembimbing_id','dosen_penguji_id']))
-                    <a href="{{ route('jadwal-ujian.index') }}" @click.prevent="navigate($event.currentTarget.href)" class="btn btn-outline">✕ Reset</a>
+                    <a href="{{ route('jadwal-ujian.index') }}" @click.prevent="navigate($event.currentTarget.href)" class="btn btn-outline"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset</a>
                 @endif
             </form>
 
@@ -578,8 +567,8 @@
             <div x-show="selectedIds.length > 0" x-cloak class="flex items-center justify-between gap-3 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 rounded-2xl p-3.5">
                 <span class="text-xs font-bold text-violet-800 dark:text-violet-300" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
                 <div class="flex items-center gap-2">
-                    <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm">📅 Jadwalkan Terpilih (Otomatis)</button>
-                    <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot / Edit Jadwal (Massal)</button>
+                    <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Jadwalkan Terpilih (Otomatis)</button>
+                    <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Plot / Edit Jadwal (Massal)</button>
                     <button type="button" @click="selectedIds = []" class="btn btn-outline btn-sm">Batalkan Pilihan</button>
                 </div>
             </div>
@@ -629,7 +618,7 @@
                                         <td colspan="16" class="py-2 px-3">
                                             <div class="flex flex-wrap items-center justify-between gap-2" x-data="{ groupIds: {{ Js::from($group['ids']) }} }">
                                                 <div class="text-xs font-extrabold text-violet-900 dark:text-violet-200">
-                                                    👥 {{ $group['label'] }}
+                                                    <x-icon name="users" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $group['label'] }}
                                                     <span class="ml-1 font-semibold text-violet-700 dark:text-violet-300">— {{ count($group['ids']) }} mahasiswa</span>
                                                     @if($group['belum_terjadwal'] > 0)
                                                         <span class="ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">{{ $group['belum_terjadwal'] }} belum terjadwal</span>
@@ -650,9 +639,9 @@
                                         <div class="flex flex-col items-center justify-center">
                                             <span class="font-bold text-xs">{{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}</span>
                                             @if($hasSchedule)
-                                                <span class="text-red-600 dark:text-red-400 text-xs" title="Bentrok Jadwal">⚠️</span>
+                                                <span class="text-red-600 dark:text-red-400 text-xs" title="Bentrok Jadwal"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                                             @elseif($hasRuleViolation)
-                                                <span class="text-orange-500 dark:text-orange-400 text-xs" title="Pelanggaran Aturan">❌</span>
+                                                <span class="text-orange-500 dark:text-orange-400 text-xs" title="Pelanggaran Aturan"><x-icon name="x-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                                             @endif
                                         </div>
                                     </td>
@@ -671,7 +660,7 @@
                                         @if($hasSchedule)
                                             <div class="mt-1">
                                                 <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-2xs">
-                                                    ⚠️ Jadwal Bentrok
+                                                    <x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Jadwal Bentrok
                                                 </span>
                                             </div>
                                             <div class="mt-1 space-y-0.5">
@@ -683,7 +672,7 @@
                                         @if($hasRuleViolation)
                                             <div class="mt-1">
                                                 <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs">
-                                                    ❌ Pelanggaran Aturan
+                                                    <x-icon name="x-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Pelanggaran Aturan
                                                 </span>
                                             </div>
                                             <div class="mt-1 space-y-0.5">
@@ -698,7 +687,7 @@
                                             {!! $item->getJadwalStatusHtml() !!}
                                             {!! $item->hasil_ujian_html !!}
                                             @if($item->canSetHasilUjian())
-                                                <button type="button" title="Ubah hasil ujian (Lulus / Tidak Lulus)" class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors" onclick="openHasilUjian('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->status_ujian }}')">✏️ {{ $item->status_ujian ? 'Ubah Hasil' : 'Set Hasil' }}</button>
+                                                <button type="button" title="Ubah hasil ujian (Lulus / Tidak Lulus)" class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors" onclick="openHasilUjian('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->status_ujian }}')"><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $item->status_ujian ? 'Ubah Hasil' : 'Set Hasil' }}</button>
                                             @endif
                                         </div>
                                     </td>
@@ -734,7 +723,7 @@
                                     <td class="text-right space-x-1 whitespace-nowrap">
                                         <button class="btn btn-primary btn-sm" title="{{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}"
                                             onclick="openJadwalkan({{ $item->id }}, '{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->ketua_penguji_id ?? '' }}', '{{ $item->anggota_penguji_1_id ?? '' }}', '{{ $item->anggota_penguji_2_id ?? '' }}', '{{ $item->dosen_pembimbing_utama_id ?? '' }}', '{{ addslashes($item->pembimbingUtama->nama_dosen ?? '') }}')">
-                                            📅
+                                            <x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                         </button>
                                         <button class="btn btn-outline btn-sm" title="Edit Data"
                                             onclick="openEdit('{{ $item->hash_id }}', {{ json_encode([
@@ -757,11 +746,11 @@
                                                 'conflict_schedule' => $conflictMap[$item->id]['schedule'] ?? [],
                                                 'conflict_rules'    => $conflictMap[$item->id]['rules'] ?? [],
                                             ]) }})">
-                                            ✏️
+                                            <x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                         </button>
                                         <button class="btn btn-danger btn-sm" title="Hapus"
                                             onclick="openDelete('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}')">
-                                            🗑
+                                            <x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                         </button>
                                     </td>
                                 </tr>
@@ -801,14 +790,14 @@
     <div id="modal-tambah" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-tambah')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">➕ Tambah Data Skripsi</span>
-                <button class="modal-close" onclick="closeModal('modal-tambah')">✕</button>
+                <span class="modal-title"><x-icon name="plus" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tambah Data Skripsi</span>
+                <button class="modal-close" onclick="closeModal('modal-tambah')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <form method="POST" action="{{ route('master.skripsi.store') }}" id="form-tambah">
                 @csrf
                 <div class="modal-body">
                     <div id="form-tambah-alert" class="modal-alert" style="display:none;">
-                        <span>⚠️</span>
+                        <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         <span id="form-tambah-alert-text"></span>
                     </div>
                     {{-- Identitas mahasiswa --}}
@@ -939,15 +928,15 @@
     <div id="modal-edit" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-edit')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">✏️ Edit Data Skripsi</span>
-                <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
+                <span class="modal-title"><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Edit Data Skripsi</span>
+                <button class="modal-close" onclick="closeModal('modal-edit')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <form method="POST" id="form-edit" action="">
                 @csrf
                 @method('PUT')
                 <div class="modal-body">
                     <div id="form-edit-alert" class="modal-alert" style="display:none;">
-                        <span>⚠️</span>
+                        <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         <span id="form-edit-alert-text"></span>
                     </div>
                     {{-- Dynamic Conflict Warning Box: 2 sections --}}
@@ -955,7 +944,7 @@
                          class="mb-3 rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/30 p-3.5"
                          style="display:none;">
                         <div class="flex items-start gap-2">
-                            <span class="text-base">⚠️</span>
+                            <span class="text-base"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                             <div class="flex-1">
                                 <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 mb-1.5">Bentrok Jadwal</strong>
                                 <ul id="edit-conflict-schedule-list" class="list-disc list-inside space-y-1 text-xs font-medium text-red-800 dark:text-red-300"></ul>
@@ -967,7 +956,7 @@
                          class="mb-3 rounded-xl border border-orange-200 dark:border-orange-800/60 bg-orange-50 dark:bg-orange-950/30 p-3.5"
                          style="display:none;">
                         <div class="flex items-start gap-2">
-                            <span class="text-base">❌</span>
+                            <span class="text-base"><x-icon name="x-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                             <div class="flex-1">
                                 <strong class="block text-xs font-bold uppercase tracking-wider text-orange-700 dark:text-orange-400 mb-1.5">Pelanggaran Aturan Skripsi</strong>
                                 <ul id="edit-conflict-rules-list" class="list-disc list-inside space-y-1 text-xs font-medium text-orange-800 dark:text-orange-300"></ul>
@@ -1118,12 +1107,12 @@
     <div id="modal-hapus" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-hapus')">
         <div class="modal-box modal-sm">
             <div class="modal-header">
-                <span class="modal-title text-rose-600 font-bold">🗑 Hapus Data</span>
-                <button class="modal-close" onclick="closeModal('modal-hapus')">✕</button>
+                <span class="modal-title text-rose-600 font-bold"><x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Hapus Data</span>
+                <button class="modal-close" onclick="closeModal('modal-hapus')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <div class="modal-body">
                 <p>Hapus data skripsi untuk mahasiswa <strong id="hapus-nama">?</strong></p>
-                <p class="text-xs text-rose-500 font-semibold mt-2">⚠ Tindakan ini tidak bisa dibatalkan.</p>
+                <p class="text-xs text-rose-500 font-semibold mt-2"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tindakan ini tidak bisa dibatalkan.</p>
             </div>
             <div class="modal-footer">
                 <form id="form-hapus" method="POST" action="">
@@ -1141,20 +1130,20 @@
     <div id="modal-hasil-ujian" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-hasil-ujian')">
         <div class="modal-box modal-sm">
             <div class="modal-header">
-                <span class="modal-title">🎓 Hasil Ujian</span>
-                <button class="modal-close" onclick="closeModal('modal-hasil-ujian')">✕</button>
+                <span class="modal-title"><x-icon name="academic" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Hasil Ujian</span>
+                <button class="modal-close" onclick="closeModal('modal-hasil-ujian')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <div class="modal-body">
                 <p>Hasil ujian sidang untuk <strong id="hasil-ujian-nama">?</strong></p>
                 <p class="text-xs mt-1">Status saat ini: <strong id="hasil-ujian-sekarang">-</strong></p>
                 <p class="text-[11px] text-slate-500 mt-1">Setelah waktu ujian lewat, status otomatis <strong>Lulus</strong>. Pilih <strong>Tidak Lulus / Remidi</strong> bila mahasiswa harus mengulang — perubahan langsung tampil di progress mahasiswa.</p>
                 <div id="form-hasil-ujian-alert" class="modal-alert" style="display:none;">
-                    <span>⚠️</span>
+                    <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <span id="form-hasil-ujian-alert-text"></span>
                 </div>
                 <div class="flex gap-3 mt-4">
-                    <button type="button" id="btn-hasil-lulus" class="btn btn-success" style="flex:1;" onclick="submitHasilUjian('lulus')">🎓 Lulus</button>
-                    <button type="button" id="btn-hasil-tidak-lulus" class="btn btn-danger" style="flex:1;" onclick="submitHasilUjian('tidak_lulus')">✕ Tidak Lulus / Remidi</button>
+                    <button type="button" id="btn-hasil-lulus" class="btn btn-success" style="flex:1;" onclick="submitHasilUjian('lulus')"><x-icon name="academic" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Lulus</button>
+                    <button type="button" id="btn-hasil-tidak-lulus" class="btn btn-danger" style="flex:1;" onclick="submitHasilUjian('tidak_lulus')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tidak Lulus / Remidi</button>
                 </div>
             </div>
         </div>
@@ -1166,13 +1155,13 @@
     <div id="modal-detail" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-detail')">
         <div class="modal-box">
             <div class="modal-header bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                <span class="modal-title font-bold">📄 Detail Jadwal Skripsi</span>
-                <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+                <span class="modal-title font-bold"><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Detail Jadwal Skripsi</span>
+                <button class="modal-close" onclick="closeModal('modal-detail')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <div class="modal-body space-y-4">
                 <div id="detail-conflict-box" class="rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/30 p-3.5" style="display:none;">
                     <div class="flex items-start gap-2">
-                        <span class="text-base">⚠️</span>
+                        <span class="text-base"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         <div class="flex-1">
                             <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 mb-1">Masalah Jadwal / Pelanggaran Aturan</strong>
                             <div id="detail-conflict-text" class="text-xs font-semibold text-red-800 dark:text-red-300 leading-snug"></div>
@@ -1222,7 +1211,7 @@
             </div>
             <div class="modal-footer bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
                 <button type="button" class="btn btn-outline" onclick="closeModal('modal-detail')">Tutup</button>
-                <button type="button" class="btn btn-primary" onclick="openEditFromDetail()">✏️ Edit Ruangan / Penguji / Jam</button>
+                <button type="button" class="btn btn-primary" onclick="openEditFromDetail()"><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Edit Ruangan / Penguji / Jam</button>
             </div>
         </div>
     </div>
@@ -1233,14 +1222,14 @@
     <div id="modal-jadwalkan" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-jadwalkan')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">📅 Plotting Jadwal & Penguji Sidang</span>
-                <button class="modal-close" onclick="closeModal('modal-jadwalkan')">✕</button>
+                <span class="modal-title"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Plotting Jadwal & Penguji Sidang</span>
+                <button class="modal-close" onclick="closeModal('modal-jadwalkan')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <form method="POST" id="form-jadwalkan" action="">
                 @csrf
                 <div class="modal-body">
                     <div id="form-jadwalkan-alert" class="modal-alert" style="display:none;">
-                        <span>⚠️</span>
+                        <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         <span id="form-jadwalkan-alert-text"></span>
                     </div>
                     <input type="hidden" id="jadwalkan-sidang-id">
@@ -1255,7 +1244,7 @@
                         <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
                             <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
                                 <span class="flex items-center gap-1.5">
-                                    <span>📝</span> Dosen Siap Menguji
+                                    <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Dosen Siap Menguji
                                 </span>
                                 <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="kesediaan-info-count">
                                     {{ $kesediaanDosens->count() }} Slot Terdaftar
@@ -1270,9 +1259,9 @@
                                         </div>
                                         <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                                             @if($kd->jam_mulai && $kd->jam_selesai)
-                                                ⏰ {{ $kd->jam_mulai }} - {{ $kd->jam_selesai }} WIB
+                                                <x-icon name="clock" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $kd->jam_mulai }} - {{ $kd->jam_selesai }} WIB
                                             @else
-                                                ✓ Tersedia (jam fleksibel)
+                                                <x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tersedia (jam fleksibel)
                                             @endif
                                         </div>
                                     </div>
@@ -1345,7 +1334,7 @@
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-ketua-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
+                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-ketua-warning" style="display:none;"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                             </div>
                             <div class="form-group">
                                 <label>Penguji 1 <span style="color:red">*</span></label>
@@ -1355,13 +1344,13 @@
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji1-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
+                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji1-warning" style="display:none;"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                             </div>
                             <div class="form-group">
                                 <label>Penguji 2 (Otomatis)</label>
                                 <div class="form-control text-xs p-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold" id="jadwalkan-penguji2-display">—</div>
                                 <p class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Otomatis diisi Pembimbing Utama sesuai aturan komposisi penguji.</p>
-                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji2-warning" style="display:none;">⚠️ Pembimbing Utama belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
+                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji2-warning" style="display:none;"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Pembimbing Utama belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                                 <input type="hidden" name="anggota_penguji_2_id" id="jadwalkan-penguji2">
                             </div>
                         </div>
@@ -1369,7 +1358,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modal-jadwalkan')">Batal</button>
-                    <button type="submit" class="btn btn-primary">💾 Simpan Jadwal</button>
+                    <button type="submit" class="btn btn-primary"><x-icon name="save" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Simpan Jadwal</button>
                 </div>
             </form>
         </div>
@@ -1381,12 +1370,12 @@
     <div id="modal-bulk-jadwalkan" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-bulk-jadwalkan')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">🗓️ Plot / Edit Jadwal Massal</span>
-                <button class="modal-close" onclick="closeModal('modal-bulk-jadwalkan')">✕</button>
+                <span class="modal-title"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Plot / Edit Jadwal Massal</span>
+                <button class="modal-close" onclick="closeModal('modal-bulk-jadwalkan')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <div class="modal-body">
                 <div id="form-bulk-jadwalkan-alert" class="modal-alert" style="display:none;">
-                    <span>⚠️</span>
+                    <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <span id="form-bulk-jadwalkan-alert-text"></span>
                 </div>
                 <p class="text-xs text-slate-500 mb-4"><strong x-text="selectedIds.length"></strong> mahasiswa terpilih akan di-plot/diedit jadwalnya berurutan pada hari &amp; ruangan yang sama, dengan tim penguji yang sama — sistem otomatis memberi slot jam berbeda per mahasiswa (mulai dari jam yang dipilih, berurutan sesuai durasi per sesi) supaya tidak bentrok ruangan. Mahasiswa yang sudah punya jadwal sebelumnya akan DITIMPA dengan jadwal baru ini.</p>
@@ -1398,7 +1387,7 @@
                     <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
                         <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
                             <span class="flex items-center gap-1.5">
-                                <span>📝</span> Dosen Siap Menguji
+                                <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Dosen Siap Menguji
                             </span>
                             <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="bulk-kesediaan-info-count">
                                 {{ $kesediaanDosens->count() }} Slot Terdaftar
@@ -1473,7 +1462,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" onclick="closeModal('modal-bulk-jadwalkan')">Batal</button>
-                <button type="button" class="btn btn-primary" @click="submitBulkJadwalkan()">💾 Terapkan ke Semua Terpilih</button>
+                <button type="button" class="btn btn-primary" @click="submitBulkJadwalkan()"><x-icon name="save" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Terapkan ke Semua Terpilih</button>
             </div>
         </div>
     </div>

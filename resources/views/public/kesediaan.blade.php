@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,24 +13,23 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-6">
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4 sm:p-6">
     <div class="max-w-2xl mx-auto w-full space-y-6">
 
         <!-- Header -->
-        <div class="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 p-6 rounded-3xl border border-indigo-500/30 shadow-2xl relative overflow-hidden">
-            <div class="absolute -top-12 -right-12 w-44 h-44 bg-indigo-500/10 rounded-full blur-2xl"></div>
+        <div class="bg-white p-6 rounded-3xl border border-indigo-200 shadow-sm relative overflow-hidden">
             <div class="relative z-10">
                 <div class="flex items-center gap-2 mb-3 flex-wrap">
-                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-bold rounded-full border border-emerald-400/30">
-                        🟢 Link Aktif
+                    <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 align-middle"></span> Link Aktif
                     </span>
-                    <span class="text-xs text-slate-400">Periode: {{ $periode->nama_periode }}</span>
+                    <span class="text-xs text-slate-500">Periode: {{ $periode->nama_periode }}</span>
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Form Kesediaan Menguji</h1>
-                <p class="text-xs text-indigo-200 mt-1">Isikan hari &amp; tanggal Anda bersedia menjadi penguji Sempro / Sidang Skripsi.</p>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Form Kesediaan Menguji</h1>
+                <p class="text-xs text-indigo-700 mt-1">Isikan hari &amp; tanggal Anda bersedia menjadi penguji Sempro / Sidang Skripsi.</p>
                 <div class="flex flex-wrap gap-2 mt-3">
                     @foreach($activeWaves as $w)
-                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">
+                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200">
                             Gelombang {{ $w->gelombang }} · {{ ucfirst($w->jenis) }} — {{ $w->tanggal_mulai?->format('d/m/Y') }} s/d {{ $w->tanggal_selesai?->format('d/m/Y') }}
                         </span>
                     @endforeach
@@ -39,31 +38,31 @@
         </div>
 
         @if(session('success'))
-        <div class="bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 rounded-2xl p-4 text-sm font-semibold">
-            ✅ {{ session('success') }}
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl p-4 text-sm font-semibold">
+            <x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ session('success') }}
         </div>
         @endif
         @if(session('error'))
-        <div class="bg-rose-500/10 border border-rose-400/30 text-rose-300 rounded-2xl p-4 text-sm font-semibold">
-            ⚠️ {{ session('error') }}
+        <div class="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 text-sm font-semibold">
+            <x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ session('error') }}
         </div>
         @endif
         @if($errors->any())
-        <div class="bg-rose-500/10 border border-rose-400/30 text-rose-300 rounded-2xl p-4 text-sm font-semibold space-y-1">
+        <div class="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 text-sm font-semibold space-y-1">
             @foreach($errors->all() as $err)
-                <p>⚠️ {{ $err }}</p>
+                <p><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $err }}</p>
             @endforeach
         </div>
         @endif
 
         <!-- Form Card -->
-        <div class="bg-slate-800/80 rounded-3xl p-5 sm:p-6 border border-slate-700/80 shadow-lg">
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-lg">
             <form method="POST" action="{{ route('public.kesediaan.store', $token) }}" class="space-y-4">
                 @csrf
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Nama Dosen *</label>
-                    <select name="dosen_id" required class="w-full text-sm p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Nama Dosen *</label>
+                    <select name="dosen_id" required class="w-full text-sm p-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">-- Pilih Nama Anda --</option>
                         @foreach($dosens as $d)
                             <option value="{{ $d->id }}" {{ old('dosen_id') == $d->id ? 'selected' : '' }}>{{ $d->nama_dosen }} @if($d->nidn) (NIDN: {{ $d->nidn }}) @endif</option>
@@ -73,8 +72,8 @@
 
                 @if($activeWaves->count() > 0)
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Gelombang Ujian *</label>
-                    <select name="wave_id" required class="w-full text-sm p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Gelombang Ujian *</label>
+                    <select name="wave_id" required class="w-full text-sm p-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">-- Pilih Gelombang --</option>
                         @foreach($activeWaves as $w)
                             <option value="{{ $w->id }}" {{ old('wave_id') == $w->id ? 'selected' : '' }}>Gelombang {{ $w->gelombang }} - {{ ucfirst($w->jenis) }}</option>
@@ -92,7 +91,7 @@
                 @else
                 {{-- Kesediaan WAJIB ditautkan ke gelombang + periode semester ini --
                      tanpa gelombang yang tersedia, form tidak bisa disubmit sama sekali. --}}
-                <div class="bg-amber-500/10 border border-amber-400/30 text-amber-200 rounded-2xl p-4 text-xs leading-relaxed">
+                <div class="bg-amber-50 border border-amber-200 text-amber-200 rounded-2xl p-4 text-xs leading-relaxed">
                     Belum ada Gelombang yang tersedia untuk periode <strong>{{ $periode->nama_periode }}</strong> saat ini. Hubungi Koordinator untuk menambahkan gelombang di menu Master Gelombang terlebih dahulu.
                 </div>
                 @endif

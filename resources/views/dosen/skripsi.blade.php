@@ -13,11 +13,9 @@
         </a>
     </div>
 
-    <!-- Page Header -->
-    <div class="mb-6">
-        <h2 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Jadwal Sidang Skripsi</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Daftar sidang skripsi mahasiswa di mana Anda bertindak sebagai pembimbing atau penguji.</p>
-    </div>
+    <x-page-header title="Jadwal Sidang Skripsi" icon="academic" accent="violet">
+            <x-slot:description>Daftar sidang skripsi mahasiswa di mana Anda bertindak sebagai pembimbing atau penguji.</x-slot:description>
+        </x-page-header>
 
     <!-- Filters & Search Toolbar -->
     <form method="GET" action="{{ route('dosen.jadwal.skripsi') }}" class="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm mb-6">

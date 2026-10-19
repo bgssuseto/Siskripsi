@@ -52,8 +52,9 @@
         .table-scroll { overflow-x: auto; }
         table.data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
         table.data-table thead th {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            color: #e2e8f0; font-weight: 600; padding: .75rem .85rem;
+            background: #f8fafc;
+            color: #64748b; font-weight: 700; padding: .75rem .85rem;
+            border-bottom: 1px solid #e2e8f0;
             text-align: left; font-size: .78rem; letter-spacing: .03em; text-transform: uppercase;
         }
         table.data-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
@@ -138,65 +139,46 @@
         html.dark .page-btn.active { background: #4361ee; color: #fff; border-color: #4361ee; }
 
         @media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
+            html.dark table.data-table thead th { background: #0f172a !important; color: #94a3b8 !important; border-bottom-color: #334155 !important; }
     </style>
 
     <div class="data-page space-y-6">
 
-        {{-- Hero Banner Header --}}
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
-            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Modul Master Data Sempro
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Data Sempro</h1>
-                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                        Kelola data mahasiswa seminar proposal (sempro).
-                    </p>
-                </div>
-                <div class="shrink-0 flex items-center gap-2 flex-wrap">
-                    <a href="{{ route('master.sempro.export', request()->query()) }}" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <span>Export Excel</span>
-                    </a>
-                    <a href="{{ route('master.sempro.import.form') }}" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-extrabold text-xs rounded-xl border border-white/15 transition-all cursor-pointer">
-                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                        Import Excel
-                    </a>
-                    <button onclick="openModal('modal-tambah')" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white text-slate-900 hover:bg-indigo-50 font-extrabold text-xs rounded-xl shadow-lg transition-all cursor-pointer">
-                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Tambah Data
+        {{-- Header halaman --}}
+        <x-page-header title="Data Sempro" subtitle="Kelola data mahasiswa seminar proposal (sempro)." icon="document" accent="indigo" class="!mb-0">
+            <x-slot:actions>
+                <a href="{{ route('master.sempro.export', request()->query()) }}" class="ui-btn-secondary">
+                    <x-icon name="download" class="w-4 h-4" /> Export Excel
+                </a>
+                <a href="{{ route('master.sempro.import.form') }}" class="ui-btn-secondary">
+                    <x-icon name="upload" class="w-4 h-4" /> Import Excel
+                </a>
+                <button type="button" onclick="openModal('modal-tambah')" class="ui-btn-primary">
+                    <x-icon name="plus" class="w-4 h-4" /> Tambah Data
+                </button>
+                <form action="{{ route('master.sempro.destroy-all') }}" method="POST" onsubmit="return confirm('⚠️ KONFIRMASI HAPUS SEMUA DATA:\nApakah Anda yakin ingin menghapus SELURUH data sempro?\n\nTindakan ini tidak dapat dibatalkan!');" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="ui-btn-danger-soft">
+                        <x-icon name="trash" class="w-4 h-4" /> Hapus Semua
                     </button>
-                    <form action="{{ route('master.sempro.destroy-all') }}" method="POST" onsubmit="return confirm('⚠️ KONFIRMASI HAPUS SEMUA DATA:\nApakah Anda yakin ingin menghapus SELURUH data sempro?\n\nTindakan ini tidak dapat dibatalkan!');" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-rose-500/90 hover:bg-rose-500 text-white font-extrabold text-xs rounded-xl border border-rose-400/40 shadow-lg transition-all cursor-pointer">
-                            🗑️ Hapus Semua Data
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
+                </form>
+            </x-slot:actions>
+        </x-page-header>
 
         {{-- Stats --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="stat-card">
-                <div class="stat-icon blue">📋</div>
+                <div class="stat-icon blue"><x-icon name="clipboard-list" /></div>
                 <div>
                     <div class="stat-value">{{ $totalSempro }}</div>
                     <div class="stat-label">Total Mahasiswa Sempro</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon green">📅</div>
+                <div class="stat-icon green"><x-icon name="calendar" /></div>
                 <div>
-                    <div class="stat-value">{{ $activePeriode ? $activePeriode->nama_periode : '—' }}</div>
+                    <div class="stat-value" style="font-size:1.1rem;line-height:1.3">{{ $activePeriode ? $activePeriode->nama_periode : '—' }}</div>
                     <div class="stat-label">Periode Aktif</div>
                 </div>
             </div>
@@ -264,7 +246,7 @@
 
             <button type="submit" class="btn btn-primary">Filter</button>
             @if(request()->hasAny(['search','status','periode_id','gelombang','per_page','dosen_pembimbing_id']))
-                <a href="{{ route('master.sempro.index') }}" class="btn btn-outline">✕ Reset</a>
+                <a href="{{ route('master.sempro.index') }}" class="btn btn-outline"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset</a>
             @endif
         </form>
 
@@ -272,7 +254,7 @@
         <div id="bulk-bar" style="display:none;" class="items-center justify-between gap-3 flex-wrap mb-4 px-4 py-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
             <span class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300"><span id="bulk-count">0</span> data dipilih</span>
             <div class="flex gap-2">
-                <button type="button" class="btn btn-danger btn-sm cursor-pointer" onclick="bulkDeleteSelected()">🗑️ Hapus Terpilih</button>
+                <button type="button" class="btn btn-danger btn-sm cursor-pointer" onclick="bulkDeleteSelected()"><x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Hapus Terpilih</button>
                 <button type="button" class="btn btn-outline btn-sm cursor-pointer" onclick="toggleSelectAll(null, true)">Batalkan Pilihan</button>
             </div>
         </div>
@@ -321,7 +303,7 @@
                                     @if($item->file_persyaratan)
                                         <div class="mt-1">
                                             <a href="{{ route('dokumen.show', [$item, 'persyaratan']) }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold">
-                                                <span>📄</span> Berkas (PDF)
+                                                <span><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Berkas (PDF)
                                             </a>
                                         </div>
                                     @endif
@@ -368,18 +350,18 @@
                                             'dosen_pembimbing_utama_id'      => $item->dosen_pembimbing_utama_id,
                                             'dosen_pembimbing_pendamping_id' => $item->dosen_pembimbing_pendamping_id,
                                         ]) }})">
-                                        ✏️
+                                        <x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                     </button>
                                     <button class="btn btn-danger btn-sm" title="Hapus"
                                         onclick="confirmHapus('{{ $item->hash_id }}', {{ json_encode($item->nama_mahasiswa) }})">
-                                        🗑️
+                                        <x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                     </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="10" class="text-center text-slate-400 dark:text-slate-500" style="padding:3rem;">
-                                    <div style="font-size:2.5rem; margin-bottom:.5rem;">📂</div>
+                                    <div style="font-size:2.5rem; margin-bottom:.5rem;"><x-icon name="folder" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></div>
                                     <div class="font-bold text-slate-500 dark:text-slate-400">Belum ada data sempro</div>
                                     <div class="text-slate-400 dark:text-slate-500" style="font-size:.82rem; margin-top:.25rem;">Import Excel atau tambah data secara manual.</div>
                                 </td>
@@ -424,8 +406,8 @@
     <div id="modal-tambah" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-tambah')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">➕ Tambah Data Sempro</span>
-                <button class="modal-close" onclick="closeModal('modal-tambah')">✕</button>
+                <span class="modal-title"><x-icon name="plus" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tambah Data Sempro</span>
+                <button class="modal-close" onclick="closeModal('modal-tambah')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <form method="POST" action="{{ route('master.sempro.store') }}" id="form-tambah">
                 @csrf
@@ -499,7 +481,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" onclick="closeModal('modal-tambah')" class="btn btn-outline">Batal</button>
-                    <button type="submit" class="btn btn-primary">💾 Simpan Data</button>
+                    <button type="submit" class="btn btn-primary"><x-icon name="save" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Simpan Data</button>
                 </div>
             </form>
         </div>
@@ -511,8 +493,8 @@
     <div id="modal-edit" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-edit')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">✏️ Edit Data Sempro</span>
-                <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
+                <span class="modal-title"><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Edit Data Sempro</span>
+                <button class="modal-close" onclick="closeModal('modal-edit')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <form method="POST" id="form-edit" action="">
                 @csrf @method('PUT')
@@ -583,7 +565,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" onclick="closeModal('modal-edit')" class="btn btn-outline">Batal</button>
-                    <button type="submit" class="btn btn-primary">💾 Simpan Perubahan</button>
+                    <button type="submit" class="btn btn-primary"><x-icon name="save" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -595,17 +577,17 @@
     <div id="modal-hapus" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-hapus')">
         <div class="modal-box modal-sm">
             <div class="modal-header">
-                <span class="modal-title">🗑️ Konfirmasi Hapus</span>
-                <button class="modal-close" onclick="closeModal('modal-hapus')">✕</button>
+                <span class="modal-title"><x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Konfirmasi Hapus</span>
+                <button class="modal-close" onclick="closeModal('modal-hapus')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <div class="modal-body" style="text-align:center; padding: 2rem 1.5rem;">
-                <div style="font-size:3rem; margin-bottom:1rem;">⚠️</div>
+                <div style="font-size:3rem; margin-bottom:1rem;"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></div>
                 <p class="text-slate-900 dark:text-slate-100" style="font-weight:700; font-size:1rem; margin-bottom:.5rem;">Hapus data ini?</p>
                 <p id="hapus-detail" class="text-slate-500 dark:text-slate-400" style="font-size:.85rem; margin-bottom:0;"></p>
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="closeModal('modal-hapus')" class="btn btn-outline">Batal</button>
-                <button type="button" id="btn-konfirmasi-hapus" class="btn btn-danger">🗑️ Ya, Hapus</button>
+                <button type="button" id="btn-konfirmasi-hapus" class="btn btn-danger"><x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Ya, Hapus</button>
             </div>
         </div>
     </div>
@@ -616,8 +598,8 @@
     <div id="modal-verifikasi" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-verifikasi')">
         <div class="modal-box modal-sm">
             <div class="modal-header">
-                <span class="modal-title" id="verif-title">🛡️ Verifikasi Pendaftaran</span>
-                <button class="modal-close" onclick="closeModal('modal-verifikasi')">✕</button>
+                <span class="modal-title" id="verif-title"><x-icon name="shield" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Verifikasi Pendaftaran</span>
+                <button class="modal-close" onclick="closeModal('modal-verifikasi')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <form id="verif-form" method="POST" action="">
                 @csrf

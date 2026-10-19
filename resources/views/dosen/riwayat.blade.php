@@ -13,11 +13,9 @@
         </a>
     </div>
 
-    <!-- Page Header -->
-    <div class="mb-6">
-        <h2 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Riwayat Menguji</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Rekap seluruh sidang skripsi & seminar proposal yang telah Anda uji/bimbing, lintas tahun ajaran.</p>
-    </div>
+    <x-page-header title="Riwayat Menguji" icon="clock" accent="indigo">
+            <x-slot:description>Rekap seluruh sidang skripsi & seminar proposal yang telah Anda uji/bimbing, lintas tahun ajaran.</x-slot:description>
+        </x-page-header>
 
     @if($dosen)
         <!-- Rekap Summary -->
@@ -36,11 +34,11 @@
             </div>
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
                 <p class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">{{ $rekap['lulus'] }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1">🎓 Lulus</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1"><x-icon name="academic" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Lulus</p>
             </div>
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
                 <p class="text-xl font-extrabold text-rose-600 dark:text-rose-400 leading-none">{{ $rekap['tidak_lulus'] }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1">✕ Tidak Lulus</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tidak Lulus</p>
             </div>
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
                 <p class="text-xl font-extrabold text-slate-400 dark:text-slate-500 leading-none">{{ $rekap['belum'] }}</p>
@@ -106,7 +104,7 @@
                 </a>
             @endif
             <a href="{{ route('dosen.riwayat.export', request()->query()) }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm border border-emerald-500 inline-flex items-center gap-1.5">
-                📥 Unduh Rekap
+                <x-icon name="download" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Unduh Rekap
             </a>
         </div>
     </form>

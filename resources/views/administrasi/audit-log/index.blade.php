@@ -3,22 +3,10 @@
 
     <div class="space-y-6">
 
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <div>
-                <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
-                    <span class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </span>
-                    Riwayat Aktivitas (Audit Log)
-                </h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Jejak perubahan jadwal, verifikasi pendaftaran, dan data dosen — siapa mengubah apa dan kapan.
-                </p>
-            </div>
-        </div>
+        <!-- Header -->
+        <x-page-header title="Riwayat Aktivitas (Audit Log)" icon="clock" accent="slate" class="!mb-0">
+            <x-slot:description>Jejak perubahan jadwal, verifikasi pendaftaran, dan data dosen — siapa mengubah apa dan kapan.</x-slot:description>
+        </x-page-header>
 
         <!-- Filter -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">

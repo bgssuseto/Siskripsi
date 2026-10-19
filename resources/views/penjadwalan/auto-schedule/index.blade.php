@@ -3,28 +3,15 @@
 
     <div class="space-y-6">
 
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <div>
-                <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
-                    <span class="p-2 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-300 rounded-xl">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </span>
-                    Asisten Plotting Jadwal Otomatis
-                </h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Usulan jadwal dibuat otomatis dari irisan kesediaan dosen yang terlibat & ruang Master Ruang yang masih kosong, dibatasi jam operasional <strong>09.00–17.00</strong>. Setiap baris bisa <strong>ditinjau dan diedit langsung</strong> — tanggal, jam, ruangan, maupun dewan penguji — sebelum diterapkan.
-                    Ketua/Penguji 1 yang belum diisi dipilihkan otomatis sesuai <strong>Rule Komposisi Dosen Penguji</strong> (pasangan terlarang tidak akan dipasangkan) dan <strong>jenjang jabatan fungsional</strong> (Asisten Ahli &lt; Lektor &lt; Lektor Kepala &lt; Guru Besar — Penguji 1 tidak akan melebihi jenjang Ketua Penguji), dengan prioritas dosen yang beban mengujinya masih di bawah jumlah mahasiswa yang ia luluskan. Ruang diusahakan tidak berpindah-pindah bagi dewan penguji yang sama dalam satu hari.
-                </p>
-            </div>
-        </div>
+        <!-- Header -->
+        <x-page-header title="Asisten Plotting Jadwal Otomatis" icon="lightning" accent="violet" class="!mb-0">
+            <x-slot:description>Usulan jadwal dibuat otomatis dari irisan kesediaan dosen yang terlibat & ruang Master Ruang yang masih kosong, dibatasi jam operasional <strong>09.00–17.00</strong>. Setiap baris bisa <strong>ditinjau dan diedit langsung</strong> — tanggal, jam, ruangan, maupun dewan penguji — sebelum diterapkan. Ketua/Penguji 1 yang belum diisi dipilihkan otomatis sesuai <strong>Rule Komposisi Dosen Penguji</strong> (pasangan terlarang tidak akan dipasangkan) dan <strong>jenjang jabatan fungsional</strong> (Asisten Ahli &lt; Lektor &lt; Lektor Kepala &lt; Guru Besar — Penguji 1 tidak akan melebihi jenjang Ketua Penguji), dengan prioritas dosen yang beban mengujinya masih di bawah jumlah mahasiswa yang ia luluskan. Ruang diusahakan tidak berpindah-pindah bagi dewan penguji yang sama dalam satu hari.</x-slot:description>
+        </x-page-header>
 
         @if(!empty($sidangIds))
         <div class="flex items-center justify-between gap-3 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-800 rounded-2xl p-4 text-sm">
             <span class="font-semibold text-violet-800 dark:text-violet-300">
-                🎯 Mode Terpilih — hanya menjadwalkan {{ count($sidangIds) }} mahasiswa yang Anda pilih dari daftar, bukan seluruh gelombang.
+                <x-icon name="flag" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Mode Terpilih — hanya menjadwalkan {{ count($sidangIds) }} mahasiswa yang Anda pilih dari daftar, bukan seluruh gelombang.
             </span>
             <a href="{{ route('jadwal.auto-plot.index', ['generate' => 1, 'periode_id' => $selectedPeriodeId, 'jenis' => $jenis, 'gelombang' => $selectedGelombang, 'slot_menit' => $slotMinutes]) }}"
                class="text-xs font-bold text-violet-700 dark:text-violet-300 underline hover:no-underline whitespace-nowrap">
@@ -168,7 +155,7 @@
                                     <div class="font-semibold text-slate-800 dark:text-slate-100">{{ $p['nama'] }}</div>
                                     <div class="text-[11px] text-slate-400 dark:text-slate-500">{{ $p['nim'] }} &middot; {{ $p['jenis_label'] }}</div>
                                     @if(!empty($p['auto_penguji']))
-                                    <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300">⚡ Penguji Otomatis</span>
+                                    <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300"><x-icon name="lightning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Penguji Otomatis</span>
                                     @endif
                                     <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{{ $p['dosen_display'][0] ?? '' }}</div>
                                 </td>

@@ -4,30 +4,13 @@
     <div class="max-w-7xl mx-auto space-y-6">
 
         <!-- Hero Banner Header -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
-            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Modul Administrasi Undangan
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Generate Undangan Sidang Dosen</h1>
-                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                        Filter berdasarkan rentang tanggal pendaftaran gelombang sidang untuk membuat dokumen undangan menguji bagi setiap dosen.
-                    </p>
-                </div>
-
+        <x-page-header title="Generate Undangan Sidang Dosen" subtitle="Filter berdasarkan rentang tanggal pendaftaran gelombang sidang untuk membuat dokumen undangan menguji bagi setiap dosen." icon="mail" accent="indigo">
+            <x-slot:actions>
                 @if($dosenList->count() > 0)
-                <div class="shrink-0 flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 px-4 py-3 shadow-md">
-                    <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Dosen Penguji</p>
-                    <p class="text-sm font-extrabold text-white">{{ $dosenList->count() }}</p>
-                </div>
+                <span class="ui-chip">Dosen Penguji: <strong class="text-slate-900 dark:text-white">{{ $dosenList->count() }}</strong></span>
                 @endif
-            </div>
-        </div>
+            </x-slot:actions>
+        </x-page-header>
 
         @if($dosenList->count() > 0)
         <div class="flex items-center gap-2 flex-wrap">

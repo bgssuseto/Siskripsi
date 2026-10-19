@@ -3,22 +3,10 @@
 
     <div class="space-y-6">
 
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <div>
-                <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
-                    <span class="p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 rounded-xl">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </span>
-                    Dashboard Analitik Koordinator/Kaprodi
-                </h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Rekap beban bimbingan &amp; menguji dosen, keterpakaian ruang, dan timeline sidang dalam satu tampilan level program studi.
-                </p>
-            </div>
-        </div>
+        <!-- Header -->
+        <x-page-header title="Dashboard Analitik Koordinator/Kaprodi" icon="chart" accent="indigo" class="!mb-0">
+            <x-slot:description>Rekap beban bimbingan &amp; menguji dosen, keterpakaian ruang, dan timeline sidang dalam satu tampilan level program studi.</x-slot:description>
+        </x-page-header>
 
         <!-- Filter -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
@@ -144,7 +132,7 @@
                              class="mt-2.5 flex flex-wrap gap-1.5">
                             @foreach($row['jadwal'] as $j)
                             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10.5px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                                📅 {{ $j['tanggal_label'] }} <span class="text-slate-300 dark:text-slate-600">·</span> <span class="text-indigo-600 dark:text-indigo-300">{{ $j['jumlah'] }} sidang</span>
+                                <x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $j['tanggal_label'] }} <span class="text-slate-300 dark:text-slate-600">·</span> <span class="text-indigo-600 dark:text-indigo-300">{{ $j['jumlah'] }} sidang</span>
                             </span>
                             @endforeach
                         </div>

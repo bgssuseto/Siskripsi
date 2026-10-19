@@ -2,17 +2,7 @@
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
     
     <!-- Welcome Header Banner -->
-    <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 rounded-3xl text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-800">
-        <div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold border border-indigo-400/30 mb-2">
-                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span> Role: Mahasiswa
-            </div>
-            <h1 class="text-2xl font-extrabold tracking-tight">
-                {{ ($type ?? 'sempro') === 'sempro' ? 'Jadwal Seminar Proposal (Sempro)' : 'Jadwal Sidang Skripsi' }}
-            </h1>
-            <p class="text-xs text-indigo-200 mt-1">Pantau informasi waktu, ruang ujian, dosen pembimbing, dan dewan penguji Anda.</p>
-        </div>
-    </div>
+    <x-page-header title="{{ ($type ?? 'sempro') === 'sempro' ? 'Jadwal Seminar Proposal (Sempro)' : 'Jadwal Sidang Skripsi' }}" subtitle="Pantau informasi waktu, ruang ujian, dosen pembimbing, dan dewan penguji Anda." icon="calendar" accent="indigo"></x-page-header>
 
     <!-- Informasi & Tata Tertib Persiapan Sidang -->
     <x-info-persiapan-sidang />
@@ -33,8 +23,8 @@
 
         @if($sidangs->isEmpty())
             <div class="text-center py-14 bg-slate-50/60 dark:bg-slate-950/40 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-                <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">
-                    📅
+                <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <x-icon name="calendar" class="w-5 h-5" />
                 </div>
                 <p class="text-sm font-extrabold text-slate-700 dark:text-slate-200">Belum Ada Agenda Ujian</p>
                 <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
@@ -62,11 +52,11 @@
                                 
                                 @if($isPlotted)
                                     <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-extrabold rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                                        ✓ Terjadwal & Plotting Selesai
+                                        <x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Terjadwal & Plotting Selesai
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-extrabold rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs">
-                                        ⏳ Belum di-Plotting
+                                        <x-icon name="clock" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Belum di-Plotting
                                     </span>
                                 @endif
                             </div>
@@ -89,7 +79,7 @@
                             <!-- Box 1: Tanggal & Waktu -->
                             <div class="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1">
                                 <div class="flex items-center gap-2 text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                                    <span class="text-base">📅</span> Jadwal Pelaksanaan Ujian
+                                    <span class="text-base"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Jadwal Pelaksanaan Ujian
                                 </div>
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-500 dark:text-slate-400 font-medium">Tanggal Ujian:</span>
@@ -112,7 +102,7 @@
                             <!-- Box 2: Ruangan Ujian -->
                             <div class="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1">
                                 <div class="flex items-center gap-2 text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                                    <span class="text-base">📍</span> Lokasi & Ruang Ujian
+                                    <span class="text-base"><x-icon name="map-pin" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Lokasi & Ruang Ujian
                                 </div>
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="text-slate-500 dark:text-slate-400 font-medium">Ruang Sidang:</span>
@@ -144,7 +134,7 @@
                             @endphp
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
                                 <div class="flex items-center gap-2.5">
-                                    <span class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-lg shrink-0">✅</span>
+                                    <span class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0"><x-icon name="check-circle" class="w-4 h-4" /></span>
                                     <div>
                                         <p class="text-xs font-extrabold text-emerald-900 dark:text-emerald-300">Bergabung ke Grup WhatsApp</p>
                                         <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-medium">Untuk info & koordinasi lebih lanjut seputar pelaksanaan ujian.</p>
@@ -152,7 +142,7 @@
                                 </div>
                                 @if($waLink)
                                     <a href="{{ route('mahasiswa.sidang.join-wa', $s) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 shrink-0">
-                                        <span>💬</span> Join Grup WhatsApp
+                                        <span><x-icon name="chat" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Join Grup WhatsApp
                                     </a>
                                 @else
                                     <span class="text-[11px] text-emerald-700/70 dark:text-emerald-400/70 font-semibold italic shrink-0">Link grup belum diatur oleh admin.</span>
@@ -165,7 +155,7 @@
                             <!-- Box 1: Dosen Pembimbing (Untuk Sempro sekaligus Penguji) -->
                             <div class="p-4 bg-indigo-50/40 dark:bg-indigo-950/30 rounded-2xl border border-indigo-100 dark:border-indigo-900 space-y-2">
                                 <p class="text-xs font-extrabold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
-                                    <span>👨‍🏫</span> {{ $s->jenis_tugas_akhir === 'sempro' ? 'Tim Dosen Pembimbing & Penguji Sempro' : 'Tim Dosen Pembimbing' }}
+                                    <span><x-icon name="user" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> {{ $s->jenis_tugas_akhir === 'sempro' ? 'Tim Dosen Pembimbing & Penguji Sempro' : 'Tim Dosen Pembimbing' }}
                                 </p>
                                 <div class="space-y-1 text-xs">
                                     <div class="flex items-start justify-between gap-2">
@@ -187,7 +177,7 @@
                             <!-- Box 2: Tim Penguji (Hanya untuk Sidang Skripsi) -->
                             <div class="p-4 bg-purple-50/40 dark:bg-purple-950/30 rounded-2xl border border-purple-100 dark:border-purple-900 space-y-2">
                                 <p class="text-xs font-extrabold text-purple-900 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-                                    <span>👨‍⚖️</span> Dewan Penguji Ujian
+                                    <span><x-icon name="user" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /><x-icon name="shield" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Dewan Penguji Ujian
                                 </p>
                                 <div class="space-y-1.5 text-xs">
                                     <div class="flex items-start justify-between gap-2">
@@ -230,7 +220,7 @@
         <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 p-6 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center gap-2">
-                    <span class="text-lg">📜</span>
+                    <span class="text-lg"><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Riwayat Seminar Proposal (Sempro) Terdahulu</h2>
                         <p class="text-xs text-slate-500 dark:text-slate-400">Arsip riwayat pelaksanaan Seminar Proposal Anda</p>
@@ -246,7 +236,7 @@
                     <div class="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all">
                         <div class="space-y-1.5 max-w-xl">
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs">
-                                ✓ Sempro Lulus / Terdata
+                                <x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Sempro Lulus / Terdata
                             </span>
                             <h4 class="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm leading-snug">"{{ $sh->judul_skripsi }}"</h4>
                             <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium">Dosbing: <strong class="text-slate-800 dark:text-slate-200 font-bold">{{ $sh->pembimbingUtama->nama_dosen ?? '-' }}</strong></p>
@@ -255,7 +245,7 @@
                             <p class="font-extrabold text-slate-900 dark:text-slate-100 text-xs">{{ $sh->tanggal ? $sh->tanggal->format('d M Y') : 'Status: Selesai' }}</p>
                             <div>
                                 <span class="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 font-extrabold text-[11px] rounded-xl shadow-2xs">
-                                    📍 Ruang: {{ $sh->ruang ? $sh->ruang->nama_ruangan : 'Belum di-Plotting' }}
+                                    <x-icon name="map-pin" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Ruang: {{ $sh->ruang ? $sh->ruang->nama_ruangan : 'Belum di-Plotting' }}
                                 </span>
                             </div>
                         </div>

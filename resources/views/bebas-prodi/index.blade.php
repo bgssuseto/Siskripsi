@@ -11,15 +11,11 @@
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6"
      x-data="{ modal: false, mode: 'disetujui', action: '', nama: '', kaprodiModal: {{ $errors->hasAny(['nama', 'mulai_menjabat', 'selesai_menjabat']) ? 'true' : 'false' }} }">
 
-    <div class="bg-gradient-to-r from-teal-900 via-slate-900 to-emerald-950 p-6 rounded-2xl text-white shadow-xl flex flex-wrap gap-3 justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-extrabold mb-1">Bebas Prodi</h1>
-            <p class="text-xs text-teal-200">Verifikasi pengajuan Surat Keterangan Bebas Prodi mahasiswa.</p>
-        </div>
-        <span class="px-3.5 py-1.5 bg-teal-500/30 border border-teal-400/30 text-teal-100 text-xs font-bold rounded-xl">
-            Nomor berikutnya: <span class="font-mono">TI/BP/{{ $nextNomor }}</span>
-        </span>
-    </div>
+    <x-page-header title="Bebas Prodi" subtitle="Verifikasi pengajuan Surat Keterangan Bebas Prodi mahasiswa." icon="badge-check" accent="teal">
+            <x-slot:actions>
+                <span class="ui-chip"><x-icon name="tag" class="w-3.5 h-3.5" /> Nomor berikutnya: <strong class="font-mono text-slate-900 dark:text-white">TI/BP/{{ $nextNomor }}</strong></span>
+            </x-slot:actions>
+        </x-page-header>
 
     @if($errors->any())
         <div class="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl p-3 text-xs text-rose-800 dark:text-rose-300">
@@ -43,7 +39,7 @@
             @if($kaprodiSekarang)
                 <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200">{{ $kaprodiSekarang->nama }}</p>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400">Masa jabatan: {{ $kaprodiSekarang->masa_jabatan }}</p>
-                <p class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">✓ Tanda tangan elektronik (QR Code) dibuat otomatis di setiap surat</p>
+                <p class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400"><x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tanda tangan elektronik (QR Code) dibuat otomatis di setiap surat</p>
             @else
                 <p class="text-[11px] font-bold text-rose-600 dark:text-rose-400">Belum ada data Kaprodi.</p>
             @endif
@@ -85,7 +81,7 @@
                             </td>
                             <td class="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold">{{ $p->jalur === 'jurnal' ? 'Jurnal' : 'Sidang' }}</td>
                             <td class="px-4 py-3 space-y-1">
-                                <a href="{{ route('bebas-prodi.berkas', $p) }}" target="_blank" class="block font-bold text-teal-700 dark:text-teal-400 hover:underline">📄 Berkas PDF</a>
+                                <a href="{{ route('bebas-prodi.berkas', $p) }}" target="_blank" class="block font-bold text-teal-700 dark:text-teal-400 hover:underline"><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Berkas PDF</a>
                                 @if($p->link_poster)<a href="{{ $p->link_poster }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">Poster Skripsi</a>@endif
                                 <a href="{{ $p->link_linkedin }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">LinkedIn</a>
                                 @if($p->link_program)<a href="{{ $p->link_program }}" target="_blank" rel="noopener noreferrer" class="block text-sky-700 dark:text-sky-400 hover:underline">Program Aplikasi</a>@endif
@@ -97,7 +93,7 @@
                                 @if($p->status === 'disetujui')
                                     <p class="mt-1 font-mono text-[10px] text-slate-600 dark:text-slate-400">{{ $p->nomor_surat_lengkap }}</p>
                                     <p class="text-[10px] text-slate-500">{{ $p->tanggal_surat?->locale('id')->translatedFormat('j M Y') }}</p>
-                                    @if($p->kaprodi)<p class="text-[10px] text-slate-500" title="Penandatangan">✍️ {{ $p->kaprodi->nama }}</p>@endif
+                                    @if($p->kaprodi)<p class="text-[10px] text-slate-500" title="Penandatangan"><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $p->kaprodi->nama }}</p>@endif
                                 @elseif($p->status === 'ditolak' && $p->komentar)
                                     <p class="mt-1 text-[10px] text-rose-700 dark:text-rose-400 max-w-[200px]">{{ $p->komentar }}</p>
                                 @endif
@@ -113,7 +109,7 @@
                                                 class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg">Tolak</button>
                                     @endif
                                     @if($p->status === 'disetujui')
-                                        <a href="{{ route('bebas-prodi.cetak', $p) }}" target="_blank" class="px-2.5 py-1.5 bg-slate-800 dark:bg-slate-600 hover:bg-slate-900 text-white text-[11px] font-bold rounded-lg">🖨️ Cetak</a>
+                                        <a href="{{ route('bebas-prodi.cetak', $p) }}" target="_blank" class="px-2.5 py-1.5 bg-slate-800 dark:bg-slate-600 hover:bg-slate-900 text-white text-[11px] font-bold rounded-lg"><x-icon name="printer" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Cetak</a>
                                     @endif
                                     @if($isSuperAdmin)
                                         <form method="POST" action="{{ route('bebas-prodi.destroy', $p) }}" onsubmit="return confirm('Hapus pengajuan Bebas Prodi {{ addslashes($p->nama_mahasiswa) }}? Berkas juga akan dihapus.')">
@@ -188,7 +184,7 @@
                     <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Kelola Kaprodi Penandatangan</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400">Surat ditandatangani secara elektronik (QR Code) atas nama Kaprodi yang menjabat pada tanggal surat. Surat yang sudah terbit tetap memakai Kaprodi saat itu.</p>
                 </div>
-                <button type="button" @click="kaprodiModal = false" class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-500 text-xs font-bold shrink-0">✕</button>
+                <button type="button" @click="kaprodiModal = false" class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-500 text-xs font-bold shrink-0"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
 
             <div class="p-6 space-y-4">

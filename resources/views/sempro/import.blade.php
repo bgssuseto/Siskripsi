@@ -13,14 +13,20 @@
         }
 
         .import-header {
-            background: linear-gradient(135deg, #4361ee 0%, #8b5cf6 100%);
-            padding: 2rem 2rem 1.5rem;
-            color: #fff;
+            background: #fff;
+            padding: 1.75rem 2rem 1.5rem;
+            color: #0f172a;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex; gap: .9rem; align-items: flex-start;
         }
+        .import-header .ikon { width: 44px; height: 44px; border-radius: 14px; background: #eef1fe; color: #4361ee; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        html.dark .import-header { background: #1e293b; color: #f1f5f9; border-bottom-color: #334155; }
+        html.dark .import-header p { color: #94a3b8 !important; }
+        html.dark .import-header .ikon { background: rgba(67,97,238,.18); color: #8b9cf7; }
         .import-header h1 {
-            font-size: 1.4rem; font-weight: 800; margin: 0 0 .4rem;
+            font-size: 1.25rem; font-weight: 800; margin: 0 0 .3rem; letter-spacing: -.01em;
         }
-        .import-header p { font-size: .875rem; opacity: .85; margin: 0; }
+        .import-header p { font-size: .875rem; color: #64748b; margin: 0; }
 
         .import-body { padding: 1.75rem 2rem; }
         .import-footer {
@@ -130,8 +136,11 @@
         <div class="import-card">
             {{-- Header --}}
             <div class="import-header">
-                <h1>📥 Import Data Sempro dari Excel</h1>
+                <span class="ikon"><x-icon name="upload" class="w-5 h-5" /></span>
+                <div>
+                    <h1>Import Data Sempro dari Excel</h1>
                 <p>Upload file Excel (.xlsx) sesuai format yang sudah ditentukan. Data akan diproses secara otomatis.</p>
+            </div>
             </div>
 
             {{-- Body --}}
@@ -143,7 +152,7 @@
                     <div class="drop-zone" id="drop-zone">
                         <input type="file" name="excel_file" id="file-input" accept=".xlsx,.xls" required
                                onchange="updateFileName(this)">
-                        <span class="drop-zone-icon">📊</span>
+                        <span class="drop-zone-icon"><x-icon name="chart" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         <div class="drop-zone-title">Klik atau seret file Excel ke sini</div>
                         <div class="drop-zone-hint">Format yang didukung: .xlsx, .xls</div>
                         <div class="file-name-display" id="file-name-display"></div>
@@ -151,7 +160,7 @@
 
                     {{-- Info sheet format --}}
                     <div class="info-box" style="margin-top:1.5rem;">
-                        <h3>📋 Format Excel yang Diperlukan</h3>
+                        <h3><x-icon name="clipboard-list" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Format Excel yang Diperlukan</h3>
                         <ul>
                             <li>File Excel harus memiliki sheet berisi data Sempro</li>
                             <li>Baris pertama adalah header, data dimulai dari baris ke-2</li>
@@ -171,9 +180,9 @@
                             </thead>
                             <tbody>
                                 <tr><td>A</td><td>—</td><td>No</td><td>Opsional (diabaikan & tidak diimpor)</td></tr>
-                                <tr><td>B</td><td>A</td><td>NIM</td><td>⚠ Wajib, unik per sheet</td></tr>
-                                <tr><td>C</td><td>B</td><td>Nama</td><td>⚠ Wajib, huruf kapital</td></tr>
-                                <tr><td>D</td><td>C</td><td>Judul Skripsi</td><td>⚠ Wajib (dapat berupa judul proposal/skripsi)</td></tr>
+                                <tr><td>B</td><td>A</td><td>NIM</td><td><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Wajib, unik per sheet</td></tr>
+                                <tr><td>C</td><td>B</td><td>Nama</td><td><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Wajib, huruf kapital</td></tr>
+                                <tr><td>D</td><td>C</td><td>Judul Skripsi</td><td><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Wajib (dapat berupa judul proposal/skripsi)</td></tr>
                                 <tr><td>E</td><td>D</td><td>Dosbing Utama</td><td>Nama dosen pembimbing utama</td></tr>
                                 <tr><td>F</td><td>E</td><td>Dosbing Pendamping</td><td>Opsional</td></tr>
                                 <tr><td>G</td><td>F</td><td>Tgl Daftar</td><td>Contoh: <em>Senin, 13 Juli 2026</em></td></tr>
@@ -183,7 +192,7 @@
 
                     {{-- Warning --}}
                     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:.85rem 1rem;margin-top:1rem;font-size:.82rem;color:#92400e;">
-                        ⚠ <strong>Perhatian:</strong> Import akan memperbarui data yang sudah ada berdasarkan NIM.
+                        <x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> <strong>Perhatian:</strong> Import akan memperbarui data yang sudah ada berdasarkan NIM.
                         Data baru akan ditambahkan otomatis.
                     </div>
                 </div>

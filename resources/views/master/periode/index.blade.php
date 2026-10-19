@@ -276,32 +276,11 @@
     }">
 
         {{-- Hero Banner Header --}}
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-6">
-            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Modul Master Periode Akademik
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Master Periode Akademik</h1>
-                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                        Kelola data periode semester aktif untuk jadwal sidang skripsi.
-                    </p>
-                </div>
-
-                <div class="shrink-0">
-                    <button @click="createModal = true" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-indigo-50 font-semibold text-sm px-4 py-2.5 rounded-xl transition-all duration-200 shadow-lg focus:outline-none cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Tambah Periode
-                    </button>
-                </div>
-            </div>
-        </div>
+        <x-page-header title="Master Periode Akademik" subtitle="Kelola data periode semester aktif untuk jadwal sidang skripsi." icon="calendar" accent="indigo">
+            <x-slot:actions>
+                <button @click="createModal = true" class="ui-btn-primary"><x-icon name="plus" class="w-4 h-4" /> Tambah Periode</button>
+            </x-slot:actions>
+        </x-page-header>
 
         {{-- Search & stats bar --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -330,7 +309,7 @@
                     </p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold">
-                    ✓
+                    <x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                 </div>
             </div>
         </div>
@@ -516,7 +495,7 @@
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
                     <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Tambah Periode Akademik</h3>
                     <button @click="createModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
-                        ✕
+                        <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                     </button>
                 </div>
                 <form method="POST" action="{{ route('master.periode.store') }}" @submit.prevent="submitCreate($event)" class="p-6 space-y-4">
@@ -575,7 +554,7 @@
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
                     <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Edit Periode Akademik</h3>
                     <button @click="editModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
-                        ✕
+                        <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                     </button>
                 </div>
                 <form method="POST" :action="`{{ route('master.periode.index') }}/${editPeriode.id}`" @submit.prevent="submitEdit($event)" class="p-6 space-y-4">
@@ -627,12 +606,12 @@
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
                     <h3 class="text-base font-bold text-rose-600 dark:text-rose-400">Hapus Periode</h3>
                     <button @click="deleteModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
-                        ✕
+                        <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                     </button>
                 </div>
                 <div class="p-6">
                     <p class="text-sm text-slate-600 dark:text-slate-400">Apakah Anda yakin ingin menghapus periode <strong class="text-slate-900 dark:text-slate-100" x-text="editPeriode.nama_periode"></strong>?</p>
-                    <p class="text-xs text-rose-500 dark:text-rose-400 mt-2 font-semibold">⚠️ Tindakan ini tidak dapat dibatalkan.</p>
+                    <p class="text-xs text-rose-500 dark:text-rose-400 mt-2 font-semibold"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tindakan ini tidak dapat dibatalkan.</p>
                 </div>
                 <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
                     <button type="button" @click="deleteModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
@@ -651,7 +630,7 @@
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
                     <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Tambah Gelombang Pendaftaran</h3>
                     <button @click="waveCreateModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
-                        ✕
+                        <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                     </button>
                 </div>
                 <form method="POST" action="{{ route('master.pendaftaran-periode.store') }}" @submit.prevent="submitWaveCreate($event)" class="p-6 space-y-4">
@@ -721,7 +700,7 @@
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
                     <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Edit Gelombang Pendaftaran</h3>
                     <button @click="waveEditModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
-                        ✕
+                        <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                     </button>
                 </div>
                 <form method="POST" :action="`{{ route('master.pendaftaran-periode.store') }}/${editWave.id}`" @submit.prevent="submitWaveEdit($event)" class="p-6 space-y-4">
@@ -792,12 +771,12 @@
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-700/30">
                     <h3 class="text-base font-bold text-rose-600 dark:text-rose-400">Hapus Gelombang Pendaftaran</h3>
                     <button @click="waveDeleteModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
-                        ✕
+                        <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                     </button>
                 </div>
                 <div class="p-6">
                     <p class="text-sm text-slate-600 dark:text-slate-400">Apakah Anda yakin ingin menghapus gelombang pendaftaran <span class="capitalize" x-text="editWave.jenis"></span> <strong class="text-slate-900 dark:text-slate-100">Gelombang <span x-text="editWave.gelombang"></span></strong>?</p>
-                    <p class="text-xs text-rose-500 dark:text-rose-400 mt-2 font-semibold">⚠️ Tindakan ini tidak dapat dibatalkan.</p>
+                    <p class="text-xs text-rose-500 dark:text-rose-400 mt-2 font-semibold"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tindakan ini tidak dapat dibatalkan.</p>
                 </div>
                 <div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/30 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
                     <button type="button" @click="waveDeleteModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>

@@ -2,28 +2,20 @@
 <div class="max-w-5xl mx-auto p-4 sm:p-6 space-y-6" x-data="{ restoreModal: false, confirmText: '' }">
 
     <!-- Header -->
-    <div class="relative overflow-hidden rounded-3xl bg-slate-800 dark:bg-slate-900 p-6 sm:p-7 text-white shadow-xl border border-slate-700">
-        <div class="relative z-10">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-extrabold border border-amber-400/30 mb-2.5">
-                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                Khusus Super Admin
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Backup &amp; Restore Database</h1>
-            <p class="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                Buat salinan cadangan seluruh data sistem secara berkala, dan simpan file-nya di tempat aman
-                di luar server. Fitur restore akan MENIMPA seluruh data saat ini — gunakan dengan sangat hati-hati.
-            </p>
-        </div>
-    </div>
+    <x-page-header title="Backup & Restore Database" subtitle="Buat salinan cadangan seluruh data sistem secara berkala, dan simpan file-nya di tempat aman di luar server. Fitur restore akan MENIMPA seluruh data saat ini — gunakan dengan sangat hati-hati." icon="database" accent="amber">
+            <x-slot:actions>
+                <span class="ui-chip"><x-icon name="shield" class="w-3.5 h-3.5" /> Khusus Super Admin</span>
+            </x-slot:actions>
+        </x-page-header>
 
     @if(session('success'))
         <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-            <span>✅</span> {{ session('success') }}
+            <span><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> {{ session('success') }}
         </div>
     @endif
     @if(session('error'))
         <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl text-xs font-bold text-rose-800 dark:text-rose-300 flex items-center gap-2">
-            <span>⚠️</span> {{ session('error') }}
+            <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> {{ session('error') }}
         </div>
     @endif
 
@@ -88,7 +80,7 @@
                 </div>
             @empty
                 <div class="p-10 text-center text-slate-400">
-                    <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl">🗄️</div>
+                    <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-2"><x-icon name="database" class="w-5 h-5" /></div>
                     <p class="text-xs font-bold text-slate-500 dark:text-slate-400">Belum ada file backup. Klik "Buat Backup Baru" untuk memulai.</p>
                 </div>
             @endforelse
@@ -99,7 +91,7 @@
     <div x-show="restoreModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
         <div @click.away="restoreModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-4">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl shrink-0">⚠️</div>
+                <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0"><x-icon name="warning" class="w-5 h-5" /></div>
                 <div>
                     <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Restore Database</h3>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400">Tindakan ini akan MENIMPA seluruh data saat ini.</p>

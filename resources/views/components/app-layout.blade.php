@@ -1571,10 +1571,10 @@
                             class="flex items-center justify-center w-10 h-10 rounded-2xl text-slate-600 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-all border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs group shrink-0"
                             title="Ganti Mode Terang / Gelap">
                         <template x-if="!darkMode">
-                            <span class="text-base" title="Aktifkan Mode Gelap">🌙</span>
+                            <span class="text-base" title="Aktifkan Mode Gelap"><x-icon name="moon" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         </template>
                         <template x-if="darkMode">
-                            <span class="text-base" title="Aktifkan Mode Terang">☀️</span>
+                            <span class="text-base" title="Aktifkan Mode Terang"><x-icon name="sun" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         </template>
                     </button>
 
@@ -1604,13 +1604,13 @@
                              x-transition:leave-end="opacity-0 scale-95 translate-y-1"
                              class="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 w-auto sm:w-[440px] bg-white border border-slate-200 rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden z-50"
                              x-cloak>
-                            <div class="px-5 py-3.5 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between">
+                            <div class="px-5 py-3.5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100 flex items-center justify-between">
                                 <div class="flex items-center gap-2.5">
-                                    <span class="text-lg">🔔</span>
+                                    <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300 flex items-center justify-center"><x-icon name="bell" class="w-4 h-4" /></span>
                                     <span class="font-extrabold text-xs tracking-wider uppercase">Notifikasi Ujian H-1</span>
                                 </div>
                                 @if ($upcomingCount > 0)
-                                <span class="bg-indigo-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-indigo-400">
+                                <span class="bg-indigo-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
                                     {{ $upcomingCount }} Baru
                                 </span>
                                 @endif
@@ -1640,7 +1640,7 @@
                                         
                                         <div class="mt-2.5 pt-2 border-t border-slate-50 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-slate-500 font-medium">
                                             <div class="flex items-center gap-1">
-                                                <span>📍 Ruang:</span>
+                                                <span><x-icon name="map-pin" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Ruang:</span>
                                                 <strong class="text-slate-700">{{ $us->ruang->kode_ruangan ?? '-' }}</strong>
                                             </div>
                                             
@@ -1658,12 +1658,12 @@
                                                     if (!$isSemproUs && $us->anggota_penguji_2_id == $dosenId) $peran[] = 'Penguji 2';
                                                 @endphp
                                                 <div class="flex items-center gap-1">
-                                                    <span>👤 Peran:</span>
+                                                    <span><x-icon name="user" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Peran:</span>
                                                     <strong class="text-slate-700">{{ implode(', ', $peran) ?: 'Penguji' }}</strong>
                                                 </div>
                                             @else
                                                 <div class="flex items-center gap-1">
-                                                    <span>👤 Ketua Penguji:</span>
+                                                    <span><x-icon name="user" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Ketua Penguji:</span>
                                                     <strong class="text-slate-700">{{ $us->ketuaPenguji ? $us->ketuaPenguji->nama_dosen : '-' }}</strong>
                                                 </div>
                                             @endif
@@ -1709,13 +1709,13 @@
                              x-transition:leave-end="opacity-0 scale-95 translate-y-1"
                              class="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 w-auto sm:w-[440px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl shadow-slate-900/20 overflow-hidden z-50"
                              x-cloak>
-                            <div class="px-5 py-3.5 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between">
+                            <div class="px-5 py-3.5 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100 flex items-center justify-between">
                                 <div class="flex items-center gap-2.5">
-                                    <span class="text-lg">🔔</span>
+                                    <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300 flex items-center justify-center"><x-icon name="bell" class="w-4 h-4" /></span>
                                     <span class="font-extrabold text-xs tracking-wider uppercase">Notifikasi</span>
                                 </div>
                                 @if ($adminNotifCount > 0)
-                                <span class="bg-indigo-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-indigo-400">
+                                <span class="bg-indigo-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
                                     {{ $adminNotifCount }} Perlu Diproses
                                 </span>
                                 @endif
@@ -1727,7 +1727,7 @@
                                        class="block p-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition-colors">
                                         <div class="flex items-center justify-between gap-2 mb-1.5">
                                             <span class="inline-flex px-2 py-0.5 text-[9px] font-bold rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                                                ⏳ Pendaftaran Baru &mdash; {{ $pr->jenis_tugas_akhir === 'sempro' ? 'Sempro' : 'Skripsi' }}
+                                                <x-icon name="clock" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Pendaftaran Baru &mdash; {{ $pr->jenis_tugas_akhir === 'sempro' ? 'Sempro' : 'Skripsi' }}
                                             </span>
                                         </div>
                                         <p class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug">{{ $pr->nama_mahasiswa }}</p>
@@ -1741,7 +1741,7 @@
                                        class="block p-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition-colors">
                                         <div class="flex items-center justify-between gap-2 mb-1.5">
                                             <span class="inline-flex px-2 py-0.5 text-[9px] font-bold rounded bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                                                ⚠️ Jadwal Bentrok
+                                                <x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Jadwal Bentrok
                                             </span>
                                         </div>
                                         <p class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug">{{ $cf->nama_mahasiswa }}</p>

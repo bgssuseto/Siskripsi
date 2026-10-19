@@ -174,46 +174,13 @@
     }">
 
         <!-- Hero Banner Header -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-8">
-            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Modul Manajemen User &amp; Role
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Manajemen User</h1>
-                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                        Kelola data pengguna, hak akses, dan role dalam sistem.
-                    </p>
-                </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <a href="{{ route('users.export', request()->query()) }}"
-                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm border border-white/15 backdrop-blur-md transition-all duration-200 cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        Export Excel
-                    </a>
-                    <button @click="importModal = true"
-                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm border border-white/15 backdrop-blur-md transition-all duration-200 cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                        </svg>
-                        Import Excel
-                    </button>
-                    <button @click="createModal = true"
-                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                        </svg>
-                        Tambah User Baru
-                    </button>
-                </div>
-            </div>
-        </div>
+        <x-page-header title="Manajemen User" subtitle="Kelola data pengguna, hak akses, dan role dalam sistem." icon="users" accent="indigo">
+            <x-slot:actions>
+                <a href="{{ route('users.export', request()->query()) }}" class="ui-btn-secondary"><x-icon name="download" class="w-4 h-4" /> Export Excel</a>
+                    <button @click="importModal = true" class="ui-btn-secondary"><x-icon name="upload" class="w-4 h-4" /> Import Excel</button>
+                    <button @click="createModal = true" class="ui-btn-primary"><x-icon name="plus" class="w-4 h-4" /> Tambah User Baru</button>
+            </x-slot:actions>
+        </x-page-header>
 
         <!-- Summary Stat Cards -->
         <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">

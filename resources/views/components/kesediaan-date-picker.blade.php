@@ -137,7 +137,7 @@
         <template x-for="date in sorted" :key="date">
             <span class="inline-flex items-center gap-1 text-[11px] font-bold pl-2.5 pr-1 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
                 <span x-text="label(date)"></span>
-                <button type="button" @click="toggle(date)" class="w-4 h-4 rounded flex items-center justify-center hover:bg-indigo-200 dark:hover:bg-indigo-800 cursor-pointer" aria-label="Hapus tanggal">✕</button>
+                <button type="button" @click="toggle(date)" class="w-4 h-4 rounded flex items-center justify-center hover:bg-indigo-200 dark:hover:bg-indigo-800 cursor-pointer" aria-label="Hapus tanggal"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </span>
         </template>
     </div>

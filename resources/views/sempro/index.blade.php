@@ -19,6 +19,7 @@
             display: inline-flex; background: #e2e8f0; border-radius: 12px; padding: .25rem; gap: .25rem;
         }
         .view-toggle-btn {
+            display: inline-flex; align-items: center; gap: .4rem;
             padding: .5rem 1rem; border-radius: 10px; font-size: .85rem; font-weight: 700;
             cursor: pointer; transition: all .2s; border: none; background: transparent; color: #475569;
         }
@@ -36,7 +37,7 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 1.4rem; flex-shrink: 0;
         }
-        .stat-icon.purple { background: #f3e8ff; }
+        .stat-icon.purple, .stat-icon.violet { background: #f3e8ff; }
         .stat-icon.green  { background: #f0fdf4; }
         .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; }
         .stat-label { font-size: .8rem; font-weight: 600; margin-top: .2rem; }
@@ -86,8 +87,9 @@
         .table-scroll { overflow-x: auto; }
         table.sidang-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
         table.sidang-table thead th {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            color: #e2e8f0; font-weight: 600; padding: .75rem .85rem;
+            background: #f8fafc;
+            color: #64748b; font-weight: 700; padding: .75rem .85rem;
+            border-bottom: 1px solid #e2e8f0;
             text-align: left; font-size: .78rem; letter-spacing: .03em; text-transform: uppercase;
         }
         table.sidang-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .1s; }
@@ -202,6 +204,7 @@
         .calendar-container { background: #fff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #f1f5f9; }
 
         @media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
+            html.dark table.sidang-table thead th { background: #0f172a !important; color: #94a3b8 !important; border-bottom-color: #334155 !important; }
     </style>
 
     <div class="sidang-page space-y-6" x-data="{
@@ -302,51 +305,38 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
         },
     }">
 
-        {{-- Top Header --}}
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
-            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Modul Penjadwalan Sempro
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Jadwal Sempro</h1>
-                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">Penjadwalan seminar proposal mahasiswa.</p>
+        {{-- Header halaman --}}
+        <x-page-header title="Jadwal Sempro" subtitle="Penjadwalan seminar proposal mahasiswa." icon="calendar" accent="indigo" class="!mb-0">
+            <x-slot:actions>
+                @if(Auth::user()->isSuperAdmin())
+                    <a href="{{ route('jadwal.semua.index') }}" class="ui-btn-secondary">
+                        <x-icon name="calendar" class="w-4 h-4" /> Lihat Semua Jadwal
+                    </a>
+                @endif
+                <div class="view-toggle">
+                    <button type="button" class="view-toggle-btn" :class="{ 'active': currentView === 'table' }" @click="currentView = 'table'">
+                        <x-icon name="list" class="w-4 h-4" /> Tabel
+                    </button>
+                    <button type="button" class="view-toggle-btn" :class="{ 'active': currentView === 'calendar' }" @click="currentView = 'calendar'; $nextTick(() => initCalendar())">
+                        <x-icon name="calendar" class="w-4 h-4" /> Kalender
+                    </button>
                 </div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    @if(Auth::user()->isSuperAdmin())
-                        <a href="{{ route('jadwal.semua.index') }}" class="btn btn-outline btn-sm">
-                            📅 Lihat Semua Jadwal
-                        </a>
-                    @endif
-                    <div class="view-toggle">
-                        <button class="view-toggle-btn" :class="{ 'active': currentView === 'table' }" @click="currentView = 'table'">
-                            📋 Tabel
-                        </button>
-                        <button class="view-toggle-btn" :class="{ 'active': currentView === 'calendar' }" @click="currentView = 'calendar'; $nextTick(() => initCalendar())">
-                            📅 Kalender
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </x-slot:actions>
+        </x-page-header>
 
         {{-- Stats --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="stat-card">
-                <div class="stat-icon purple">📋</div>
+                <div class="stat-icon violet"><x-icon name="clipboard-list" /></div>
                 <div>
                     <div class="stat-value">{{ $totalSempro }}</div>
                     <div class="stat-label">Total Mahasiswa Sempro</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon green">📅</div>
+                <div class="stat-icon green"><x-icon name="calendar" /></div>
                 <div>
-                    <div class="stat-value">{{ $activePeriode ? $activePeriode->nama_periode : '—' }}</div>
+                    <div class="stat-value" style="font-size:1.1rem;line-height:1.3">{{ $activePeriode ? $activePeriode->nama_periode : '—' }}</div>
                     <div class="stat-label">Periode Aktif</div>
                 </div>
             </div>
@@ -414,7 +404,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
 
             <button type="submit" class="btn btn-primary">Filter</button>
             @if(request()->hasAny(['search','status','periode_id','gelombang','dosen_pembimbing_id']))
-                <a href="{{ route('jadwal-sempro.index') }}" class="btn btn-outline">✕ Reset</a>
+                <a href="{{ route('jadwal-sempro.index') }}" class="btn btn-outline"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset</a>
             @endif
         </form>
 
@@ -424,9 +414,9 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
             <div x-show="selectedIds.length > 0" x-cloak class="flex items-center justify-between gap-3 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 rounded-2xl p-3.5">
                 <span class="text-xs font-bold text-violet-800 dark:text-violet-300" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
                 <div class="flex items-center gap-2">
-                    <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm">📅 Jadwalkan Terpilih (Otomatis)</button>
-                    <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot / Edit Jadwal (Massal)</button>
-                    <button type="button" @click="resetJadwalTerpilih()" class="btn btn-danger btn-sm" title="Kosongkan tanggal, jam & ruangan untuk dijadwalkan ulang">♻️ Reset Jadwal</button>
+                    <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Jadwalkan Terpilih (Otomatis)</button>
+                    <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Plot / Edit Jadwal (Massal)</button>
+                    <button type="button" @click="resetJadwalTerpilih()" class="btn btn-danger btn-sm" title="Kosongkan tanggal, jam & ruangan untuk dijadwalkan ulang"><x-icon name="refresh" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset Jadwal</button>
                     <button type="button" @click="selectedIds = []" class="btn btn-outline btn-sm">Batalkan Pilihan</button>
                 </div>
             </div>
@@ -468,7 +458,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                         <td colspan="12" class="py-2 px-3">
                                             <div class="flex flex-wrap items-center justify-between gap-2" x-data="{ groupIds: {{ Js::from($group['ids']) }} }">
                                                 <div class="text-xs font-extrabold text-violet-900 dark:text-violet-200">
-                                                    👥 {{ $group['label'] }}
+                                                    <x-icon name="users" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $group['label'] }}
                                                     <span class="ml-1 font-semibold text-violet-700 dark:text-violet-300">— {{ count($group['ids']) }} mahasiswa</span>
                                                     @if($group['belum_terjadwal'] > 0)
                                                         <span class="ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">{{ $group['belum_terjadwal'] }} belum terjadwal</span>
@@ -489,7 +479,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                         <div class="flex flex-col items-center justify-center">
                                             <span class="font-bold text-xs">{{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}</span>
                                             @if($hasConflict)
-                                                <span class="text-red-600 dark:text-red-400 text-xs" title="Bentrok Jadwal">⚠️</span>
+                                                <span class="text-red-600 dark:text-red-400 text-xs" title="Bentrok Jadwal"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                                             @endif
                                         </div>
                                     </td>
@@ -508,7 +498,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                             @if($hasConflict)
                                                 <div class="mt-1">
                                                     <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-2xs">
-                                                        ⚠️ Jadwal Bentrok
+                                                        <x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Jadwal Bentrok
                                                     </span>
                                                 </div>
                                                 <div class="mt-1 space-y-0.5">
@@ -523,7 +513,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                             {!! $item->getJadwalStatusHtml() !!}
                                             {!! $item->hasil_ujian_html !!}
                                             @if($item->canSetHasilUjian())
-                                                <button type="button" title="Ubah hasil ujian (Lulus / Tidak Lulus)" class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors" onclick="openHasilUjian('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->status_ujian }}')">✏️ {{ $item->status_ujian ? 'Ubah Hasil' : 'Set Hasil' }}</button>
+                                                <button type="button" title="Ubah hasil ujian (Lulus / Tidak Lulus)" class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors" onclick="openHasilUjian('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->status_ujian }}')"><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $item->status_ujian ? 'Ubah Hasil' : 'Set Hasil' }}</button>
                                             @endif
                                         </div>
                                     </td>
@@ -558,7 +548,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                                 'ruangIdPendamping' => $item->ruang_id_pendamping,
                                                 'catatan' => $item->catatan_jadwal_terpisah,
                                             ]) }})">
-                                            📅
+                                            <x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                         </button>
                                         <button class="btn btn-outline btn-sm" title="Edit Data"
                                             onclick="openEdit('{{ $item->hash_id }}', {{ json_encode([
@@ -576,11 +566,11 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                                 'jam' => $item->jam,
                                                 'conflict_schedule' => $conflictMap[$item->id]['schedule'] ?? [],
                                             ]) }})">
-                                            ✏️
+                                            <x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                         </button>
                                         <button class="btn btn-danger btn-sm" title="Hapus"
                                             onclick="openDelete('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}')">
-                                            🗑️
+                                            <x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                         </button>
                                     </td>
                                 </tr>
@@ -616,14 +606,14 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
     <div id="modal-jadwalkan" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-jadwalkan')">
         <div class="modal-box modal-sm">
             <div class="modal-header">
-                <span class="modal-title">📅 Plotting Jadwal Sempro</span>
-                <button class="modal-close" onclick="closeModal('modal-jadwalkan')">✕</button>
+                <span class="modal-title"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Plotting Jadwal Sempro</span>
+                <button class="modal-close" onclick="closeModal('modal-jadwalkan')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <form method="POST" id="form-jadwalkan" action="">
                 @csrf
                 <div class="modal-body">
                     <div id="form-jadwalkan-alert" class="modal-alert" style="display:none;">
-                        <span>⚠️</span>
+                        <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         <span id="form-jadwalkan-alert-text"></span>
                     </div>
                     <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl mb-4 text-xs">
@@ -638,7 +628,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                     <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
                         <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
                             <span class="flex items-center gap-1.5">
-                                <span>📝</span> Kesediaan Pembimbing (Penguji Sempro)
+                                <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Kesediaan Pembimbing (Penguji Sempro)
                             </span>
                             <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="kesediaan-info-count"></span>
                         </div>
@@ -763,7 +753,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline" onclick="closeModal('modal-jadwalkan')">Batal</button>
-                    <button type="submit" class="btn btn-primary">💾 Simpan Jadwal</button>
+                    <button type="submit" class="btn btn-primary"><x-icon name="save" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Simpan Jadwal</button>
                 </div>
             </form>
         </div>
@@ -773,12 +763,12 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
     <div id="modal-bulk-jadwalkan" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-bulk-jadwalkan')">
         <div class="modal-box modal-sm">
             <div class="modal-header">
-                <span class="modal-title">🗓️ Plot / Edit Jadwal Massal</span>
-                <button class="modal-close" onclick="closeModal('modal-bulk-jadwalkan')">✕</button>
+                <span class="modal-title"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Plot / Edit Jadwal Massal</span>
+                <button class="modal-close" onclick="closeModal('modal-bulk-jadwalkan')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <div class="modal-body">
                 <div id="form-bulk-jadwalkan-alert" class="modal-alert" style="display:none;">
-                    <span>⚠️</span>
+                    <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <span id="form-bulk-jadwalkan-alert-text"></span>
                 </div>
                 <p class="text-xs text-slate-500 mb-4"><strong x-text="selectedIds.length"></strong> mahasiswa terpilih akan di-plot/diedit jadwalnya berurutan pada hari &amp; ruangan yang sama — sistem otomatis memberi slot jam berbeda per mahasiswa (mulai dari jam yang dipilih, berurutan sesuai durasi per sesi) supaya tidak bentrok ruangan. Mahasiswa yang sudah punya jadwal sebelumnya akan DITIMPA dengan jadwal baru ini.</p>
@@ -788,7 +778,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                 <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
                     <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
                         <span class="flex items-center gap-1.5">
-                            <span>📝</span> Kesediaan Pembimbing (Penguji Sempro)
+                            <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Kesediaan Pembimbing (Penguji Sempro)
                         </span>
                         <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="bulk-kesediaan-info-count"></span>
                     </div>
@@ -835,7 +825,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" onclick="closeModal('modal-bulk-jadwalkan')">Batal</button>
-                <button type="button" class="btn btn-primary" @click="submitBulkJadwalkan()">💾 Terapkan ke Semua Terpilih</button>
+                <button type="button" class="btn btn-primary" @click="submitBulkJadwalkan()"><x-icon name="save" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Terapkan ke Semua Terpilih</button>
             </div>
         </div>
     </div>
@@ -844,14 +834,14 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
     <div id="modal-edit" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-edit')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">✏️ Edit Data Sempro</span>
-                <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
+                <span class="modal-title"><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Edit Data Sempro</span>
+                <button class="modal-close" onclick="closeModal('modal-edit')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <form method="POST" id="form-edit" action="">
                 @csrf @method('PUT')
                 <div class="modal-body">
                     <div id="form-edit-alert" class="modal-alert" style="display:none;">
-                        <span>⚠️</span>
+                        <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         <span id="form-edit-alert-text"></span>
                     </div>
                     <div class="form-section">
@@ -962,7 +952,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
     <div id="modal-hapus" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-hapus')">
         <div class="modal-box modal-sm text-center">
             <div class="modal-body pt-6">
-                <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-3 text-xl">⚠️</div>
+                <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-3"><x-icon name="warning" class="w-5 h-5" /></div>
                 <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Hapus Data Sempro?</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Anda yakin ingin menghapus data sempro <strong id="hapus-nama"></strong>?</p>
             </div>
@@ -980,20 +970,20 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
     <div id="modal-hasil-ujian" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-hasil-ujian')">
         <div class="modal-box modal-sm">
             <div class="modal-header">
-                <span class="modal-title">🎓 Hasil Ujian</span>
-                <button class="modal-close" onclick="closeModal('modal-hasil-ujian')">✕</button>
+                <span class="modal-title"><x-icon name="academic" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Hasil Ujian</span>
+                <button class="modal-close" onclick="closeModal('modal-hasil-ujian')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <div class="modal-body">
                 <p>Hasil ujian sempro untuk <strong id="hasil-ujian-nama">?</strong></p>
                 <p class="text-xs mt-1">Status saat ini: <strong id="hasil-ujian-sekarang">-</strong></p>
                 <p class="text-[11px] text-slate-500 mt-1">Setelah waktu ujian lewat, status otomatis <strong>Lulus</strong>. Pilih <strong>Tidak Lulus / Remidi</strong> bila mahasiswa harus mengulang — perubahan langsung tampil di progress mahasiswa.</p>
                 <div id="form-hasil-ujian-alert" class="modal-alert" style="display:none;">
-                    <span>⚠️</span>
+                    <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <span id="form-hasil-ujian-alert-text"></span>
                 </div>
                 <div class="flex gap-3 mt-4">
-                    <button type="button" id="btn-hasil-lulus" class="btn btn-success" style="flex:1;" onclick="submitHasilUjian('lulus')">🎓 Lulus</button>
-                    <button type="button" id="btn-hasil-tidak-lulus" class="btn btn-danger" style="flex:1;" onclick="submitHasilUjian('tidak_lulus')">✕ Tidak Lulus / Remidi</button>
+                    <button type="button" id="btn-hasil-lulus" class="btn btn-success" style="flex:1;" onclick="submitHasilUjian('lulus')"><x-icon name="academic" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Lulus</button>
+                    <button type="button" id="btn-hasil-tidak-lulus" class="btn btn-danger" style="flex:1;" onclick="submitHasilUjian('tidak_lulus')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tidak Lulus / Remidi</button>
                 </div>
             </div>
         </div>

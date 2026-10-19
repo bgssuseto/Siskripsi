@@ -24,13 +24,7 @@
     $inputCls = 'w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-500/20 transition-all text-slate-800 dark:text-slate-200 font-medium bg-white dark:bg-slate-700 placeholder-slate-400';
 @endphp
 <div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
-    <div class="bg-gradient-to-r from-teal-900 via-slate-900 to-emerald-950 p-6 rounded-2xl text-white shadow-xl flex flex-wrap gap-3 justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-extrabold mb-1">Bebas Prodi</h1>
-            <p class="text-xs text-teal-200">Ajukan Surat Keterangan Bebas Prodi setelah lulus Seminar Proposal &amp; Skripsi.</p>
-        </div>
-        <span class="px-3.5 py-1.5 bg-teal-500/30 border border-teal-400/30 text-teal-100 text-xs font-bold rounded-xl">Surat Bebas Prodi</span>
-    </div>
+    <x-page-header title="Bebas Prodi" subtitle="Ajukan Surat Keterangan Bebas Prodi setelah lulus Seminar Proposal & Skripsi." icon="badge-check" accent="teal"></x-page-header>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Kiri: kelayakan & status --}}
@@ -41,17 +35,17 @@
                     @foreach(['lulus_sempro' => 'Lulus Seminar Proposal', 'lulus_skripsi' => 'Lulus Sidang Skripsi / Jurnal'] as $key => $label)
                         <li class="flex items-center gap-2.5">
                             @if($kelayakan[$key])
-                                <span class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[11px]">✓</span>
+                                <span class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[11px]"><x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                                 <span class="text-slate-800 dark:text-slate-200">{{ $label }}</span>
                             @else
-                                <span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-[11px]">✕</span>
+                                <span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-[11px]"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                                 <span class="text-slate-400">{{ $label }}</span>
                             @endif
                         </li>
                     @endforeach
                 </ul>
                 @if($kelayakan['bypass'])
-                    <p class="mt-3 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] font-bold text-amber-800 dark:text-amber-300">🧪 Akun testing — akses Bebas Prodi dibuka tanpa syarat kelulusan.</p>
+                    <p class="mt-3 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] font-bold text-amber-800 dark:text-amber-300"><x-icon name="info" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Akun testing — akses Bebas Prodi dibuka tanpa syarat kelulusan.</p>
                 @endif
                 @if($jalur)
                     <p class="mt-3 text-[11px] text-slate-500 dark:text-slate-400">Jalur skripsi Anda: <strong class="text-slate-800 dark:text-slate-200">{{ $syaratJalur[$jalur]['label'] }}</strong></p>
@@ -62,35 +56,35 @@
                 <h2 class="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Status Pengajuan</h2>
                 @if(!$kelayakan['eligible'])
                     <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-700 dark:text-slate-300 font-bold flex gap-2">
-                        <span>🔒</span>
+                        <span><x-icon name="lock" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                         <span>Pendaftaran Bebas Prodi belum terbuka. Anda harus dinyatakan <strong>lulus Seminar Proposal dan Skripsi</strong> terlebih dahulu.</span>
                     </div>
                 @elseif(!$pengajuan)
                     <div class="bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-xl p-3 text-xs text-teal-900 dark:text-teal-300 font-bold flex gap-2">
-                        <span>📝</span><span>Pendaftaran terbuka. Silakan lengkapi formulir pengajuan.</span>
+                        <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span><span>Pendaftaran terbuka. Silakan lengkapi formulir pengajuan.</span>
                     </div>
                 @elseif($pengajuan->status === 'menunggu')
                     <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 font-bold flex gap-2">
-                        <span>⏳</span><span>Pengajuan terkirim {{ $pengajuan->submitted_at?->timezone('Asia/Jakarta')->format('d M Y H:i') }} dan sedang diverifikasi admin.</span>
+                        <span><x-icon name="clock" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span><span>Pengajuan terkirim {{ $pengajuan->submitted_at?->timezone('Asia/Jakarta')->format('d M Y H:i') }} dan sedang diverifikasi admin.</span>
                     </div>
                 @elseif($pengajuan->status === 'ditolak')
                     <div class="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl p-3 text-xs text-rose-900 dark:text-rose-300 space-y-1">
-                        <p class="font-extrabold">✕ Pengajuan perlu direvisi</p>
+                        <p class="font-extrabold"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Pengajuan perlu direvisi</p>
                         @if($pengajuan->komentar)<p class="font-medium">Catatan admin: {{ $pengajuan->komentar }}</p>@endif
                         <p class="font-medium">Perbaiki berkas lalu kirim ulang lewat formulir.</p>
                     </div>
                 @else
                     <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 space-y-3">
-                        <p class="text-xs text-emerald-900 dark:text-emerald-300 font-extrabold">✅ Pengajuan disetujui</p>
+                        <p class="text-xs text-emerald-900 dark:text-emerald-300 font-extrabold"><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Pengajuan disetujui</p>
                         <p class="text-[11px] text-emerald-800 dark:text-emerald-400">No. Surat: <strong class="font-mono">{{ $pengajuan->nomor_surat_lengkap }}</strong><br>Tanggal: {{ $pengajuan->tanggal_surat?->locale('id')->translatedFormat('j F Y') }}</p>
                         <a href="{{ route('mahasiswa.bebas-prodi.cetak') }}" target="_blank" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
-                            <span>🖨️</span> Cetak Surat Bebas Prodi
+                            <span><x-icon name="printer" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Cetak Surat Bebas Prodi
                         </a>
                     </div>
                 @endif
 
                 @if($pengajuan)
-                    <a href="{{ route('bebas-prodi.berkas', $pengajuan) }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-teal-700 dark:text-teal-400 hover:underline">📄 Lihat berkas yang dikirim</a>
+                    <a href="{{ route('bebas-prodi.berkas', $pengajuan) }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-teal-700 dark:text-teal-400 hover:underline"><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Lihat berkas yang dikirim</a>
                 @endif
             </div>
         </div>
@@ -98,7 +92,7 @@
         {{-- Kanan: syarat & ketentuan --}}
         <div class="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-6 border border-slate-200/80 dark:border-slate-700">
             <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
-                <div class="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center text-base shrink-0 border border-teal-200 dark:border-teal-800">📋</div>
+                <div class="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-200 dark:border-teal-800"><x-icon name="clipboard-list" class="w-4 h-4" /></div>
                 <div>
                     <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Syarat &amp; Ketentuan Bebas Prodi</h2>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400">Dokumen wajib disiapkan:</p>

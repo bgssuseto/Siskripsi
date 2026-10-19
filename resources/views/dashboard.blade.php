@@ -6,32 +6,17 @@
     {{-- Chart.js CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
-    <!-- Welcome Header Banner -->
-    <div class="relative overflow-hidden rounded-xl bg-slate-900 p-6 sm:p-8 text-white mb-8 border border-slate-800">
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-semibold text-indigo-200 border border-white/10 mb-3">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    Sistem Informasi Skripsi & Sempro Teknik Informatika
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Selamat Datang, {{ Auth::user()->name }}! 👋</h1>
-                <p class="text-slate-300 text-sm mt-1 max-w-xl">
-                    Anda masuk sebagai <span class="font-bold text-white uppercase">{{ Auth::user()->role_label }}</span>. Berikut adalah ringkasan data pendaftaran, verifikasi, dan trend kelulusan terkini.
-                </p>
-            </div>
-
-            <div class="shrink-0 flex items-center gap-3 flex-wrap">
-                <span class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-extrabold border {{ Auth::user()->role_badge_class }}">
-                    Role: {{ Auth::user()->role_label }}
-                </span>
-                @if(Auth::user()->hasRole(['super_admin', 'koordinator']))
-                <a href="{{ route('pendaftaran.sempro') }}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all">
-                    🛡️ Verifikasi Pendaftaran →
+    <!-- Header -->
+    <x-page-header title="Selamat datang, {{ Auth::user()->name }}" subtitle="Ringkasan data pendaftaran, verifikasi, dan tren kelulusan Sistem Informasi Skripsi & Sempro Teknik Informatika." icon="home" accent="indigo">
+        <x-slot:actions>
+            <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold border {{ Auth::user()->role_badge_class }}">{{ Auth::user()->role_label }}</span>
+            @if(Auth::user()->hasRole(['super_admin', 'koordinator']))
+                <a href="{{ route('pendaftaran.sempro') }}" class="ui-btn-primary">
+                    <x-icon name="shield" class="w-4 h-4" /> Verifikasi Pendaftaran
                 </a>
-                @endif
-            </div>
-        </div>
-    </div>
+            @endif
+        </x-slot:actions>
+    </x-page-header>
 
     <!-- Main Stats Cards (REAL DATA) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
@@ -43,8 +28,8 @@
                     <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">{{ $totalMahasiswa }}</p>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">Mahasiswa Terdata</p>
                 </div>
-                <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center font-bold text-xl border border-indigo-100 dark:border-indigo-900 shrink-0">
-                    🎓
+                <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center font-bold border border-indigo-100 dark:border-indigo-900 shrink-0">
+                    <x-icon name="academic" class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -57,8 +42,8 @@
                     <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">{{ $skripsiRegulerCount }} <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">/ {{ $artikelJurnalCount }} Jurnal</span></p>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">Sidang Reguler / Artikel Jurnal</p>
                 </div>
-                <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center font-bold text-xl border border-purple-100 dark:border-purple-900 shrink-0">
-                    📄
+                <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center font-bold border border-purple-100 dark:border-purple-900 shrink-0">
+                    <x-icon name="document" class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -69,10 +54,10 @@
                 <div>
                     <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status Plotting</p>
                     <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">{{ $totalTerjadwal }}</p>
-                    <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-bold">⚠️ {{ $totalBelumPlotting }} Belum Plotting</p>
+                    <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-bold"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $totalBelumPlotting }} Belum Plotting</p>
                 </div>
-                <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center font-bold text-xl border border-emerald-100 dark:border-emerald-900 shrink-0">
-                    📅
+                <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center font-bold border border-emerald-100 dark:border-emerald-900 shrink-0">
+                    <x-icon name="calendar" class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -83,10 +68,10 @@
                 <div>
                     <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Verifikasi Berkas</p>
                     <p class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{{ $verifikasiDisetujui }}</p>
-                    <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-bold">⏳ {{ $verifikasiMenunggu }} Menunggu</p>
+                    <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-bold"><x-icon name="clock" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $verifikasiMenunggu }} Menunggu</p>
                 </div>
-                <div class="w-12 h-12 bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center font-bold text-xl border border-amber-100 dark:border-amber-900 shrink-0">
-                    🛡️
+                <div class="w-12 h-12 bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center font-bold border border-amber-100 dark:border-amber-900 shrink-0">
+                    <x-icon name="shield" class="w-5 h-5" />
                 </div>
             </div>
         </div>
@@ -142,7 +127,7 @@
                 </div>
             </div>
             @if($semproBelumJalurCount > 0)
-            <p class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mb-2">⚠️ {{ $semproBelumJalurCount }} data Sempro lama belum tercatat jalurnya.</p>
+            <p class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mb-2"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $semproBelumJalurCount }} data Sempro lama belum tercatat jalurnya.</p>
             @endif
 
             <div class="flex-1 min-h-[160px] relative">

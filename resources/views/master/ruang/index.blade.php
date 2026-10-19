@@ -128,20 +128,12 @@
         }
     }">
 
-        <!-- Page Title & Actions -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Master Ruang</h2>
-                <p class="text-sm text-slate-500 mt-1">Kelola data Kode Ruangan dan Nama Ruangan ujian skripsi.</p>
-            </div>
-            <button @click="createModal = true" 
-                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/25 transition-all">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Tambah Ruangan
-            </button>
-        </div>
+        <x-page-header title="Master Ruang" icon="building" accent="indigo">
+            <x-slot:description>Kelola data Kode Ruangan dan Nama Ruangan ujian skripsi.</x-slot:description>
+            <x-slot:actions>
+                <button @click="createModal = true" class="ui-btn-primary"><x-icon name="plus" class="w-4 h-4" /> Tambah Ruangan</button>
+            </x-slot:actions>
+        </x-page-header>
 
         <!-- Search & Filter Bar -->
         <div id="filter-container" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -171,7 +163,7 @@
                     <option value="belum_siap_digunakan">Belum Siap Digunakan</option>
                 </select>
                 <button type="button" onclick="bulkUpdateStatusRuang()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all">Ubah Status Terpilih</button>
-                <button type="button" onclick="bulkDeleteRuang()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all">🗑️ Hapus Terpilih</button>
+                <button type="button" onclick="bulkDeleteRuang()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all"><x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Hapus Terpilih</button>
                 <button type="button" onclick="toggleSelectAllRuang(null, true)" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all">Batalkan Pilihan</button>
             </div>
         </div>

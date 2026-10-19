@@ -3,36 +3,16 @@
 
     <div class="max-w-7xl mx-auto space-y-6">
         <!-- Hero Banner Header -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
-            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Modul Administrasi Surat Keputusan (SK)
-                        &nbsp;— <span class="text-blue-300">Ujian Skripsi</span>
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Generate SK Dekan (Excel Output)</h1>
-                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                        Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian Skripsi. Hanya ujian skripsi (sidang &amp; jurnal) yang dihitung — sempro tidak termasuk.
-                    </p>
-                </div>
-
-                <div class="shrink-0 flex items-center gap-3">
-                    <div class="px-4 py-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center shadow-md">
-                        <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Periode Aktif</p>
-                        <p class="text-sm font-extrabold text-white mt-0.5">{{ $selectedPeriode->nama_periode ?? 'Belum Ditentukan' }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-page-header title="Generate SK Dekan (Excel Output)" subtitle="Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian Skripsi. Hanya ujian skripsi (sidang & jurnal) yang dihitung — sempro tidak termasuk." icon="badge-check" accent="indigo">
+            <x-slot:actions>
+                <span class="ui-chip">Periode Aktif: <strong class="text-slate-900 dark:text-white">{{ $selectedPeriode->nama_periode ?? 'Belum Ditentukan' }}</strong></span>
+            </x-slot:actions>
+        </x-page-header>
 
         @if(session('warning'))
             <div class="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-300 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xs">
-                <span>⚠️ {{ session('warning') }}</span>
-                <button onclick="this.parentElement.remove()" class="text-amber-500 hover:text-amber-800">✕</button>
+                <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ session('warning') }}</span>
+                <button onclick="this.parentElement.remove()" class="text-amber-500 hover:text-amber-800"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
         @endif
 
@@ -89,8 +69,8 @@
 
                 <div class="relative z-10 space-y-4">
                     <div class="flex items-center justify-between">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-xl shrink-0 border border-indigo-100 dark:border-indigo-700">
-                            👨‍🏫
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-700">
+                            <x-icon name="user" class="w-5 h-5" />
                         </div>
                         <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold uppercase rounded-full border border-indigo-200 dark:border-indigo-700">
                             Output Excel (.xlsx)
@@ -138,8 +118,8 @@
 
                 <div class="relative z-10 space-y-4">
                     <div class="flex items-center justify-between">
-                        <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center text-xl shrink-0 border border-purple-100 dark:border-purple-700">
-                            🎓
+                        <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-700">
+                            <x-icon name="academic" class="w-5 h-5" />
                         </div>
                         <span class="px-3 py-1 bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold uppercase rounded-full border border-purple-200 dark:border-purple-700">
                             Output Excel (.xlsx)

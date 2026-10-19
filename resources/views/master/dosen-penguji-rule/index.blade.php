@@ -24,28 +24,19 @@
         },
     }">
 
-        <!-- Page Title & Actions -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-                <h2 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Rule Komposisi Dosen Penguji</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Atur pasangan dosen yang boleh/tidak boleh satu tim dewan penguji. Dipakai sebagai validasi wajib saat plotting jadwal (manual maupun otomatis).</p>
-            </div>
-            <div>
-                <button @click="createModal = true"
-                        {{ $dosenBelumAdaRule->isEmpty() ? 'disabled' : '' }}
-                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 whitespace-nowrap">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Tambah Rule
+        <x-page-header title="Rule Komposisi Dosen Penguji" icon="shield" accent="indigo">
+            <x-slot:description>Atur pasangan dosen yang boleh/tidak boleh satu tim dewan penguji. Dipakai sebagai validasi wajib saat plotting jadwal (manual maupun otomatis).</x-slot:description>
+            <x-slot:actions>
+                <button @click="createModal = true" @disabled($dosenBelumAdaRule->isEmpty()) class="ui-btn-primary">
+                    <x-icon name="plus" class="w-4 h-4" /> Tambah Rule
                 </button>
-            </div>
-        </div>
+            </x-slot:actions>
+        </x-page-header>
 
         @if(session('success'))
             <div class="p-4 mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-semibold flex items-center justify-between shadow-xs">
                 <span>{{ session('success') }}</span>
-                <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800">✕</button>
+                <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
         @endif
 

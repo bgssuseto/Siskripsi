@@ -10,30 +10,11 @@
     <div class="max-w-7xl mx-auto space-y-6">
 
         <!-- Hero Banner Header -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
-            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
-            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
-
-            <div class="relative z-10">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Modul Administrasi Berita Acara
-                    @if(($jenis ?? '') === 'sempro')
-                        &nbsp;— <span class="text-amber-300">Seminar Proposal</span>
-                    @elseif(($jenis ?? '') === 'skripsi')
-                        &nbsp;— <span class="text-blue-300">Skripsi</span>
-                    @endif
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Generate Berita Acara</h1>
-                <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                    Generate berita acara sidang, baik per mahasiswa secara individual maupun cetak massal per periode &amp; gelombang.
-                </p>
-            </div>
-        </div>
+        <x-page-header title="Generate Berita Acara" subtitle="Generate berita acara sidang, baik per mahasiswa secara individual maupun cetak massal per periode & gelombang." icon="clipboard-list" accent="indigo"></x-page-header>
 
             @if($sidangs->count() > $maksCetakGabungan)
                 <div class="flex items-start gap-2 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-xs text-amber-800 dark:text-amber-300">
-                    <span>⚠️</span>
+                    <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <span>Ada <strong>{{ $sidangs->count() }}</strong> mahasiswa pada filter ini — terlalu banyak untuk satu PDF gabungan (maksimal {{ $maksCetakGabungan }}). Pilih <strong>Gelombang</strong> terlebih dahulu untuk "Cetak Semua", atau gunakan <strong>Unduh Semua (ZIP)</strong>.</span>
                 </div>
             @endif

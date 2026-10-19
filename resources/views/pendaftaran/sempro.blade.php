@@ -19,42 +19,22 @@
          tglValue: '',
      }">
     
-    <!-- Hero Header Banner -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-7 text-white shadow-xl border border-slate-800">
-        <div class="absolute -right-10 -top-10 w-52 h-52 bg-indigo-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute right-32 -bottom-10 w-40 h-40 bg-violet-500/10 rounded-full blur-2xl"></div>
-
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-extrabold border border-indigo-400/30 mb-2.5 shadow-inner">
-                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-                    Portal Verifikasi Pendaftaran
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Verifikasi Pendaftaran Sempro</h1>
-                <p class="text-xs text-indigo-200/90 mt-1 max-w-2xl leading-relaxed">
-                    Periksa kelayakan pendaftaran, validasi berkas persyaratan, dan berikan persetujuan untuk meneruskan mahasiswa ke Master Data Sempro.
-                </p>
-            </div>
-            
-            <div class="shrink-0 flex items-center gap-3">
-                <button type="button" @click="adminModal = true" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl shadow-md transition-all">
-                    <span>➕</span> Daftar Mahasiswa
-                </button>
-                <div class="px-4 py-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center shadow-md">
-                    <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Total Pendaftaran</p>
-                    <p class="text-lg font-extrabold text-white mt-0.5">{{ $counts['total'] }} Berkas</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <x-page-header title="Verifikasi Pendaftaran Sempro" subtitle="Periksa kelayakan pendaftaran, validasi berkas persyaratan, dan berikan persetujuan untuk meneruskan mahasiswa ke Master Data Sempro." icon="clipboard" accent="indigo" class="!mb-0">
+        <x-slot:actions>
+            <span class="ui-chip"><x-icon name="inbox" class="w-3.5 h-3.5" /> {{ $counts['total'] }} berkas</span>
+            <button type="button" @click="adminModal = true" class="ui-btn-primary">
+                <x-icon name="plus" class="w-4 h-4" /> Daftarkan Mahasiswa
+            </button>
+        </x-slot:actions>
+    </x-page-header>
 
     @if(session('success'))
         <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xs">
             <div class="flex items-center gap-2">
-                <span class="text-base">✅</span>
+                <span class="text-base"><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                 <span>{{ session('success') }}</span>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 text-sm font-bold">✕</button>
+            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 text-sm font-bold"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
         </div>
     @endif
 
@@ -66,7 +46,7 @@
             <div class="flex items-center justify-between">
                 <p class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">SEMUA BERKAS</p>
                 <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-sm sm:text-base border border-indigo-100 dark:border-indigo-900 group-hover:scale-110 transition-transform">
-                    📋
+                    <x-icon name="clipboard-list" class="w-[18px] h-[18px]" />
                 </div>
             </div>
             <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">{{ $counts['total'] }}</p>
@@ -79,7 +59,7 @@
             <div class="flex items-center justify-between">
                 <p class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">MENUNGGU</p>
                 <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center text-sm sm:text-base border border-amber-100 dark:border-amber-900 group-hover:scale-110 transition-transform relative">
-                    ⏳
+                    <x-icon name="clock" class="w-[18px] h-[18px]" />
                     @if($counts['menunggu'] > 0)
                         <span class="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-ping"></span>
                     @endif
@@ -95,7 +75,7 @@
             <div class="flex items-center justify-between">
                 <p class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">DISETUJUI</p>
                 <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center text-sm sm:text-base border border-emerald-100 dark:border-emerald-900 group-hover:scale-110 transition-transform">
-                    ✓
+                    <x-icon name="check" class="w-[18px] h-[18px]" />
                 </div>
             </div>
             <p class="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-2">{{ $counts['disetujui'] }}</p>
@@ -108,7 +88,7 @@
             <div class="flex items-center justify-between">
                 <p class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400">DITOLAK</p>
                 <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-bold flex items-center justify-center text-sm sm:text-base border border-rose-100 dark:border-rose-900 group-hover:scale-110 transition-transform">
-                    ✕
+                    <x-icon name="x" class="w-[18px] h-[18px]" />
                 </div>
             </div>
             <p class="text-2xl sm:text-3xl font-extrabold text-rose-700 dark:text-rose-400 mt-2">{{ $counts['ditolak'] }}</p>
@@ -143,9 +123,9 @@
                         <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status Verifikasi</label>
                         <select name="verifikasi_status" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950">
                             <option value="">-- Semua Status Verifikasi --</option>
-                            <option value="menunggu" {{ request('verifikasi_status') === 'menunggu' ? 'selected' : '' }}>⏳ Menunggu Verifikasi</option>
-                            <option value="disetujui" {{ request('verifikasi_status') === 'disetujui' ? 'selected' : '' }}>✓ Disetujui</option>
-                            <option value="ditolak" {{ request('verifikasi_status') === 'ditolak' ? 'selected' : '' }}>✕ Ditolak</option>
+                            <option value="menunggu" {{ request('verifikasi_status') === 'menunggu' ? 'selected' : '' }}> Menunggu Verifikasi</option>
+                            <option value="disetujui" {{ request('verifikasi_status') === 'disetujui' ? 'selected' : '' }}> Disetujui</option>
+                            <option value="ditolak" {{ request('verifikasi_status') === 'ditolak' ? 'selected' : '' }}> Ditolak</option>
                         </select>
                     </div>
                     <div>
@@ -184,7 +164,7 @@
                     <button type="submit"
                             style="background-color: #3251d4; color: #ffffff;"
                             class="px-5 py-2.5 bg-indigo-600 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md hover:bg-indigo-700 border border-indigo-500 cursor-pointer flex items-center justify-center gap-1.5">
-                        🔍 Cari & Filter
+                        <x-icon name="search" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Cari & Filter
                     </button>
 
                     <a href="{{ route('pendaftaran.sempro.export', request()->query()) }}"
@@ -200,7 +180,7 @@
                         <a href="{{ route('pendaftaran.sempro') }}"
                            style="background-color: #475569; color: #ffffff;"
                            class="px-4 py-2.5 bg-slate-600 text-white font-extrabold text-xs rounded-2xl hover:bg-slate-700 transition-colors border border-slate-500 cursor-pointer flex items-center justify-center gap-1">
-                            ✕ Reset
+                            <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset
                         </a>
                     @endif
                 </div>
@@ -214,17 +194,17 @@
                 <button type="button" @click="if(confirm('Setujui ' + selectedIds.length + ' pendaftaran terpilih?')) $refs.bulkApproveForm.submit()"
                         style="background-color: #059669; color: #ffffff;"
                         class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
-                    ✓ Setujui Terpilih
+                    <x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Setujui Terpilih
                 </button>
                 <button type="button" @click="bulkRejectModal = true"
                         style="background-color: #e11d48; color: #ffffff;"
                         class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
-                    ✕ Tolak Terpilih
+                    <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tolak Terpilih
                 </button>
                 <button type="button" @click="bulkDeleteModal = true"
                         style="background-color: #475569; color: #ffffff;"
                         class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
-                    🗑️ Hapus Terpilih
+                    <x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Hapus Terpilih
                 </button>
                 <button type="button" @click="selectedIds = []" class="px-3.5 py-2 rounded-xl font-bold text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                     Batalkan Pilihan
@@ -294,7 +274,7 @@
                                     Tgl Daftar: {{ $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->isoFormat('dddd, D MMMM Y') : '-' }}
                                     <button type="button" title="Ubah tanggal pendaftaran"
                                             @click="tglSidang = {{ Js::from(['hash_id' => $s->hash_id, 'nama' => $s->nama_mahasiswa, 'nim' => $s->nim]) }}; tglValue = '{{ $s->tanggal_pendaftaran?->format('Y-m-d') }}'; tglModal = true"
-                                            class="ml-1 text-indigo-600 dark:text-indigo-400 hover:underline font-bold">✏️ Ubah</button>
+                                            class="ml-1 text-indigo-600 dark:text-indigo-400 hover:underline font-bold"><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Ubah</button>
                                 </div>
                             </td>
 
@@ -306,12 +286,12 @@
                                                 @click="previewUrl = '{{ route('dokumen.show', [$s, 'persyaratan']) }}'; previewTitle = 'Berkas Persyaratan - {{ addslashes($s->nama_mahasiswa) }}'; previewModal = true"
                                                 title="Preview Berkas"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900 transition-all shadow-2xs cursor-pointer">
-                                            👁️
+                                            <x-icon name="eye" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                         </button>
                                         <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}?download=1"
                                            title="Download Berkas"
                                            class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 transition-all shadow-2xs">
-                                            📥
+                                            <x-icon name="download" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                         </a>
                                     </div>
                                 @else
@@ -323,12 +303,12 @@
                             <td class="py-3.5 px-3 text-center whitespace-nowrap">
                                 @if(($s->verifikasi_status ?? 'menunggu') === 'disetujui')
                                     <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
-                                        ✓ Disetujui
+                                        <x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Disetujui
                                     </span>
                                 @elseif(($s->verifikasi_status ?? '') === 'ditolak')
                                     <div class="flex flex-col items-center gap-0.5">
                                         <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-2xs">
-                                            ✕ Ditolak
+                                            <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Ditolak
                                         </span>
                                         @if($s->verifikasi_komentar)
                                             <span class="text-[9.5px] text-slate-500 dark:text-slate-400 font-semibold max-w-[140px] truncate" title="{{ $s->verifikasi_komentar }}">
@@ -338,7 +318,7 @@
                                     </div>
                                 @else
                                     <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs animate-pulse">
-                                        ⏳ Menunggu
+                                        <x-icon name="clock" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Menunggu
                                     </span>
                                 @endif
                             </td>
@@ -350,21 +330,21 @@
                                         style="background-color: #3251d4; color: #ffffff;"
                                         title="Verifikasi Pendaftaran"
                                         class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-600 text-white transition-all shadow-md shadow-indigo-600/30 hover:bg-indigo-700 border border-indigo-500 cursor-pointer">
-                                    ⚡
+                                    <x-icon name="lightning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                 </button>
                                 <button type="button"
                                         @click="selectedSidang = {{ json_encode($s) }}; deleteModal = true"
                                         class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 transition-all border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 cursor-pointer"
                                         title="Hapus pendaftaran agar mahasiswa dapat daftar ulang">
-                                    🗑️
+                                    <x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                 </button>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="8" class="py-14 px-6 text-center bg-slate-50/40 dark:bg-slate-900/40">
-                                <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl">
-                                    📋
+                                <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                                    <x-icon name="clipboard-list" class="w-5 h-5" />
                                 </div>
                                 <h3 class="text-xs font-extrabold text-slate-800 dark:text-slate-200">Tidak Ada Data Pendaftaran Sempro</h3>
                                 <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">Data pendaftaran yang diajukan mahasiswa akan ditampilkan di sini.</p>
@@ -396,15 +376,15 @@
         <div @click.away="previewModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full p-6 text-slate-800 dark:text-slate-100 shadow-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-sm border border-indigo-100 dark:border-indigo-900">
-                        📄
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center border border-indigo-100 dark:border-indigo-900">
+                        <x-icon name="document" class="w-4 h-4" />
                     </div>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100" x-text="previewTitle"></h3>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400">Pratinjau Berkas Persyaratan Pendaftaran</p>
                     </div>
                 </div>
-                <button type="button" @click="previewModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs transition-colors">✕</button>
+                <button type="button" @click="previewModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs transition-colors"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
 
             <!-- Preview Content -->
@@ -416,7 +396,7 @@
 
             <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <a :href="previewUrl + (previewUrl.includes('?') ? '&' : '?') + 'download=1'" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs rounded-xl border border-indigo-200 dark:border-indigo-900 transition-all">
-                    📥 Unduh File Asli
+                    <x-icon name="download" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Unduh File Asli
                 </a>
                 <button type="button" @click="previewModal = false" class="px-5 py-2 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-extrabold rounded-xl transition-all">
                     Tutup Pratinjau
@@ -438,15 +418,15 @@
         <div @click.away="if (!previewModal) verifikasiModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-4 sm:p-5 text-slate-800 dark:text-slate-100 shadow-2xl overflow-hidden relative border border-slate-100 dark:border-slate-800 space-y-3 max-h-[85vh] overflow-y-auto">
             <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-sm border border-indigo-100 dark:border-indigo-900">
-                        ⚡
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center border border-indigo-100 dark:border-indigo-900">
+                        <x-icon name="lightning" class="w-4 h-4" />
                     </div>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Verifikasi Sempro</h3>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400">Validasi kelayakan pendaftaran & berkas</p>
                     </div>
                 </div>
-                <button type="button" @click="verifikasiModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs transition-colors">✕</button>
+                <button type="button" @click="verifikasiModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs transition-colors"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
 
             <!-- Detail Data Mahasiswa Ringkas -->
@@ -473,11 +453,11 @@
                                 <button type="button"
                                          @click.stop="previewUrl = '{{ url('dokumen') }}/' + selectedSidang.hash_id + '/persyaratan'; previewTitle = 'Berkas Persyaratan - ' + selectedSidang.nama_mahasiswa; previewModal = true"
                                          class="inline-flex items-center gap-1 text-[10.5px] text-indigo-600 dark:text-indigo-400 font-extrabold hover:underline cursor-pointer">
-                                    👁️ Preview Berkas
+                                    <x-icon name="eye" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Preview Berkas
                                 </button>
                                 <a :href="'{{ url('dokumen') }}/' + selectedSidang.hash_id + '/persyaratan?download=1'"
                                    class="inline-flex items-center gap-1 text-[10.5px] text-emerald-600 dark:text-emerald-400 font-extrabold hover:underline">
-                                    📥 Download
+                                    <x-icon name="download" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Download
                                 </a>
                             </div>
                         </template>
@@ -497,12 +477,12 @@
                         <label class="flex items-center justify-center gap-1.5 p-2.5 rounded-2xl border cursor-pointer transition-all text-xs"
                                :class="verifikasiStatus === 'disetujui' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-extrabold ring-2 ring-emerald-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium'">
                             <input type="radio" name="verifikasi_status" value="disetujui" x-model="verifikasiStatus" class="sr-only">
-                            <span>✓ Setujui</span>
+                            <span><x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Setujui</span>
                         </label>
                         <label class="flex items-center justify-center gap-2 p-2.5 rounded-2xl border cursor-pointer transition-all text-xs"
                                :class="verifikasiStatus === 'ditolak' ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 font-extrabold ring-2 ring-rose-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium'">
                             <input type="radio" name="verifikasi_status" value="ditolak" x-model="verifikasiStatus" class="sr-only">
-                            <span>✕ Tolak</span>
+                            <span><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tolak</span>
                         </label>
                     </div>
                 </div>
@@ -539,8 +519,8 @@
          x-transition:leave-end="opacity-0 scale-95">
         <div @click.away="deleteModal = false" class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left my-auto relative z-50">
             <div class="p-6 text-center space-y-4">
-                <div class="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto shadow-inner">
-                    🗑️
+                <div class="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto shadow-inner">
+                    <x-icon name="trash" class="w-7 h-7" />
                 </div>
                 <div>
                     <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Hapus Pendaftaran Sempro?</h3>
@@ -548,7 +528,7 @@
                         Data pendaftaran mahasiswa <strong class="text-slate-800 dark:text-slate-200" x-text="selectedSidang?.nama_mahasiswa"></strong> (<span x-text="selectedSidang?.nim"></span>) akan dihapus secara permanen.
                     </p>
                     <p class="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/60 font-semibold mt-3">
-                        💡 Setelah dihapus, mahasiswa ini dapat melakukan pendaftaran ulang Sempro.
+                        <x-icon name="lightning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Setelah dihapus, mahasiswa ini dapat melakukan pendaftaran ulang Sempro.
                     </p>
                 </div>
 
@@ -600,7 +580,7 @@
     <!-- MODAL BULK HAPUS -->
     <div x-show="bulkDeleteModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
         <div @click.away="bulkDeleteModal = false" class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 p-6 text-center space-y-4">
-            <div class="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto shadow-inner">🗑️</div>
+            <div class="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto shadow-inner"><x-icon name="trash" class="w-7 h-7" /></div>
             <div>
                 <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Hapus <span x-text="selectedIds.length"></span> Pendaftaran Terpilih?</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Data akan dihapus permanen dan mahasiswa terkait dapat mendaftar ulang.</p>
@@ -624,10 +604,10 @@
         <div @click.away="adminModal = false" class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 text-slate-800 dark:text-slate-100 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-3 max-h-[85vh] overflow-y-auto">
             <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                    <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">➕ Daftar Mahasiswa Sempro</h3>
+                    <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100"><x-icon name="plus" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Daftar Mahasiswa Sempro</h3>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400">Untuk mahasiswa remidi/belum lulus periode sebelumnya, atau pendaftaran manual lainnya.</p>
                 </div>
-                <button type="button" @click="adminModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs transition-colors">✕</button>
+                <button type="button" @click="adminModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs transition-colors"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <form method="POST" action="{{ route('pendaftaran.admin-store') }}" class="space-y-3">
                 @csrf
@@ -707,8 +687,8 @@
          @keydown.escape.window="tglModal = false" @click.self="tglModal = false">
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-700 p-5">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">📅 Ubah Tanggal Pendaftaran</h3>
-                <button type="button" @click="tglModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs">✕</button>
+                <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Ubah Tanggal Pendaftaran</h3>
+                <button type="button" @click="tglModal = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center font-bold text-xs"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
             <p class="text-xs text-slate-600 dark:text-slate-300 mb-3">
                 <strong x-text="tglSidang ? tglSidang.nama : ''"></strong>

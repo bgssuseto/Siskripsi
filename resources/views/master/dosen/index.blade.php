@@ -161,36 +161,16 @@
         }
     }">
 
-        <!-- Page Title & Actions -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Master Dosen</h2>
-                <p class="text-sm text-slate-500 mt-1">Kelola data NIDN dan Nama Dosen pembimbing/penguji skripsi.</p>
+        <x-page-header title="Master Dosen" icon="user" accent="indigo">
+            <x-slot:description>Kelola data NIDN dan Nama Dosen pembimbing/penguji skripsi.</x-slot:description>
+            <x-slot:actions>
+                <div class="flex items-center gap-3">
+                <a href="{{ route('master.dosen.export', request()->query()) }}" class="ui-btn-secondary"><x-icon name="download" class="w-4 h-4" /> Export Excel</a>
+                <button @click="importModal = true" class="ui-btn-secondary"><x-icon name="upload" class="w-4 h-4" /> Import Excel</button>
+                <button @click="createModal = true" class="ui-btn-primary"><x-icon name="plus" class="w-4 h-4" /> Tambah Dosen</button>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('master.dosen.export', request()->query()) }}"
-                   class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold text-sm shadow-lg shadow-slate-600/25 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Export Excel
-                </a>
-                <button @click="importModal = true"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-lg shadow-emerald-600/25 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                    </svg>
-                    Import Excel
-                </button>
-                <button @click="createModal = true" 
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/25 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Tambah Dosen
-                </button>
-            </div>
-        </div>
+            </x-slot:actions>
+        </x-page-header>
 
         <!-- Search & Filter Bar -->
         <div id="filter-container" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -215,7 +195,7 @@
         <div id="bulk-bar" class="hidden items-center justify-between gap-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-2xl px-4 py-3 mb-4">
             <span class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300"><span id="bulk-count">0</span> dosen dipilih</span>
             <div class="flex items-center gap-2">
-                <button type="button" onclick="bulkDeleteDosen()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all">🗑️ Hapus Terpilih</button>
+                <button type="button" onclick="bulkDeleteDosen()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all"><x-icon name="trash" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Hapus Terpilih</button>
                 <button type="button" onclick="toggleSelectAllDosen(null, true)" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all">Batalkan Pilihan</button>
             </div>
         </div>

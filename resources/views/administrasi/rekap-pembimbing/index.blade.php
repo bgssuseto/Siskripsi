@@ -3,34 +3,17 @@
 
     <div class="space-y-6">
 
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <div>
-                <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
-                    <span class="p-2 bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        </svg>
-                    </span>
-                    Rekap Dosen Pembimbing
-                </h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Jumlah mahasiswa bimbingan per dosen, dipisah antara Pembimbing Utama dan Pembimbing Pendamping.
-                </p>
-            </div>
-
-            @if($dosenRows->count() > 0)
+        <!-- Header -->
+        <x-page-header title="Rekap Dosen Pembimbing" icon="users" accent="teal" class="!mb-0">
+            <x-slot:description>Jumlah mahasiswa bimbingan per dosen, dipisah antara Pembimbing Utama dan Pembimbing Pendamping.</x-slot:description>
+            <x-slot:actions>
+                @if($dosenRows->count() > 0)
             <div class="flex items-center gap-2 flex-wrap">
-                <a href="{{ route('administrasi.sk.export-pembimbing', array_merge(request()->except('jenis'), ['jenis_tugas_akhir' => $jenisTa])) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Export Excel
-                </a>
+                <a href="{{ route('administrasi.sk.export-pembimbing', array_merge(request()->except('jenis'), ['jenis_tugas_akhir' => $jenisTa])) }}" class="ui-btn-secondary"><x-icon name="download" class="w-4 h-4" /> Export Excel</a>
             </div>
             @endif
-        </div>
+            </x-slot:actions>
+        </x-page-header>
 
         <!-- Filter -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
@@ -185,8 +168,8 @@
             <div class="relative z-10 w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-all duration-200" id="detail-pembimbing-panel">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 shrink-0 rounded-xl bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-300 border border-teal-100 dark:border-teal-900 flex items-center justify-center text-lg">
-                            🎓
+                        <div class="w-10 h-10 shrink-0 rounded-xl bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-300 border border-teal-100 dark:border-teal-900 flex items-center justify-center">
+                            <x-icon name="academic" class="w-5 h-5" />
                         </div>
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Mahasiswa Bimbingan</h3>
@@ -195,7 +178,7 @@
                     </div>
                     <div class="flex items-center gap-3">
                         <span id="detail-pembimbing-count" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-100 dark:border-teal-900"></span>
-                        <button type="button" onclick="closeDetailPembimbing()" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">✕</button>
+                        <button type="button" onclick="closeDetailPembimbing()" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
                     </div>
                 </div>
                 <div class="max-h-[60vh] overflow-y-auto">

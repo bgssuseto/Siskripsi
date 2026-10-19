@@ -264,7 +264,7 @@
 <body>
 
   <div class="btn-print-bar">
-    <button onclick="window.print()" class="btn-print">🖨️ Cetak Undangan</button>
+    <button onclick="window.print()" class="btn-print"><x-icon name="printer" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Cetak Undangan</button>
     <button onclick="window.close()" class="btn-close">Tutup</button>
   </div>
 

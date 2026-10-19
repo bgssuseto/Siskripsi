@@ -22,15 +22,7 @@
     regModal: false,
     jenisTaSelected: '{{ $mySidang && $mySidang->jenis_tugas_akhir === 'jurnal' ? 'jurnal' : ($mySidang && $mySidang->jenis_tugas_akhir === 'sidang' ? 'sidang' : '') }}'
 }">
-    <div class="bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-extrabold mb-1">Pendaftaran Sidang Skripsi</h1>
-            <p class="text-xs text-purple-200">Kelola riwayat dan pendaftaran Sidang Skripsi Tugas Akhir Anda.</p>
-        </div>
-        <span class="px-3.5 py-1.5 bg-purple-500/30 border border-purple-400/30 text-purple-200 text-xs font-bold rounded-xl">
-            Sidang Skripsi
-        </span>
-    </div>
+    <x-page-header title="Pendaftaran Sidang Skripsi" subtitle="Kelola riwayat dan pendaftaran Sidang Skripsi Tugas Akhir Anda." icon="academic" accent="violet"></x-page-header>
 
     <!-- Top Grid: Status Cards & Card Syarat & Ketentuan Pendaftaran -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -71,29 +63,29 @@
                     <div class="mt-4">
                         @if($user->status_kelulusan === 'lulus')
                             <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
-                                <span>🎓</span> Anda telah dinyatakan LULUS. Pendaftaran ditutup.
+                                <span><x-icon name="academic" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Anda telah dinyatakan LULUS. Pendaftaran ditutup.
                             </div>
                         @elseif($needsCoordinator)
                             <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 font-extrabold flex items-center gap-2">
-                                <span>⚠️</span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
+                                <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
                             </div>
                         @elseif(!$mySidang)
                             <button @click="regModal = true" style="background-color: #9333ea; color: #ffffff;" class="w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer border border-purple-500">
-                                <span>📝</span> Ajukan Pendaftaran Sidang Skripsi
+                                <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Ajukan Pendaftaran Sidang Skripsi
                             </button>
                         @elseif($mySidang->verifikasi_status === 'ditolak')
                             <button @click="regModal = true" style="background-color: #e11d48; color: #ffffff;" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer border border-rose-500">
-                                <span>✏️</span> Revisi Pendaftaran Skripsi
+                                <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Revisi Pendaftaran Skripsi
                             </button>
                         @elseif($mySidang->verifikasi_status === 'disetujui')
                             @php $waLink = optional($mySidang->periode)->link_grup_wa_skripsi; @endphp
                             <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 space-y-2">
                                 <p class="text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
-                                    <span>✅</span> Pendaftaran Anda telah terverifikasi.
+                                    <span><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Pendaftaran Anda telah terverifikasi.
                                 </p>
                                 @if($waLink)
                                     <a href="{{ route('mahasiswa.sidang.join-wa', $mySidang) }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
-                                        <span>💬</span> Join Grup WhatsApp
+                                        <span><x-icon name="chat" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Join Grup WhatsApp
                                     </a>
                                 @else
                                     <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-semibold italic">Link grup WA belum diatur oleh admin.</p>
@@ -101,7 +93,7 @@
                             </div>
                         @else
                             <div class="bg-purple-100 dark:bg-purple-900/60 border border-purple-300 dark:border-purple-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white font-extrabold flex items-center gap-2">
-                                <span>ℹ️</span> Pendaftaran Anda telah terkirim dan sedang diproses.
+                                <span><x-icon name="info" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Pendaftaran Anda telah terkirim dan sedang diproses.
                             </div>
                         @endif
                     </div>
@@ -113,8 +105,8 @@
         <div class="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-6 border border-slate-200/80 dark:border-slate-700 flex flex-col justify-between">
             <div>
                 <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
-                    <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base font-bold shrink-0 border border-purple-200 dark:border-purple-800">
-                        📋
+                    <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold shrink-0 border border-purple-200 dark:border-purple-800">
+                        <x-icon name="clipboard-list" class="w-4 h-4" />
                     </div>
                     <div>
                         <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Syarat & Ketentuan Sidang Skripsi</h2>
@@ -146,7 +138,7 @@
             <!-- Box Informasi Pembayaran BSI -->
             <div class="mt-4 p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-800/80 flex items-center justify-between text-xs text-purple-900 dark:text-purple-200">
                 <div class="flex items-center gap-2">
-                    <span class="text-base">💳</span>
+                    <span class="text-base"><x-icon name="credit-card" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <div>
                         <p class="font-extrabold">Pembayaran Administrasi (Bank BSI)</p>
                         <p class="text-[11px] text-purple-700 dark:text-purple-300">No. Rek: <strong class="font-mono font-bold">7318709593</strong> (A.n. Ahmad Abdul Chamid / Alvin R)</p>
@@ -174,15 +166,15 @@
         <div @click.away="regModal = false" class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden text-left my-6 transform transition-all relative z-50">
             <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/50">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center text-base font-bold shadow-sm">
-                        🎓
+                    <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-sm">
+                        <x-icon name="academic" class="w-5 h-5" />
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Form Pendaftaran Sidang Skripsi</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400">Lengkapi formulir pendaftaran dengan data yang valid</p>
                     </div>
                 </div>
-                <button @click="regModal = false" class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-bold transition-all">✕</button>
+                <button @click="regModal = false" class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center text-xs font-bold transition-all"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
 
             <form id="form-daftar-skripsi" method="POST" action="{{ route('mahasiswa.daftar.store') }}" enctype="multipart/form-data" class="p-6 space-y-4">
@@ -278,7 +270,7 @@
 
                 {{-- Info wajib LOA / bukti publish untuk jalur Jurnal (hanya tampil saat jalur Jurnal dipilih) --}}
                 <div x-show="jenisTaSelected === 'jurnal'" x-cloak class="flex items-start gap-2.5 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl">
-                    <span class="text-base shrink-0">⚠️</span>
+                    <span class="text-base shrink-0"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <p class="text-[11px] text-amber-900 dark:text-amber-300 font-semibold leading-relaxed">
                         Untuk jalur <strong>Jurnal / Artikel</strong>, wajib melampirkan <strong>LOA (Letter of Acceptance)</strong> atau <strong>bukti publish jurnal</strong> pada file persyaratan (digabung dalam 1 PDF di bawah ini).
                     </p>
@@ -334,8 +326,8 @@
 
                         <template x-if="!fileName">
                             <div class="flex items-center justify-center gap-2 py-1">
-                                <div class="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-sm shrink-0 border border-purple-100 dark:border-purple-700">
-                                    📄
+                                <div class="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-700">
+                                    <x-icon name="document" class="w-4 h-4" />
                                 </div>
                                 <div class="text-left">
                                     <p class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Pilih berkas PDF persyaratan</p>
@@ -354,7 +346,7 @@
                                     <span class="text-[9px] text-slate-400 font-medium shrink-0" x-text="fileSize"></span>
                                 </div>
                                 <button type="button" @click.stop="clearFile()" class="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded transition-colors z-20" title="Batal">
-                                    ✕
+                                    <x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                 </button>
                             </div>
                         </template>
@@ -364,7 +356,7 @@
 
                     <template x-if="!fileName && existingFile">
                         <div class="mt-1.5 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-700 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
-                            <span>📄 File Terunggah:</span>
+                            <span><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> File Terunggah:</span>
                             <a :href="existingFile" target="_blank" class="text-purple-600 dark:text-purple-400 hover:underline font-extrabold" @click.stop>
                                 Preview File ↗
                             </a>
@@ -377,7 +369,7 @@
                     <button type="submit"
                             style="background-color: #9333ea; color: #ffffff; border: none;"
                             class="px-5 py-2 font-extrabold text-[12px] rounded-lg transition-all shadow-md flex items-center gap-1.5 hover:opacity-90 active:scale-95 cursor-pointer">
-                        <span>🚀</span> Kirim Pendaftaran
+                        <span></span> Kirim Pendaftaran
                     </button>
                 </div>
             </form>
@@ -437,10 +429,10 @@
                                     @if($s->file_persyaratan)
                                         <div class="flex items-center justify-center gap-1.5">
                                             <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}" target="_blank" class="px-2.5 py-1 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 text-purple-700 dark:text-purple-300 text-[11px] font-bold rounded-lg border border-purple-200 dark:border-purple-700 transition-all flex items-center gap-1 shadow-sm">
-                                                <span>👁️</span> Preview
+                                                <span><x-icon name="eye" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Preview
                                             </a>
                                             <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}?download=1" class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold rounded-lg border border-emerald-200 dark:border-emerald-700 transition-all flex items-center gap-1 shadow-sm">
-                                                <span>📥</span>
+                                                <span><x-icon name="download" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                                             </a>
                                         </div>
                                     @else

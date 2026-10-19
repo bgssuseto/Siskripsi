@@ -10,15 +10,15 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-slate-800/80 rounded-3xl p-8 border border-slate-700/80 shadow-2xl text-center">
-        <div class="w-16 h-16 rounded-full bg-amber-500/10 text-amber-300 flex items-center justify-center text-3xl mx-auto mb-4">
-            🔒
+<body class="bg-slate-100 text-slate-800 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 shadow-sm text-center">
+        <div class="w-16 h-16 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center text-3xl mx-auto mb-4">
+            <x-icon name="lock" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
         </div>
-        <h1 class="text-xl font-extrabold text-white mb-2">Link Sedang Tidak Aktif</h1>
-        <p class="text-sm text-slate-400 leading-relaxed">
+        <h1 class="text-xl font-extrabold text-slate-900 mb-2">Link Sedang Tidak Aktif</h1>
+        <p class="text-sm text-slate-500 leading-relaxed">
             @if($periode)
-                Form kesediaan menguji untuk periode <strong class="text-slate-200">{{ $periode->nama_periode }}</strong> saat ini sudah dikunci atau disembunyikan oleh admin.
+                Form kesediaan menguji untuk periode <strong class="text-slate-700">{{ $periode->nama_periode }}</strong> saat ini sudah dikunci atau disembunyikan oleh admin.
             @else
                 Link ini tidak valid atau sudah tidak berlaku.
             @endif

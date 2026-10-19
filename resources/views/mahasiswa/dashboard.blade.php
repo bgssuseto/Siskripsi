@@ -2,23 +2,11 @@
 <div class="max-w-7xl mx-auto space-y-5 sm:space-y-6">
     
     <!-- Welcome Header -->
-    <div class="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-5 sm:p-7 rounded-3xl text-white shadow-xl flex justify-between items-center gap-4 border border-slate-800">
-        <div aria-hidden="true" class="absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl"></div>
-        <div aria-hidden="true" class="absolute left-1/3 -bottom-16 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl"></div>
-        <div class="relative min-w-0">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] sm:text-xs font-semibold border border-emerald-500/30 mb-2.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Role: Mahasiswa
-            </span>
-            <h1 class="text-xl sm:text-3xl font-extrabold tracking-tight leading-tight break-words">Halo, {{ $user->name }}! 👋</h1>
-            <p class="text-[12px] sm:text-sm text-slate-300 mt-1.5 leading-relaxed max-w-2xl">Selamat datang di Sistem Informasi Skripsi TI. Kelola tugas akhir, pendaftaran, dan jadwal sidang Anda.</p>
-        </div>
-        <div class="relative hidden sm:flex w-14 h-14 shrink-0 bg-indigo-500/20 border border-indigo-400/30 rounded-2xl items-center justify-center">
-            <svg class="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-            </svg>
-        </div>
-    </div>
+    <x-page-header title="Halo, {{ $user->name }}" subtitle="Selamat datang di Sistem Informasi Skripsi TI. Kelola tugas akhir, pendaftaran, dan jadwal sidang Anda." icon="home" accent="indigo" class="!mb-0">
+            <x-slot:actions>
+                <span class="ui-chip"><x-icon name="academic" class="w-3.5 h-3.5" /> Mahasiswa</span>
+            </x-slot:actions>
+        </x-page-header>
 
 
 
@@ -134,18 +122,18 @@
             </div>
 
             <div class="relative z-10">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/15 border border-white/25 text-3xl mb-4 grad-cap-float">
-                    🎓
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/15 border border-white/25 mb-4 grad-cap-float">
+                    <x-icon name="academic" class="w-7 h-7" />
                 </div>
                 <p class="text-[11px] font-bold uppercase tracking-widest text-amber-300 mb-2">Selamat &amp; Sukses</p>
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-3">
-                    Selamat, {{ $user->name }}! Anda Telah Dinyatakan <span class="text-amber-300">LULUS</span> 🎉
+                    Selamat, {{ $user->name }}! Anda Telah Dinyatakan <span class="text-amber-300">LULUS</span> 
                 </h2>
                 <p class="max-w-2xl mx-auto text-sm sm:text-[15px] text-emerald-50 leading-relaxed">
                     Perjalanan panjang menyusun proposal, penelitian, hingga mempertahankannya di meja sidang kini telah usai.
                     Terima kasih telah menjadi bagian dari keluarga besar <strong class="text-white">Program Studi Teknik Informatika, Universitas Muria Kudus</strong>.
                     Semoga ilmu dan pengalaman yang telah diperoleh menjadi bekal berharga untuk melangkah lebih jauh.
-                    Sukses selalu untuk langkah berikutnya — kami bangga pernah menjadi bagian dari perjalananmu. 🎓✨
+                    Sukses selalu untuk langkah berikutnya — kami bangga pernah menjadi bagian dari perjalananmu. <x-icon name="academic" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                 </p>
             </div>
         </div>
@@ -288,8 +276,8 @@
                         </div>
                         <p class="text-[13px] font-bold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">{{ $s->judul_skripsi }}</p>
                         <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                            <span>📅 {{ optional($s->tanggal)->format('d M Y') ?? 'Belum dijadwalkan' }}</span>
-                            <span>🏫 {{ $s->ruang->kode_ruangan ?? $s->ruang->nama ?? '-' }}</span>
+                            <span><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ optional($s->tanggal)->format('d M Y') ?? 'Belum dijadwalkan' }}</span>
+                            <span><x-icon name="building" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $s->ruang->kode_ruangan ?? $s->ruang->nama ?? '-' }}</span>
                         </div>
                     </div>
                 @endforeach
