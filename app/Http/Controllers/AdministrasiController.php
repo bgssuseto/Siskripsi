@@ -98,6 +98,7 @@ class AdministrasiController extends Controller
 
         // Build list of lecturers with stats
         $dosenList = Dosen::whereIn('id', $dosenExaminerIds)
+            ->excludingSuperAdminPlaceholder()
             ->orderBy('nama_dosen', 'asc')
             ->get()
             ->map(function ($dosen) use ($sidangs) {
@@ -125,9 +126,14 @@ class AdministrasiController extends Controller
     }
 
     /**
-     * Preview HTML Undangan untuk Cetak / Tampilan Web 1 Dosen
+     * Build the full data context for one dosen's Undangan letter — periode,
+     * matching Sidang list, rekap sesi, koordinator penandatangan, dan logo
+     * kop surat (base64) — dari filter query params yang sama. Dipakai
+     * bersama oleh previewUndanganHtml() (versi "Cetak"/HTML) dan
+     * buildUndanganPdfForDosen() (versi export PDF) supaya KEDUANYA selalu
+     * menampilkan isi & kop surat yang identik.
      */
-    public function previewUndanganHtml(Request $request, Dosen $dosen): View
+    private function buildUndanganContext(Request $request, Dosen $dosen): array
     {
         $periodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
@@ -176,25 +182,69 @@ class AdministrasiController extends Controller
                            ->orderBy('jam', 'asc')
                            ->get();
 
+        // Rekap sesi (menggabungkan slot waktu berurutan per hari & ruang)
         $rekapSesi = $this->buildSimplifiedSessions($mySidangs);
 
-        $kopPath = public_path('images/kop_surat.png');
-        $kopBase64 = '';
-        if (file_exists($kopPath)) {
-            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($kopPath);
-            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        }
+        $koordinator = \App\Models\User::where('role', \App\Models\User::ROLE_KOORDINATOR)
+            ->whereNotNull('dosen_id')
+            ->with('dosen')
+            ->first()?->dosen;
 
-        return view('administrasi.undangan.preview', [
+        return [
             'dosen'         => $dosen,
             'namaPeriode'   => $namaPeriode,
             'rekapSesi'     => $rekapSesi,
             'sidangs'       => $mySidangs,
-            'kopBase64'     => $kopBase64,
             'totalUji'      => $mySidangs->count(),
             'jenisUndangan' => $jenisUndangan,
-        ]);
+            'koordinator'   => $koordinator,
+            'kopBase64'     => $this->imageToBase64(public_path('images/kop_surat.png')),
+            'logoTiBase64'  => $this->imageToBase64(public_path('images/logo-ti-umk-icon.png')),
+        ];
+    }
+
+    /**
+     * Load an image file from disk and encode it as a data: URI, or an empty
+     * string when the file doesn't exist — used for images embedded into the
+     * Undangan kop surat (works both for the browser preview and dompdf).
+     */
+    private function imageToBase64(string $path): string
+    {
+        if (!file_exists($path)) {
+            return '';
+        }
+        $type = pathinfo($path, PATHINFO_EXTENSION);
+        $data = file_get_contents($path);
+        return 'data:image/' . $type . ';base64,' . base64_encode($data);
+    }
+
+    /**
+     * Preview HTML Undangan untuk Cetak / Tampilan Web 1 Dosen
+     */
+    public function previewUndanganHtml(Request $request, Dosen $dosen): View
+    {
+        return view('administrasi.undangan.preview', $this->buildUndanganContext($request, $dosen));
+    }
+
+    /**
+     * Build the Undangan PDF (dompdf instance) plus its supporting context for
+     * one dosen, given the same filter query params used across preview/pdf/
+     * docx/email export. Shared by generateUndanganPdf() and the "kirim email"
+     * flow so both stay in sync with a single source of truth.
+     */
+    private function buildUndanganPdfForDosen(Request $request, Dosen $dosen): array
+    {
+        $context = $this->buildUndanganContext($request, $dosen);
+
+        $pdf = Pdf::loadView('administrasi.undangan.pdf', $context);
+        $pdf->setPaper('a4', 'landscape');
+
+        return [
+            'pdf'           => $pdf,
+            'namaPeriode'   => $context['namaPeriode'],
+            'jenisUndangan' => $context['jenisUndangan'],
+            'totalUji'      => $context['totalUji'],
+        ];
     }
 
     /**
@@ -202,81 +252,48 @@ class AdministrasiController extends Controller
      */
     public function generateUndanganPdf(Request $request, Dosen $dosen): Response
     {
-        $periodeId = $request->get('periode_id');
-        $tglMulai = $request->get('tanggal_pendaftaran_mulai');
-        $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $built = $this->buildUndanganPdfForDosen($request, $dosen);
 
-        $periode = $periodeId ? Periode::find($periodeId) : Periode::where('aktif', true)->first();
-        $namaPeriode = $periode ? $periode->nama_periode : 'Periode ' . date('Y');
-
-        $jenisUndangan = $request->get('jenis', 'sempro');
-
-        $query = Sidang::with([
-            'pembimbingUtama', 'pembimbingPendamping',
-            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
-            'ruang', 'periode'
-        ])
-        ->where(function ($q) use ($dosen) {
-            $q->where('ketua_penguji_id', $dosen->id)
-              ->orWhere('anggota_penguji_1_id', $dosen->id)
-              ->orWhere('anggota_penguji_2_id', $dosen->id);
-        });
-
-        if ($jenisUndangan === 'sempro') {
-            $query->where('jenis_tugas_akhir', 'sempro');
-        } else {
-            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
-        }
-
-        if ($periode) {
-            $query->where('periode_id', $periode->id);
-        }
-
-        if ($tglMulai) {
-            $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
-        }
-
-        if ($tglSelesai) {
-            $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
-        }
-
-        $selectedGelombang = $request->get('gelombang');
-        if ($selectedGelombang !== null && $selectedGelombang !== '') {
-            $query->where('gelombang', $selectedGelombang);
-        }
-
-        $mySidangs = $query->orderBy('tanggal', 'asc')
-                           ->orderBy('jam', 'asc')
-                           ->get();
-
-        // Build simplified rekap sessions (merging consecutive time slots per day & room)
-        $rekapSesi = $this->buildSimplifiedSessions($mySidangs);
-
-        // Prepare Kop Surat Image (Base64)
-        $kopPath = public_path('images/kop_surat.png');
-        $kopBase64 = '';
-        if (file_exists($kopPath)) {
-            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($kopPath);
-            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        }
-
-        $pdf = Pdf::loadView('administrasi.undangan.pdf', [
-            'dosen'         => $dosen,
-            'namaPeriode'   => $namaPeriode,
-            'rekapSesi'     => $rekapSesi,
-            'sidangs'       => $mySidangs,
-            'kopBase64'     => $kopBase64,
-            'totalUji'      => $mySidangs->count(),
-            'jenisUndangan' => $jenisUndangan,
-        ]);
-
-        $pdf->setPaper('a4', 'landscape');
-
-        $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
+        $invType = $built['jenisUndangan'] === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $filename = "Undangan_{$invType}_{$dosen->nama_dosen}.pdf";
 
-        return $pdf->download($filename);
+        return $built['pdf']->download($filename);
+    }
+
+    /**
+     * Send the Undangan PDF for 1 dosen directly to their registered email,
+     * with an auto-generated subject and message body — an alternative to the
+     * manual "download then attach to your own email" flow.
+     */
+    public function sendUndanganEmail(Request $request, Dosen $dosen)
+    {
+        if (empty($dosen->email)) {
+            $message = "Dosen {$dosen->nama_dosen} belum memiliki alamat email. Silakan lengkapi email dosen ini di Master Dosen terlebih dahulu.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
+        $built = $this->buildUndanganPdfForDosen($request, $dosen);
+
+        $invType = $built['jenisUndangan'] === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
+        $filename = "Undangan_{$invType}_{$dosen->nama_dosen}.pdf";
+
+        \Illuminate\Support\Facades\Mail::to($dosen->email)->send(new \App\Mail\UndanganDosenMail(
+            $dosen,
+            $built['jenisUndangan'],
+            $built['namaPeriode'],
+            $built['totalUji'],
+            $built['pdf']->output(),
+            $filename,
+        ));
+
+        $message = "Undangan berhasil dikirim ke email {$dosen->email} ({$dosen->nama_dosen}).";
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+        return back()->with('success', $message);
     }
 
     /**
@@ -338,7 +355,10 @@ class AdministrasiController extends Controller
         $phpWord = $this->buildUndanganDocxForDosen($dosen, $mySidangs, $namaPeriode, $jenisUndangan);
 
         $filename = "{$dosen->nama_dosen}.docx";
-        $tempPath = storage_path('app/public/' . preg_replace('/[^\w\s\.,-]/', '_', $filename));
+        // uniqid() prefix on the on-disk temp path (not the downloaded filename)
+        // so two concurrent exports never overwrite/truncate each other's file
+        // while one is still streaming to its own requester.
+        $tempPath = storage_path('app/public/' . uniqid('undangan_', true) . '_' . preg_replace('/[^\w\s\.,-]/', '_', $filename));
 
         $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
         $objWriter->save($tempPath);
@@ -431,8 +451,12 @@ class AdministrasiController extends Controller
 
         $table2->addRow();
         $table2->addCell(600)->addText('No', ['bold' => true, 'size' => 9]);
+        $table2->addCell(1500)->addText('NIM', ['bold' => true, 'size' => 9]);
         $table2->addCell(2500)->addText('Nama', ['bold' => true, 'size' => 9]);
-        $table2->addCell(2500)->addText('Ketua Penguji', ['bold' => true, 'size' => 9]);
+        // Sempro: dewan penguji = pembimbing mahasiswa sendiri, tanpa ketua penguji
+        if ($jenisUndangan !== 'sempro') {
+            $table2->addCell(2500)->addText('Ketua Penguji', ['bold' => true, 'size' => 9]);
+        }
         $table2->addCell(2500)->addText('Penguji 1', ['bold' => true, 'size' => 9]);
         $table2->addCell(2500)->addText('Penguji 2', ['bold' => true, 'size' => 9]);
         $table2->addCell(2200)->addText('Hari', ['bold' => true, 'size' => 9]);
@@ -445,10 +469,16 @@ class AdministrasiController extends Controller
 
             $table2->addRow();
             $table2->addCell(600)->addText(($idx + 1), ['size' => 9]);
+            $table2->addCell(1500)->addText($s->nim ?? '-', ['size' => 9]);
             $table2->addCell(2500)->addText($s->nama_mahasiswa, ['size' => 9]);
-            $table2->addCell(2500)->addText($s->ketuaPenguji->nama_dosen ?? '-', ['size' => 9]);
-            $table2->addCell(2500)->addText($s->anggotaPenguji1->nama_dosen ?? '-', ['size' => 9]);
-            $table2->addCell(2500)->addText($s->anggotaPenguji2->nama_dosen ?? '-', ['size' => 9]);
+            if ($jenisUndangan === 'sempro') {
+                $table2->addCell(2500)->addText($s->pembimbingUtama->nama_dosen ?? ($s->ketuaPenguji->nama_dosen ?? '-'), ['size' => 9]);
+                $table2->addCell(2500)->addText($s->pembimbingPendamping->nama_dosen ?? ($s->anggotaPenguji1->nama_dosen ?? '-'), ['size' => 9]);
+            } else {
+                $table2->addCell(2500)->addText($s->ketuaPenguji->nama_dosen ?? '-', ['size' => 9]);
+                $table2->addCell(2500)->addText($s->anggotaPenguji1->nama_dosen ?? '-', ['size' => 9]);
+                $table2->addCell(2500)->addText($s->anggotaPenguji2->nama_dosen ?? '-', ['size' => 9]);
+            }
             $table2->addCell(2200)->addText($tglStr, ['size' => 9]);
             $table2->addCell(1500)->addText($s->jam ?? '-', ['size' => 9]);
             $table2->addCell(1200)->addText($ruangKode, ['size' => 9]);
@@ -508,22 +538,27 @@ class AdministrasiController extends Controller
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
         }
 
-        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->get();
+        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->excludingSuperAdminPlaceholder()->get();
 
         if ($dosens->isEmpty()) {
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
         }
 
+        // uniqid() on both the zip path and its scratch directory so two
+        // concurrent mass-exports never share files — the old shared
+        // tmp_undangan_docx/ dir let one request's final cleanup (unlink all
+        // *.docx) delete another still-in-progress request's files.
+        $requestToken = uniqid('', true);
         $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $zipFilename = "Undangan_DOCX_{$invType}_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
-        $tempZipPath = storage_path('app/public/' . $zipFilename);
+        $tempZipPath = storage_path('app/public/' . $requestToken . '_' . $zipFilename);
 
         $zip = new ZipArchive();
         if ($zip->open($tempZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
             return back()->with('error', 'Gagal membuat file ZIP.');
         }
 
-        $tempDocxDir = storage_path('app/public/tmp_undangan_docx');
+        $tempDocxDir = storage_path('app/public/tmp_undangan_docx_' . $requestToken);
         if (!is_dir($tempDocxDir)) {
             mkdir($tempDocxDir, 0777, true);
         }
@@ -550,12 +585,14 @@ class AdministrasiController extends Controller
 
         $zip->close();
 
-        // Clean up temp docx files after they've been added to the zip
+        // Clean up this request's own scratch docx files/dir after they've
+        // been added to the zip.
         foreach (glob($tempDocxDir . '/*.docx') as $f) {
             @unlink($f);
         }
+        @rmdir($tempDocxDir);
 
-        return response()->download($tempZipPath)->deleteFileAfterSend(true);
+        return response()->download($tempZipPath, $zipFilename)->deleteFileAfterSend(true);
     }
 
     /**
@@ -609,15 +646,23 @@ class AdministrasiController extends Controller
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
         }
 
-        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->get();
+        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->excludingSuperAdminPlaceholder()->get();
 
         if ($dosens->isEmpty()) {
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
         }
 
+        $koordinator = \App\Models\User::where('role', \App\Models\User::ROLE_KOORDINATOR)
+            ->whereNotNull('dosen_id')
+            ->with('dosen')
+            ->first()?->dosen;
+
         $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $zipFilename = "Undangan_{$invType}_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
-        $tempZipPath = storage_path('app/public/' . $zipFilename);
+        // uniqid() prefix on the on-disk temp path only — the download itself
+        // keeps the clean $zipFilename — so two concurrent exports never
+        // overwrite/truncate each other's zip.
+        $tempZipPath = storage_path('app/public/' . uniqid('', true) . '_' . $zipFilename);
 
         $zip = new ZipArchive();
         if ($zip->open($tempZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
@@ -631,6 +676,8 @@ class AdministrasiController extends Controller
             $data = file_get_contents($kopPath);
             $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
         }
+
+        $logoTiBase64 = $this->imageToBase64(public_path('images/logo-ti-umk-icon.png'));
 
         foreach ($dosens as $dosen) {
             $mySidangs = $sidangs->filter(function ($s) use ($dosen) {
@@ -649,8 +696,10 @@ class AdministrasiController extends Controller
                 'rekapSesi'     => $rekapSesi,
                 'sidangs'       => $mySidangs,
                 'kopBase64'     => $kopBase64,
+                'logoTiBase64'  => $logoTiBase64,
                 'totalUji'      => $mySidangs->count(),
                 'jenisUndangan' => $jenisUndangan,
+                'koordinator'   => $koordinator,
             ]);
 
             $pdf->setPaper('a4', 'landscape');
@@ -662,7 +711,7 @@ class AdministrasiController extends Controller
 
         $zip->close();
 
-        return response()->download($tempZipPath)->deleteFileAfterSend(true);
+        return response()->download($tempZipPath, $zipFilename)->deleteFileAfterSend(true);
     }
 
     /**
@@ -790,7 +839,7 @@ class AdministrasiController extends Controller
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
         }
 
-        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->orderBy('nama_dosen')->get();
+        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         if ($dosens->isEmpty()) {
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
@@ -895,7 +944,7 @@ class AdministrasiController extends Controller
             if ($s->anggota_penguji_2_id) $dosenExaminerIds->push($s->anggota_penguji_2_id);
         }
 
-        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->orderBy('nama_dosen')->get();
+        $dosens = Dosen::whereIn('id', $dosenExaminerIds->unique())->excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         if ($dosens->isEmpty()) {
             return back()->with('warning', 'Tidak ada data dosen penguji yang dapat diexport.');
@@ -1000,6 +1049,22 @@ class AdministrasiController extends Controller
             'Content-Type'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Cache-Control' => 'max-age=0',
         ]);
+    }
+
+    /**
+     * Load the official UMK kop surat (letterhead) image as a base64 data URI,
+     * for embedding directly into a dompdf-rendered view.
+     */
+    private function kopSuratBase64(): string
+    {
+        $kopPath = public_path('images/kop_surat.png');
+        if (!file_exists($kopPath)) {
+            return '';
+        }
+
+        $type = pathinfo($kopPath, PATHINFO_EXTENSION);
+        $data = file_get_contents($kopPath);
+        return 'data:image/' . $type . ';base64,' . base64_encode($data);
     }
 
     /**
@@ -1246,53 +1311,157 @@ class AdministrasiController extends Controller
     public function beritaAcaraIndex(Request $request): View
     {
         $periodes = Periode::orderBy('id', 'desc')->get();
+        $jenis    = $request->get('jenis'); // 'skripsi' | 'sempro' | null
 
-        $selectedPeriodeId = $request->get('periode_id');
-        if (!$selectedPeriodeId) {
-            $activePeriode = Periode::where('aktif', true)->first();
-            $selectedPeriodeId = $activePeriode ? $activePeriode->id : ($periodes->first()?->id);
-        }
+        $selectedPeriodeId = $this->resolvePeriodeId($request, $periodes);
+        $selectedPeriode   = Periode::find($selectedPeriodeId);
+        $selectedGelombang = $request->get('gelombang');
+        $gelombangOptions  = $this->gelombangOptions($selectedPeriodeId, $jenis);
 
-        $selectedPeriode = Periode::find($selectedPeriodeId);
+        $sidangs = $this->beritaAcaraQuery($request, $selectedPeriodeId)
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('jam', 'asc')
+            ->orderBy('nama_mahasiswa', 'asc')
+            ->get();
 
-        $tglMulai  = $request->get('tanggal_pendaftaran_mulai');
-        $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
-        $jenis     = $request->get('jenis'); // 'skripsi' | 'sempro' | null
-
-        $query = Sidang::with([
-            'pembimbingUtama', 'pembimbingPendamping',
-            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
-            'ruang', 'periode'
-        ]);
-
-        if ($selectedPeriodeId) {
-            $query->where('periode_id', $selectedPeriodeId);
-        }
-
-        if ($tglMulai) {
-            $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
-        }
-
-        if ($tglSelesai) {
-            $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
-        }
-
-        // Filter berdasarkan jenis tugas akhir
-        if ($jenis === 'sempro') {
-            $query->where('jenis_tugas_akhir', 'sempro');
-        } elseif ($jenis === 'skripsi') {
-            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
-        }
-
-        $sidangs = $query->orderBy('tanggal', 'asc')
-                         ->orderBy('jam', 'asc')
-                         ->orderBy('nama_mahasiswa', 'asc')
-                         ->get();
+        $maksCetakGabungan = $this->maksBeritaAcaraGabungan();
 
         return view('administrasi.berita-acara.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId',
-            'tglMulai', 'tglSelesai', 'jenis', 'sidangs'
+            'selectedGelombang', 'gelombangOptions', 'jenis', 'sidangs', 'maksCetakGabungan'
         ));
+    }
+
+    /**
+     * Periode terpilih; default ke periode aktif (atau terbaru) bila tidak dipilih.
+     */
+    private function resolvePeriodeId(Request $request, $periodes = null): ?int
+    {
+        if ($request->filled('periode_id')) {
+            return (int) $request->get('periode_id');
+        }
+
+        return Periode::where('aktif', true)->value('id')
+            ?? ($periodes ?? Periode::orderBy('id', 'desc')->get())->first()?->id;
+    }
+
+    /**
+     * Opsi dropdown Gelombang untuk periode + jenis terpilih, diambil dari Master
+     * Gelombang (PendaftaranPeriode) beserta rentang tanggalnya.
+     */
+    private function gelombangOptions(?int $periodeId, ?string $jenis)
+    {
+        if (!$periodeId) {
+            return collect();
+        }
+
+        return PendaftaranPeriode::where('periode_id', $periodeId)
+            ->when($jenis === 'sempro', fn ($q) => $q->where('jenis', 'sempro'))
+            ->when($jenis === 'skripsi', fn ($q) => $q->where('jenis', 'skripsi'))
+            ->orderBy('gelombang')
+            ->get()
+            ->groupBy('gelombang')
+            ->map(function ($waves, $gelombang) {
+                $w = $waves->first();
+                $rentang = $w->tanggal_mulai && $w->tanggal_selesai
+                    ? ' (' . Carbon::parse($w->tanggal_mulai)->locale('id')->translatedFormat('j M') . ' – ' . Carbon::parse($w->tanggal_selesai)->locale('id')->translatedFormat('j M Y') . ')'
+                    : '';
+                return ['value' => (string) $gelombang, 'label' => 'Gelombang ' . $gelombang . ($waves->count() === 1 ? $rentang : '')];
+            })
+            ->values();
+    }
+
+    /**
+     * Query berita acara sesuai filter: periode, gelombang, jenis (dan rentang
+     * tanggal pendaftaran untuk link lama yang masih membawanya).
+     */
+    private function beritaAcaraQuery(Request $request, ?int $periodeId)
+    {
+        $jenis = $request->get('jenis');
+
+        return Sidang::with([
+                'pembimbingUtama', 'pembimbingPendamping',
+                'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
+                'ruang', 'ruangPendamping', 'periode',
+            ])
+            ->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))
+            ->when($request->filled('gelombang'), fn ($q) => $q->where('gelombang', $request->get('gelombang')))
+            ->when($request->filled('tanggal_pendaftaran_mulai'), fn ($q) => $q->whereDate('tanggal_pendaftaran', '>=', $request->get('tanggal_pendaftaran_mulai')))
+            ->when($request->filled('tanggal_pendaftaran_selesai'), fn ($q) => $q->whereDate('tanggal_pendaftaran', '<=', $request->get('tanggal_pendaftaran_selesai')))
+            ->when($jenis === 'sempro', fn ($q) => $q->where('jenis_tugas_akhir', 'sempro'))
+            ->when($jenis === 'skripsi', fn ($q) => $q->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']));
+    }
+
+    /**
+     * DomPDF butuh ±3 MB memori per mahasiswa untuk satu PDF gabungan (4 halaman
+     * per mahasiswa), jadi "Cetak Semua" untuk satu periode penuh dulu berakhir
+     * dengan error 500 (memory exhausted). Naikkan batas memori & waktu bila
+     * server mengizinkan, lalu hitung berapa mahasiswa yang muat dalam satu PDF.
+     */
+    private function siapkanCetakBesar(): void
+    {
+        @set_time_limit(600);
+
+        if ($this->memoriMb() < 1024) {
+            @ini_set('memory_limit', '1024M');
+        }
+    }
+
+    private function memoriMb(): int
+    {
+        $limit = trim((string) ini_get('memory_limit'));
+        if ($limit === '' || $limit === '-1') {
+            return PHP_INT_MAX;
+        }
+
+        $angka = (int) $limit;
+        return match (strtolower(substr($limit, -1))) {
+            'g'     => $angka * 1024,
+            'm'     => $angka,
+            'k'     => intdiv($angka, 1024),
+            default => intdiv($angka, 1048576),
+        };
+    }
+
+    private function maksBeritaAcaraGabungan(): int
+    {
+        $this->siapkanCetakBesar();
+
+        return max(10, min(250, intdiv(min($this->memoriMb(), 4096) - 64, 3)));
+    }
+
+    private function renderBeritaAcaraGabungan(Request $request)
+    {
+        $periodeId = $this->resolvePeriodeId($request);
+
+        $sidangs = $this->beritaAcaraQuery($request, $periodeId)
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('jam', 'asc')
+            ->orderBy('nama_mahasiswa', 'asc')
+            ->get();
+
+        if ($sidangs->isEmpty()) {
+            return back()->with('warning', 'Tidak ada data sidang mahasiswa pada filter yang dipilih.');
+        }
+
+        $maks = $this->maksBeritaAcaraGabungan();
+        if ($sidangs->count() > $maks) {
+            return back()->with('warning', "Terlalu banyak data untuk dicetak dalam satu PDF ({$sidangs->count()} mahasiswa, maksimal {$maks}). Pilih Gelombang terlebih dahulu, atau gunakan \"Unduh Semua (ZIP)\".");
+        }
+
+        return Pdf::loadView('administrasi.berita-acara.pdf', [
+            'sidangs'   => $sidangs,
+            'kopBase64' => $this->kopSuratBase64(),
+        ])->setPaper('a4', 'portrait');
+    }
+
+    private function namaFileBeritaAcara(Request $request, string $ext): string
+    {
+        $jenis = $request->get('jenis') === 'sempro' ? 'Sempro' : ($request->get('jenis') === 'skripsi' ? 'Skripsi' : 'Sidang');
+        $periode = Periode::find($this->resolvePeriodeId($request))?->nama_periode ?? 'Semua Periode';
+        $gelombang = $request->filled('gelombang') ? '_Gelombang_' . $request->get('gelombang') : '';
+
+        return trim(preg_replace('/[^\w\.-]+/', '_', "Berita_Acara_{$jenis}_{$periode}{$gelombang}"), '_') . ".{$ext}";
     }
 
     /**
@@ -1300,24 +1469,14 @@ class AdministrasiController extends Controller
      */
     public function generateBeritaAcaraPdf(Request $request, Sidang $sidang): Response
     {
-        $kopPath = public_path('images/kop_surat.png');
-        $kopBase64 = '';
-        if (file_exists($kopPath)) {
-            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($kopPath);
-            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        }
-
         $pdf = Pdf::loadView('administrasi.berita-acara.pdf', [
             'sidangs'   => collect([$sidang]),
-            'kopBase64' => $kopBase64,
+            'kopBase64' => $this->kopSuratBase64(),
         ]);
 
         $pdf->setPaper('a4', 'portrait');
 
-        $filename = "Berita Acara - {$sidang->nim} - {$sidang->nama_mahasiswa}.pdf";
-
-        return $pdf->download($filename);
+        return $pdf->download("Berita Acara - {$sidang->nim} - {$sidang->nama_mahasiswa}.pdf");
     }
 
     /**
@@ -1325,17 +1484,9 @@ class AdministrasiController extends Controller
      */
     public function previewBeritaAcaraPdf(Request $request, Sidang $sidang): Response
     {
-        $kopPath = public_path('images/kop_surat.png');
-        $kopBase64 = '';
-        if (file_exists($kopPath)) {
-            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($kopPath);
-            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        }
-
         $pdf = Pdf::loadView('administrasi.berita-acara.pdf', [
             'sidangs'   => collect([$sidang]),
-            'kopBase64' => $kopBase64,
+            'kopBase64' => $this->kopSuratBase64(),
         ]);
 
         $pdf->setPaper('a4', 'portrait');
@@ -1348,53 +1499,9 @@ class AdministrasiController extends Controller
      */
     public function generateBeritaAcaraMassPdf(Request $request): Response|RedirectResponse
     {
-        $periodeId = $request->get('periode_id');
-        $tglMulai = $request->get('tanggal_pendaftaran_mulai');
-        $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $pdf = $this->renderBeritaAcaraGabungan($request);
 
-        $query = Sidang::with([
-            'pembimbingUtama', 'pembimbingPendamping',
-            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
-            'ruang', 'periode'
-        ]);
-
-        if ($periodeId) {
-            $query->where('periode_id', $periodeId);
-        }
-
-        if ($tglMulai) {
-            $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
-        }
-
-        if ($tglSelesai) {
-            $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
-        }
-
-        $sidangs = $query->orderBy('tanggal', 'asc')
-                         ->orderBy('jam', 'asc')
-                         ->orderBy('nama_mahasiswa', 'asc')
-                         ->get();
-
-        if ($sidangs->isEmpty()) {
-            return back()->with('warning', 'Tidak ada data sidang mahasiswa pada filter yang dipilih.');
-        }
-
-        $kopPath = public_path('images/kop_surat.png');
-        $kopBase64 = '';
-        if (file_exists($kopPath)) {
-            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($kopPath);
-            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        }
-
-        $pdf = Pdf::loadView('administrasi.berita-acara.pdf', [
-            'sidangs'   => $sidangs,
-            'kopBase64' => $kopBase64,
-        ]);
-
-        $pdf->setPaper('a4', 'portrait');
-
-        return $pdf->download("Berita_Acara_Sidang_Massal.pdf");
+        return $pdf instanceof RedirectResponse ? $pdf : $pdf->download($this->namaFileBeritaAcara($request, 'pdf'));
     }
 
     /**
@@ -1402,106 +1509,39 @@ class AdministrasiController extends Controller
      */
     public function previewBeritaAcaraMassPdf(Request $request): Response|RedirectResponse
     {
-        $periodeId = $request->get('periode_id');
-        $tglMulai = $request->get('tanggal_pendaftaran_mulai');
-        $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
+        $pdf = $this->renderBeritaAcaraGabungan($request);
 
-        $query = Sidang::with([
-            'pembimbingUtama', 'pembimbingPendamping',
-            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
-            'ruang', 'periode'
-        ]);
-
-        if ($periodeId) {
-            $query->where('periode_id', $periodeId);
-        }
-
-        if ($tglMulai) {
-            $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
-        }
-
-        if ($tglSelesai) {
-            $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
-        }
-
-        $sidangs = $query->orderBy('tanggal', 'asc')
-                         ->orderBy('jam', 'asc')
-                         ->orderBy('nama_mahasiswa', 'asc')
-                         ->get();
-
-        if ($sidangs->isEmpty()) {
-            return back()->with('warning', 'Tidak ada data sidang mahasiswa pada filter yang dipilih.');
-        }
-
-        $kopPath = public_path('images/kop_surat.png');
-        $kopBase64 = '';
-        if (file_exists($kopPath)) {
-            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($kopPath);
-            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        }
-
-        $pdf = Pdf::loadView('administrasi.berita-acara.pdf', [
-            'sidangs'   => $sidangs,
-            'kopBase64' => $kopBase64,
-        ]);
-
-        $pdf->setPaper('a4', 'portrait');
-
-        return $pdf->stream("Berita_Acara_Sidang_Massal.pdf");
+        return $pdf instanceof RedirectResponse ? $pdf : $pdf->stream($this->namaFileBeritaAcara($request, 'pdf'));
     }
 
     /**
-     * Download Berita Acara dalam bentuk ZIP berisi individual PDFs
+     * Download Berita Acara dalam bentuk ZIP berisi individual PDFs — dirender
+     * satu per satu, jadi pemakaian memori tidak bertambah seiring jumlah data.
      */
     public function generateBeritaAcaraZip(Request $request): BinaryFileResponse|RedirectResponse
     {
-        $periodeId = $request->get('periode_id');
-        $tglMulai = $request->get('tanggal_pendaftaran_mulai');
-        $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
-
-        $query = Sidang::with([
-            'pembimbingUtama', 'pembimbingPendamping',
-            'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
-            'ruang', 'periode'
-        ]);
-
-        if ($periodeId) {
-            $query->where('periode_id', $periodeId);
-        }
-
-        if ($tglMulai) {
-            $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
-        }
-
-        if ($tglSelesai) {
-            $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
-        }
-
-        $sidangs = $query->get();
+        $sidangs = $this->beritaAcaraQuery($request, $this->resolvePeriodeId($request))
+            ->orderBy('nama_mahasiswa')
+            ->get();
 
         if ($sidangs->isEmpty()) {
             return back()->with('warning', 'Tidak ada data sidang mahasiswa pada filter yang dipilih.');
         }
 
-        $periode = $periodeId ? Periode::find($periodeId) : Periode::where('aktif', true)->first();
-        $namaPeriode = $periode ? $periode->nama_periode : 'Periode ' . date('Y');
+        $this->siapkanCetakBesar();
 
-        $zipFilename = "Berita_Acara_Sidang_Skripsi_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
-        $tempZipPath = storage_path('app/public/' . $zipFilename);
+        $zipFilename = $this->namaFileBeritaAcara($request, 'zip');
+        // uniqid() prefix on the on-disk temp path only — the download itself
+        // keeps the clean $zipFilename — so two concurrent exports never
+        // overwrite/truncate each other's zip.
+        $tempZipPath = storage_path('app/public/' . uniqid('', true) . '_' . $zipFilename);
 
         $zip = new ZipArchive();
         if ($zip->open($tempZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
             return back()->with('error', 'Gagal membuat file ZIP.');
         }
 
-        $kopPath = public_path('images/kop_surat.png');
-        $kopBase64 = '';
-        if (file_exists($kopPath)) {
-            $type = pathinfo($kopPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($kopPath);
-            $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-        }
+        $kopBase64 = $this->kopSuratBase64();
 
         foreach ($sidangs as $sidang) {
             $pdf = Pdf::loadView('administrasi.berita-acara.pdf', [
@@ -1511,14 +1551,14 @@ class AdministrasiController extends Controller
 
             $pdf->setPaper('a4', 'portrait');
 
-            $pdfContent = $pdf->output();
             $safeName = preg_replace('/[^\w\s\.,-]/', '_', $sidang->nama_mahasiswa);
-            $zip->addFromString("Berita Acara - {$sidang->nim} - {$safeName}.pdf", $pdfContent);
+            $zip->addFromString("Berita Acara - {$sidang->nim} - {$safeName}.pdf", $pdf->output());
+            unset($pdf);
         }
 
         $zip->close();
 
-        return response()->download($tempZipPath)->deleteFileAfterSend(true);
+        return response()->download($tempZipPath, $zipFilename)->deleteFileAfterSend(true);
     }
 
     public function skIndex(Request $request): View
@@ -1534,21 +1574,23 @@ class AdministrasiController extends Controller
         $selectedPeriode = Periode::find($selectedPeriodeId);
         $jenis = $request->get('jenis'); // 'skripsi' | 'sempro' | null
 
+        $selectedGelombang = $request->get('gelombang');
+        $gelombangOptions  = $this->gelombangOptions($selectedPeriodeId ? (int) $selectedPeriodeId : null, 'skripsi');
+
         $query = Sidang::query();
         if ($selectedPeriodeId) {
             $query->where('periode_id', $selectedPeriodeId);
         }
-
-        // Filter berdasarkan jenis tugas akhir
-        if ($jenis === 'sempro') {
-            $query->where('jenis_tugas_akhir', 'sempro');
-        } elseif ($jenis === 'skripsi') {
-            $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
         }
 
-        $totalSidangs = (clone $query)->count();
-        $totalSempro  = ($jenis === 'skripsi') ? 0 : (clone $query)->where('jenis_tugas_akhir', 'sempro')->count();
-        $totalSkripsi = ($jenis === 'sempro') ? 0 : (clone $query)->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count();
+        // SK Pembimbing & Penguji hanya dihitung dari ujian skripsi — sempro tidak ikut.
+        $query->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
+
+        $totalSidangs       = (clone $query)->count();
+        $totalJurnal        = (clone $query)->where('jenis_tugas_akhir', 'jurnal')->count();
+        $totalSidangReguler = $totalSidangs - $totalJurnal;
 
         // Unique lecturers count (sesuai jenis yang ditampilkan)
         $dosenPembimbingIds = (clone $query)->pluck('dosen_pembimbing_utama_id')
@@ -1560,10 +1602,31 @@ class AdministrasiController extends Controller
             ->merge((clone $query)->pluck('anggota_penguji_2_id'))
             ->filter()->unique();
 
+        // Infografis: distribusi jalur, dan beban kerja top-8 dosen pembimbing/penguji
+        // pada filter periode/jenis yang sedang aktif.
+        $sidangsForChart = (clone $query)->get();
+        $dosensAll = Dosen::orderBy('nama_dosen')->get();
+
+        $pembimbingChart = $dosensAll->map(function ($d) use ($sidangsForChart) {
+            $total = $sidangsForChart->where('dosen_pembimbing_utama_id', $d->id)->count()
+                + $sidangsForChart->where('dosen_pembimbing_pendamping_id', $d->id)->count();
+            return ['nama' => $d->nama_dosen, 'total' => $total];
+        })->filter(fn ($row) => $row['total'] > 0)
+            ->sortByDesc('total')->take(8)->values();
+
+        $pengujiChart = $dosensAll->map(function ($d) use ($sidangsForChart) {
+            $total = $sidangsForChart->where('ketua_penguji_id', $d->id)->count()
+                + $sidangsForChart->where('anggota_penguji_1_id', $d->id)->count()
+                + $sidangsForChart->where('anggota_penguji_2_id', $d->id)->count();
+            return ['nama' => $d->nama_dosen, 'total' => $total];
+        })->filter(fn ($row) => $row['total'] > 0)
+            ->sortByDesc('total')->take(8)->values();
+
         return view('administrasi.sk.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId',
-            'totalSidangs', 'totalSempro', 'totalSkripsi',
-            'dosenPembimbingIds', 'dosenPengujiIds', 'jenis'
+            'totalSidangs', 'totalJurnal', 'totalSidangReguler',
+            'dosenPembimbingIds', 'dosenPengujiIds', 'jenis',
+            'pembimbingChart', 'pengujiChart', 'selectedGelombang', 'gelombangOptions'
         ));
     }    /**
      * Helper to generate unique & valid Excel sheet title for a lecturer (Max 31 chars)
@@ -1599,8 +1662,6 @@ class AdministrasiController extends Controller
         $selectedPeriodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
-        $jenisTa = $request->get('jenis_tugas_akhir');
-
         $query = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'periode']);
 
         if ($selectedPeriodeId) {
@@ -1620,13 +1681,9 @@ class AdministrasiController extends Controller
             $query->where('gelombang', $selectedGelombang);
         }
 
-        if ($jenisTa) {
-            if ($jenisTa === 'sempro') {
-                $query->where('jenis_tugas_akhir', 'sempro');
-            } else {
-                $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
-            }
-        }
+        // SK Pembimbing & Penguji hanya dihitung dari ujian skripsi (skripsi /
+        // sidang / jurnal) — sempro tidak ikut dihitung.
+        $query->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
 
         $sidangs = $query->orderBy('nama_mahasiswa')->get();
 
@@ -1868,8 +1925,6 @@ class AdministrasiController extends Controller
         $selectedPeriodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
         $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
-        $jenisTa = $request->get('jenis_tugas_akhir');
-
         $query = Sidang::with([
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'pembimbingUtama', 'pembimbingPendamping',
@@ -1888,13 +1943,14 @@ class AdministrasiController extends Controller
             $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
         }
 
-        if ($jenisTa) {
-            if ($jenisTa === 'sempro') {
-                $query->where('jenis_tugas_akhir', 'sempro');
-            } else {
-                $query->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']);
-            }
+        $selectedGelombang = $request->get('gelombang');
+        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+            $query->where('gelombang', $selectedGelombang);
         }
+
+        // SK Pembimbing & Penguji hanya dihitung dari ujian skripsi (skripsi /
+        // sidang / jurnal) — sempro tidak ikut dihitung.
+        $query->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
 
         $sidangs = $query->orderBy('tanggal', 'asc')->orderBy('jam', 'asc')->get();
 
@@ -2214,6 +2270,50 @@ class AdministrasiController extends Controller
     }
 
     /**
+     * Export SK Pembimbing (PDF) — a compact rangkuman report: per-dosen bimbingan
+     * totals plus the full mahasiswa/pembimbing master list, using the same filters
+     * as the Excel export. Meant as a quick printable summary, not a per-dosen
+     * breakdown (use the Excel export for that level of detail).
+     */
+    public function exportSkPembimbingPdf(Request $request)
+    {
+        return $this->exportSkPdf($request, 'pembimbing');
+    }
+
+    /**
+     * Export SK Penguji (PDF) — format surat permohonan yang sama dengan SK
+     * Pembimbing, berisi Ketua/Anggota Penguji. Untuk Sempro penguji = pembimbing
+     * (ketua = pembimbing utama, anggota = pembimbing pendamping).
+     */
+    public function exportSkPengujiPdf(Request $request)
+    {
+        return $this->exportSkPdf($request, 'penguji');
+    }
+
+    /**
+     * Surat Permohonan SK Pembimbing / Penguji mengikuti format
+     * "PENGAJUAN SK PENGUJI GANJIL2526.docx": surat ke Dekan, Lampiran 1
+     * (rekap jumlah per dosen), lalu rincian mahasiswa per dosen.
+     */
+    private function exportSkPdf(Request $request, string $mode)
+    {
+        $this->siapkanCetakBesar();
+
+        $hasil = \App\Services\SkPdfService::build($mode, [
+            'periode_id'      => $this->resolvePeriodeId($request),
+            'gelombang'       => $request->get('gelombang'),
+            'tanggal_mulai'   => $request->get('tanggal_pendaftaran_mulai'),
+            'tanggal_selesai' => $request->get('tanggal_pendaftaran_selesai'),
+        ]);
+
+        if (!$hasil) {
+            return back()->with('warning', 'Tidak ada data pada filter yang dipilih.');
+        }
+
+        return $hasil['pdf']->download($hasil['filename']);
+    }
+
+    /**
      * Public page for viewing lecturer examiner schedule without login (Encrypted / Short Token)
      */
     /**
@@ -2391,7 +2491,7 @@ class AdministrasiController extends Controller
      */
     public function publicJadwalDosenPenguji(Request $request): View
     {
-        $dosens = Dosen::orderBy('nama_dosen', 'asc')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen', 'asc')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
 
         $selectedDosenId = $request->get('dosen_id');

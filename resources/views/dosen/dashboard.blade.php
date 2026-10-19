@@ -113,7 +113,7 @@
                                         <div class="mt-1"><span class="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-700 px-2 py-0.5 rounded-lg">Gel. {{ $slot->wave->gelombang }} ({{ ucfirst($slot->wave->jenis) }})</span></div>
                                     @endif
                                 </div>
-                                <form method="POST" action="{{ route('dosen.kesediaan.destroy', $slot->id) }}" onsubmit="return confirm('Hapus slot ketersediaan ini?')">
+                                <form method="POST" action="{{ route('dosen.kesediaan.destroy', $slot->hash_id) }}" onsubmit="return confirm('Hapus slot ketersediaan ini?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 dark:hover:bg-rose-800/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs transition-colors cursor-pointer" title="Hapus Slot">
@@ -305,12 +305,16 @@
                                     <td class="py-4 px-6 text-center">
                                         @php
                                             $dosenId = $dosen ? $dosen->id : 0;
+                                            $isSemproRow = $s->jenis_tugas_akhir === 'sempro';
                                             $roles = [];
                                             if ($s->dosen_pembimbing_utama_id == $dosenId) $roles[] = ['name' => 'Pembimbing Utama', 'class' => 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700'];
                                             if ($s->dosen_pembimbing_pendamping_id == $dosenId) $roles[] = ['name' => 'Pembimbing Pendamping', 'class' => 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'];
-                                            if ($s->ketua_penguji_id == $dosenId) $roles[] = ['name' => 'Ketua Penguji', 'class' => 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700'];
-                                            if ($s->anggota_penguji_1_id == $dosenId) $roles[] = ['name' => 'Penguji 1', 'class' => 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700'];
-                                            if ($s->anggota_penguji_2_id == $dosenId) $roles[] = ['name' => 'Penguji 2', 'class' => 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700'];
+                                            // Untuk Sempro, ketua_penguji_id/anggota_penguji_1_id/2_id SELALU mencerminkan
+                                            // pembimbing (Sidang::syncPengujiFromPembimbing()) — sudah tercakup 2 baris di
+                                            // atas, dilewati di sini supaya tidak dobel.
+                                            if (!$isSemproRow && $s->ketua_penguji_id == $dosenId) $roles[] = ['name' => 'Ketua Penguji', 'class' => 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700'];
+                                            if (!$isSemproRow && $s->anggota_penguji_1_id == $dosenId) $roles[] = ['name' => 'Penguji 1', 'class' => 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700'];
+                                            if (!$isSemproRow && $s->anggota_penguji_2_id == $dosenId) $roles[] = ['name' => 'Penguji 2', 'class' => 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700'];
                                         @endphp
                                         <div class="flex flex-wrap gap-1.5 justify-center items-center">
                                             @forelse($roles as $r)
@@ -356,6 +360,11 @@
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">Form Kesediaan Menguji Ujian</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Silakan tentukan hari, tanggal, dan rentang jam ketersediaan Anda untuk Sempro dan Skripsi.</p>
+                        @if($activePeriode)
+                            <span class="inline-flex items-center gap-1 mt-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
+                                📅 {{ $activePeriode->nama_periode }}
+                            </span>
+                        @endif
                     </div>
                     <button type="button" @click="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center font-bold cursor-pointer">✕</button>
                 </div>
@@ -375,51 +384,32 @@
 
                     @if($allWaves->count() > 0)
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Gelombang Ujian (Opsional)</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Gelombang Ujian *</label>
                             <select name="wave_id" required class="w-full text-xs p-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer">
+                                <option value="">-- Pilih Gelombang --</option>
                                 @foreach($allWaves as $w)
                                     <option value="{{ $w->id }}">Gelombang {{ $w->gelombang }} - {{ ucfirst($w->jenis) }} ({{ $w->tanggal_mulai ? $w->tanggal_mulai->format('d/m/Y') : '' }} s/d {{ $w->tanggal_selesai ? $w->tanggal_selesai->format('d/m/Y') : '' }})</option>
                                 @endforeach
                             </select>
                         </div>
-                    @endif
 
-                    {{-- Slot List --}}
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Rentang Hari & Waktu Ketersediaan</label>
-                            <button type="button" @click="addSlot()" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-700 px-3 py-1.5 rounded-xl transition-colors cursor-pointer">
-                                + Tambah Slot Jam
-                            </button>
+                        {{-- Kalender multi-pilih tanggal --}}
+                        <x-kesediaan-date-picker
+                            :existing="$existingKesediaan->map(fn ($k) => \Carbon\Carbon::parse($k->tanggal)->format('Y-m-d'))->unique()->values()->all()" />
+                    @else
+                        {{-- Kesediaan WAJIB ditautkan ke gelombang + periode semester aktif —
+                             tanpa gelombang yang tersedia, form tidak bisa disubmit sama sekali. --}}
+                        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-300 rounded-2xl p-4 text-xs leading-relaxed">
+                            Belum ada Gelombang yang tersedia untuk periode <strong>{{ $activePeriode->nama_periode ?? '-' }}</strong> saat ini. Hubungi Koordinator untuk menambahkan gelombang di menu Master Gelombang terlebih dahulu.
                         </div>
-
-                        <template x-for="(slot, index) in slots" :key="index">
-                            <div class="bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-2xl p-4 mb-3 space-y-3 relative">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/40 px-2.5 py-0.5 rounded-lg" x-text="'Slot ' + (index + 1)"></span>
-                                    <button type="button" x-show="slots.length > 1" @click="removeSlot(index)" class="text-rose-500 hover:text-rose-700 text-xs font-bold cursor-pointer">
-                                        Hapus Slot
-                                    </button>
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Tanggal *</label>
-                                        <input type="date" :name="'slots['+index+'][tanggal]'" x-model="slot.tanggal" required class="w-full text-xs p-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Catatan / Keterangan (Opsional)</label>
-                                        <input type="text" :name="'slots['+index+'][keterangan]'" x-model="slot.keterangan" placeholder="Contoh: Ketersediaan menguji Sempro & Skripsi secara luring/online" class="w-full text-xs p-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400">
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
+                    @endif
 
                     {{-- Modal Footer --}}
                     <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
                         <button type="button" @click="closeModal()" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl cursor-pointer">Batal</button>
-                        <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-600/20 cursor-pointer">Simpan Kesediaan</button>
+                        @if($allWaves->count() > 0)
+                            <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-600/20 cursor-pointer">Simpan Kesediaan</button>
+                        @endif
                     </div>
                 </form>
             </div>
@@ -430,22 +420,11 @@
         function kesediaanModalHandler() {
             return {
                 isOpen: false,
-                slots: [
-                    { tanggal: '{{ now()->format('Y-m-d') }}', keterangan: '' }
-                ],
                 openModal() {
                     this.isOpen = true;
                 },
                 closeModal() {
                     this.isOpen = false;
-                },
-                addSlot() {
-                    this.slots.push({ tanggal: '{{ now()->format('Y-m-d') }}', keterangan: '' });
-                },
-                removeSlot(index) {
-                    if (this.slots.length > 1) {
-                        this.slots.splice(index, 1);
-                    }
                 }
             }
         }

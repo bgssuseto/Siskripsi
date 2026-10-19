@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Concerns\HasHashedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KesediaanDosen extends Model
 {
+    use HasHashedRouteKey;
+
     protected $fillable = [
         'dosen_id',
         'periode_id',

@@ -37,12 +37,16 @@ class AutoScheduleController extends Controller
             $slotMinutes = 60;
         }
 
-        $gelombangOptions = $selectedPeriodeId
-            ? PendaftaranPeriode::where('periode_id', $selectedPeriodeId)
-                ->where('jenis', $jenis)
-                ->orderBy('gelombang')
-                ->pluck('gelombang')
-            : collect();
+        // Semua kombinasi periode+jenis+gelombang yang ada, dikirim sekali ke
+        // halaman supaya dropdown Gelombang bisa langsung menyesuaikan diri di
+        // browser (Alpine) begitu Periode Akademik/Jenis diganti — TANPA reload
+        // ke server tiap kali, karena datanya sudah kecil (jumlah gelombang per
+        // periode+jenis) dan seluruhnya sudah ada di sini.
+        $allWaves = PendaftaranPeriode::select('periode_id', 'jenis', 'gelombang')
+            ->orderBy('gelombang')
+            ->get()
+            ->map(fn ($w) => ['periode_id' => $w->periode_id, 'jenis' => $w->jenis, 'gelombang' => $w->gelombang])
+            ->values();
 
         $sidangIds = array_filter(array_map('intval', (array) $request->get('ids', [])));
 
@@ -51,6 +55,13 @@ class AutoScheduleController extends Controller
         $generated = $request->boolean('generate') && $selectedPeriodeId;
 
         if ($generated) {
+            // Self-heal: kolom `gelombang` pada Sidang cuma dihitung otomatis saat
+            // Sidang itu sendiri dibuat/diupdate (lihat Sidang::computeGelombang()),
+            // TIDAK retroaktif kalau gelombangnya baru dibuat/diedit belakangan —
+            // tag ulang di sini supaya filter Gelombang selalu mencerminkan Master
+            // Gelombang yang berlaku sekarang, walau datanya sempat telanjur usang.
+            Sidang::recomputeGelombangForPeriode((int) $selectedPeriodeId, $jenis);
+
             $result = AutoScheduleService::generateProposals(
                 (int) $selectedPeriodeId,
                 $jenis,
@@ -77,18 +88,30 @@ class AutoScheduleController extends Controller
             $unresolved = $result['unresolved'];
         }
 
-        $ruangs = Ruang::orderBy('kode_ruangan')->get();
-        $dosens = Dosen::orderBy('nama_dosen')->get();
+        $ruangs = Ruang::orderBy('kode_ruangan')->where('status', Ruang::STATUS_SIAP)->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
         $jamOptions = ['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'];
 
         return view('penjadwalan.auto-schedule.index', compact(
-            'periodes', 'selectedPeriodeId', 'jenis', 'selectedGelombang', 'gelombangOptions',
+            'periodes', 'selectedPeriodeId', 'jenis', 'selectedGelombang', 'allWaves',
             'slotMinutes', 'proposals', 'unresolved', 'generated', 'ruangs', 'sidangIds', 'dosens', 'jamOptions'
         ));
     }
 
     public function apply(Request $request): RedirectResponse
     {
+        $request->validate([
+            'selected'                          => ['nullable', 'array'],
+            'selected.*'                        => ['integer', 'exists:sidangs,id'],
+            'proposals'                          => ['nullable', 'array'],
+            'proposals.*.tanggal'                => ['nullable', 'date'],
+            'proposals.*.jam_mulai'              => ['nullable', 'string'],
+            'proposals.*.jam_selesai'            => ['nullable', 'string'],
+            'proposals.*.ruang_id'               => ['nullable', 'integer', 'exists:ruangs,id'],
+            'proposals.*.ketua_penguji_id'       => ['nullable', 'integer', 'exists:dosens,id'],
+            'proposals.*.anggota_penguji_1_id'  => ['nullable', 'integer', 'exists:dosens,id'],
+        ]);
+
         $selected = (array) $request->input('selected', []);
         $rows = (array) $request->input('proposals', []);
 
@@ -135,7 +158,20 @@ class AutoScheduleController extends Controller
             }
 
             $before = $sidang->only(array_keys($update));
-            $sidang->update($update);
+
+            // Unique DB constraint on (ruang_id, tanggal, jam) is the final
+            // backstop if another request just took this exact slot in the
+            // narrow window between checkConflicts() above and this write —
+            // skip this row rather than fail the whole batch.
+            try {
+                $sidang->update($update);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ((int) $e->getCode() === 23000) {
+                    $skipped[] = "{$sidang->nama_mahasiswa}: ruang/jam baru saja dipakai jadwal lain, dilewati.";
+                    continue;
+                }
+                throw $e;
+            }
 
             ActivityLogger::log(
                 'jadwalkan',

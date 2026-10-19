@@ -1,4 +1,8 @@
 import Alpine from 'alpinejs';
+import morph from '@alpinejs/morph';
+import { initLiveFilter } from './live-filter';
+
+Alpine.plugin(morph);
 
 window.Alpine = Alpine;
 
@@ -27,6 +31,82 @@ window.refreshComponent = async function(selectors) {
     }
 };
 
+// Modal interaktif untuk menampilkan daftar bentrok jadwal (ruangan/dosen/
+// mahasiswa/aturan) sebagai list per-item — dipakai di halaman Plotting
+// Jadwal Sempro & Skripsi saat submit gagal karena bentrok (lihat
+// SidangConflictService::checkConflicts(), yang mengembalikan array pesan
+// per-bentrok, bukan satu string gabungan). Dibuat sekali (singleton) dan
+// dipakai ulang lewat window.showBentrokModal(conflicts) dari tiap halaman.
+function bentrokIconFor(text) {
+    if (/Bentrok Ruangan/.test(text)) return '🏫';
+    if (/Bentrok Dosen/.test(text)) return '👤';
+    if (/Bentrok Mahasiswa/.test(text)) return '🧑‍🎓';
+    if (/Rentang jam/i.test(text)) return '⏱️';
+    if (/^(\[.*?\]\s*)?Aturan\b/.test(text)) return '📋';
+    return '⚠️';
+}
+
+function escapeHtmlForBentrok(str) {
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+}
+
+function closeBentrokModal() {
+    const overlay = document.getElementById('modal-bentrok-global');
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+}
+window.closeBentrokModal = closeBentrokModal;
+
+window.showBentrokModal = function (conflicts) {
+    if (!Array.isArray(conflicts) || conflicts.length === 0) return;
+
+    let overlay = document.getElementById('modal-bentrok-global');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'modal-bentrok-global';
+        overlay.className = 'modal-overlay';
+        overlay.style.zIndex = '10000';
+        overlay.innerHTML = `
+            <div class="modal-box modal-sm">
+                <div class="modal-header">
+                    <span class="modal-title" id="modal-bentrok-title">⚠️ Jadwal Bentrok</span>
+                    <button class="modal-close" type="button" data-bentrok-close>✕</button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Jadwal ini belum bisa disimpan karena bentrok dengan jadwal lain:</p>
+                    <div id="modal-bentrok-list" class="space-y-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bentrok-close>Mengerti, Ubah Jadwal</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeBentrokModal();
+        });
+        overlay.querySelectorAll('[data-bentrok-close]').forEach(function (btn) {
+            btn.addEventListener('click', closeBentrokModal);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay.style.display === 'flex') closeBentrokModal();
+        });
+    }
+
+    document.getElementById('modal-bentrok-title').textContent = `⚠️ Jadwal Bentrok (${conflicts.length})`;
+    document.getElementById('modal-bentrok-list').innerHTML = conflicts.map(function (c) {
+        return `
+            <div class="flex items-start gap-2.5 p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-xl text-xs text-rose-800 dark:text-rose-300 leading-snug">
+                <span class="text-base leading-none shrink-0">${bentrokIconFor(c)}</span>
+                <span>${escapeHtmlForBentrok(c)}</span>
+            </div>`;
+    }).join('');
+
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+};
+
 // Let the mouse wheel scroll wide tables horizontally instead of forcing users
 // to first scroll the page down to reach the scrollbar at the bottom of the table.
 // Only intercepts the wheel when the hovered container actually overflows horizontally,
@@ -42,3 +122,4 @@ document.addEventListener('wheel', function (event) {
 }, { passive: false });
 
 Alpine.start();
+initLiveFilter();

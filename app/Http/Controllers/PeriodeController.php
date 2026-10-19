@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Periode;
 use App\Models\PendaftaranPeriode;
+use App\Models\Sidang;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -63,6 +65,8 @@ class PeriodeController extends Controller
             'link_grup_wa_sempro'  => $validated['link_grup_wa_sempro'] ?? null,
         ]);
 
+        ActivityLogger::log('created', $periode, "Menambahkan periode akademik baru: {$periode->nama_periode}" . ($aktif ? ' (langsung diaktifkan).' : '.'));
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -98,12 +102,21 @@ class PeriodeController extends Controller
             Periode::where('aktif', true)->update(['aktif' => false]);
         }
 
+        $before = $periode->only(['nama_periode', 'aktif', 'link_grup_wa_skripsi', 'link_grup_wa_sempro']);
+
         $periode->update([
             'nama_periode'         => $request->nama_periode,
             'aktif'                => $aktif,
             'link_grup_wa_skripsi' => $validated['link_grup_wa_skripsi'] ?? null,
             'link_grup_wa_sempro'  => $validated['link_grup_wa_sempro'] ?? null,
         ]);
+
+        ActivityLogger::log(
+            'updated',
+            $periode,
+            "Memperbarui periode akademik: {$periode->nama_periode}.",
+            ['before' => $before, 'after' => $periode->only(['nama_periode', 'aktif', 'link_grup_wa_skripsi', 'link_grup_wa_sempro'])]
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -132,7 +145,10 @@ class PeriodeController extends Controller
             return redirect()->route('master.periode.index')->with('error', 'Gagal menghapus! Periode ini masih digunakan oleh data sidang.');
         }
 
+        $namaPeriode = $periode->nama_periode;
         $periode->delete();
+
+        ActivityLogger::log('deleted', $periode, "Menghapus periode akademik: {$namaPeriode}.");
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -151,6 +167,8 @@ class PeriodeController extends Controller
     {
         Periode::where('aktif', true)->update(['aktif' => false]);
         $periode->update(['aktif' => true]);
+
+        ActivityLogger::log('updated', $periode, "Mengaktifkan periode akademik: {$periode->nama_periode}.");
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -199,6 +217,13 @@ class PeriodeController extends Controller
 
         $pendaftaran = PendaftaranPeriode::create($validated);
 
+        // Mahasiswa yang sudah terdaftar SEBELUM gelombang ini dibuat tapi tanggal
+        // daftarnya masuk rentang gelombang ini tidak otomatis ter-tag — tag ulang
+        // sekarang supaya langsung terdeteksi di Asisten Plotting/Undangan/dll.
+        Sidang::recomputeGelombangForPeriode($pendaftaran->periode_id, $pendaftaran->jenis);
+
+        ActivityLogger::log('created', $pendaftaran, "Menambahkan gelombang pendaftaran {$pendaftaran->jenis} #{$pendaftaran->gelombang} ({$pendaftaran->tanggal_mulai->format('d/m/Y')} - {$pendaftaran->tanggal_selesai->format('d/m/Y')}).");
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -246,7 +271,25 @@ class PeriodeController extends Controller
             return back()->with('error', 'Gelombang pendaftaran ini sudah terdaftar untuk periode dan jenis yang sama.');
         }
 
+        $before = $pendaftaranPeriode->only(['periode_id', 'jenis', 'gelombang', 'tanggal_mulai', 'tanggal_selesai']);
+        $oldPeriodeId = $pendaftaranPeriode->periode_id;
+        $oldJenis = $pendaftaranPeriode->jenis;
+
         $pendaftaranPeriode->update($validated);
+
+        // Rentang tanggal (atau periode/jenis-nya) bisa berubah — tag ulang gelombang
+        // untuk pasangan periode+jenis LAMA maupun BARU (kalau sama, cukup sekali).
+        Sidang::recomputeGelombangForPeriode($oldPeriodeId, $oldJenis);
+        if ($oldPeriodeId !== $pendaftaranPeriode->periode_id || $oldJenis !== $pendaftaranPeriode->jenis) {
+            Sidang::recomputeGelombangForPeriode($pendaftaranPeriode->periode_id, $pendaftaranPeriode->jenis);
+        }
+
+        ActivityLogger::log(
+            'updated',
+            $pendaftaranPeriode,
+            "Memperbarui gelombang pendaftaran {$pendaftaranPeriode->jenis} #{$pendaftaranPeriode->gelombang}.",
+            ['before' => $before, 'after' => $pendaftaranPeriode->only(['periode_id', 'jenis', 'gelombang', 'tanggal_mulai', 'tanggal_selesai'])]
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -264,7 +307,17 @@ class PeriodeController extends Controller
      */
     public function destroyPendaftaranPeriode(Request $request, PendaftaranPeriode $pendaftaranPeriode)
     {
+        $jenis = $pendaftaranPeriode->jenis;
+        $gelombang = $pendaftaranPeriode->gelombang;
+        $periodeId = $pendaftaranPeriode->periode_id;
+
         $pendaftaranPeriode->delete();
+
+        // Mahasiswa yang sebelumnya ke-tag gelombang ini perlu di-null-kan (atau
+        // dicocokkan ulang ke gelombang lain yang masih ada) sekarang juga.
+        Sidang::recomputeGelombangForPeriode($periodeId, $jenis);
+
+        ActivityLogger::log('deleted', $pendaftaranPeriode, "Menghapus gelombang pendaftaran {$jenis} #{$gelombang}.");
 
         if ($request->expectsJson()) {
             return response()->json([

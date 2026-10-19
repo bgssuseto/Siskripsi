@@ -34,7 +34,19 @@
         @endif
 
         <!-- Filter -->
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm"
+             x-data="{
+                allWaves: {{ \Illuminate\Support\Js::from($allWaves) }},
+                periodeId: '{{ $selectedPeriodeId }}',
+                jenis: '{{ $jenis }}',
+                gelombang: '{{ (string) $selectedGelombang }}',
+                get gelombangOptions() {
+                    return this.allWaves
+                        .filter(w => String(w.periode_id) === String(this.periodeId) && w.jenis === this.jenis)
+                        .map(w => String(w.gelombang));
+                }
+             }"
+             x-effect="if (gelombang && !gelombangOptions.includes(gelombang)) { gelombang = '' }">
             <form method="GET" action="{{ route('jadwal.auto-plot.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                 <input type="hidden" name="generate" value="1">
                 @foreach($sidangIds as $sid)
@@ -43,9 +55,9 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
-                    <select name="periode_id" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
+                    <select name="periode_id" x-model="periodeId" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
                         @foreach($periodes as $p)
-                        <option value="{{ $p->id }}" {{ (string) $selectedPeriodeId === (string) $p->id ? 'selected' : '' }}>
+                        <option value="{{ $p->id }}">
                             {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
                         </option>
                         @endforeach
@@ -54,20 +66,25 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Jenis</label>
-                    <select name="jenis" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
-                        <option value="skripsi" {{ $jenis === 'skripsi' ? 'selected' : '' }}>Sidang Skripsi</option>
-                        <option value="sempro" {{ $jenis === 'sempro' ? 'selected' : '' }}>Seminar Proposal (Sempro)</option>
+                    <select name="jenis" x-model="jenis" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
+                        <option value="skripsi">Sidang Skripsi</option>
+                        <option value="sempro">Seminar Proposal (Sempro)</option>
                     </select>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Gelombang</label>
-                    <select name="gelombang" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
+                    <!-- Opsi diisi ulang otomatis oleh Alpine (lihat x-data di atas) setiap
+                         Periode Akademik/Jenis diganti — TANPA reload halaman. -->
+                    <select name="gelombang" x-model="gelombang" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
                         <option value="">-- Semua Gelombang --</option>
-                        @foreach($gelombangOptions as $g)
-                        <option value="{{ $g }}" {{ (string) $selectedGelombang === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
-                        @endforeach
+                        <template x-for="g in gelombangOptions" :key="g">
+                            <option :value="g" x-text="'Gelombang ' + g"></option>
+                        </template>
                     </select>
+                    <p class="mt-1 text-[11px] text-slate-400 dark:text-slate-500" x-show="allWaves.length && gelombangOptions.length === 0">
+                        Belum ada gelombang untuk periode &amp; jenis ini di Master Gelombang.
+                    </p>
                 </div>
 
                 <div>

@@ -21,7 +21,13 @@
             ->whereDate('tanggal_selesai', '>=', $today)
             ->first();
     }
-    $mySidang = $sidangs->where('jenis_tugas_akhir', 'sempro')->first();
+    // Scope ke periode aktif — tanpa ini, catatan sempro yang ditolak dari
+    // periode lama (sudah tertutup) bisa terpilih di sini dan modal salah
+    // menampilkan "Revisi Pendaftaran" dari data basi alih-alih pendaftaran
+    // baru di periode berjalan.
+    $mySidang = $activePeriode
+        ? $sidangs->where('jenis_tugas_akhir', 'sempro')->where('periode_id', $activePeriode->id)->first()
+        : null;
 @endphp
 
     <!-- Top Grid: Status Cards & Card Syarat & Ketentuan Pendaftaran -->
@@ -61,7 +67,15 @@
 
                 @if($activeWave)
                     <div class="mt-4">
-                        @if(!$mySidang)
+                        @if($user->status_kelulusan === 'lulus')
+                            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
+                                <span>🎓</span> Anda telah dinyatakan LULUS. Pendaftaran ditutup.
+                            </div>
+                        @elseif($needsCoordinator)
+                            <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 font-extrabold flex items-center gap-2">
+                                <span>⚠️</span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
+                            </div>
+                        @elseif(!$mySidang)
                             <button @click="regModal = true" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer">
                                 <span>📝</span> Ajukan Pendaftaran Sempro
                             </button>
@@ -69,6 +83,20 @@
                             <button @click="regModal = true" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer">
                                 <span>✏️</span> Revisi Pendaftaran Sempro
                             </button>
+                        @elseif($mySidang->verifikasi_status === 'disetujui')
+                            @php $waLink = optional($mySidang->periode)->link_grup_wa_sempro; @endphp
+                            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 space-y-2">
+                                <p class="text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
+                                    <span>✅</span> Pendaftaran Anda telah terverifikasi.
+                                </p>
+                                @if($waLink)
+                                    <a href="{{ route('mahasiswa.sidang.join-wa', $mySidang) }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                                        <span>💬</span> Join Grup WhatsApp
+                                    </a>
+                                @else
+                                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-semibold italic">Link grup WA belum diatur oleh admin.</p>
+                                @endif
+                            </div>
                         @else
                             <div class="bg-indigo-100 dark:bg-indigo-900/60 border border-indigo-300 dark:border-indigo-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white font-extrabold flex items-center gap-2">
                                 <span>ℹ️</span> Pendaftaran Anda telah terkirim dan sedang diproses.
@@ -79,45 +107,141 @@
             </div>
         </div>
 
-        <!-- Right Side: Card Syarat & Ketentuan Pendaftaran Sempro -->
-        <div class="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-6 border border-slate-200/80 dark:border-slate-700 flex flex-col justify-between">
-            <div>
-                <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
-                    <div class="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-base font-bold shrink-0 border border-indigo-200 dark:border-indigo-800">
-                        📋
-                    </div>
-                    <div>
-                        <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Syarat & Ketentuan Pendaftaran Seminar Proposal</h2>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Pastikan seluruh dokumen dan kriteria berikut terpenuhi sebelum mendaftar</p>
-                    </div>
+        <!-- Right Side: Card Syarat & Ketentuan -->
+        <div class="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-6 border border-slate-200/80 dark:border-slate-700 flex flex-col gap-5">
+            <!-- Header -->
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700">
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg font-bold shrink-0 border border-indigo-200 dark:border-indigo-800">
+                    📋
                 </div>
-
-                <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-2 list-decimal pl-4 leading-relaxed font-medium">
-                    <li>Telah menyelesaikan minimal <strong>100 SKS</strong> dengan IPK memenuhi syarat.</li>
-                    <li>Telah menempuh dan lulus mata kuliah <strong>Metodologi Penelitian</strong>.</li>
-                    <li>Memiliki topik/judul proposal tugas akhir yang disetujui Dosen Pembimbing Utama.</li>
-                    <li>Memilih Dosen Pembimbing Utama yang telah terdaftar resmi dalam sistem.</li>
-                    <li>Melunasi administrasi pendaftaran Seminar Proposal sebesar <strong>Rp 200.000</strong>.</li>
-                    <li>Mengunggah seluruh berkas persyaratan gabungan dalam <strong>1 file format PDF (maksimal 4 MB)</strong>.</li>
-                </ol>
+                <div>
+                    <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Syarat & Ketentuan Pendaftaran Seminar Proposal</h2>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Pastikan seluruh kriteria berikut terpenuhi sebelum mendaftar</p>
+                </div>
             </div>
 
+            <!-- Syarat List dengan numbered pill -->
+            <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-3 list-none pl-0 leading-relaxed font-medium">
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">1</span>
+                    <span>Mahasiswa telah menyelesaikan minimal <strong>125 SKS</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">2</span>
+                    <span>Mahasiswa telah <strong>lulus mata kuliah Metodologi Penelitian</strong>/Tata tulis &amp; Karya Ilmiah/Kapita Selekta dengan nilai <strong>minimal BC</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">3</span>
+                    <span>Mahasiswa telah <strong>lulus</strong> Mata Kuliah Praktek Kerja Lapangan (<strong>PKL</strong>) atau Kerja Praktek (KP), Kuliah Kerja Lapangan (<strong>KKL</strong>), dan Kuliah Kerja Nyata (<strong>KKN</strong>).</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">4</span>
+                    <span>Mahasiswa sudah <strong>lulus Matakuliah Umum</strong> (Pendidikan Pancasila, Kewarganegaraan, Bahasa Indonesia dan Pendidikan Agama) dengan nilai <strong>minimal C</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">5</span>
+                    <span><strong>IPK minimal 2.5</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">6</span>
+                    <span><strong>Nilai D tidak lebih dari 10% (14 SKS)</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">7</span>
+                    <span><strong>Melakukan Pembayaran Sebesar "Rp. 200.000" Ke Rekening BSI</strong>.</span>
+                </li>
+                <li class="flex items-start gap-3">
+                    <span class="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-800 mt-0.5">8</span>
+                    <span>Mengunggah seluruh berkas persyaratan gabungan dalam <strong>1 file format PDF (maksimal 4 MB)</strong>.</span>
+                </li>
+            </ol>
+
             <!-- Box Informasi Pembayaran BSI -->
-            <div class="mt-4 p-3.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/80 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-200">
-                <div class="flex items-center gap-2">
-                    <span class="text-base">💳</span>
+            <div class="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/80 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-200 mt-auto">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl">💳</span>
                     <div>
                         <p class="font-extrabold">Pembayaran Administrasi (Bank BSI)</p>
-                        <p class="text-[11px] text-indigo-700 dark:text-indigo-300">No. Rek: <strong class="font-mono font-bold">7318709593</strong> (A.n. Ahmad Abdul Chamid / Alvin R)</p>
+                        <p class="text-[11px] text-indigo-700 dark:text-indigo-300 mt-0.5">No. Rek: <strong class="font-mono font-bold">7318709593</strong> (A.n. Ahmad Abdul Chamid / Alvin R)</p>
                     </div>
                 </div>
-                <span class="px-2.5 py-1 bg-indigo-600 text-white font-extrabold text-[10px] rounded-lg shadow-2xs shrink-0">
+                <span class="px-3 py-1.5 bg-indigo-600 text-white font-extrabold text-xs rounded-lg shadow-sm shrink-0">
                     Rp 200.000
                 </span>
             </div>
         </div>
 
     </div>
+
+    <!-- Dokumen Wajib Pendaftaran Sempro (Full Width Card) -->
+    <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 overflow-hidden">
+        <!-- Card Header -->
+        <div class="flex items-center gap-3 px-6 py-4 bg-rose-50/60 dark:bg-rose-950/30 border-b border-rose-100 dark:border-rose-900/60">
+            <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base font-bold shrink-0 border border-rose-200 dark:border-rose-800">
+                📂
+            </div>
+            <div>
+                <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Dokumen Wajib Pendaftaran Sempro</h2>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Gabungkan semua dokumen berikut menjadi <strong>1 file PDF</strong> sebelum diunggah</p>
+            </div>
+        </div>
+
+        <!-- Dokumen 4-column Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6">
+            <!-- Dok 1 -->
+            <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-base border border-indigo-200 dark:border-indigo-800 shrink-0">📝</div>
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 1</span>
+                </div>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Surat Persetujuan Judul</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan halaman persetujuan judul Seminar Proposal yang sudah di TTD Pembimbing 1 &amp; 2 dalam format PDF</p>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">*bisa menggunakan camscanner</span>
+            </div>
+
+            <!-- Dok 2 -->
+            <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base border border-emerald-200 dark:border-emerald-800 shrink-0">💳</div>
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 2</span>
+                </div>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Bukti Pembayaran Sempro</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan bukti pembayaran Sempro dalam format PDF</p>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">*bisa menggunakan camscanner</span>
+            </div>
+
+            <!-- Dok 3 -->
+            <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-amber-200 dark:hover:border-amber-800 transition-colors">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base border border-amber-200 dark:border-amber-800 shrink-0">📊</div>
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 3</span>
+                </div>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Transkrip Nilai Lengkap</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan/file Transkrip Nilai lengkap <strong>WAJIB</strong> yang dikeluarkan oleh <strong>BAAK</strong> dalam format PDF</p>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">*bisa menggunakan camscanner</span>
+            </div>
+
+            <!-- Dok 4 -->
+            <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-rose-200 dark:hover:border-rose-800 transition-colors">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base border border-rose-200 dark:border-rose-800 shrink-0">📋</div>
+                    <span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dokumen 4</span>
+                </div>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 leading-snug">Bukti KRS Sempro</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex-1">Scan/file bukti KRS Sempro dalam format PDF</p>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">*bisa menggunakan camscanner</span>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="px-6 pb-6">
+            <div class="flex items-center gap-3 px-5 py-4 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 rounded-2xl text-sm text-indigo-800 dark:text-indigo-300 font-semibold">
+                <span class="text-xl shrink-0">💡</span>
+                <span class="leading-relaxed">Gabungkan seluruh dokumen di atas menjadi <strong>1 file PDF</strong> sebelum diunggah (maks. 4 MB). Scan bukan foto untuk hasil terbaik.</span>
+            </div>
+        </div>
+    </div>
+
 
     {{-- Modal Pendaftaran Seminar Proposal (Proporsional & Compact) --}}
     @if($activeWave)
@@ -150,7 +274,9 @@
             <form id="form-daftar-sempro" method="POST" action="{{ route('mahasiswa.daftar.store') }}" enctype="multipart/form-data" class="p-5 space-y-3.5">
                 @csrf
                 <input type="hidden" name="jenis_tugas_akhir" value="sempro">
-                
+                {{-- Periode otomatis dari periode aktif, tidak bisa diubah mahasiswa --}}
+                <input type="hidden" name="periode_id" value="{{ $activePeriode?->id }}">
+
                 {{-- NIM & Nama (Readonly) --}}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -219,7 +345,7 @@
                         fileName: '',
                         fileSize: '',
                         fileError: '',
-                        existingFile: '{{ ($mySidang && $mySidang->file_persyaratan) ? asset($mySidang->file_persyaratan) : '' }}',
+                        existingFile: '{{ ($mySidang && $mySidang->file_persyaratan) ? route('dokumen.show', [$mySidang, 'persyaratan']) : '' }}',
                         handleFileSelect(e) {
                             const file = e.target.files[0] || (e.dataTransfer ? e.dataTransfer.files[0] : null);
                             if (!file) return;
@@ -348,11 +474,11 @@
                                 </td>
                                 <td class="py-3 px-4 text-center">
                                     @if($s->file_persyaratan)
-                                        <a href="{{ asset($s->file_persyaratan) }}" target="_blank" class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold rounded-lg border border-indigo-200 dark:border-indigo-700 transition-all flex items-center gap-1 shadow-2xs justify-center">
+                                        <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}" target="_blank" class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold rounded-lg border border-indigo-200 dark:border-indigo-700 transition-all flex items-center gap-1 shadow-2xs justify-center">
                                             <span>📄</span> Preview
                                         </a>
                                     @elseif($s->bukti_pembayaran)
-                                        <a href="{{ asset($s->bukti_pembayaran) }}" target="_blank" class="px-2.5 py-1 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-600 transition-all flex items-center gap-1 shadow-2xs justify-center">
+                                        <a href="{{ route('dokumen.show', [$s, 'bukti-pembayaran']) }}" target="_blank" class="px-2.5 py-1 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-600 transition-all flex items-center gap-1 shadow-2xs justify-center">
                                             <span>📄</span> Lihat Bukti
                                         </a>
                                     @else
@@ -367,7 +493,49 @@
         @endif
     </div>
 </div>
-</x-app-layout>
+
+{{-- ═══════════════════════════════════════════════════════════════ --}}
+{{-- TOAST NOTIFICATION SYSTEM                                        --}}
+{{-- ═══════════════════════════════════════════════════════════════ --}}
+<style>
+    #toast-container {
+        position: fixed; bottom: 1.5rem; right: 1.5rem;
+        z-index: 99999; display: flex; flex-direction: column; gap: .65rem;
+        pointer-events: none;
+    }
+    .toast {
+        display: flex; align-items: flex-start; gap: .85rem;
+        background: #fff; border-radius: 14px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+        padding: .9rem 1.1rem; min-width: 300px; max-width: 400px;
+        border-left: 4px solid #4361ee;
+        pointer-events: all;
+        animation: toastInSempro .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    .toast.toast-success { border-color: #10b981; }
+    .toast.toast-error   { border-color: #ef4444; }
+    .toast.toast-warning { border-color: #f59e0b; }
+    @keyframes toastInSempro {
+        from { opacity:0; transform: translateX(2rem) scale(.92); }
+        to   { opacity:1; transform: translateX(0) scale(1); }
+    }
+    .toast-icon { font-size:1.4rem; flex-shrink:0; line-height:1; }
+    .toast-body { flex:1; }
+    .toast-title { font-weight:700; font-size:.88rem; color:#0f172a; }
+    .toast-msg   { font-size:.8rem; color:#64748b; margin-top:.15rem; line-height:1.4; }
+    .toast-close {
+        background:none; border:none; color:#94a3b8; cursor:pointer;
+        font-size:1.1rem; line-height:1; padding:.1rem .2rem; flex-shrink:0;
+        transition: color .15s;
+    }
+    .toast-close:hover { color: #475569; }
+    html.dark .toast { background: #1e293b; box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3); }
+    html.dark .toast-title { color: #f8fafc; }
+    html.dark .toast-msg { color: #94a3b8; }
+    html.dark .toast-close { color: #64748b; }
+    html.dark .toast-close:hover { color: #cbd5e1; }
+</style>
+<div id="toast-container"></div>
 
 @push('scripts')
 <script>
@@ -389,6 +557,17 @@
     @if(session('error'))   showToastMhs('error',   @json(session('error')));   @endif
     @if(session('warning')) showToastMhs('warning', @json(session('warning'))); @endif
 
+    // Ambil pesan error spesifik per-field dari respons validasi Laravel (422),
+    // supaya mahasiswa tahu persis bagian mana yang salah (mis. "File persyaratan
+    // harus berformat PDF"), bukan cuma pesan generik "The given data was invalid."
+    function extractErrorMessageMhs(data, fallback) {
+        if (data && data.errors && typeof data.errors === 'object') {
+            const messages = Object.values(data.errors).flat();
+            if (messages.length) return messages.join(' ');
+        }
+        return (data && data.message) || fallback;
+    }
+
     // Pendaftaran Sempro (AJAX)
     const formDaftar = document.getElementById('form-daftar-sempro');
     if (formDaftar) {
@@ -398,16 +577,27 @@
             btn.disabled = true; btn.innerHTML = '⏳ Mengirim…';
             try {
                 const res = await fetch(this.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF_MAHASISWA, 'Accept': 'application/json' }, body: new FormData(this) });
-                const data = await res.json();
+                let data;
+                try {
+                    data = await res.json();
+                } catch (parseErr) {
+                    // Respons diterima tapi bukan JSON — biasanya berarti request DITOLAK
+                    // sebelum sempat diproses Laravel (mis. webserver/PHP menolak karena
+                    // ukuran file melebihi batas server), sehingga yang kembali adalah
+                    // halaman HTML mentah, bukan JSON error yang biasa kita tampilkan.
+                    showToastMhs('error', 'File gagal diunggah — kemungkinan ukurannya terlalu besar untuk server (status ' + res.status + '). Coba kompres file PDF Anda lalu unggah ulang.');
+                    return;
+                }
                 if (res.ok && data.success) {
                     showToastMhs('success', data.message || 'Pendaftaran berhasil dikirim!');
                     setTimeout(() => location.reload(), 1200);
                 } else {
-                    showToastMhs(res.status === 422 ? 'warning' : 'error', data.message || 'Terjadi kesalahan.');
+                    showToastMhs(res.status === 422 ? 'warning' : 'error', extractErrorMessageMhs(data, 'Terjadi kesalahan.'));
                 }
-            } catch(err) { showToastMhs('error', 'Gagal terhubung ke server.'); }
+            } catch(err) { showToastMhs('error', 'Gagal terhubung ke server. Periksa koneksi internet Anda lalu coba lagi.'); }
             finally { btn.disabled = false; btn.innerHTML = orig; }
         });
     }
 </script>
 @endpush
+</x-app-layout>

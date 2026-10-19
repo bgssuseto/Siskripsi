@@ -9,7 +9,7 @@
         deleteRule: { id: null, dosen_nama: '' },
         openEdit(rule) {
             this.editRule = {
-                id: rule.id,
+                id: rule.hash_id,
                 dosen_id: rule.dosen_id,
                 dosen_nama: rule.dosen?.nama_dosen ?? '',
                 boleh: (rule.boleh_dosen_ids || []).map(String),
@@ -19,7 +19,7 @@
             this.editModal = true;
         },
         openDelete(rule) {
-            this.deleteRule = { id: rule.id, dosen_nama: rule.dosen?.nama_dosen ?? '' };
+            this.deleteRule = { id: rule.hash_id, dosen_nama: rule.dosen?.nama_dosen ?? '' };
             this.deleteModal = true;
         },
     }">
@@ -33,9 +33,9 @@
             <div>
                 <button @click="createModal = true"
                         {{ $dosenBelumAdaRule->isEmpty() ? 'disabled' : '' }}
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                     </svg>
                     Tambah Rule
                 </button>
@@ -215,7 +215,7 @@
                         </button>
                     </div>
 
-                    <form :action="'/master/dosen-penguji-rule/' + editRule.id" method="POST" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                    <form :action="window.location.pathname.replace(/\/$/, '') + '/' + editRule.id" method="POST" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                         @csrf
                         @method('PUT')
 
@@ -273,7 +273,7 @@
                     <p class="text-xs text-slate-500 mb-6">
                         Apakah Anda yakin ingin menghapus rule komposisi penguji untuk <span class="font-bold text-slate-800" x-text="deleteRule.dosen_nama"></span>?
                     </p>
-                    <form :action="'/master/dosen-penguji-rule/' + deleteRule.id" method="POST" class="flex items-center justify-center gap-3">
+                    <form :action="window.location.pathname.replace(/\/$/, '') + '/' + deleteRule.id" method="POST" class="flex items-center justify-center gap-3">
                         @csrf
                         @method('DELETE')
                         <button type="button" @click="deleteModal = false" class="w-1/2 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>

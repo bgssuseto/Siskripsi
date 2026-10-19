@@ -1,0 +1,277 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Models\Periode;
+use App\Models\Ruang;
+use App\Models\Sidang;
+use App\Services\ProgressTugasAkhirService as Progress;
+use Carbon\Carbon;
+use Tests\TestCase;
+
+/**
+ * Logika murni 6 tahap progress (tanpa query DB): semua relasi di-set manual.
+ */
+class ProgressTugasAkhirServiceTest extends TestCase
+{
+    private const WA_SEMPRO  = 'https://chat.whatsapp.com/sempro';
+    private const WA_SKRIPSI = 'https://chat.whatsapp.com/skripsi';
+
+    private function today(): Carbon
+    {
+        return Carbon::parse('2026-10-05', 'Asia/Jakarta');
+    }
+
+    private function sidang(array $attrs = [], bool $withLinks = true): Sidang
+    {
+        $sidang = new Sidang(array_merge([
+            'nim'                 => '202251001',
+            'jenis_tugas_akhir'   => 'sempro',
+            'verifikasi_status'   => 'disetujui',
+            'tanggal_pendaftaran' => '2026-09-20',
+        ], $attrs));
+
+        $sidang->setRelation('periode', new Periode($withLinks ? [
+            'link_grup_wa_sempro'  => self::WA_SEMPRO,
+            'link_grup_wa_skripsi' => self::WA_SKRIPSI,
+        ] : []));
+        $sidang->setRelation('ruang', new Ruang(['kode_ruangan' => 'R101']));
+
+        return $sidang;
+    }
+
+    private function statuses(array $progress): array
+    {
+        return array_column($progress['steps'], 'status', 'key');
+    }
+
+    public function test_belum_mendaftar_dan_gelombang_sedang_buka(): void
+    {
+        $p = Progress::build(null, 'sempro', $this->today(), waveOpen: true);
+
+        $this->assertFalse($p['registered']);
+        $this->assertSame([
+            'pendaftaran' => 'active', 'verifikasi' => 'pending', 'join_wa' => 'pending',
+            'penjadwalan' => 'pending', 'ujian' => 'pending', 'kelulusan' => 'pending',
+        ], $this->statuses($p));
+        $this->assertSame('Sedang Buka', $p['steps'][0]['detail']);
+        $this->assertSame('daftar', $p['steps'][0]['cta']);
+        $this->assertSame(0, $p['percent']);
+        $this->assertSame(0, $p['current_index']);
+    }
+
+    public function test_belum_mendaftar_dan_gelombang_belum_dibuka(): void
+    {
+        // waveOpen default (false): mahasiswa belum bisa mendaftar sama sekali,
+        // jadi tahap "Pendaftaran" tidak boleh menawarkan tombol Daftar.
+        $p = Progress::build(null, 'sempro', $this->today());
+
+        $this->assertFalse($p['registered']);
+        $this->assertSame('pending', $p['steps'][0]['status']);
+        $this->assertSame('Belum dibuka Pendaftaran', $p['steps'][0]['detail']);
+        $this->assertNull($p['steps'][0]['cta']);
+        $this->assertSame(0, $p['percent']);
+        $this->assertSame(0, $p['current_index']);
+    }
+
+    public function test_menunggu_verifikasi(): void
+    {
+        $p = Progress::build($this->sidang(['verifikasi_status' => 'menunggu']), 'sempro', $this->today());
+
+        $this->assertSame('done', $p['steps'][0]['status']);
+        $this->assertSame('active', $p['steps'][1]['status']);
+        $this->assertSame('Sedang Diverifikasi', $p['steps'][1]['detail']);
+        $this->assertSame('pending', $p['steps'][2]['status']);
+        $this->assertSame(17, $p['percent']);
+        $this->assertSame(1, $p['current_index']);
+        $this->assertFalse($p['failed']);
+    }
+
+    public function test_verifikasi_status_kosong_dianggap_menunggu(): void
+    {
+        $p = Progress::build($this->sidang(['verifikasi_status' => null]), 'sempro', $this->today());
+
+        $this->assertSame('active', $p['steps'][1]['status']);
+    }
+
+    public function test_berkas_ditolak_menghentikan_tahap_berikutnya(): void
+    {
+        $p = Progress::build($this->sidang([
+            'verifikasi_status'   => 'ditolak',
+            'verifikasi_komentar' => 'PDF tidak terbaca',
+            // walau data jadwal ada, tidak boleh dianggap terjadwal sebelum berkas diterima
+            'tanggal' => '2026-10-10', 'ruang_id' => 1,
+        ]), 'sempro', $this->today());
+
+        $this->assertSame('failed', $p['steps'][1]['status']);
+        $this->assertSame('revisi', $p['steps'][1]['cta']);
+        $this->assertStringContainsString('PDF tidak terbaca', $p['steps'][1]['note']);
+        $this->assertSame(['pending', 'pending', 'pending', 'pending'], array_column(array_slice($p['steps'], 2), 'status'));
+        $this->assertTrue($p['failed']);
+        $this->assertSame(1, $p['current_index']);
+        $this->assertSame(17, $p['percent']);
+    }
+
+    public function test_diterima_belum_join_wa_dan_belum_dijadwalkan(): void
+    {
+        $p = Progress::build($this->sidang(), 'sempro', $this->today());
+
+        $this->assertSame('done', $p['steps'][1]['status']);
+        $this->assertSame('active', $p['steps'][2]['status']);
+        $this->assertSame('join_wa', $p['steps'][2]['cta']);
+        $this->assertSame('active', $p['steps'][3]['status']);
+        $this->assertSame('Sedang dijadwalkan', $p['steps'][3]['detail']);
+        $this->assertSame('pending', $p['steps'][4]['status']);
+        $this->assertSame(33, $p['percent']);
+        $this->assertSame(2, $p['current_index']);
+    }
+
+    public function test_klik_join_wa_menandai_tahap_selesai(): void
+    {
+        $p = Progress::build($this->sidang(['wa_joined_at' => '2026-10-03 10:00:00']), 'sempro', $this->today());
+
+        $this->assertSame('done', $p['steps'][2]['status']);
+        $this->assertStringContainsString('Bergabung', $p['steps'][2]['detail']);
+        $this->assertNull($p['steps'][2]['cta']);
+        $this->assertSame('active', $p['steps'][3]['status']);
+        $this->assertSame(50, $p['percent']);
+        $this->assertSame(3, $p['current_index']);
+    }
+
+    public function test_tanpa_link_grup_tahap_join_wa_tidak_bisa_diklik(): void
+    {
+        $p = Progress::build($this->sidang([], withLinks: false), 'sempro', $this->today());
+
+        $this->assertSame('pending', $p['steps'][2]['status']);
+        $this->assertSame('Link grup belum tersedia', $p['steps'][2]['detail']);
+        $this->assertNull($p['steps'][2]['cta']);
+    }
+
+    public function test_skripsi_memakai_link_grup_skripsi_bukan_sempro(): void
+    {
+        $sidang = $this->sidang(['jenis_tugas_akhir' => 'sidang']);
+        $sidang->periode->link_grup_wa_sempro = null; // hanya link skripsi yang diisi
+
+        $p = Progress::build($sidang, 'skripsi', $this->today());
+
+        $this->assertSame('active', $p['steps'][2]['status']);
+        $this->assertSame('join_wa', $p['steps'][2]['cta']);
+    }
+
+    public function test_skripsi_belum_terjadwal_sebelum_ketua_penguji_ditentukan(): void
+    {
+        $tanpaKetua = $this->sidang(['jenis_tugas_akhir' => 'sidang', 'tanggal' => '2026-10-10', 'ruang_id' => 1]);
+        $denganKetua = $this->sidang(['jenis_tugas_akhir' => 'sidang', 'tanggal' => '2026-10-10', 'ruang_id' => 1, 'ketua_penguji_id' => 7]);
+
+        $this->assertSame('active', Progress::build($tanpaKetua, 'skripsi', $this->today())['steps'][3]['status']);
+        $this->assertSame('done', Progress::build($denganKetua, 'skripsi', $this->today())['steps'][3]['status']);
+    }
+
+    public function test_sempro_cukup_tanggal_dan_ruang_untuk_dianggap_terjadwal(): void
+    {
+        $p = Progress::build($this->sidang(['tanggal' => '2026-10-10', 'ruang_id' => 1]), 'sempro', $this->today());
+
+        $this->assertSame('done', $p['steps'][3]['status']);
+        $this->assertSame('Sudah terjadwal', $p['steps'][3]['detail']);
+    }
+
+    public function test_tanggal_tanpa_ruang_masih_dijadwalkan(): void
+    {
+        $p = Progress::build($this->sidang(['tanggal' => '2026-10-10']), 'sempro', $this->today());
+
+        $this->assertSame('active', $p['steps'][3]['status']);
+        $this->assertSame('pending', $p['steps'][4]['status']);
+    }
+
+    public function test_ujian_mendatang_menampilkan_tanggal_dan_hitung_mundur(): void
+    {
+        $p = Progress::build(
+            $this->sidang(['tanggal' => '2026-10-08', 'ruang_id' => 1, 'jam' => '08.00 - 09.00']),
+            'sempro', $this->today()
+        );
+        $ujian = $p['steps'][4];
+
+        $this->assertSame('active', $ujian['status']);
+        $this->assertSame('H-3', $ujian['badge']);
+        $this->assertStringContainsString('08 Okt 2026', $ujian['detail']);
+        $this->assertSame('Pukul 08.00 - 09.00 • Ruang R101', $ujian['note']);
+    }
+
+    public function test_ujian_besok_dan_hari_ini(): void
+    {
+        $besok = Progress::build($this->sidang(['tanggal' => '2026-10-06', 'ruang_id' => 1]), 'sempro', $this->today());
+        $hariIni = Progress::build($this->sidang(['tanggal' => '2026-10-05', 'ruang_id' => 1]), 'sempro', $this->today());
+
+        $this->assertSame('Besok', $besok['steps'][4]['badge']);
+        $this->assertSame('active', $hariIni['steps'][4]['status']);
+        $this->assertSame('Hari ini', $hariIni['steps'][4]['badge']);
+        $this->assertFalse($hariIni['complete']);
+    }
+
+    public function test_ujian_sudah_lewat_status_kelulusan_default_lulus(): void
+    {
+        $base = ['tanggal' => '2026-10-01', 'ruang_id' => 1, 'wa_joined_at' => '2026-09-25 09:00:00'];
+
+        $lulus      = Progress::build($this->sidang($base + ['status_ujian' => 'lulus']), 'sempro', $this->today());
+        $remidi     = Progress::build($this->sidang($base + ['status_ujian' => 'tidak_lulus']), 'sempro', $this->today());
+        $belumDiisi = Progress::build($this->sidang($base), 'sempro', $this->today());
+
+        // Tahap ujian cukup "Selesai"; hasilnya ada di tahap Status Kelulusan.
+        $this->assertSame('done', $lulus['steps'][4]['status']);
+        $this->assertSame('Selesai', $lulus['steps'][4]['badge']);
+
+        $this->assertSame('kelulusan', $lulus['steps'][5]['key']);
+        $this->assertSame(['done', 'Lulus', 'success'], [$lulus['steps'][5]['status'], $lulus['steps'][5]['badge'], $lulus['steps'][5]['badge_tone']]);
+        $this->assertSame(['done', 'Dinyatakan lulus'], [$belumDiisi['steps'][5]['status'], $belumDiisi['steps'][5]['detail']]);
+        $this->assertSame(['failed', 'Tidak Lulus', 'danger'], [$remidi['steps'][5]['status'], $remidi['steps'][5]['badge'], $remidi['steps'][5]['badge_tone']]);
+
+        $this->assertTrue($lulus['complete']);
+        $this->assertTrue($belumDiisi['complete']);
+        $this->assertSame(100, $lulus['percent']);
+        $this->assertSame(5, $lulus['current_index']);
+
+        $this->assertFalse($remidi['complete']);
+        $this->assertTrue($remidi['failed']);
+        $this->assertSame(5, $remidi['current_index']);
+    }
+
+    public function test_status_kelulusan_lulus_begitu_jam_ujian_hari_ini_lewat(): void
+    {
+        $sidang = $this->sidang(['tanggal' => '2026-10-05', 'ruang_id' => 1, 'jam' => '08.00 - 09.00']);
+
+        $sebelum = Progress::build($sidang, 'sempro', $this->today(), now: Carbon::parse('2026-10-05 08:30', 'Asia/Jakarta'));
+        $sesudah = Progress::build($sidang, 'sempro', $this->today(), now: Carbon::parse('2026-10-05 09:01', 'Asia/Jakarta'));
+
+        $this->assertSame(['active', 'Hari ini'], [$sebelum['steps'][4]['status'], $sebelum['steps'][4]['badge']]);
+        $this->assertSame(['pending', 'Menunggu pelaksanaan ujian'], [$sebelum['steps'][5]['status'], $sebelum['steps'][5]['detail']]);
+
+        $this->assertSame('done', $sesudah['steps'][4]['status']);
+        $this->assertSame(['done', 'Dinyatakan lulus'], [$sesudah['steps'][5]['status'], $sesudah['steps'][5]['detail']]);
+    }
+
+    public function test_jadwal_terpisah_lulus_setelah_kedua_sesi_selesai(): void
+    {
+        $sidang = $this->sidang([
+            'tanggal' => '2026-10-01', 'ruang_id' => 1, 'jam' => '08.00 - 09.00',
+            'jadwal_terpisah' => true, 'tanggal_pendamping' => '2026-10-07', 'jam_pendamping' => '10.00 - 11.00', 'ruang_id_pendamping' => 2,
+        ]);
+
+        $p = Progress::build($sidang, 'sempro', $this->today());
+        $this->assertSame(['active', 'Berlangsung'], [$p['steps'][4]['status'], $p['steps'][4]['badge']]);
+        $this->assertSame('pending', $p['steps'][5]['status']);
+
+        $p = Progress::build($sidang, 'sempro', Carbon::parse('2026-10-08', 'Asia/Jakarta'));
+        $this->assertSame('done', $p['steps'][5]['status']);
+    }
+
+    public function test_ujian_lewat_tanpa_join_wa_tetap_selesai_dan_tidak_menawarkan_join(): void
+    {
+        $p = Progress::build($this->sidang(['tanggal' => '2026-10-01', 'ruang_id' => 1]), 'sempro', $this->today());
+
+        $this->assertSame('pending', $p['steps'][2]['status']);
+        $this->assertSame('Tidak tercatat bergabung', $p['steps'][2]['detail']);
+        $this->assertNull($p['steps'][2]['cta']);
+        $this->assertSame(100, $p['percent']);
+        $this->assertSame(5, $p['current_index']);
+    }
+}

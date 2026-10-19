@@ -33,14 +33,113 @@ class DosenController extends Controller
         return view('master.dosen.index', compact('dosens'));
     }
 
+    /**
+     * Export the current Master Dosen list (respecting the active search filter) to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $query = Dosen::query();
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_dosen', 'like', "%{$search}%")
+                  ->orWhere('nidn', 'like', "%{$search}%");
+            });
+        }
+
+        $dosens = $query->orderBy('nama_dosen')->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data Dosen');
+
+        $headers = ['No', 'NIDN', 'Nama & Gelar', 'Email', 'No WhatsApp', 'Alias/Inisial', 'Kepakaran', 'Jabatan Fungsional'];
+        foreach ($headers as $colIdx => $text) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
+            $sheet->setCellValue("{$colLetter}1", $text);
+        }
+        $sheet->getStyle('A1:H1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
+        $sheet->getStyle('A1:H1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF4F46E5');
+        $sheet->getStyle('A1:H1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        foreach ($dosens as $idx => $dosen) {
+            $row = $idx + 2;
+            $sheet->setCellValue("A{$row}", $idx + 1);
+            $sheet->setCellValueExplicit("B{$row}", $dosen->nidn, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue("C{$row}", $dosen->nama_dosen);
+            $sheet->setCellValue("D{$row}", $dosen->email ?? '-');
+            $sheet->setCellValueExplicit("E{$row}", $dosen->no_wa ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue("F{$row}", $dosen->alias ?: $dosen->initials);
+            $sheet->setCellValue("G{$row}", $dosen->kepakaran ?? '-');
+            $sheet->setCellValue("H{$row}", $dosen->jabatan_fungsional ?? '-');
+        }
+
+        $lastRow = $dosens->count() + 1;
+        $sheet->getStyle("A1:H{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle("A2:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        foreach (range('A', 'H') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Data_Dosen_' . now()->format('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
     public function store(Request $request)
     {
+        // If a previously soft-deleted dosen already occupies this NIDN, this is a
+        // "re-add" — restore that same record instead of creating a new one, so any
+        // bimbingan/penguji history that referenced it (now showing as "-") reconnects
+        // automatically instead of ending up duplicated under a new id.
+        $trashed = Dosen::onlyTrashed()->where('nidn', $request->input('nidn'))->first();
+
+        if ($trashed) {
+            $validated = $request->validate([
+                'nidn' => ['required', 'string', 'max:50'],
+                'nama_dosen' => ['required', 'string', 'max:255'],
+                'email' => ['nullable', 'email', 'max:255'],
+                'alias' => ['nullable', 'string', 'max:50', 'alpha_dash', Rule::unique('dosens', 'alias')->ignore($trashed->id)],
+                'kepakaran' => ['nullable', 'string', 'max:255'],
+                'jabatan_fungsional' => ['nullable', 'string', Rule::in(array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS))],
+                'status_kepegawaian' => ['nullable', 'string', Rule::in(array_keys(Dosen::STATUS_KEPEGAWAIAN_LABELS))],
+                'no_wa' => ['nullable', 'string', 'max:30'],
+            ], [
+                'nama_dosen.required' => 'Nama dosen wajib diisi.',
+                'alias.alpha_dash' => 'Alias hanya boleh huruf, angka, strip, dan underscore (tanpa spasi).',
+                'alias.unique' => 'Alias sudah dipakai dosen lain.',
+            ]);
+
+            $trashed->restore();
+            $trashed->update($validated);
+            $this->syncLinkedUserAccount($trashed);
+
+            ActivityLogger::log('created', $trashed, "Memulihkan data dosen: {$trashed->nama_dosen} (NIDN: {$trashed->nidn}). Riwayat bimbingan/penguji sebelumnya otomatis terhubung kembali.");
+
+            $message = "Data dosen dengan NIDN ini sebelumnya pernah dihapus — data berhasil dipulihkan, lengkap dengan riwayat bimbingan/penguji sebelumnya.";
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => $message, 'dosen' => $trashed]);
+            }
+
+            return redirect()->route('master.dosen.index')->with('success', $message);
+        }
+
         $validated = $request->validate([
             'nidn' => ['required', 'string', 'max:50', 'unique:dosens,nidn'],
             'nama_dosen' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
             'alias' => ['nullable', 'string', 'max:50', 'alpha_dash', 'unique:dosens,alias'],
             'kepakaran' => ['nullable', 'string', 'max:255'],
             'jabatan_fungsional' => ['nullable', 'string', Rule::in(array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS))],
+            'status_kepegawaian' => ['nullable', 'string', Rule::in(array_keys(Dosen::STATUS_KEPEGAWAIAN_LABELS))],
             'no_wa' => ['nullable', 'string', 'max:30'],
         ], [
             'nidn.required' => 'NIDN wajib diisi.',
@@ -70,9 +169,11 @@ class DosenController extends Controller
         $validated = $request->validate([
             'nidn' => ['required', 'string', 'max:50', 'unique:dosens,nidn,' . $dosen->id],
             'nama_dosen' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
             'alias' => ['nullable', 'string', 'max:50', 'alpha_dash', 'unique:dosens,alias,' . $dosen->id],
             'kepakaran' => ['nullable', 'string', 'max:255'],
             'jabatan_fungsional' => ['nullable', 'string', Rule::in(array_keys(Dosen::JABATAN_FUNGSIONAL_RANKS))],
+            'status_kepegawaian' => ['nullable', 'string', Rule::in(array_keys(Dosen::STATUS_KEPEGAWAIAN_LABELS))],
             'no_wa' => ['nullable', 'string', 'max:30'],
         ], [
             'nidn.required' => 'NIDN wajib diisi.',
@@ -82,9 +183,10 @@ class DosenController extends Controller
             'alias.unique' => 'Alias sudah dipakai dosen lain.',
         ]);
 
-        $trackedFields = ['nidn', 'nama_dosen', 'alias', 'kepakaran', 'jabatan_fungsional', 'no_wa'];
+        $trackedFields = ['nidn', 'nama_dosen', 'email', 'alias', 'kepakaran', 'jabatan_fungsional', 'status_kepegawaian', 'no_wa'];
         $before = $dosen->only($trackedFields);
         $dosen->update($validated);
+        $this->syncLinkedUserAccount($dosen);
 
         ActivityLogger::log(
             'updated',
@@ -104,53 +206,54 @@ class DosenController extends Controller
         return redirect()->route('master.dosen.index')->with('success', 'Data dosen berhasil diperbarui!');
     }
 
-    public function destroy(Request $request, Dosen $dosen)
+    /**
+     * Keep a dosen's linked login account (User where dosen_id = X) in sync with
+     * the Master Dosen record's contact info — email and no. WhatsApp (User's
+     * no_hp) — so editing a dosen here doesn't leave their account showing stale
+     * contact details. Dosen is treated as the source of truth. The email sync
+     * is skipped if it would collide with a different user's login email.
+     */
+    private function syncLinkedUserAccount(Dosen $dosen): void
+    {
+        $user = \App\Models\User::where('dosen_id', $dosen->id)->first();
+        if (!$user) {
+            return;
+        }
+
+        $updates = [];
+
+        if (!empty($dosen->email) && $dosen->email !== $user->email) {
+            $emailTaken = \App\Models\User::where('email', $dosen->email)->where('id', '!=', $user->id)->exists();
+            if (!$emailTaken) {
+                $updates['email'] = $dosen->email;
+            }
+        }
+
+        if ($dosen->no_wa !== $user->no_hp) {
+            $updates['no_hp'] = $dosen->no_wa;
+        }
+
+        if (!empty($updates)) {
+            $user->update($updates);
+        }
+    }
+
+    /**
+     * Soft-delete a Dosen. Every Sidang/KesediaanDosen row that referenced this
+     * dosen keeps its original foreign key untouched — since Dosen uses
+     * SoftDeletes, those relations simply resolve to null (displayed as "-")
+     * while the dosen is trashed, and automatically resolve correctly again the
+     * moment the dosen is restored (re-added with the same NIDN via store()).
+     * Nothing is reassigned to a placeholder, so no history is ever lost.
+     */
+    private function attemptDeleteDosen(Dosen $dosen): ?string
     {
         // Refuse to delete a Dosen that still has a linked User login account —
-        // deleting it would silently orphan that account (dosen_id set to null
-        // via the FK's onDelete('set null')), locking them out of their own portal data.
+        // while trashed, relations to it resolve to null, which would break that
+        // person's own dosen-portal dashboard while they still have an active login.
         $linkedUser = \App\Models\User::where('dosen_id', $dosen->id)->first();
         if ($linkedUser) {
-            $message = "Tidak dapat menghapus data dosen ini karena masih terhubung dengan akun login \"{$linkedUser->name}\". Lepaskan tautan akun tersebut terlebih dahulu sebelum menghapus.";
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => $message], 422);
-            }
-            return back()->with('error', $message);
-        }
-
-        // Ensure Super Administrator Dosen exists
-        $superAdminDosen = Dosen::firstOrCreate(
-            ['nidn' => '0000000000'],
-            ['nama_dosen' => 'Super Administrator']
-        );
-
-        // Link the first super_admin User to this Super Administrator Dosen if they are not already linked
-        $superAdminUser = \App\Models\User::where('role', \App\Models\User::ROLE_SUPER_ADMIN)->first();
-        if ($superAdminUser && !$superAdminUser->dosen_id) {
-            $superAdminUser->update(['dosen_id' => $superAdminDosen->id]);
-        }
-
-        $dosenId = $dosen->id;
-        if ($dosenId !== $superAdminDosen->id) {
-            // Reassign kesediaan_dosens
-            \App\Models\KesediaanDosen::where('dosen_id', $dosenId)
-                ->update(['dosen_id' => $superAdminDosen->id]);
-
-            // Reassign sidang roles
-            \App\Models\Sidang::where('dosen_pembimbing_utama_id', $dosenId)
-                ->update(['dosen_pembimbing_utama_id' => $superAdminDosen->id]);
-
-            \App\Models\Sidang::where('dosen_pembimbing_pendamping_id', $dosenId)
-                ->update(['dosen_pembimbing_pendamping_id' => $superAdminDosen->id]);
-
-            \App\Models\Sidang::where('ketua_penguji_id', $dosenId)
-                ->update(['ketua_penguji_id' => $superAdminDosen->id]);
-
-            \App\Models\Sidang::where('anggota_penguji_1_id', $dosenId)
-                ->update(['anggota_penguji_1_id' => $superAdminDosen->id]);
-
-            \App\Models\Sidang::where('anggota_penguji_2_id', $dosenId)
-                ->update(['anggota_penguji_2_id' => $superAdminDosen->id]);
+            return "masih terhubung dengan akun login \"{$linkedUser->name}\"";
         }
 
         $namaDosenDihapus = $dosen->nama_dosen;
@@ -160,8 +263,23 @@ class DosenController extends Controller
         ActivityLogger::log(
             'deleted',
             $dosen,
-            "Menghapus data dosen: {$namaDosenDihapus} (NIDN: {$nidnDosenDihapus}). Riwayat bimbingan/penguji dialihkan ke Super Administrator."
+            "Menghapus data dosen: {$namaDosenDihapus} (NIDN: {$nidnDosenDihapus}). Data bimbingan/penguji terkait akan tampil sebagai \"-\" dan otomatis kembali seperti semula jika dosen ini ditambahkan lagi dengan NIDN yang sama."
         );
+
+        return null;
+    }
+
+    public function destroy(Request $request, Dosen $dosen)
+    {
+        $refusalReason = $this->attemptDeleteDosen($dosen);
+
+        if ($refusalReason !== null) {
+            $message = "Tidak dapat menghapus data dosen ini karena {$refusalReason}. Lepaskan tautan akun tersebut terlebih dahulu sebelum menghapus.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -171,6 +289,49 @@ class DosenController extends Controller
         }
 
         return redirect()->route('master.dosen.index')->with('success', 'Data dosen berhasil dihapus!');
+    }
+
+    /**
+     * Bulk-delete several Dosen records at once. Each is deleted via the same
+     * reassignment logic as a single delete; any that are refused (still linked
+     * to a login account) are skipped and reported back rather than failing the
+     * whole batch.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:dosens,id'],
+        ]);
+
+        $dosens = Dosen::whereIn('id', $validated['ids'])->get();
+
+        $deleted = 0;
+        $skipped = [];
+        foreach ($dosens as $dosen) {
+            $refusalReason = $this->attemptDeleteDosen($dosen);
+            if ($refusalReason === null) {
+                $deleted++;
+            } else {
+                $skipped[] = "{$dosen->nama_dosen} ({$refusalReason})";
+            }
+        }
+
+        $message = "{$deleted} data dosen berhasil dihapus.";
+        if (!empty($skipped)) {
+            $message .= ' Dilewati: ' . implode('; ', $skipped) . '.';
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'deleted' => $deleted,
+                'skipped' => $skipped,
+            ]);
+        }
+
+        return back()->with($deleted > 0 ? 'success' : 'error', $message);
     }
 
     /**
@@ -210,6 +371,7 @@ class DosenController extends Controller
             $aliasCol = null;
             $kepakaranCol = null;
             $jabatanCol = null;
+            $emailCol = null;
 
             foreach ($rows as $rIdx => $rData) {
                 if (!is_array($rData)) continue;
@@ -221,6 +383,9 @@ class DosenController extends Controller
                         $matchedInRow = true;
                     } elseif (str_contains($valLower, 'kepakaran')) {
                         $kepakaranCol = $cIdx;
+                        $matchedInRow = true;
+                    } elseif (str_contains($valLower, 'email')) {
+                        $emailCol = $cIdx;
                         $matchedInRow = true;
                     } elseif (str_contains($valLower, 'alias') || str_contains($valLower, 'inisial')) {
                         $aliasCol = $cIdx;
@@ -257,6 +422,10 @@ class DosenController extends Controller
                 $alias = $aliasCol !== null ? trim((string)($row[$aliasCol] ?? '')) : '';
                 $kepakaran = $kepakaranCol !== null ? trim((string)($row[$kepakaranCol] ?? '')) : '';
                 $jabatanRaw = $jabatanCol !== null ? trim((string)($row[$jabatanCol] ?? '')) : '';
+                $email = $emailCol !== null ? trim((string)($row[$emailCol] ?? '')) : '';
+                if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $email = '';
+                }
 
                 // Skip if both nama and nidn are empty
                 if (empty($namaDosen) && empty($nidn)) {
@@ -294,25 +463,33 @@ class DosenController extends Controller
                     }
                 }
 
-                // Match existing dosen by NIDN or Nama
+                // Match existing dosen by NIDN or Nama — including previously soft-deleted
+                // ones, which are restored here so a re-imported lecturer reconnects with
+                // their prior bimbingan/penguji history instead of colliding on the unique NIDN.
                 $existing = null;
                 if (!empty($nidn)) {
-                    $existing = Dosen::where('nidn', $nidn)->first();
+                    $existing = Dosen::withTrashed()->where('nidn', $nidn)->first();
                 }
                 if (!$existing && !empty($namaDosen)) {
-                    $existing = Dosen::where('nama_dosen', $namaDosen)->first();
+                    $existing = Dosen::withTrashed()->where('nama_dosen', $namaDosen)->first();
+                }
+
+                if ($existing && $existing->trashed()) {
+                    $existing->restore();
                 }
 
                 if ($existing) {
                     $updateData = [];
                     if (!empty($namaDosen)) $updateData['nama_dosen'] = $namaDosen;
                     if (!empty($nidn) && str_starts_with($existing->nidn, 'NIDN-')) $updateData['nidn'] = $nidn;
+                    if (!empty($email)) $updateData['email'] = $email;
                     if (!empty($noWa)) $updateData['no_wa'] = $noWa;
                     if (!empty($alias) && empty($existing->alias)) $updateData['alias'] = $alias;
                     if (!empty($kepakaran)) $updateData['kepakaran'] = $kepakaran;
                     if ($jabatanFungsional) $updateData['jabatan_fungsional'] = $jabatanFungsional;
                     if (!empty($updateData)) {
                         $existing->update($updateData);
+                        $this->syncLinkedUserAccount($existing);
                         $updatedCount++;
                     }
                 } else {
@@ -324,6 +501,7 @@ class DosenController extends Controller
                     Dosen::create([
                         'nidn' => $nidn,
                         'nama_dosen' => $namaDosen,
+                        'email' => $email ?: null,
                         'no_wa' => $noWa ?: null,
                         'alias' => $alias,
                         'kepakaran' => $kepakaran ?: null,
@@ -367,20 +545,20 @@ class DosenController extends Controller
         $sheet->setTitle('Template Import Dosen');
 
         // Header
-        $headers = ['No', 'Nama & Gelar', 'NIDN', 'No WhatsApp', 'Alias/Inisial', 'Kepakaran', 'Jabatan Fungsional'];
+        $headers = ['No', 'Nama & Gelar', 'NIDN', 'Email', 'No WhatsApp', 'Alias/Inisial', 'Kepakaran', 'Jabatan Fungsional'];
         foreach ($headers as $colIdx => $text) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
             $sheet->setCellValue("{$colLetter}1", $text);
         }
 
-        $sheet->getStyle('A1:G1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
-        $sheet->getStyle('A1:G1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF4F46E5');
-        $sheet->getStyle('A1:G1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1:H1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
+        $sheet->getStyle('A1:H1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF4F46E5');
+        $sheet->getStyle('A1:H1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Sample Rows
         $samples = [
-            [1, 'Dr. Budi Santoso, M.T.', '0012058501', '081234567890', 'bds', 'Kecerdasan Buatan', 'Lektor'],
-            [2, 'Siti Aminah, S.Kom., M.Cs.', '0015088802', '085712345678', 'sam', 'Rekayasa Perangkat Lunak', 'Asisten Ahli'],
+            [1, 'Dr. Budi Santoso, M.T.', '0012058501', 'budi.santoso@umk.ac.id', '081234567890', 'bds', 'Kecerdasan Buatan', 'Lektor'],
+            [2, 'Siti Aminah, S.Kom., M.Cs.', '0015088802', 'siti.aminah@umk.ac.id', '085712345678', 'sam', 'Rekayasa Perangkat Lunak', 'Asisten Ahli'],
         ];
 
         foreach ($samples as $rIdx => $sample) {
@@ -388,17 +566,18 @@ class DosenController extends Controller
             $sheet->setCellValue("A{$rowNum}", $sample[0]);
             $sheet->setCellValue("B{$rowNum}", $sample[1]);
             $sheet->setCellValueExplicit("C{$rowNum}", $sample[2], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit("D{$rowNum}", $sample[3], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            $sheet->setCellValue("E{$rowNum}", $sample[4]);
+            $sheet->setCellValue("D{$rowNum}", $sample[3]);
+            $sheet->setCellValueExplicit("E{$rowNum}", $sample[4], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValue("F{$rowNum}", $sample[5]);
             $sheet->setCellValue("G{$rowNum}", $sample[6]);
+            $sheet->setCellValue("H{$rowNum}", $sample[7]);
         }
 
-        $sheet->getStyle('A1:G3')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle('A1:H3')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet->getStyle('A2:A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('C2:E3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C2:F3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        foreach (range('A', 'G') as $col) {
+        foreach (range('A', 'H') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 

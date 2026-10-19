@@ -23,7 +23,7 @@
             display: flex; flex-wrap: wrap; gap: .75rem; align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,.07); border: 1px solid #f1f5f9;
         }
-        .toolbar-search { position: relative; flex: 1; min-width: 200px; }
+        .toolbar-search { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
         .toolbar-search svg { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
         .toolbar-search input {
             width: 100%; padding: .55rem .75rem .55rem 2.25rem;
@@ -67,6 +67,8 @@
         .badge { display: inline-flex; align-items: center; padding: .22rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
         .badge-skripsi { background: #dbeafe; color: #1d4ed8; }
         .badge-jurnal  { background: #dcfce7; color: #15803d; }
+        html.dark .badge-skripsi { background: rgba(29,78,216,.2); color: #93c5fd; }
+        html.dark .badge-jurnal  { background: rgba(21,128,61,.2); color: #86efac; }
         .nim-pill { font-family: 'Courier New', monospace; background: #f1f5f9; color: #475569; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
         .judul-text { font-size: .8rem; color: #1e293b; font-weight: 500; line-height: 1.4; max-width: 280px; }
         .dosen-chip { display: inline-block; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: .1rem .45rem; font-size: .75rem; color: #475569; margin: .1rem 0; }
@@ -152,31 +154,45 @@
 
     <div class="data-page space-y-6">
 
-        {{-- Page Header --}}
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Data Skripsi</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola data mahasiswa sidang skripsi dan jurnal.</p>
-            </div>
-            <div class="flex items-center gap-3 flex-wrap">
-                <a href="{{ route('master.skripsi.export', request()->query()) }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 border border-emerald-500 cursor-pointer">
-                    📊 Export Excel
-                </a>
-                <a href="{{ route('master.skripsi.import.form') }}" class="btn btn-success">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                    Import Excel
-                </a>
-                <button onclick="openModal('modal-tambah')" class="btn btn-primary">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Tambah Data
-                </button>
-                <form action="{{ route('master.skripsi.destroy-all') }}" method="POST" onsubmit="return confirm('⚠️ KONFIRMASI HAPUS SEMUA DATA:\nApakah Anda yakin ingin menghapus SELURUH data skripsi & jurnal?\n\nTindakan ini tidak dapat dibatalkan!');" class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 border border-rose-500 cursor-pointer">
-                        🗑️ Hapus Semua Data
+        {{-- Hero Banner Header --}}
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
+            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Modul Master Data Skripsi &amp; Jurnal
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Data Skripsi</h1>
+                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
+                        Kelola data mahasiswa sidang skripsi dan jurnal.
+                    </p>
+                </div>
+                <div class="shrink-0 flex items-center gap-2.5 flex-wrap">
+                    <a href="{{ route('master.skripsi.export', request()->query()) }}" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-1.5 border border-emerald-500 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>Export Excel</span>
+                    </a>
+                    <a href="{{ route('master.skripsi.import.form') }}" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-extrabold text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-1.5 border border-white/15 cursor-pointer">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        Import Excel
+                    </a>
+                    <button onclick="openModal('modal-tambah')" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-1.5 border border-indigo-500 cursor-pointer">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Tambah Data
                     </button>
-                </form>
+                    <form action="{{ route('master.skripsi.destroy-all') }}" method="POST" onsubmit="return confirm('⚠️ KONFIRMASI HAPUS SEMUA DATA:\nApakah Anda yakin ingin menghapus SELURUH data skripsi & jurnal?\n\nTindakan ini tidak dapat dibatalkan!');" class="inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-2xl shadow-md transition-all flex items-center gap-1.5 border border-rose-500 cursor-pointer">
+                            🗑️ Hapus Semua Data
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -212,41 +228,51 @@
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIM, nama, judul…">
             </div>
 
-            <select name="per_page" class="filter-select" onchange="this.form.submit()">
-                <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
-                <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>Tampilkan 10 data</option>
-                <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
-                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Tampilkan 100 data</option>
-            </select>
-
-            <select name="jenis" class="filter-select">
-                <option value="">Semua Jenis</option>
-                <option value="skripsi" {{ request('jenis') == 'skripsi' ? 'selected' : '' }}>Skripsi</option>
-                <option value="jurnal" {{ request('jenis') == 'jurnal' ? 'selected' : '' }}>Jurnal / Artikel</option>
-            </select>
-
-            <select name="status" class="filter-select">
-                <option value="">Semua Status</option>
-                <option value="belum" {{ request('status') == 'belum' ? 'selected' : '' }}>Belum Dijadwalkan</option>
-                <option value="sudah" {{ request('status') == 'sudah' ? 'selected' : '' }}>Sudah Dijadwal</option>
-            </select>
-
-            <select name="periode_id" class="filter-select">
-                @foreach ($periodes as $p)
-                    <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode->id ?? null) == $p->id) ? 'selected' : '' }}>
-                        {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
-                    </option>
-                @endforeach
-            </select>
-
-            <select name="gelombang" class="filter-select">
-                <option value="">Semua Gelombang</option>
-                @foreach ($gelombangOptions ?? [] as $g)
-                    <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
-                @endforeach
-            </select>
-
-            <x-filter-popover :active="request()->hasAny(['dosen_pembimbing_id','dosen_penguji_id'])">
+            <x-filter-popover :active="request()->hasAny(['jenis','status','periode_id','gelombang','per_page','dosen_pembimbing_id','dosen_penguji_id'])">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tampilkan</label>
+                    <select name="per_page" class="filter-select w-full">
+                        <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
+                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>Tampilkan 10 data</option>
+                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Tampilkan 100 data</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Jenis</label>
+                    <select name="jenis" class="filter-select w-full">
+                        <option value="">Semua Jenis</option>
+                        <option value="skripsi" {{ request('jenis') == 'skripsi' ? 'selected' : '' }}>Skripsi</option>
+                        <option value="jurnal" {{ request('jenis') == 'jurnal' ? 'selected' : '' }}>Jurnal / Artikel</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status Jadwal</label>
+                    <select name="status" class="filter-select w-full">
+                        <option value="">Semua Status</option>
+                        <option value="belum" {{ request('status') == 'belum' ? 'selected' : '' }}>Belum Dijadwalkan</option>
+                        <option value="sudah" {{ request('status') == 'sudah' ? 'selected' : '' }}>Sudah Dijadwal</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Periode</label>
+                    <select name="periode_id" class="filter-select w-full">
+                        @foreach ($periodes as $p)
+                            <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode->id ?? null) == $p->id) ? 'selected' : '' }}>
+                                {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gelombang</label>
+                    <select name="gelombang" class="filter-select w-full">
+                        <option value="">Semua Gelombang</option>
+                        @foreach ($gelombangOptions ?? [] as $g)
+                            <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Pembimbing</label>
                     <select name="dosen_pembimbing_id" class="filter-select w-full">
@@ -274,9 +300,9 @@
         </form>
 
         {{-- Bulk Action Bar --}}
-        <div id="bulk-bar" style="display:none; padding:.85rem 1rem; margin-bottom:1rem; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; background:#eef1fe; border:1px solid #c7d0fb; border-radius:14px;">
-            <span style="font-size:.8rem; font-weight:800; color:#3251d4;"><span id="bulk-count">0</span> data dipilih</span>
-            <div style="display:flex; gap:.5rem;">
+        <div id="bulk-bar" style="display:none;" class="p-3.5 mb-4 items-center justify-between gap-3 flex-wrap bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-2xl">
+            <span class="text-[.8rem] font-extrabold text-indigo-700 dark:text-indigo-300"><span id="bulk-count">0</span> data dipilih</span>
+            <div class="flex gap-2">
                 <button type="button" class="btn btn-danger btn-sm" onclick="bulkDeleteSelected()">🗑️ Hapus Terpilih</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="toggleSelectAll(null, true)">Batalkan Pilihan</button>
             </div>
@@ -313,7 +339,7 @@
                                 <td style="text-align:center;">
                                     <input type="checkbox" class="row-checkbox" value="{{ $item->id }}" onchange="updateBulkBar()">
                                 </td>
-                                <td style="text-align:center; color:#475569; font-weight:700; font-size:.78rem;">
+                                <td class="text-center font-bold text-[.78rem] text-slate-600 dark:text-slate-300">
                                     {{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}
                                 </td>
                                 <td>
@@ -322,14 +348,14 @@
                                             {{ $item->tanggal_pendaftaran->locale('id')->translatedFormat('l, d/m/Y') }}
                                         </span>
                                     @else
-                                        <span style="color:#cbd5e1;">—</span>
+                                        <span class="text-slate-300 dark:text-slate-600">—</span>
                                     @endif
                                 </td>
                                 <td>
                                     <span class="nim-pill">{{ $item->nim }}</span>
                                     @if($item->file_persyaratan)
                                         <div class="mt-1">
-                                            <a href="{{ asset($item->file_persyaratan) }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-purple-600 dark:text-purple-400 hover:underline font-bold">
+                                            <a href="{{ route('dokumen.show', [$item, 'persyaratan']) }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-purple-600 dark:text-purple-400 hover:underline font-bold">
                                                 <span>📄</span> Berkas (PDF)
                                             </a>
                                         </div>
@@ -342,13 +368,13 @@
                                 <td>
                                     @php
                                         $verifStatus = $item->verifikasi_status ?? 'menunggu';
-                                        $bgClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                                        $bgClass = 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
                                         $labelTxt = 'Menunggu';
                                         if ($verifStatus === 'disetujui') {
-                                            $bgClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                            $bgClass = 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
                                             $labelTxt = 'Disetujui';
                                         } elseif ($verifStatus === 'ditolak') {
-                                            $bgClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                                            $bgClass = 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800';
                                             $labelTxt = 'Ditolak';
                                         }
                                     @endphp
@@ -357,11 +383,11 @@
                                             {{ $labelTxt }}
                                         </span>
                                         @if($verifStatus === 'ditolak' && $item->verifikasi_komentar)
-                                            <span class="text-[10px] text-slate-500 font-normal max-w-[150px] truncate" title="{{ $item->verifikasi_komentar }}">Catatan: {{ $item->verifikasi_komentar }}</span>
+                                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-normal max-w-[150px] truncate" title="{{ $item->verifikasi_komentar }}">Catatan: {{ $item->verifikasi_komentar }}</span>
                                         @endif
                                     </div>
                                 </td>
-                                <td><span class="text-xs font-semibold text-slate-500">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
+                                <td><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                 <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                 <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                 <td><span class="dosen-chip ketua">{{ $item->ketuaPenguji ? $item->ketuaPenguji->nama_dosen : '—' }}</span></td>
@@ -372,16 +398,26 @@
                                         <span class="badge badge-skripsi">Skripsi</span>
                                     @else
                                         <span class="badge badge-jurnal">Jurnal</span>
+                                        @if($item->kategori_jurnal)
+                                            <div class="mt-1 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                                                {{ $item->kategori_jurnal }}
+                                                @if($item->link_jurnal)
+                                                    · <a href="{{ $item->link_jurnal }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 hover:underline">Link ↗</a>
+                                                @endif
+                                            </div>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="text-right space-x-1 whitespace-nowrap">
-                                    <button class="btn btn-outline btn-sm"
-                                        onclick="openEdit({{ $item->id }}, {{ json_encode([
+                                    <button class="btn btn-outline btn-sm" title="Edit Data"
+                                        onclick="openEdit('{{ $item->hash_id }}', {{ json_encode([
                                             'id'                             => $item->id,
                                             'nim'                            => $item->nim,
                                             'nama_mahasiswa'                 => $item->nama_mahasiswa,
                                             'judul_skripsi'                  => $item->judul_skripsi,
                                             'jenis_tugas_akhir'              => $item->jenis_tugas_akhir,
+                                            'kategori_jurnal'                => $item->kategori_jurnal,
+                                            'link_jurnal'                    => $item->link_jurnal,
                                             'periode_id'                     => $item->periode_id,
                                             'tanggal_pendaftaran'            => $item->tanggal_pendaftaran?->format('Y-m-d'),
                                             'dosen_pembimbing_utama_id'      => $item->dosen_pembimbing_utama_id,
@@ -392,17 +428,17 @@
                                         ]) }})">
                                         ✏️
                                     </button>
-                                    <button class="btn btn-danger btn-sm"
-                                        onclick="confirmHapus({{ $item->id }}, {{ json_encode($item->nama_mahasiswa) }})">
+                                    <button class="btn btn-danger btn-sm" title="Hapus"
+                                        onclick="confirmHapus('{{ $item->hash_id }}', {{ json_encode($item->nama_mahasiswa) }})">
                                         🗑️
                                     </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="14" style="text-align:center; padding:3rem; color:#94a3b8;">
+                                <td colspan="14" class="text-center py-12 text-slate-400 dark:text-slate-500">
                                     <div style="font-size:2.5rem; margin-bottom:.5rem;">📂</div>
-                                    <div style="font-weight:700; color:#64748b;">Belum ada data skripsi</div>
+                                    <div class="font-bold text-slate-500 dark:text-slate-400">Belum ada data skripsi</div>
                                     <div style="font-size:.82rem; margin-top:.25rem;">Import Excel atau tambah data secara manual.</div>
                                 </td>
                             </tr>
@@ -462,7 +498,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Jenis <span style="color:red">*</span></label>
-                                <select name="jenis_tugas_akhir" class="form-control" required>
+                                <select name="jenis_tugas_akhir" class="form-control" required onchange="toggleJurnalFields('tambah', this.value)">
                                     <option value="skripsi">Skripsi</option>
                                     <option value="jurnal">Jurnal / Artikel</option>
                                 </select>
@@ -475,6 +511,21 @@
                         <div class="form-group mt-3">
                             <label>Judul Skripsi / TA <span style="color:red">*</span></label>
                             <textarea name="judul_skripsi" class="form-control" required placeholder="Judul skripsi / tugas akhir"></textarea>
+                        </div>
+                        <div id="tambah-jurnal-fields" class="form-grid-2 mt-3" style="display:none;">
+                            <div class="form-group">
+                                <label>Kategori Jurnal <span style="color:red">*</span></label>
+                                <select name="kategori_jurnal" class="form-control">
+                                    <option value="">-- Pilih Kategori --</option>
+                                    @foreach(\App\Models\Sidang::KATEGORI_JURNAL_OPTIONS as $kat)
+                                        <option value="{{ $kat }}">{{ $kat }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Link Jurnal <span class="text-[10px] text-slate-400 font-normal">(jika sudah terbit)</span></label>
+                                <input type="url" name="link_jurnal" class="form-control" placeholder="https://...">
+                            </div>
                         </div>
                         <div class="form-grid-2 mt-3">
                             <div class="form-group">
@@ -573,7 +624,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Jenis <span style="color:red">*</span></label>
-                                <select name="jenis_tugas_akhir" id="edit-jenis" class="form-control" required>
+                                <select name="jenis_tugas_akhir" id="edit-jenis" class="form-control" required onchange="toggleJurnalFields('edit', this.value)">
                                     <option value="skripsi">Skripsi</option>
                                     <option value="jurnal">Jurnal / Artikel</option>
                                 </select>
@@ -586,6 +637,21 @@
                         <div class="form-group mt-3">
                             <label>Judul Skripsi / TA <span style="color:red">*</span></label>
                             <textarea name="judul_skripsi" id="edit-judul" class="form-control" required></textarea>
+                        </div>
+                        <div id="edit-jurnal-fields" class="form-grid-2 mt-3" style="display:none;">
+                            <div class="form-group">
+                                <label>Kategori Jurnal <span style="color:red">*</span></label>
+                                <select name="kategori_jurnal" id="edit-kategori-jurnal" class="form-control">
+                                    <option value="">-- Pilih Kategori --</option>
+                                    @foreach(\App\Models\Sidang::KATEGORI_JURNAL_OPTIONS as $kat)
+                                        <option value="{{ $kat }}">{{ $kat }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Link Jurnal <span class="text-[10px] text-slate-400 font-normal">(jika sudah terbit)</span></label>
+                                <input type="url" name="link_jurnal" id="edit-link-jurnal" class="form-control" placeholder="https://...">
+                            </div>
                         </div>
                         <div class="form-grid-2 mt-3">
                             <div class="form-group">
@@ -672,8 +738,8 @@
             </div>
             <div class="modal-body" style="text-align:center; padding: 2rem 1.5rem;">
                 <div style="font-size:3rem; margin-bottom:1rem;">⚠️</div>
-                <p style="font-weight:700; color:#0f172a; font-size:1rem; margin-bottom:.5rem;">Hapus data ini?</p>
-                <p id="hapus-detail" style="font-size:.85rem; color:#64748b; margin-bottom:0;"></p>
+                <p class="font-bold text-slate-900 dark:text-slate-100 text-[1rem] mb-2">Hapus data ini?</p>
+                <p id="hapus-detail" class="text-[.85rem] text-slate-500 dark:text-slate-400 mb-0"></p>
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="closeModal('modal-hapus')" class="btn btn-outline">Batal</button>
@@ -695,15 +761,15 @@
                 @csrf
                 <div class="modal-body space-y-4">
                     {{-- Student Registration Details Panel --}}
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem; font-size: 0.8rem; line-height: 1.5; color: #334155; text-align: left;">
+                    <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3.5 mb-4 text-[0.8rem] leading-relaxed text-slate-700 dark:text-slate-300 text-left">
                         <div style="margin-bottom: 0.4rem;"><strong>NIM:</strong> <span id="verif-detail-nim"></span></div>
                         <div style="margin-bottom: 0.4rem;"><strong>Nama:</strong> <span id="verif-detail-nama"></span></div>
                         <div style="margin-bottom: 0.4rem;"><strong>Judul:</strong> <span id="verif-detail-judul" style="font-style: italic;"></span></div>
                         <div style="margin-bottom: 0.4rem;"><strong>Pembimbing Utama:</strong> <span id="verif-detail-dosbing-utama"></span></div>
                         <div style="margin-bottom: 0.4rem;"><strong>Pembimbing Pendamping:</strong> <span id="verif-detail-dosbing-pendamping"></span></div>
-                        <div style="margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid #e2e8f0;" id="verif-detail-bukti-container">
-                            <strong>Bukti Pembayaran:</strong> 
-                            <a id="verif-detail-bukti" href="#" target="_blank" style="color: #3251d4; font-weight: bold; text-decoration: underline;">Lihat Bukti</a>
+                        <div class="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-700" id="verif-detail-bukti-container">
+                            <strong>Bukti Pembayaran:</strong>
+                            <a id="verif-detail-bukti" href="#" target="_blank" class="text-indigo-700 dark:text-indigo-400 font-bold underline">Lihat Bukti</a>
                         </div>
                     </div>
 
@@ -769,6 +835,11 @@
             transition: color .15s;
         }
         .toast-close:hover { color: #475569; }
+        html.dark .toast { background: #1e293b; box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3); }
+        html.dark .toast-title { color: #f8fafc; }
+        html.dark .toast-msg { color: #94a3b8; }
+        html.dark .toast-close { color: #64748b; }
+        html.dark .toast-close:hover { color: #cbd5e1; }
         .toast-progress {
             position: absolute; bottom:0; left:0; height:3px;
             background: currentColor; opacity:.25; border-radius: 0 0 14px 14px;
@@ -920,6 +991,9 @@
             document.getElementById('edit-judul').value = data.judul_skripsi || '';
             document.getElementById('edit-jenis').value = data.jenis_tugas_akhir || 'skripsi';
             document.getElementById('edit-tgl-daftar').value = data.tanggal_pendaftaran || '';
+            document.getElementById('edit-link-jurnal').value = data.link_jurnal || '';
+            setSelect('edit-kategori-jurnal', data.kategori_jurnal);
+            toggleJurnalFields('edit', data.jenis_tugas_akhir || 'skripsi');
             setSelect('edit-periode',           data.periode_id);
             setSelect('edit-dosbing-utama',     data.dosen_pembimbing_utama_id);
             setSelect('edit-dosbing-pendamping',data.dosen_pembimbing_pendamping_id);
@@ -932,6 +1006,17 @@
         function setSelect(id, val) {
             const el = document.getElementById(id);
             if (el) el.value = val || '';
+        }
+
+        // Kategori/Link Jurnal cuma relevan untuk jenis 'jurnal' — sembunyikan &
+        // kosongkan kategori (biar tidak ikut submit) saat jenisnya 'skripsi'.
+        function toggleJurnalFields(prefix, jenis) {
+            const wrap = document.getElementById(prefix + '-jurnal-fields');
+            if (!wrap) return;
+            const isJurnal = jenis === 'jurnal';
+            wrap.style.display = isJurnal ? '' : 'none';
+            const kategoriSelect = wrap.querySelector('select[name="kategori_jurnal"]');
+            if (kategoriSelect) kategoriSelect.required = isJurnal;
         }
 
         // ── Edit Data (AJAX) ──────────────────────────────────────────────────

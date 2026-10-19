@@ -1,15 +1,5 @@
 <x-app-layout title="Daftar Skripsi">
-<div class="max-w-7xl mx-auto p-6 space-y-6" x-data="{ regModal: false }">
-    <div class="bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-extrabold mb-1">Pendaftaran Sidang Skripsi</h1>
-            <p class="text-xs text-purple-200">Kelola riwayat dan pendaftaran Sidang Skripsi Tugas Akhir Anda.</p>
-        </div>
-        <span class="px-3.5 py-1.5 bg-purple-500/30 border border-purple-400/30 text-purple-200 text-xs font-bold rounded-xl">
-            Sidang Skripsi
-        </span>
-    </div>
-
+{{-- Harus di paling atas: $mySidang dipakai oleh x-data elemen pembungkus di bawah. --}}
 @php
     $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
     $activeWave = null;
@@ -20,8 +10,27 @@
             ->whereDate('tanggal_selesai', '>=', $today)
             ->first();
     }
-    $mySidang = $sidangs->first();
+    // Scope ke periode aktif — tanpa ini, catatan skripsi yang ditolak dari
+    // periode lama (sudah tertutup) bisa terpilih di sini dan modal salah
+    // menampilkan "Revisi Pendaftaran" dari data basi alih-alih pendaftaran
+    // baru di periode berjalan.
+    $mySidang = $activePeriode
+        ? $sidangs->where('periode_id', $activePeriode->id)->first()
+        : null;
 @endphp
+<div class="max-w-7xl mx-auto p-6 space-y-6" x-data="{
+    regModal: false,
+    jenisTaSelected: '{{ $mySidang && $mySidang->jenis_tugas_akhir === 'jurnal' ? 'jurnal' : ($mySidang && $mySidang->jenis_tugas_akhir === 'sidang' ? 'sidang' : '') }}'
+}">
+    <div class="bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-xl flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-extrabold mb-1">Pendaftaran Sidang Skripsi</h1>
+            <p class="text-xs text-purple-200">Kelola riwayat dan pendaftaran Sidang Skripsi Tugas Akhir Anda.</p>
+        </div>
+        <span class="px-3.5 py-1.5 bg-purple-500/30 border border-purple-400/30 text-purple-200 text-xs font-bold rounded-xl">
+            Sidang Skripsi
+        </span>
+    </div>
 
     <!-- Top Grid: Status Cards & Card Syarat & Ketentuan Pendaftaran -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -60,7 +69,15 @@
 
                 @if($activeWave)
                     <div class="mt-4">
-                        @if(!$mySidang)
+                        @if($user->status_kelulusan === 'lulus')
+                            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
+                                <span>🎓</span> Anda telah dinyatakan LULUS. Pendaftaran ditutup.
+                            </div>
+                        @elseif($needsCoordinator)
+                            <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-900 dark:text-amber-300 font-extrabold flex items-center gap-2">
+                                <span>⚠️</span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
+                            </div>
+                        @elseif(!$mySidang)
                             <button @click="regModal = true" style="background-color: #9333ea; color: #ffffff;" class="w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer border border-purple-500">
                                 <span>📝</span> Ajukan Pendaftaran Sidang Skripsi
                             </button>
@@ -68,6 +85,20 @@
                             <button @click="regModal = true" style="background-color: #e11d48; color: #ffffff;" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer border border-rose-500">
                                 <span>✏️</span> Revisi Pendaftaran Skripsi
                             </button>
+                        @elseif($mySidang->verifikasi_status === 'disetujui')
+                            @php $waLink = optional($mySidang->periode)->link_grup_wa_skripsi; @endphp
+                            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 space-y-2">
+                                <p class="text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
+                                    <span>✅</span> Pendaftaran Anda telah terverifikasi.
+                                </p>
+                                @if($waLink)
+                                    <a href="{{ route('mahasiswa.sidang.join-wa', $mySidang) }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                                        <span>💬</span> Join Grup WhatsApp
+                                    </a>
+                                @else
+                                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-semibold italic">Link grup WA belum diatur oleh admin.</p>
+                                @endif
+                            </div>
                         @else
                             <div class="bg-purple-100 dark:bg-purple-900/60 border border-purple-300 dark:border-purple-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white font-extrabold flex items-center gap-2">
                                 <span>ℹ️</span> Pendaftaran Anda telah terkirim dan sedang diproses.
@@ -93,7 +124,7 @@
 
                 <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-2 list-decimal pl-4 leading-relaxed font-medium columns-1 sm:columns-2 gap-x-6">
                     <li>Scan surat pendaftaran skripsi bertandatangan kaprodi.</li>
-                    <li>Scan transkrip nilai resmi dari BAAK.</li>
+                    <li>Scan transkrip nilai <strong>WAJIB</strong> yang dikeluarkan oleh <strong>BAAK</strong>.</li>
                     <li>Tidak terdapat nilai <strong>E</strong>.</li>
                     <li>Nilai <strong>D</strong> maksimal 14 SKS.</li>
                     <li>Nilai Metodologi Penelitian minimal <strong>BC</strong>.</li>
@@ -107,6 +138,7 @@
                     <li>Hasil Turnitin maksimal <strong>25%</strong>.</li>
                     <li>Halaman persetujuan yang telah ditandatangani.</li>
                     <li>Lampiran ACC pada buku bimbingan.</li>
+                    <li>Khusus jalur <strong>Jurnal / Artikel</strong>: wajib melampirkan <strong>LOA (Letter of Acceptance)</strong> atau <strong>bukti publish jurnal</strong>.</li>
                 </ol>
                 <p class="mt-3 text-[11px] text-slate-500 dark:text-slate-400">Semua dokumen digabung dalam <strong>1 file PDF (maks. 4 MB)</strong>. Format nama file: <code class="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-purple-700 dark:text-purple-300 font-mono">NIM_NAMA_SKRIPSI.pdf</code></p>
             </div>
@@ -121,7 +153,7 @@
                     </div>
                 </div>
                 <span class="px-2.5 py-1 bg-purple-600 text-white font-extrabold text-[10px] rounded-lg shadow-2xs shrink-0">
-                    Rp 200.000
+                    Rp 700.000
                 </span>
             </div>
         </div>
@@ -156,6 +188,8 @@
             <form id="form-daftar-skripsi" method="POST" action="{{ route('mahasiswa.daftar.store') }}" enctype="multipart/form-data" class="p-6 space-y-4">
                 @csrf
                 <input type="hidden" name="jenis_tugas_akhir" value="skripsi">
+                {{-- Periode otomatis dari periode aktif, tidak bisa diubah mahasiswa --}}
+                <input type="hidden" name="periode_id" value="{{ $activePeriode?->id }}">
                 
                 {{-- NIM & Nama --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -178,11 +212,30 @@
                 {{-- Jenis TA --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Jenis Tugas Akhir <span class="text-rose-500">*</span></label>
-                    <select name="jenis_ta_pilihan" required class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold cursor-pointer bg-white dark:bg-slate-700">
+                    <select name="jenis_ta_pilihan" x-model="jenisTaSelected" required class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold cursor-pointer bg-white dark:bg-slate-700">
                         <option value="">-- Pilih Jenis Tugas Akhir --</option>
-                        <option value="sidang" {{ (($mySidang->jenis_tugas_akhir ?? '') == 'sidang') ? 'selected' : 'selected' }}>Sidang Skripsi</option>
-                        <option value="jurnal" {{ (($mySidang->jenis_tugas_akhir ?? '') == 'jurnal') ? 'selected' : '' }}>Jurnal</option>
+                        <option value="sidang">Sidang Skripsi</option>
+                        <option value="jurnal">Jurnal / Artikel</option>
                     </select>
+                </div>
+
+                {{-- Kategori & Link Jurnal (hanya untuk jalur Jurnal / Artikel) --}}
+                <div x-show="jenisTaSelected === 'jurnal'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Kategori Jurnal <span class="text-rose-500">*</span></label>
+                        <select name="kategori_jurnal" :required="jenisTaSelected === 'jurnal'" class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold cursor-pointer bg-white dark:bg-slate-700">
+                            <option value="">-- Pilih Kategori --</option>
+                            @foreach(\App\Models\Sidang::KATEGORI_JURNAL_OPTIONS as $kat)
+                                <option value="{{ $kat }}" {{ ($mySidang && $mySidang->kategori_jurnal === $kat) ? 'selected' : '' }}>{{ $kat }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Target/tingkat publikasi jurnal Anda.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Link Jurnal <span class="text-[9px] text-slate-400 font-normal normal-case">(jika sudah terbit)</span></label>
+                        <input type="url" name="link_jurnal" value="{{ $mySidang->link_jurnal ?? '' }}" placeholder="https://..." class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-800 dark:text-slate-200 font-semibold bg-white dark:bg-slate-700 placeholder-slate-400">
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Kosongkan jika artikel belum terbit.</p>
+                    </div>
                 </div>
 
                 {{-- Dosbing Utama & Pendamping --}}
@@ -223,13 +276,21 @@
                     </div>
                 </div>
 
+                {{-- Info wajib LOA / bukti publish untuk jalur Jurnal (hanya tampil saat jalur Jurnal dipilih) --}}
+                <div x-show="jenisTaSelected === 'jurnal'" x-cloak class="flex items-start gap-2.5 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl">
+                    <span class="text-base shrink-0">⚠️</span>
+                    <p class="text-[11px] text-amber-900 dark:text-amber-300 font-semibold leading-relaxed">
+                        Untuk jalur <strong>Jurnal / Artikel</strong>, wajib melampirkan <strong>LOA (Letter of Acceptance)</strong> atau <strong>bukti publish jurnal</strong> pada file persyaratan (digabung dalam 1 PDF di bawah ini).
+                    </p>
+                </div>
+
                 {{-- File Upload PDF Only --}}
                 <div x-data="{
                         isDragging: false,
                         fileName: '',
                         fileSize: '',
                         fileError: '',
-                        existingFile: '{{ ($mySidang && $mySidang->file_persyaratan) ? asset($mySidang->file_persyaratan) : '' }}',
+                        existingFile: '{{ ($mySidang && $mySidang->file_persyaratan) ? route('dokumen.show', [$mySidang, 'persyaratan']) : '' }}',
                         handleFileSelect(e) {
                             const file = e.target.files[0] || (e.dataTransfer ? e.dataTransfer.files[0] : null);
                             if (!file) return;
@@ -352,10 +413,18 @@
                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30">
                                 <td class="py-3 px-4 text-slate-400 dark:text-slate-500 text-xs">{{ $i + 1 }}</td>
                                 <td class="py-3 px-4 font-bold text-slate-800 dark:text-slate-200 max-w-xs truncate" title="{{ $s->judul_skripsi }}">{{ $s->judul_skripsi }}</td>
-                                <td class="py-3 px-4">
-                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-lg {{ $s->jenis_tugas_akhir === 'jurnal' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' }}">
+                                <td class="py-3 px-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 text-[10px] font-bold rounded-lg {{ $s->jenis_tugas_akhir === 'jurnal' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' }}">
                                         {{ $s->jenis_tugas_akhir === 'jurnal' ? 'Jurnal' : 'Sidang Skripsi' }}
                                     </span>
+                                    @if($s->jenis_tugas_akhir === 'jurnal' && $s->kategori_jurnal)
+                                        <div class="mt-1 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                                            {{ $s->kategori_jurnal }}
+                                            @if($s->link_jurnal)
+                                                · <a href="{{ $s->link_jurnal }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 hover:underline">Lihat Jurnal ↗</a>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="py-3 px-4 text-slate-600 dark:text-slate-400">{{ $s->pembimbingUtama->nama_dosen ?? '-' }}</td>
                                 <td class="py-3 px-4 text-slate-600 dark:text-slate-400 text-xs font-mono">{{ $s->no_wa_aktif ?? '-' }}</td>
@@ -367,10 +436,10 @@
                                 <td class="py-3 px-4 text-center">
                                     @if($s->file_persyaratan)
                                         <div class="flex items-center justify-center gap-1.5">
-                                            <a href="{{ asset($s->file_persyaratan) }}" target="_blank" class="px-2.5 py-1 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 text-purple-700 dark:text-purple-300 text-[11px] font-bold rounded-lg border border-purple-200 dark:border-purple-700 transition-all flex items-center gap-1 shadow-sm">
+                                            <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}" target="_blank" class="px-2.5 py-1 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 text-purple-700 dark:text-purple-300 text-[11px] font-bold rounded-lg border border-purple-200 dark:border-purple-700 transition-all flex items-center gap-1 shadow-sm">
                                                 <span>👁️</span> Preview
                                             </a>
-                                            <a href="{{ asset($s->file_persyaratan) }}" download class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold rounded-lg border border-emerald-200 dark:border-emerald-700 transition-all flex items-center gap-1 shadow-sm">
+                                            <a href="{{ route('dokumen.show', [$s, 'persyaratan']) }}?download=1" class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold rounded-lg border border-emerald-200 dark:border-emerald-700 transition-all flex items-center gap-1 shadow-sm">
                                                 <span>📥</span>
                                             </a>
                                         </div>
@@ -386,7 +455,49 @@
         @endif
     </div>
 </div>
-</x-app-layout>
+
+{{-- ═══════════════════════════════════════════════════════════════ --}}
+{{-- TOAST NOTIFICATION SYSTEM                                        --}}
+{{-- ═══════════════════════════════════════════════════════════════ --}}
+<style>
+    #toast-container {
+        position: fixed; bottom: 1.5rem; right: 1.5rem;
+        z-index: 99999; display: flex; flex-direction: column; gap: .65rem;
+        pointer-events: none;
+    }
+    .toast {
+        display: flex; align-items: flex-start; gap: .85rem;
+        background: #fff; border-radius: 14px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+        padding: .9rem 1.1rem; min-width: 300px; max-width: 400px;
+        border-left: 4px solid #4361ee;
+        pointer-events: all;
+        animation: toastInSkripsi .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    .toast.toast-success { border-color: #10b981; }
+    .toast.toast-error   { border-color: #ef4444; }
+    .toast.toast-warning { border-color: #f59e0b; }
+    @keyframes toastInSkripsi {
+        from { opacity:0; transform: translateX(2rem) scale(.92); }
+        to   { opacity:1; transform: translateX(0) scale(1); }
+    }
+    .toast-icon { font-size:1.4rem; flex-shrink:0; line-height:1; }
+    .toast-body { flex:1; }
+    .toast-title { font-weight:700; font-size:.88rem; color:#0f172a; }
+    .toast-msg   { font-size:.8rem; color:#64748b; margin-top:.15rem; line-height:1.4; }
+    .toast-close {
+        background:none; border:none; color:#94a3b8; cursor:pointer;
+        font-size:1.1rem; line-height:1; padding:.1rem .2rem; flex-shrink:0;
+        transition: color .15s;
+    }
+    .toast-close:hover { color: #475569; }
+    html.dark .toast { background: #1e293b; box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3); }
+    html.dark .toast-title { color: #f8fafc; }
+    html.dark .toast-msg { color: #94a3b8; }
+    html.dark .toast-close { color: #64748b; }
+    html.dark .toast-close:hover { color: #cbd5e1; }
+</style>
+<div id="toast-container"></div>
 
 @push('scripts')
 <script>
@@ -408,6 +519,17 @@
     @if(session('error'))   showToastSkripsi('error',   @json(session('error')));   @endif
     @if(session('warning')) showToastSkripsi('warning', @json(session('warning'))); @endif
 
+    // Ambil pesan error spesifik per-field dari respons validasi Laravel (422),
+    // supaya mahasiswa tahu persis bagian mana yang salah (mis. "File persyaratan
+    // harus berformat PDF"), bukan cuma pesan generik "The given data was invalid."
+    function extractErrorMessageSkripsi(data, fallback) {
+        if (data && data.errors && typeof data.errors === 'object') {
+            const messages = Object.values(data.errors).flat();
+            if (messages.length) return messages.join(' ');
+        }
+        return (data && data.message) || fallback;
+    }
+
     // Pendaftaran Skripsi (AJAX)
     const formDaftarSkripsi = document.getElementById('form-daftar-skripsi');
     if (formDaftarSkripsi) {
@@ -417,16 +539,27 @@
             btn.disabled = true; btn.innerHTML = '⏳ Mengirim…';
             try {
                 const res = await fetch(this.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF_MHS_SKRIPSI, 'Accept': 'application/json' }, body: new FormData(this) });
-                const data = await res.json();
+                let data;
+                try {
+                    data = await res.json();
+                } catch (parseErr) {
+                    // Respons diterima tapi bukan JSON — biasanya berarti request DITOLAK
+                    // sebelum sempat diproses Laravel (mis. webserver/PHP menolak karena
+                    // ukuran file melebihi batas server), sehingga yang kembali adalah
+                    // halaman HTML mentah, bukan JSON error yang biasa kita tampilkan.
+                    showToastSkripsi('error', 'File gagal diunggah — kemungkinan ukurannya terlalu besar untuk server (status ' + res.status + '). Coba kompres file PDF Anda lalu unggah ulang.');
+                    return;
+                }
                 if (res.ok && data.success) {
                     showToastSkripsi('success', data.message || 'Pendaftaran berhasil dikirim!');
                     setTimeout(() => location.reload(), 1200);
                 } else {
-                    showToastSkripsi(res.status === 422 ? 'warning' : 'error', data.message || 'Terjadi kesalahan.');
+                    showToastSkripsi(res.status === 422 ? 'warning' : 'error', extractErrorMessageSkripsi(data, 'Terjadi kesalahan.'));
                 }
-            } catch(err) { showToastSkripsi('error', 'Gagal terhubung ke server.'); }
+            } catch(err) { showToastSkripsi('error', 'Gagal terhubung ke server. Periksa koneksi internet Anda lalu coba lagi.'); }
             finally { btn.disabled = false; btn.innerHTML = orig; }
         });
     }
 </script>
 @endpush
+</x-app-layout>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Menu;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +43,8 @@ class MenuController extends Controller
 
         $menu = Menu::create($validated);
 
+        ActivityLogger::log('created', $menu, "Menambahkan menu sistem baru: {$menu->name}" . ($menu->route ? " (route: {$menu->route})" : '') . '.');
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -71,7 +74,15 @@ class MenuController extends Controller
 
         $validated['is_active'] = $request->has('is_active');
 
+        $before = $menu->only(['name', 'route', 'role_default', 'sort_order', 'is_active']);
         $menu->update($validated);
+
+        ActivityLogger::log(
+            'updated',
+            $menu,
+            "Memperbarui menu sistem: {$menu->name}.",
+            ['before' => $before, 'after' => $menu->only(['name', 'route', 'role_default', 'sort_order', 'is_active'])]
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -89,7 +100,10 @@ class MenuController extends Controller
      */
     public function destroy(Request $request, Menu $menu)
     {
+        $menuName = $menu->name;
         $menu->delete();
+
+        ActivityLogger::log('deleted', $menu, "Menghapus menu sistem: {$menuName}.");
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -107,8 +121,10 @@ class MenuController extends Controller
     public function assignUserMenus(Request $request, User $user)
     {
         $menuIds = $request->input('menu_ids', []);
-        
+
         $user->menus()->sync($menuIds);
+
+        ActivityLogger::log('updated', $user, "Mengatur akses menu kustom untuk user {$user->name} ({$user->email}) — " . count($menuIds) . ' menu diberikan.');
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -149,6 +165,8 @@ class MenuController extends Controller
         if (!empty($insertData)) {
             \Illuminate\Support\Facades\DB::table('role_menu')->insert($insertData);
         }
+
+        ActivityLogger::log('updated', null, "Mengatur hak akses menu default untuk role {$role} — " . count($menuIds) . ' menu diberikan.');
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -251,6 +269,13 @@ class MenuController extends Controller
                 'role_default' => 'super_admin',
                 'sort_order'   => 13,
             ],
+            [
+                'name'         => 'Backup & Restore',
+                'route'        => 'backup.index',
+                'icon'         => 'database',
+                'role_default' => 'super_admin',
+                'sort_order'   => 14,
+            ],
             // ── Dosen menus ──
             [
                 'name'         => 'Dashboard',
@@ -279,6 +304,25 @@ class MenuController extends Controller
         // Seed top-level menus first
         foreach ($defaultMenus as $menu) {
             Menu::firstOrCreate(['route' => $menu['route']], $menu);
+        }
+
+        // Group 'Manajemen User' and 'Manajemen Menu' under a single 'Manajemen' parent
+        $manajemenParent = Menu::firstOrCreate(
+            ['name' => 'Manajemen', 'role_default' => 'super_admin'],
+            [
+                'route'        => null,
+                'icon'         => 'cog',
+                'role_default' => 'super_admin',
+                'sort_order'   => 8,
+            ]
+        );
+        $manajemenMenuItem = Menu::where('route', 'admin.menus.index')->first();
+        if ($manajemenMenuItem) {
+            $manajemenMenuItem->update(['parent_id' => $manajemenParent->id, 'sort_order' => 1]);
+        }
+        $manajemenUserItem = Menu::where('route', 'users.index')->first();
+        if ($manajemenUserItem) {
+            $manajemenUserItem->update(['parent_id' => $manajemenParent->id, 'sort_order' => 2]);
         }
 
         // Remove any parent menu named 'Jadwal Sidang' for role_default = 'dosen' to prevent duplicate/incorrect menu
@@ -337,13 +381,40 @@ class MenuController extends Controller
         );
         $skripsiMenu->update(['parent_id' => $jadwalMenu->id]);
 
+        // Seed Riwayat Menguji (top-level, bukan submenu Jadwal — ini rekap/
+        // laporan histori, bukan penjadwalan yang sedang berjalan).
+        Menu::firstOrCreate(
+            ['route' => 'dosen.riwayat'],
+            [
+                'name'         => 'Riwayat Menguji',
+                'parent_id'    => null,
+                'icon'         => 'document',
+                'role_default' => 'dosen',
+                'sort_order'   => 24,
+            ]
+        );
+
+        // Seed menu SK (unduh SK Pembimbing & Penguji per periode).
+        Menu::firstOrCreate(
+            ['route' => 'dosen.sk.index'],
+            [
+                'name'         => 'SK',
+                'parent_id'    => null,
+                'icon'         => 'badge',
+                'role_default' => 'dosen',
+                'sort_order'   => 25,
+            ]
+        );
+
         // Seed default role_menu mappings for dosen
         $dosenMenuRoutes = [
             'dosen.dashboard',
             'dosen.kalender',
             'dosen.profil',
             'dosen.jadwal.sempro',
-            'dosen.jadwal.skripsi'
+            'dosen.jadwal.skripsi',
+            'dosen.riwayat',
+            'dosen.sk.index',
         ];
 
         $dosenMenus = Menu::whereIn('route', $dosenMenuRoutes)
@@ -428,13 +499,26 @@ class MenuController extends Controller
         );
         $mhsJadwalSkripsi->update(['parent_id' => $mhsPenjadwalanParent->id]);
 
+        Menu::firstOrCreate(
+            ['route' => 'mahasiswa.bebas-prodi.index'],
+            ['name' => 'Bebas Prodi', 'icon' => 'badge', 'role_default' => 'mahasiswa', 'sort_order' => 8]
+        );
+
+        // Halaman admin Bebas Prodi — koordinator baru bisa membuka bila
+        // diberi akses lewat "Atur Akses Role Koordinator" (tidak di-default).
+        Menu::firstOrCreate(
+            ['route' => 'bebas-prodi.index'],
+            ['name' => 'Bebas Prodi', 'icon' => 'badge', 'role_default' => 'koordinator', 'sort_order' => 45]
+        );
+
         // Seed default role_menu mappings for mahasiswa
         $mhsMenuRoutes = [
             'mahasiswa.dashboard',
             'mahasiswa.sempro.index',
             'mahasiswa.skripsi.index',
             'mahasiswa.jadwal.sempro',
-            'mahasiswa.jadwal.skripsi'
+            'mahasiswa.jadwal.skripsi',
+            'mahasiswa.bebas-prodi.index',
         ];
 
         $mhsMenus = Menu::whereIn('route', $mhsMenuRoutes)

@@ -33,6 +33,11 @@ class ProfileController extends Controller
         // Only update nim for mahasiswa, ignore nim/nidn for super_admin
         if ($user->hasRole('mahasiswa')) {
             $user->fill($request->safe()->only(['name', 'email', 'nim', 'no_hp']));
+            // Nama mahasiswa diseragamkan HURUF KAPITAL agar konsisten dengan
+            // data pendaftaran sidang/sempro.
+            if ($user->isDirty('name') && $user->name !== null) {
+                $user->name = mb_strtoupper(trim($user->name));
+            }
         } else {
             $user->fill($request->safe()->only(['name', 'email', 'no_hp']));
         }
@@ -56,7 +61,20 @@ class ProfileController extends Controller
             }
 
             $file = $request->file('foto_profil');
-            $fileName = time() . '_' . $user->id . '.' . $file->getClientOriginalExtension();
+
+            // Never trust the client-supplied filename/extension for the saved
+            // filename — an image+PHP polyglot can pass the `image`/`mimes`
+            // validation (which sniffs actual file content) while still being
+            // uploaded with an attacker-chosen filename like "shell.php". Derive
+            // the extension from the sniffed MIME type instead, and whitelist it,
+            // so the file can never be saved as anything web-server-executable.
+            $safeExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+            $detectedExtension = strtolower((string) $file->extension());
+            if (!in_array($detectedExtension, $safeExtensions, true)) {
+                return back()->withErrors(['foto_profil' => 'Format foto profil tidak didukung.']);
+            }
+
+            $fileName = time() . '_' . $user->id . '.' . $detectedExtension;
             $file->move($uploadDir, $fileName);
             $user->foto_profil = 'uploads/avatars/' . $fileName;
         }

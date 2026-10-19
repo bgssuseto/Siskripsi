@@ -38,6 +38,9 @@ class CheckMenuPermission
             if (in_array($routeName, ['dosen.kesediaan.store', 'dosen.kesediaan.destroy'], true)) {
                 $checkRouteName = 'dosen.dashboard';
             }
+            if ($routeName === 'dosen.sk.download') {
+                $checkRouteName = 'dosen.sk.index';
+            }
 
             // Find if this route is defined in active system menus
             // If it is a menu, verify if user has access to it

@@ -56,10 +56,18 @@ class AutoScheduleService
         }
 
         $ruangs = Ruang::orderBy('kode_ruangan')->get()
-            ->filter(fn ($r) => trim($r->kode_ruangan) !== 'Langsung Pemberkasan')
+            ->filter(fn ($r) => trim($r->kode_ruangan) !== 'Langsung Pemberkasan' && $r->isSiapDigunakan())
             ->values();
 
         $bebanDosen = self::calculateBebanDosen();
+
+        // Dosen tugas belajar & placeholder "Super Administrator" dikecualikan
+        // total dari kandidat penguji otomatis (nama variabel dipertahankan
+        // karena sudah dipakai di seluruh fungsi di bawah sebagai daftar
+        // exclude umum, bukan cuma tugas belajar).
+        $tugasBelajarIds = Dosen::where('status_kepegawaian', Dosen::STATUS_TUGAS_BELAJAR)
+            ->orWhere('nidn', Dosen::NIDN_SUPER_ADMIN_PLACEHOLDER)
+            ->pluck('id')->all();
 
         // ── Busy maps, seeded dari seluruh Sidang yang SUDAH terjadwal (sistem-wide) ──
         $busyDosen = [];      // [dosen_id][Y-m-d] => [[start,end], ...]
@@ -73,14 +81,23 @@ class AutoScheduleService
         // ── Kesediaan dosen: [dosen_id][Y-m-d] => [[start,end], ...] ──
         $kesediaanMap = [];
         KesediaanDosen::where('periode_id', $periodeId)->get()->each(function ($k) use (&$kesediaanMap) {
-            if (!$k->tanggal || !$k->jam_mulai || !$k->jam_selesai) {
+            if (!$k->tanggal) {
                 return;
             }
             $tgl = $k->tanggal->format('Y-m-d');
+
+            // Dosen biasanya cuma memilih TANGGAL kesediaan lewat portal dosen atau
+            // link publik — jam_mulai/jam_selesai tetap kosong kecuali datanya hasil
+            // import Excel. Kesediaan tanpa jam dianggap tersedia sepanjang jam
+            // operasional sidang (bukan di-skip), supaya mahasiswa yang pembimbingnya
+            // sudah mengisi kesediaan tetap bisa diusulkan otomatis — sebelumnya baris
+            // seperti ini selalu dibuang sehingga kesediaan yang diisi dosen lewat
+            // portal/link publik tidak pernah terpakai oleh asisten plotting.
             $start = self::timeStringToMinutes((string) $k->jam_mulai);
             $end = self::timeStringToMinutes((string) $k->jam_selesai);
             if ($start === null || $end === null || $end <= $start) {
-                return;
+                $start = self::JAM_OPERASIONAL_MULAI;
+                $end = self::JAM_OPERASIONAL_SELESAI;
             }
 
             // Pangkas ke jam operasional sidang (09.00–17.00) walaupun kesediaan dosen lebih lebar
@@ -96,6 +113,13 @@ class AutoScheduleService
         $proposals = [];
         $unresolved = [];
 
+        // Trio Ketua Penguji + Penguji 1 yang TERAKHIR berhasil dipasangkan secara
+        // otomatis untuk setiap tanggal, dicoba dipakai ulang dulu sebelum memilih
+        // pasangan baru — supaya dewan penguji yang sama menempel di satu tanggal
+        // (dan, lewat preferensi pickRuang(), di satu ruang) sepanjang hari alih-alih
+        // berganti-ganti tiap mahasiswa.
+        $lastTrioPerTanggal = []; // [Y-m-d] => [ketuaId, p1Id]
+
         foreach ($unscheduled as $sidang) {
             $isSempro = $sidang->jenis_tugas_akhir === 'sempro';
 
@@ -107,7 +131,7 @@ class AutoScheduleService
             $needsPengujiAssignment = !$isSempro && (!$sidang->ketua_penguji_id || !$sidang->anggota_penguji_1_id);
 
             if ($needsPengujiAssignment) {
-                $result = self::scheduleWithAutoPenguji($sidang, $kesediaanMap, $busyDosen, $busyRuang, $dosenRuangHariIni, $ruangs, $slotMinutes, $bebanDosen);
+                $result = self::scheduleWithAutoPenguji($sidang, $kesediaanMap, $busyDosen, $busyRuang, $dosenRuangHariIni, $ruangs, $slotMinutes, $bebanDosen, $lastTrioPerTanggal, $tugasBelajarIds);
                 if ($result) {
                     $proposals[] = $result;
                 } else {
@@ -133,6 +157,12 @@ class AutoScheduleService
                     'anggota_penguji_1_id'  => $sidang->anggota_penguji_1_id,
                     'anggota_penguji_2_id'  => $sidang->anggota_penguji_2_id,
                 ]);
+                $tugasBelajarErrors = SidangConflictService::checkTugasBelajarRule([
+                    'ketua_penguji_id'      => $sidang->ketua_penguji_id,
+                    'anggota_penguji_1_id'  => $sidang->anggota_penguji_1_id,
+                    'anggota_penguji_2_id'  => $sidang->anggota_penguji_2_id,
+                ]);
+                $compositionErrors = array_merge($compositionErrors, $tugasBelajarErrors);
                 if (!empty($compositionErrors)) {
                     $unresolved[] = self::unresolvedEntry($sidang, 'Dewan penguji yang sudah diisi melanggar Rule Komposisi Dosen Penguji: ' . implode(' ', $compositionErrors));
                     continue;
@@ -292,10 +322,20 @@ class AutoScheduleService
         array &$dosenRuangHariIni,
         $ruangs,
         int $slotMinutes,
-        array $bebanDosen
+        array $bebanDosen,
+        array &$lastTrioPerTanggal,
+        array $tugasBelajarIds = []
     ): ?array {
         $utamaId = $sidang->dosen_pembimbing_utama_id;
         if (empty($kesediaanMap[$utamaId])) {
+            return null;
+        }
+
+        // Pembimbing Utama otomatis jadi Anggota Penguji 2 (lihat Sidang::booted()
+        // dan pickValidPengujiPair() di bawah) — dosen berstatus Tugas Belajar
+        // tidak boleh menjadi penguji sama sekali, jadi jangan jadwalkan lewat
+        // jalur auto-penguji ini sampai pembimbingnya diganti atau statusnya pulih.
+        if (in_array($utamaId, $tugasBelajarIds)) {
             return null;
         }
 
@@ -312,7 +352,7 @@ class AutoScheduleService
             // Pool kandidat penguji: dosen lain yang punya kesediaan di tanggal ini
             $pool = [];
             foreach ($kesediaanMap as $dosenId => $tanggalMap) {
-                if (in_array($dosenId, $excludeIds) || empty($tanggalMap[$tgl])) {
+                if (in_array($dosenId, $excludeIds) || in_array($dosenId, $tugasBelajarIds) || empty($tanggalMap[$tgl])) {
                     continue;
                 }
                 $free = self::subtractBusy($tanggalMap[$tgl], $busyDosen[$dosenId][$tgl] ?? []);
@@ -347,7 +387,32 @@ class AutoScheduleService
                     continue;
                 }
 
-                $pair = self::pickValidPengujiPair($kandidatTersedia, $utamaId);
+                // Coba pakai ulang dulu trio Ketua/Penguji 1 terakhir yang berhasil
+                // dipasangkan di tanggal ini (kalau ada, masih tersedia di slot ini,
+                // dan tidak melanggar Rule Komposisi terhadap pembimbing utama
+                // mahasiswa ini) — supaya dewan penguji tidak berganti-ganti tiap
+                // mahasiswa dan pickRuang() bisa menahan mereka di satu ruang.
+                $pair = null;
+                $reusedTrio = $lastTrioPerTanggal[$tgl] ?? null;
+                if ($reusedTrio) {
+                    [$reusedKetua, $reusedP1] = $reusedTrio;
+                    $bothAvailable = in_array($reusedKetua, $kandidatTersedia) && in_array($reusedP1, $kandidatTersedia);
+                    if ($bothAvailable) {
+                        $errors = SidangConflictService::checkPengujiCompositionRules([
+                            'jenis_tugas_akhir'    => 'skripsi',
+                            'ketua_penguji_id'     => $reusedKetua,
+                            'anggota_penguji_1_id' => $reusedP1,
+                            'anggota_penguji_2_id' => $utamaId,
+                        ]);
+                        if (empty($errors)) {
+                            $pair = [$reusedKetua, $reusedP1];
+                        }
+                    }
+                }
+
+                if (!$pair) {
+                    $pair = self::pickValidPengujiPair($kandidatTersedia, $utamaId);
+                }
                 if (!$pair) {
                     continue;
                 }
@@ -373,6 +438,7 @@ class AutoScheduleService
                     $dosenRuangHariIni[$dosenId][$tgl][$ruang->id] = true;
                 }
                 $busyRuang[$ruang->id][$tgl][] = [$slotStart, $slotEnd];
+                $lastTrioPerTanggal[$tgl] = [$ketuaId, $p1Id];
 
                 return [
                     'sidang_id'            => $sidang->id,

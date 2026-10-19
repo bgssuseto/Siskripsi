@@ -54,7 +54,7 @@
     </div>
 
     @if(session('success'))
-        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xs">
+        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xs">
             <div class="flex items-center gap-2">
                 <span class="text-base">✅</span>
                 <span>{{ session('success') }}</span>
@@ -68,15 +68,15 @@
         
         <!-- Left Column (2 Cols): Personal Details & Avatar Upload -->
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-7 shadow-sm space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-6">
                 
-                <div class="pb-4 border-b border-slate-100 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-lg shrink-0 border border-indigo-100">
+                <div class="pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-lg shrink-0 border border-indigo-100 dark:border-indigo-900">
                         👤
                     </div>
                     <div>
-                        <h2 class="text-base font-extrabold text-slate-900">Informasi Pribadi & Kontak</h2>
-                        <p class="text-xs text-slate-500">Perbarui informasi profil, pasfoto, dan nomor kontak Anda.</p>
+                        <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Informasi Pribadi & Kontak</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Perbarui informasi profil, pasfoto, dan nomor kontak Anda.</p>
                     </div>
                 </div>
 
@@ -96,18 +96,18 @@
                             }
                         }
                     }">
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                             Foto Profil / Avatar
                         </label>
                         
-                        <div class="flex flex-col sm:flex-row items-center gap-4 p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                        <div class="flex flex-col sm:flex-row items-center gap-4 p-4 bg-slate-50/80 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700">
                             <!-- Thumbnail Preview Box -->
                             <div class="relative shrink-0">
                                 <template x-if="previewUrl">
-                                    <img :src="previewUrl" class="w-16 h-16 rounded-2xl object-cover border border-slate-300 shadow-xs">
+                                    <img :src="previewUrl" class="w-16 h-16 rounded-2xl object-cover border border-slate-300 dark:border-slate-600 shadow-xs">
                                 </template>
                                 <template x-if="!previewUrl">
-                                    <div class="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center text-xl border border-indigo-200">
+                                    <div class="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 font-bold flex items-center justify-center text-xl border border-indigo-200 dark:border-indigo-800">
                                         {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
                                     </div>
                                 </template>
@@ -115,11 +115,11 @@
 
                             <!-- Upload Button Trigger -->
                             <div class="space-y-1.5 text-center sm:text-left flex-1">
-                                <label for="foto_profil" class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl border border-slate-300 shadow-2xs cursor-pointer transition-colors">
+                                <label for="foto_profil" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl border border-slate-300 dark:border-slate-600 shadow-2xs cursor-pointer transition-colors">
                                     <span>📁 Pilih Foto Baru</span>
                                 </label>
                                 <input type="file" id="foto_profil" name="foto_profil" @change="handleFile($event)" accept="image/*" class="sr-only">
-                                <p class="text-[11px] text-slate-500 font-medium" x-text="fileName ? 'File terpilih: ' + fileName : 'Format: JPG, PNG, WEBP (Maks 2MB)'"></p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium" x-text="fileName ? 'File terpilih: ' + fileName : 'Format: JPG, PNG, WEBP (Maks 2MB)'"></p>
                             </div>
                         </div>
                         @error('foto_profil')
@@ -129,11 +129,11 @@
 
                     <!-- Input Nama Lengkap -->
                     <div>
-                        <label for="name" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label for="name" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                             Nama Lengkap <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-2xl text-xs font-semibold focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                               class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                         @error('name')
                             <p class="text-rose-600 text-xs mt-1 font-bold">{{ $message }}</p>
                         @enderror
@@ -141,11 +141,11 @@
 
                     <!-- Input Email -->
                     <div>
-                        <label for="email" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label for="email" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                             Alamat Email <span class="text-rose-500">*</span>
                         </label>
                         <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-2xl text-xs font-semibold focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                               class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                         @error('email')
                             <p class="text-rose-600 text-xs mt-1 font-bold">{{ $message }}</p>
                         @enderror
@@ -154,22 +154,22 @@
                     <!-- Input NIM (Khusus Mahasiswa) / NIDN (Khusus Dosen) -->
                     @if(Auth::user()->hasRole('mahasiswa'))
                     <div>
-                        <label for="nim" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label for="nim" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                             Nomor Induk Mahasiswa (NIM)
                         </label>
                         <input type="text" id="nim" name="nim" value="{{ old('nim', $user->nim) }}" placeholder="Contoh: 202251xxx"
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-2xl text-xs font-semibold font-mono focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                               class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold font-mono bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                         @error('nim')
                             <p class="text-rose-600 text-xs mt-1 font-bold">{{ $message }}</p>
                         @enderror
                     </div>
                     @elseif(Auth::user()->hasRole('dosen'))
                     <div>
-                        <label for="nidn" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label for="nidn" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                             Nomor Induk Dosen Nasional (NIDN)
                         </label>
                         <input type="text" id="nidn" name="nidn" value="{{ old('nidn', $user->dosen->nidn ?? '') }}" placeholder="Contoh: 0012345678"
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-2xl text-xs font-semibold font-mono focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                               class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold font-mono bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                         @error('nidn')
                             <p class="text-rose-600 text-xs mt-1 font-bold">{{ $message }}</p>
                         @enderror
@@ -178,17 +178,17 @@
 
                     <!-- Input No HP -->
                     <div>
-                        <label for="no_hp" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label for="no_hp" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                             Nomor WhatsApp / HP
                         </label>
                         <input type="text" id="no_hp" name="no_hp" value="{{ old('no_hp', $user->no_hp) }}" placeholder="Contoh: 08123456789"
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-2xl text-xs font-semibold focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                               class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                         @error('no_hp')
                             <p class="text-rose-600 text-xs mt-1 font-bold">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="pt-3 border-t border-slate-100 flex justify-end">
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                         <button type="submit" 
                                 style="background-color: #4361ee; color: #ffffff;"
                                 class="px-6 py-2.5 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md border cursor-pointer" style="background:#4361ee; border-color:#3251d4;">
@@ -201,15 +201,15 @@
 
         <!-- Right Column (1 Col): Security & Change Password -->
         <div class="space-y-6">
-            <div class="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-7 shadow-sm space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-6">
                 
-                <div class="pb-4 border-b border-slate-100 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 font-bold flex items-center justify-center text-lg shrink-0 border border-amber-100">
+                <div class="pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center text-lg shrink-0 border border-amber-100 dark:border-amber-900">
                         🔒
                     </div>
                     <div>
-                        <h2 class="text-base font-extrabold text-slate-900">Perbarui Kata Sandi</h2>
-                        <p class="text-xs text-slate-500">Pastikan akun Anda aman dengan kata sandi yang kuat.</p>
+                        <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Perbarui Kata Sandi</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Pastikan akun Anda aman dengan kata sandi yang kuat.</p>
                     </div>
                 </div>
 
@@ -218,39 +218,39 @@
                     @method('PUT')
 
                     <div>
-                        <label for="current_password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label for="current_password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                             Kata Sandi Saat Ini
                         </label>
                         <input type="password" id="current_password" name="current_password" required
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-2xl text-xs font-semibold focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 transition-all">
+                               class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 transition-all">
                         @error('current_password', 'updatePassword')
                             <p class="text-rose-600 text-xs mt-1 font-bold">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
-                        <label for="password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label for="password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                             Kata Sandi Baru
                         </label>
                         <input type="password" id="password" name="password" required
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-2xl text-xs font-semibold focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 transition-all">
+                               class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 transition-all">
                         @error('password', 'updatePassword')
                             <p class="text-rose-600 text-xs mt-1 font-bold">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
-                        <label for="password_confirmation" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label for="password_confirmation" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                             Konfirmasi Kata Sandi Baru
                         </label>
                         <input type="password" id="password_confirmation" name="password_confirmation" required
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-2xl text-xs font-semibold focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 transition-all">
+                               class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 transition-all">
                         @error('password_confirmation', 'updatePassword')
                             <p class="text-rose-600 text-xs mt-1 font-bold">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="pt-3 border-t border-slate-100 flex justify-end">
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                         <button type="submit" 
                                 style="background-color: #d97706; color: #ffffff;"
                                 class="w-full py-2.5 bg-amber-600 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md hover:bg-amber-700 border border-amber-500 cursor-pointer text-center">

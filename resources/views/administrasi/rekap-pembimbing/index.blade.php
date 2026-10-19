@@ -148,12 +148,12 @@
                             <td class="py-3.5 px-4 text-center">
                                 <button type="button"
                                         onclick='openDetailPembimbing(@json($row["dosen"]->nama_dosen), @json($row["mahasiswa"]))'
-                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 dark:bg-teal-500/10 dark:hover:bg-teal-500/20 text-teal-700 dark:text-teal-300 font-bold text-xs rounded-lg transition-all border border-teal-200 dark:border-teal-800">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        class="inline-flex items-center justify-center p-2 bg-teal-50 hover:bg-teal-100 dark:bg-teal-500/10 dark:hover:bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded-lg transition-all border border-teal-200 dark:border-teal-800"
+                                        title="Detail Bimbingan">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
-                                    Detail
                                 </button>
                             </td>
                         </tr>
@@ -181,14 +181,22 @@
     <!-- ============ MODAL DETAIL MAHASISWA BIMBINGAN ============ -->
     <div id="modal-detail-pembimbing" class="fixed inset-0 z-50 overflow-y-auto" style="display:none;" onclick="if (event.target === this) closeDetailPembimbing()">
         <div class="flex items-center justify-center min-h-screen px-4 py-8">
-            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-            <div class="relative z-10 w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-                    <div>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Mahasiswa Bimbingan</h3>
-                        <p id="detail-pembimbing-dosen" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"></p>
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-200" id="detail-pembimbing-backdrop"></div>
+            <div class="relative z-10 w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-all duration-200" id="detail-pembimbing-panel">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 shrink-0 rounded-xl bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-300 border border-teal-100 dark:border-teal-900 flex items-center justify-center text-lg">
+                            🎓
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Mahasiswa Bimbingan</h3>
+                            <p id="detail-pembimbing-dosen" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"></p>
+                        </div>
                     </div>
-                    <button type="button" onclick="closeDetailPembimbing()" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">✕</button>
+                    <div class="flex items-center gap-3">
+                        <span id="detail-pembimbing-count" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-100 dark:border-teal-900"></span>
+                        <button type="button" onclick="closeDetailPembimbing()" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">✕</button>
+                    </div>
                 </div>
                 <div class="max-h-[60vh] overflow-y-auto">
                     <table class="w-full text-left border-collapse text-sm table-fixed">
@@ -204,7 +212,7 @@
                         <tbody id="detail-pembimbing-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                     </table>
                 </div>
-                <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex justify-end bg-slate-50/60 dark:bg-slate-800/40">
                     <button type="button" onclick="closeDetailPembimbing()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium text-xs rounded-xl transition-all">Tutup</button>
                 </div>
             </div>
@@ -220,6 +228,9 @@
 
         function openDetailPembimbing(namaDosen, mahasiswa) {
             document.getElementById('detail-pembimbing-dosen').textContent = namaDosen;
+            const count = (mahasiswa || []).length;
+            const countEl = document.getElementById('detail-pembimbing-count');
+            countEl.textContent = count + ' Mahasiswa';
             const body = document.getElementById('detail-pembimbing-body');
             body.innerHTML = '';
 
@@ -243,8 +254,16 @@
                 });
             }
 
-            document.getElementById('modal-detail-pembimbing').style.display = 'flex';
+            const backdrop = document.getElementById('detail-pembimbing-backdrop');
+            const panel = document.getElementById('detail-pembimbing-panel');
+            backdrop.classList.add('opacity-0');
+            panel.classList.add('opacity-0', 'scale-95');
+            document.getElementById('modal-detail-pembimbing').style.display = 'block';
             document.body.style.overflow = 'hidden';
+            requestAnimationFrame(() => {
+                backdrop.classList.remove('opacity-0');
+                panel.classList.remove('opacity-0', 'scale-95');
+            });
         }
 
         function closeDetailPembimbing() {

@@ -29,10 +29,12 @@ class KesediaanDosenController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('dosen', function ($q) use ($search) {
-                $q->where('nama_dosen', 'like', "%{$search}%")
-                  ->orWhere('nidn', 'like', "%{$search}%");
-            })->orWhere('keterangan', 'like', "%{$search}%");
+            $query->where(function ($outer) use ($search) {
+                $outer->whereHas('dosen', function ($q) use ($search) {
+                    $q->where('nama_dosen', 'like', "%{$search}%")
+                      ->orWhere('nidn', 'like', "%{$search}%");
+                })->orWhere('keterangan', 'like', "%{$search}%");
+            });
         }
 
         $perPage = (int) $request->get('per_page', 10);
@@ -69,7 +71,7 @@ class KesediaanDosenController extends Controller
             ['path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]
         );
 
-        $dosens = Dosen::orderBy('nama_dosen')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $waves = PendaftaranPeriode::with('periode')->orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
@@ -246,6 +248,24 @@ class KesediaanDosenController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Pengaturan form kesediaan menguji berhasil diperbarui.');
+    }
+
+    /**
+     * Buat ulang token link publik kesediaan (menonaktifkan link lama yang
+     * sudah pernah dibagikan — mis. kalau bocor atau ingin mulai "bersih"
+     * untuk gelombang berikutnya).
+     */
+    public function resetPublicToken(Request $request): RedirectResponse
+    {
+        $activePeriode = Periode::where('aktif', true)->first();
+
+        if (!$activePeriode) {
+            return redirect()->back()->with('error', 'Tidak ada periode akademik yang aktif saat ini.');
+        }
+
+        $activePeriode->update(['kesediaan_public_token' => \Illuminate\Support\Str::random(40)]);
+
+        return redirect()->back()->with('success', 'Link publik form kesediaan berhasil di-reset. Link lama sudah tidak berlaku.');
     }
 
     /**

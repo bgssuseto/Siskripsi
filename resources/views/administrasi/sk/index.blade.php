@@ -12,15 +12,11 @@
                     <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         Modul Administrasi Surat Keputusan (SK)
-                        @if(($jenis ?? '') === 'sempro')
-                            &nbsp;— <span class="text-amber-300">Seminar Proposal</span>
-                        @elseif(($jenis ?? '') === 'skripsi')
-                            &nbsp;— <span class="text-blue-300">Skripsi</span>
-                        @endif
+                        &nbsp;— <span class="text-blue-300">Ujian Skripsi</span>
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Generate SK Dekan (Excel Output)</h1>
                     <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
-                        Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian dalam format Excel (.xlsx).
+                        Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian Skripsi. Hanya ujian skripsi (sidang &amp; jurnal) yang dihitung — sempro tidak termasuk.
                     </p>
                 </div>
 
@@ -48,12 +44,9 @@
             </h3>
 
             <form method="GET" action="{{ route('administrasi.sk.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                @if(($jenis ?? '') !== '')
-                    <input type="hidden" name="jenis" value="{{ $jenis }}">
-                @endif
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
-                    <select name="periode_id" onchange="this.form.submit()" class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                    <select name="periode_id" onchange="this.form.gelombang.value=''; this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">
                         @foreach($periodes as $p)
                             <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>
                                 {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
@@ -63,20 +56,22 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Tanggal Pendaftaran Mulai</label>
-                    <input type="date" name="tanggal_pendaftaran_mulai" value="{{ request('tanggal_pendaftaran_mulai') }}" class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Gelombang</label>
+                    <select name="gelombang" class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                        <option value="">-- Semua Gelombang --</option>
+                        @foreach($gelombangOptions as $g)
+                            <option value="{{ $g['value'] }}" {{ (string) $selectedGelombang === $g['value'] ? 'selected' : '' }}>{{ $g['label'] }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Tanggal Pendaftaran Selesai</label>
-                    <input type="date" name="tanggal_pendaftaran_selesai" value="{{ request('tanggal_pendaftaran_selesai') }}" class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500">
-                </div>
+                <div class="hidden lg:block"></div>
 
                 <div class="flex items-end gap-2">
                     <button type="submit" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer">
                         Terapkan Filter
                     </button>
-                    @if(request()->anyFilled(['tanggal_pendaftaran_mulai', 'tanggal_pendaftaran_selesai']))
+                    @if(request()->anyFilled(['gelombang', 'tanggal_pendaftaran_mulai', 'tanggal_pendaftaran_selesai']))
                         <a href="{{ route('administrasi.sk.index', ['periode_id' => $selectedPeriodeId]) }}" class="px-3.5 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
                             Reset
                         </a>
@@ -105,7 +100,7 @@
                     <div>
                         <h2 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">1. SK Dekan - Dosen Pembimbing Skripsi</h2>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                            Generate file Excel (.xlsx) Surat Keputusan penetapan <strong>Pembimbing Utama</strong> dan <strong>Pembimbing Pendamping</strong> bagi seluruh mahasiswa terdaftar pada periode terpilih. Dilengkapi sheet Rekapitulasi Jumlah Bimbingan per Dosen.
+                            Generate file Excel (.xlsx) Surat Keputusan penetapan <strong>Pembimbing Utama</strong> dan <strong>Pembimbing Pendamping</strong> bagi mahasiswa ujian skripsi (sidang &amp; jurnal) pada periode terpilih — sempro tidak dihitung. Dilengkapi sheet Rekapitulasi Jumlah Bimbingan per Dosen.
                         </p>
                     </div>
 
@@ -121,12 +116,18 @@
                     </div>
                 </div>
 
-                <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700">
-                    <a href="{{ route('administrasi.sk.export-pembimbing', request()->all()) }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-600/20 transition-all">
+                <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-2.5">
+                    <a href="{{ route('administrasi.sk.export-pembimbing', request()->except('jenis')) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-600/20 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <span>Download SK Pembimbing (.xlsx)</span>
+                        <span>Excel (.xlsx)</span>
+                    </a>
+                    <a href="{{ route('administrasi.sk.export-pembimbing-pdf', request()->except('jenis')) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs rounded-2xl border-2 border-indigo-200 dark:border-indigo-800 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>PDF</span>
                     </a>
                 </div>
             </div>
@@ -148,18 +149,18 @@
                     <div>
                         <h2 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">2. SK Dekan - Tim Dosen Penguji Ujian</h2>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                            Generate file Excel (.xlsx) Surat Keputusan penetapan tim penguji: <strong>Ketua Penguji</strong>, <strong>Anggota Penguji 1</strong>, dan <strong>Anggota Penguji 2</strong>. Dilengkapi sheet Rekapitulasi Beban Penguji per Dosen.
+                            Generate file Excel (.xlsx) Surat Keputusan penetapan tim penguji: <strong>Ketua Penguji</strong>, <strong>Anggota Penguji 1</strong>, dan <strong>Anggota Penguji 2</strong>. Hanya ujian skripsi (sidang &amp; jurnal) — sempro tidak dihitung. Dilengkapi sheet Rekapitulasi Beban Penguji per Dosen.
                         </p>
                     </div>
 
                     <div class="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-600 grid grid-cols-3 gap-2 text-center">
                         <div>
-                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Sempro</p>
-                            <p class="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-0.5">{{ $totalSempro }}</p>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Sidang</p>
+                            <p class="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-0.5">{{ $totalSidangReguler }}</p>
                         </div>
                         <div>
-                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Skripsi</p>
-                            <p class="text-lg font-extrabold text-purple-600 dark:text-purple-400 mt-0.5">{{ $totalSkripsi }}</p>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Jurnal</p>
+                            <p class="text-lg font-extrabold text-purple-600 dark:text-purple-400 mt-0.5">{{ $totalJurnal }}</p>
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Dosen Penguji</p>
@@ -168,16 +169,130 @@
                     </div>
                 </div>
 
-                <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700">
-                    <a href="{{ route('administrasi.sk.export-penguji', request()->all()) }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-purple-600/20 transition-all">
+                <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-2.5">
+                    <a href="{{ route('administrasi.sk.export-penguji', request()->except('jenis')) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-purple-600/20 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <span>Download SK Tim Penguji (.xlsx)</span>
+                        <span>Excel (.xlsx)</span>
+                    </a>
+                    <a href="{{ route('administrasi.sk.export-penguji-pdf', request()->except('jenis')) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-purple-700 dark:text-purple-300 font-extrabold text-xs rounded-2xl border-2 border-purple-200 dark:border-purple-800 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>PDF</span>
                     </a>
                 </div>
             </div>
 
         </div>
+
+        <!-- Infografis / Statistik -->
+        <div class="bg-white dark:bg-slate-800/80 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                Infografis Beban Bimbingan &amp; Penguji
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">Mengikuti filter periode &amp; gelombang di atas — hanya ujian skripsi.</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div>
+                    <p class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">Proporsi Jalur Tugas Akhir</p>
+                    <div style="height: 220px;">
+                        <canvas id="chartJalur"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">Top Dosen Pembimbing (Beban Bimbingan)</p>
+                    <div style="height: 220px;">
+                        <canvas id="chartPembimbing"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">Top Dosen Penguji (Beban Menguji)</p>
+                    <div style="height: 220px;">
+                        <canvas id="chartPenguji"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#f8fafc' : '#1e293b';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)';
+
+            new Chart(document.getElementById('chartJalur').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sidang Skripsi', 'Jurnal'],
+                    datasets: [{
+                        data: [{{ $totalSidangReguler }}, {{ $totalJurnal }}],
+                        backgroundColor: ['#f59e0b', '#7c3aed'],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: textColor, font: { weight: 'bold', size: 10 } } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('chartPembimbing').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($pembimbingChart->pluck('nama')) !!},
+                    datasets: [{
+                        label: 'Jumlah Bimbingan',
+                        data: {!! json_encode($pembimbingChart->pluck('total')) !!},
+                        backgroundColor: '#4361ee',
+                        borderRadius: 6,
+                        maxBarThickness: 22,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } },
+                        y: { ticks: { color: textColor, font: { size: 9.5 } }, grid: { display: false } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('chartPenguji').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($pengujiChart->pluck('nama')) !!},
+                    datasets: [{
+                        label: 'Jumlah Menguji',
+                        data: {!! json_encode($pengujiChart->pluck('total')) !!},
+                        backgroundColor: '#10b981',
+                        borderRadius: 6,
+                        maxBarThickness: 22,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } },
+                        y: { ticks: { color: textColor, font: { size: 9.5 } }, grid: { display: false } }
+                    }
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>

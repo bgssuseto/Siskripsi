@@ -14,6 +14,7 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class SemproController extends Controller
 {
@@ -159,8 +160,8 @@ class SemproController extends Controller
         );
 
         // Dropdown lists
-        $dosens = Dosen::orderBy('nama_dosen')->get();
-        $ruangs = Ruang::orderBy('kode_ruangan')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
+        $ruangs = Ruang::siapDigunakan()->orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
 
@@ -193,6 +194,7 @@ class SemproController extends Controller
                 'borderColor'     => $borderColor,
                 'textColor'       => '#ffffff',
                 'extendedProps'   => [
+                    'hash_id'        => $s->hash_id,
                     'nim'            => $s->nim,
                     'mahasiswa'      => $s->nama_mahasiswa,
                     'judul'          => $s->judul_skripsi,
@@ -203,6 +205,11 @@ class SemproController extends Controller
                     'has_conflict'   => $hasConflict,
                     'conflict_notes' => !empty($conflictEntry['schedule']) ? implode('; ', $conflictEntry['schedule']) : null,
                     'ruang_id'       => $s->ruang_id,
+                    'sidang_id'      => $s->id,
+                    'pembimbing'     => collect([
+                        $s->pembimbingUtama ? ['dosen_id' => $s->dosen_pembimbing_utama_id, 'nama_dosen' => $s->pembimbingUtama->nama_dosen, 'peran' => 'Pembimbing Utama'] : null,
+                        $s->pembimbingPendamping ? ['dosen_id' => $s->dosen_pembimbing_pendamping_id, 'nama_dosen' => $s->pembimbingPendamping->nama_dosen, 'peran' => 'Pembimbing Pendamping'] : null,
+                    ])->filter()->values(),
                 ]
             ];
         });
@@ -214,11 +221,13 @@ class SemproController extends Controller
             ->orderBy('tanggal', 'asc')
             ->pluck('tanggal');
 
-        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->count();
+        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurSidang = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         return view('master.sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
-            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap',
+            'daftarTanggal', 'totalSempro', 'totalJalurSidang', 'totalJalurJurnal', 'calendarEvents', 'conflictMap',
             'selectedGelombang', 'gelombangOptions'
         ));
     }
@@ -254,11 +263,11 @@ class SemproController extends Controller
             $sheet->setCellValue("C{$row}", $s->nama_mahasiswa);
             $sheet->setCellValue("D{$row}", $s->judul_skripsi);
             $sheet->setCellValue("E{$row}", $s->periode?->nama_periode ?? '-');
-            $sheet->setCellValue("F{$row}", $s->tanggal_pendaftaran ? $s->tanggal_pendaftaran->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("F{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal_pendaftaran));
             $sheet->setCellValue("G{$row}", $s->pembimbingUtama?->nama_dosen ?? '-');
             $sheet->setCellValue("H{$row}", $s->pembimbingPendamping?->nama_dosen ?? '-');
             $sheet->setCellValue("I{$row}", $s->ruang?->kode_ruangan ?? '-');
-            $sheet->setCellValue("J{$row}", $s->tanggal ? $s->tanggal->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("J{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal));
             $sheet->setCellValue("K{$row}", $s->jam ?? '-');
         }
 
@@ -282,6 +291,8 @@ class SemproController extends Controller
 
     public function jadwalIndex(Request $request): View
     {
+        \App\Services\KelulusanService::autoFinalizePastExams();
+
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping', 'ruang', 'periode'
         ])->where('jenis_tugas_akhir', 'sempro');
@@ -335,25 +346,51 @@ class SemproController extends Controller
                             ->where('jenis_tugas_akhir', 'sempro')->get();
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
 
-        $conflictIds = [];
-        foreach ($conflictMap as $sId => $cEntry) {
-            if (!empty($cEntry['schedule']) || !empty($cEntry['rules'])) {
-                $conflictIds[] = $sId;
+        $allMatching = $query->get();
+
+        // Kelompokkan berdasarkan PASANGAN dosen pembimbing (utama & pendamping,
+        // tanpa memandang urutan perannya) — penguji sempro = pembimbing sendiri,
+        // jadi mahasiswa dengan pasangan pembimbing yang sama paling enak diplot
+        // massal bersamaan. Di dalam grup: yang sudah terjadwal (urut tanggal)
+        // dulu, lalu yang belum terjadwal.
+        $pairOf = function ($s) {
+            $dosen = collect([
+                $s->dosen_pembimbing_utama_id ? ['id' => $s->dosen_pembimbing_utama_id, 'nama' => $s->pembimbingUtama->nama_dosen ?? '-'] : null,
+                $s->dosen_pembimbing_pendamping_id ? ['id' => $s->dosen_pembimbing_pendamping_id, 'nama' => $s->pembimbingPendamping->nama_dosen ?? '-'] : null,
+            ])->filter()->unique('id')->sortBy(fn ($d) => mb_strtolower($d['nama']))->values();
+
+            return [
+                'key'   => $dosen->isEmpty() ? 'none' : $dosen->pluck('id')->sort()->implode('-'),
+                'label' => $dosen->isEmpty() ? 'Belum ada pembimbing' : $dosen->pluck('nama')->implode(' & '),
+            ];
+        };
+
+        $pembimbingGroups = [];
+        foreach ($allMatching as $s) {
+            $pair = $pairOf($s);
+            $s->setAttribute('pembimbing_group_key', $pair['key']);
+            $pembimbingGroups[$pair['key']] ??= ['label' => $pair['label'], 'ids' => [], 'belum_terjadwal' => 0];
+            $pembimbingGroups[$pair['key']]['ids'][] = (string) $s->id;
+            if (empty($s->tanggal)) {
+                $pembimbingGroups[$pair['key']]['belum_terjadwal']++;
             }
         }
 
-        $allMatching = $query->get();
+        // Semua id yang belum terjadwal (lintas halaman) — "Pilih Semua di Grup
+        // Ini" bisa memilih mahasiswa di halaman lain, dan Asisten Plotting
+        // Otomatis harus tetap menerimanya.
+        $unscheduledIds = $allMatching->filter(fn ($s) => empty($s->tanggal))->pluck('id')->map(fn ($id) => (string) $id)->values();
 
-        $sortedSidangs = $allMatching->sortBy(function ($s) use ($conflictIds) {
-            $hasConflict = in_array($s->id, $conflictIds);
-            $hasDate     = !empty($s->tanggal) ? 0 : 1;
-            $tglOrder    = $s->tanggal ? $s->tanggal->format('Y-m-d') : '9999-12-31';
+        $sortedSidangs = $allMatching->sortBy(function ($s) use ($pembimbingGroups) {
+            $key = $s->pembimbing_group_key;
 
             return [
-                $hasConflict ? 0 : 1,
-                $hasDate,
-                $tglOrder,
-                $s->id
+                $key === 'none' ? 1 : 0,
+                mb_strtolower($pembimbingGroups[$key]['label']),
+                $key,
+                !empty($s->tanggal) ? 0 : 1,
+                $s->tanggal ? $s->tanggal->format('Y-m-d') . ' ' . $s->jam : '',
+                $s->id,
             ];
         })->values();
 
@@ -411,6 +448,7 @@ class SemproController extends Controller
                 'textColor'       => '#ffffff',
                 'editable'        => !$s->tanggal->isPast() || $s->tanggal->isToday(),
                 'extendedProps'   => [
+                    'hash_id'        => $s->hash_id,
                     'nim'            => $s->nim,
                     'mahasiswa'      => $s->nama_mahasiswa,
                     'judul'          => $s->judul_skripsi,
@@ -421,24 +459,39 @@ class SemproController extends Controller
                     'has_conflict'   => $hasConflict,
                     'conflict_notes' => !empty($conflictEntry['schedule']) ? implode('; ', $conflictEntry['schedule']) : null,
                     'ruang_id'       => $s->ruang_id,
+                    'sidang_id'      => $s->id,
+                    'pembimbing'     => collect([
+                        $s->pembimbingUtama ? ['dosen_id' => $s->dosen_pembimbing_utama_id, 'nama_dosen' => $s->pembimbingUtama->nama_dosen, 'peran' => 'Pembimbing Utama'] : null,
+                        $s->pembimbingPendamping ? ['dosen_id' => $s->dosen_pembimbing_pendamping_id, 'nama_dosen' => $s->pembimbingPendamping->nama_dosen, 'peran' => 'Pembimbing Pendamping'] : null,
+                    ])->filter()->values(),
+                    'split_data'     => [
+                        'pembimbingPendampingId' => $s->dosen_pembimbing_pendamping_id,
+                        'jadwalTerpisah'          => (bool) $s->jadwal_terpisah,
+                        'tanggalPendamping'       => $s->tanggal_pendamping ? $s->tanggal_pendamping->format('Y-m-d') : '',
+                        'jamPendamping'           => $s->jam_pendamping ?? '',
+                        'ruangIdPendamping'       => $s->ruang_id_pendamping,
+                        'catatan'                 => $s->catatan_jadwal_terpisah,
+                    ],
                 ]
             ];
         });
 
-        $dosens  = Dosen::orderBy('nama_dosen')->get();
-        $ruangs  = Ruang::orderBy('kode_ruangan')->get();
+        $dosens  = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
+        $ruangs  = Ruang::siapDigunakan()->orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
         $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')
                                ->where('jenis_tugas_akhir', 'sempro')->orderBy('tanggal')->pluck('tanggal');
-        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->count();
+        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurSidang = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
 
         return view('sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
-            'daftarTanggal', 'totalSempro', 'calendarEvents', 'conflictMap', 'kesediaanDosens',
-            'selectedGelombang', 'gelombangOptions'
+            'daftarTanggal', 'totalSempro', 'totalJalurSidang', 'totalJalurJurnal', 'calendarEvents', 'conflictMap', 'kesediaanDosens',
+            'selectedGelombang', 'gelombangOptions', 'pembimbingGroups', 'unscheduledIds'
         ));
     }
 
@@ -446,44 +499,109 @@ class SemproController extends Controller
 
     public function jadwalkan(Request $request, Sidang $sidang)
     {
+        $jadwalTerpisah = $request->boolean('jadwal_terpisah');
+
         if ($request->filled('jam_mulai') && $request->filled('jam_selesai')) {
             $request->merge(['jam' => $request->input('jam_mulai') . ' - ' . $request->input('jam_selesai')]);
         }
+        if ($jadwalTerpisah && $request->filled('jam_mulai_pendamping') && $request->filled('jam_selesai_pendamping')) {
+            $request->merge(['jam_pendamping' => $request->input('jam_mulai_pendamping') . ' - ' . $request->input('jam_selesai_pendamping')]);
+        }
 
-        foreach (['ruang_id'] as $fk) {
+        foreach (['ruang_id', 'ruang_id_pendamping'] as $fk) {
             if ($request->has($fk) && ($request->input($fk) === '' || $request->input($fk) === 'null')) {
                 $request->merge([$fk => null]);
             }
         }
 
-        $validated = $request->validate([
+        // Jadwal terpisah cuma masuk akal kalau ada Pembimbing Pendamping untuk
+        // dipisah jadwalnya — tanpa pendamping, sempro-nya memang hanya satu
+        // sesi sejak awal.
+        if ($jadwalTerpisah && !$sidang->dosen_pembimbing_pendamping_id) {
+            $msg = 'Jadwal terpisah hanya berlaku untuk mahasiswa yang punya Pembimbing Pendamping.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('warning', $msg);
+        }
+
+        $rules = [
             'tanggal'  => ['required', 'date'],
             'jam'      => ['required', 'string', 'max:100'],
-            'ruang_id' => ['required', 'exists:ruangs,id'],
-        ], [
+            'ruang_id' => ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)],
+        ];
+        $messages = [
             'tanggal.required'  => 'Tanggal sempro wajib diisi.',
             'jam.required'      => 'Waktu / Jam sempro wajib dipilih.',
             'ruang_id.required' => 'Ruangan sempro wajib dipilih.',
-            'ruang_id.exists'   => 'Ruangan yang dipilih tidak valid.',
-        ]);
+            'ruang_id.exists'   => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
+        ];
 
-        // Check schedule conflicts
+        if ($jadwalTerpisah) {
+            $rules['tanggal_pendamping']      = ['required', 'date'];
+            $rules['jam_pendamping']          = ['required', 'string', 'max:100'];
+            $rules['ruang_id_pendamping']     = ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)];
+            $rules['catatan_jadwal_terpisah'] = ['nullable', 'string', 'max:1000'];
+
+            $messages['tanggal_pendamping.required']  = 'Tanggal sesi Pembimbing Pendamping wajib diisi.';
+            $messages['jam_pendamping.required']      = 'Jam sesi Pembimbing Pendamping wajib dipilih.';
+            $messages['ruang_id_pendamping.required'] = 'Ruangan sesi Pembimbing Pendamping wajib dipilih.';
+            $messages['ruang_id_pendamping.exists']   = 'Ruangan sesi Pembimbing Pendamping tidak valid atau belum siap digunakan.';
+        }
+
+        $validated = $request->validate($rules, $messages);
+        $validated['jadwal_terpisah'] = $jadwalTerpisah;
+
+        if (!$jadwalTerpisah) {
+            // Kosongkan sisa kolom sesi kedua kalau sebelumnya pernah dipisah
+            // lalu digabung kembali jadi satu sesi.
+            $validated['tanggal_pendamping'] = null;
+            $validated['jam_pendamping'] = null;
+            $validated['ruang_id_pendamping'] = null;
+            $validated['catatan_jadwal_terpisah'] = null;
+        }
+
+        // Check schedule conflicts — jadwal terpisah dicek per sesi (Pembimbing
+        // Utama & Pendamping tidak saling membentrok satu sama lain, karena
+        // memang sengaja tidak hadir bersamaan) via checkSplitSemproConflicts().
         $checkData = array_merge($sidang->toArray(), $validated);
-        $scheduleConflicts = SidangConflictService::checkConflicts($checkData, $sidang->id);
+        $scheduleConflicts = $jadwalTerpisah
+            ? SidangConflictService::checkSplitSemproConflicts($checkData, $sidang->id)
+            : SidangConflictService::checkConflicts($checkData, $sidang->id);
         if (!empty($scheduleConflicts)) {
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)], 422);
+                return response()->json(['success' => false, 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts), 'conflicts' => $scheduleConflicts], 422);
             }
             return back()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
 
-        $before = $sidang->only(['tanggal', 'jam', 'ruang_id']);
-        $sidang->update($validated);
+        $before = $sidang->only(['tanggal', 'jam', 'ruang_id', 'jadwal_terpisah', 'tanggal_pendamping', 'jam_pendamping', 'ruang_id_pendamping']);
+
+        // Unique DB constraint on (ruang_id, tanggal, jam) — dan padanannya untuk
+        // sesi pendamping — adalah backstop terakhir kalau request lain baru saja
+        // mengambil slot yang sama persis di antara checkConflicts() di atas dan
+        // penulisan ini.
+        try {
+            $sidang->update($validated);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ((int) $e->getCode() === 23000) {
+                $msg = '⚠️ Ruang/jam ini baru saja dipakai jadwal lain. Silakan pilih ruang atau jam yang berbeda.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+                return back()->with('warning', $msg);
+            }
+            throw $e;
+        }
+
+        $logMessage = $jadwalTerpisah
+            ? "Menetapkan jadwal sempro TERPISAH untuk {$sidang->nama_mahasiswa} ({$sidang->nim}) — sesi Pembimbing Utama: {$validated['tanggal']} {$validated['jam']}, sesi Pembimbing Pendamping: {$validated['tanggal_pendamping']} {$validated['jam_pendamping']}."
+            : "Menetapkan jadwal sempro untuk {$sidang->nama_mahasiswa} ({$sidang->nim}) pada {$validated['tanggal']} {$validated['jam']}.";
 
         ActivityLogger::log(
             'jadwalkan',
             $sidang,
-            "Menetapkan jadwal sempro untuk {$sidang->nama_mahasiswa} ({$sidang->nim}) pada {$validated['tanggal']} {$validated['jam']}.",
+            $logMessage,
             ['before' => $before, 'after' => $sidang->only(array_keys($before))]
         );
 
@@ -509,13 +627,14 @@ class SemproController extends Controller
             'tanggal'      => ['required', 'date'],
             'jam_mulai'    => ['required', 'string'],
             'durasi_menit' => ['required', 'integer', 'min:15', 'max:240'],
-            'ruang_id'     => ['required', 'exists:ruangs,id'],
+            'ruang_id'     => ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)],
         ], [
             'ids.required'          => 'Pilih minimal satu mahasiswa.',
             'tanggal.required'      => 'Tanggal sempro wajib diisi.',
             'jam_mulai.required'    => 'Jam mulai sesi pertama wajib diisi.',
             'durasi_menit.required' => 'Durasi per sesi wajib diisi.',
             'ruang_id.required'     => 'Ruangan sempro wajib dipilih.',
+            'ruang_id.exists'       => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
         ]);
 
         $durasi = (int) $validated['durasi_menit'];
@@ -573,6 +692,70 @@ class SemproController extends Controller
         ]);
     }
 
+    // ─── Bulk Reset Jadwal (kosongkan jadwal untuk dijadwalkan ulang) ─────────
+
+    /**
+     * Mengosongkan tanggal, jam & ruangan sempro terpilih supaya bisa
+     * dijadwalkan ulang dari awal — dipakai saat terjadi kesalahan plotting
+     * massal. Sempro yang sudah punya hasil ujian (lulus/tidak lulus) dilewati
+     * karena ujiannya sudah berlangsung.
+     */
+    public function bulkResetJadwal(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:sidangs,id'],
+        ], [
+            'ids.required' => 'Pilih minimal satu mahasiswa.',
+        ]);
+
+        $sidangs = Sidang::whereIn('id', $validated['ids'])
+            ->where('jenis_tugas_akhir', 'sempro')
+            ->get();
+
+        $berhasil = [];
+        $dilewati = [];
+
+        foreach ($sidangs as $sidang) {
+            $punyaJadwalUtama = !empty($sidang->tanggal) || !empty($sidang->jam) || !empty($sidang->ruang_id);
+            $punyaJadwalPendamping = !empty($sidang->tanggal_pendamping) || !empty($sidang->jam_pendamping) || !empty($sidang->ruang_id_pendamping);
+            if (!$punyaJadwalUtama && !$punyaJadwalPendamping) {
+                continue;
+            }
+            if (!empty($sidang->status_ujian)) {
+                $dilewati[] = ['nama' => $sidang->nama_mahasiswa, 'alasan' => 'Sudah memiliki hasil ujian.'];
+                continue;
+            }
+
+            $before = $sidang->only(['tanggal', 'jam', 'ruang_id', 'jadwal_terpisah', 'tanggal_pendamping', 'jam_pendamping', 'ruang_id_pendamping', 'catatan_jadwal_terpisah']);
+            // Reset juga sesi Pembimbing Pendamping (jadwal_terpisah) kalau ada —
+            // kalau tidak, sisa data sesi lama akan nyangkut walau tanggal
+            // utamanya sudah dikosongkan untuk dijadwalkan ulang.
+            $sidang->update([
+                'tanggal' => null, 'jam' => null, 'ruang_id' => null,
+                'jadwal_terpisah' => false, 'tanggal_pendamping' => null,
+                'jam_pendamping' => null, 'ruang_id_pendamping' => null,
+                'catatan_jadwal_terpisah' => null,
+            ]);
+
+            ActivityLogger::log(
+                'reset_jadwal',
+                $sidang,
+                "Mereset jadwal sempro {$sidang->nama_mahasiswa} ({$sidang->nim}) untuk dijadwalkan ulang.",
+                ['before' => $before, 'after' => $sidang->only(array_keys($before))]
+            );
+
+            $berhasil[] = $sidang->nama_mahasiswa;
+        }
+
+        return response()->json([
+            'success'  => true,
+            'message'  => count($berhasil) . ' jadwal sempro berhasil direset.',
+            'berhasil' => $berhasil,
+            'gagal'    => $dilewati,
+        ]);
+    }
+
     // ─── Reschedule (Geser Jadwal via Drag & Drop di Kalender) ─────────────────
 
     public function reschedule(Request $request, Sidang $sidang)
@@ -592,6 +775,7 @@ class SemproController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+                'conflicts' => $scheduleConflicts,
             ], 422);
         }
 
@@ -635,8 +819,12 @@ class SemproController extends Controller
 
         $validated['jenis_tugas_akhir'] = 'sempro';
         $validated['verifikasi_status'] = 'disetujui';
-        $validated['ketua_penguji_id'] = null;
-        $validated['anggota_penguji_1_id'] = null;
+        // Dewan penguji Sempro SELALU = pembimbing sendiri (lihat
+        // Sidang::syncPengujiFromPembimbing(), yang akan menegaskan ulang nilai
+        // ini saat disimpan) — diisi di sini juga supaya checkConflicts() di
+        // bawah (Rule Tugas Belajar) menilai data yang sebenarnya, bukan kosong.
+        $validated['ketua_penguji_id'] = $validated['dosen_pembimbing_utama_id'] ?? null;
+        $validated['anggota_penguji_1_id'] = $validated['dosen_pembimbing_pendamping_id'] ?? null;
         $validated['anggota_penguji_2_id'] = null;
 
         // Check schedule conflicts (room overlaps)
@@ -645,7 +833,8 @@ class SemproController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)
+                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+                    'conflicts' => $scheduleConflicts,
                 ], 422);
             }
             return back()->withInput()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
@@ -693,8 +882,10 @@ class SemproController extends Controller
         ]);
 
         $validated['jenis_tugas_akhir'] = 'sempro';
-        $validated['ketua_penguji_id'] = null;
-        $validated['anggota_penguji_1_id'] = null;
+        // Dewan penguji Sempro SELALU = pembimbing sendiri — lihat catatan yang
+        // sama di store() di atas.
+        $validated['ketua_penguji_id'] = $validated['dosen_pembimbing_utama_id'] ?? null;
+        $validated['anggota_penguji_1_id'] = $validated['dosen_pembimbing_pendamping_id'] ?? null;
         $validated['anggota_penguji_2_id'] = null;
 
         // Check schedule conflicts excluding current ID
@@ -703,13 +894,30 @@ class SemproController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)
+                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+                    'conflicts' => $scheduleConflicts,
                 ], 422);
             }
             return back()->withInput()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
 
-        $sidang->update($validated);
+        // Unique constraint (nim, jenis_tugas_akhir, periode_id) & (ruang, tanggal,
+        // jam) bisa terlanggar di sini — tampilkan pesan yang jelas alih-alih
+        // "Server Error" mentah.
+        try {
+            $sidang->update($validated);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ((int) $e->getCode() !== 23000) {
+                throw $e;
+            }
+            $msg = str_contains($e->getMessage(), 'nim_jenis_periode')
+                ? '⚠️ Mahasiswa dengan NIM ini sudah memiliki data sempro lain pada periode yang dipilih.'
+                : '⚠️ Ruang/jam ini sudah dipakai jadwal lain. Silakan pilih ruang atau jam yang berbeda.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->withInput()->with('warning', $msg);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -743,7 +951,11 @@ class SemproController extends Controller
      */
     public function destroyAll(Request $request): RedirectResponse
     {
-        $count = Sidang::where('jenis_tugas_akhir', 'sempro')->delete();
+        // ->get()->each->delete() (not a query-builder ->delete()) so the
+        // model's deleting() hook fires per record and cleans up uploaded files.
+        $rows = Sidang::where('jenis_tugas_akhir', 'sempro')->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         return redirect()->route('master.sempro.index')->with('success', "Berhasil menghapus seluruh data sempro ({$count} data berhasil dihapus).");
     }
@@ -758,7 +970,9 @@ class SemproController extends Controller
             'ids.*' => ['integer', 'exists:sidangs,id'],
         ]);
 
-        $count = Sidang::where('jenis_tugas_akhir', 'sempro')->whereIn('id', $validated['ids'])->delete();
+        $rows = Sidang::where('jenis_tugas_akhir', 'sempro')->whereIn('id', $validated['ids'])->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         $message = "🗑️ {$count} data sempro berhasil dihapus.";
 
@@ -963,8 +1177,10 @@ class SemproController extends Controller
                             'judul_skripsi'                => $judul,
                             'dosen_pembimbing_utama_id'      => $dosenUtama?->id,
                             'dosen_pembimbing_pendamping_id' => $dosenPend?->id,
-                            'ketua_penguji_id'               => null,
-                            'anggota_penguji_1_id'           => null,
+                            // Dewan penguji Sempro SELALU = pembimbing sendiri
+                            // (lihat Sidang::syncPengujiFromPembimbing()).
+                            'ketua_penguji_id'               => $dosenUtama?->id,
+                            'anggota_penguji_1_id'           => $dosenPend?->id,
                             'anggota_penguji_2_id'           => null,
                             'tanggal'                      => $tanggalParsed,
                             'jam'                          => $waktuJam ?: null,

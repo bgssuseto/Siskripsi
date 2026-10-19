@@ -147,6 +147,46 @@
                     </div>
                 </form>
             </div>
+
+            {{-- Link Publik Form Kesediaan (Tanpa Login) --}}
+            <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm mb-6" x-data="{ copied: false }">
+                <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700 mb-5">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-100 dark:border-emerald-700 shadow-xs shrink-0">
+                        🔗
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Link Publik Form Kesediaan (Tanpa Login)</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Bagikan link ini ke dosen (mis. lewat WhatsApp) untuk periode <strong class="text-indigo-600 dark:text-indigo-400">{{ $activePeriode->nama_periode }}</strong> — aktif/nonaktifnya murni ikut pengaturan "Buka/Tutup" &amp; "Kunci" di atas, <strong>tidak tergantung gelombang pendaftaran sedang buka atau tidak</strong>, jadi tetap bisa dipakai mengumpulkan kesediaan walau semua gelombang sudah lewat.</p>
+                    </div>
+                </div>
+
+                @if($activePeriode->isKesediaanPublicLinkActive())
+                    <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 mb-3">
+                        🟢 AKTIF SEKARANG
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 mb-3">
+                        ⚪ TIDAK AKTIF — form ditutup atau dikunci
+                    </span>
+                @endif
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="kesediaan-public-link" type="text" readonly value="{{ $activePeriode->kesediaan_public_url }}"
+                           class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-mono">
+                    <button type="button"
+                            @click="navigator.clipboard.writeText(document.getElementById('kesediaan-public-link').value); copied = true; setTimeout(() => copied = false, 1500)"
+                            class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shrink-0">
+                        <span x-show="!copied">📋 Salin Link</span>
+                        <span x-show="copied">✅ Tersalin</span>
+                    </button>
+                    <form method="POST" action="{{ route('master.kesediaan-dosen.reset-public-token') }}" onsubmit="return confirm('Reset link publik? Link lama yang sudah dibagikan akan langsung tidak berlaku.')" class="shrink-0">
+                        @csrf
+                        <button type="submit" class="w-full px-4 py-2.5 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-xs font-bold transition-all">
+                            🔄 Reset Link
+                        </button>
+                    </form>
+                </div>
+            </div>
         @else
             <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-xs font-bold shadow-xs mb-6 flex items-center gap-3">
                 <span class="text-lg">⚠️</span>
@@ -185,7 +225,7 @@
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('master.kesediaan-dosen.toggle-access', $d->id) }}" class="shrink-0">
+                        <form method="POST" action="{{ route('master.kesediaan-dosen.toggle-access', $d->hash_id) }}" class="shrink-0">
                             @csrf
                             <label class="relative inline-flex items-center cursor-pointer select-none">
                                 <input type="checkbox" class="sr-only peer" {{ $d->can_fill_kesediaan ? 'checked' : '' }} onchange="this.form.submit()">
@@ -199,35 +239,44 @@
 
         {{-- Toolbar / Filters --}}
         <form method="GET" action="{{ route('master.kesediaan-dosen.index') }}" class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-4 mb-6 shadow-sm flex flex-wrap items-center gap-4">
-            <div class="relative flex-1 min-w-[240px]">
+            <div class="relative flex-1 max-w-sm min-w-[200px]">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama dosen, NIP, keterangan…" class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
 
-            <select name="per_page" class="px-3.5 py-2.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer focus:ring-2 focus:ring-indigo-500" onchange="this.form.submit()">
-                <option value="5" {{ request('per_page') == 5 ? 'selected' : '' }}>5 per halaman</option>
-                <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 per halaman</option>
-                <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 per halaman</option>
-                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 per halaman</option>
-            </select>
-
-            <select name="dosen_id" class="px-3.5 py-2.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer focus:ring-2 focus:ring-indigo-500" onchange="this.form.submit()">
-                <option value="">Semua Dosen</option>
-                @foreach ($dosens as $d)
-                    <option value="{{ $d->id }}" {{ request('dosen_id') == $d->id ? 'selected' : '' }}>
-                        {{ $d->nama_dosen }}
-                    </option>
-                @endforeach
-            </select>
-
-            <select name="periode_id" class="px-3.5 py-2.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer focus:ring-2 focus:ring-indigo-500" onchange="this.form.submit()">
-                <option value="">Semua Periode</option>
-                @foreach ($periodes as $p)
-                    <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode->id ?? null) == $p->id) ? 'selected' : '' }}>
-                        {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
-                    </option>
-                @endforeach
-            </select>
+            <x-filter-popover :active="request()->hasAny(['dosen_id','periode_id','per_page'])">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tampilkan</label>
+                    <select name="per_page" class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                        <option value="5" {{ request('per_page') == 5 ? 'selected' : '' }}>5 per halaman</option>
+                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 per halaman</option>
+                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 per halaman</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 per halaman</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen</label>
+                    <select name="dosen_id" class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                        <option value="">Semua Dosen</option>
+                        @foreach ($dosens as $d)
+                            <option value="{{ $d->id }}" {{ request('dosen_id') == $d->id ? 'selected' : '' }}>
+                                {{ $d->nama_dosen }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Periode</label>
+                    <select name="periode_id" class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                        <option value="">Semua Periode</option>
+                        @foreach ($periodes as $p)
+                            <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode->id ?? null) == $p->id) ? 'selected' : '' }}>
+                                {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </x-filter-popover>
 
             <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-xs transition-colors cursor-pointer">Filter</button>
             @if(request()->hasAny(['search','dosen_id','periode_id','per_page']))
@@ -291,7 +340,11 @@
                                         @csrf
                                         <input type="hidden" name="dosen_id" value="{{ $item['dosen_id'] }}">
                                         <input type="hidden" name="wave_id" value="{{ $item['wave_id'] }}">
-                                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap">Hapus Semua</button>
+                                        <button type="submit" class="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 transition-colors cursor-pointer" title="Hapus Semua">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
                                     </form>
                                 </td>
                             </tr>

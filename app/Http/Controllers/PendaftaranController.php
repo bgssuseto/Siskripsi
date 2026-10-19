@@ -84,7 +84,7 @@ class PendaftaranController extends Controller
                 ->pluck('gelombang')
             : collect();
 
-        $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
+        $dosens = \App\Models\Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         $sidangs = $query->orderByRaw("CASE WHEN verifikasi_status = 'menunggu' THEN 1 WHEN verifikasi_status = 'ditolak' THEN 2 ELSE 3 END")
             ->orderByDesc('id')
@@ -95,13 +95,16 @@ class PendaftaranController extends Controller
         $activePeriode = Periode::where('aktif', true)->first();
 
         $counts = [
-            'total'     => Sidang::where('jenis_tugas_akhir', 'sempro')->count(),
-            'menunggu'  => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'menunggu')->count(),
-            'disetujui' => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'disetujui')->count(),
-            'ditolak'   => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'ditolak')->count(),
+            'total'     => Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'menunggu'  => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'menunggu')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'disetujui' => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'disetujui')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'ditolak'   => Sidang::where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'ditolak')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
         ];
 
-        return view('pendaftaran.sempro', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens'));
+        $totalJalurSidang = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+
+        return view('pendaftaran.sempro', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens', 'totalJalurSidang', 'totalJalurJurnal'));
     }
 
     /**
@@ -186,7 +189,7 @@ class PendaftaranController extends Controller
                 ->pluck('gelombang')
             : collect();
 
-        $dosens = \App\Models\Dosen::orderBy('nama_dosen')->get();
+        $dosens = \App\Models\Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
 
         $sidangs = $query->orderByRaw("CASE WHEN verifikasi_status = 'menunggu' THEN 1 WHEN verifikasi_status = 'ditolak' THEN 2 ELSE 3 END")
             ->orderByDesc('id')
@@ -197,13 +200,16 @@ class PendaftaranController extends Controller
         $activePeriode = Periode::where('aktif', true)->first();
 
         $counts = [
-            'total'     => Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count(),
-            'menunggu'  => Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->where('verifikasi_status', 'menunggu')->count(),
-            'disetujui' => Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->where('verifikasi_status', 'disetujui')->count(),
-            'ditolak'   => Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->where('verifikasi_status', 'ditolak')->count(),
+            'total'     => Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'menunggu'  => Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->where('verifikasi_status', 'menunggu')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'disetujui' => Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->where('verifikasi_status', 'disetujui')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
+            'ditolak'   => Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->where('verifikasi_status', 'ditolak')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count(),
         ];
 
-        return view('pendaftaran.skripsi', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens'));
+        $totalJalurSidang = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang'])->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+
+        return view('pendaftaran.skripsi', compact('sidangs', 'periodes', 'activePeriode', 'counts', 'selectedGelombang', 'gelombangOptions', 'dosens', 'totalJalurSidang', 'totalJalurJurnal'));
     }
 
     /**
@@ -250,6 +256,41 @@ class PendaftaranController extends Controller
     }
 
     /**
+     * Ubah tanggal pendaftaran oleh admin/koordinator (mis. salah input, atau
+     * pendaftaran manual yang sebenarnya masuk di hari lain). Gelombang ikut
+     * dihitung ulang otomatis oleh hook updating() di model Sidang.
+     */
+    public function updateTanggalPendaftaran(Request $request, Sidang $sidang)
+    {
+        $validated = $request->validate([
+            'tanggal_pendaftaran' => ['required', 'date'],
+        ], [
+            'tanggal_pendaftaran.required' => 'Tanggal pendaftaran wajib diisi.',
+            'tanggal_pendaftaran.date'     => 'Format tanggal pendaftaran tidak valid.',
+        ]);
+
+        $before = $sidang->tanggal_pendaftaran?->format('Y-m-d');
+        $gelombangBefore = $sidang->gelombang;
+        $sidang->update(['tanggal_pendaftaran' => $validated['tanggal_pendaftaran']]);
+        $after = $sidang->tanggal_pendaftaran?->format('Y-m-d');
+
+        ActivityLogger::log(
+            'updated',
+            $sidang,
+            "Mengubah tanggal pendaftaran {$sidang->nama_mahasiswa} ({$sidang->nim}) dari " . ($before ?? '-') . " menjadi {$after}.",
+            ['before' => ['tanggal_pendaftaran' => $before, 'gelombang' => $gelombangBefore], 'after' => ['tanggal_pendaftaran' => $after, 'gelombang' => $sidang->gelombang]]
+        );
+
+        $message = "Tanggal pendaftaran {$sidang->nama_mahasiswa} berhasil diubah.";
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message, 'gelombang' => $sidang->gelombang]);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
      * Delete pendaftaran record so student can re-register
      */
     public function destroy(Request $request, Sidang $sidang)
@@ -267,6 +308,101 @@ class PendaftaranController extends Controller
                 'success' => true,
                 'message' => $message
             ]);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Admin/koordinator directly registers a student (e.g. a remidi/retake student
+     * who can no longer self-register, or any manual entry). Unlike the student's
+     * own self-service registration, this is allowed to create a new record even if
+     * the student already has records in OTHER periods — a fresh attempt in a new
+     * period is legitimate. Duplicate registration within the SAME period+jenis is
+     * still blocked. The record is created as already 'disetujui' since an
+     * admin/koordinator is registering it directly.
+     */
+    public function adminStore(Request $request)
+    {
+        $validated = $request->validate([
+            'nim'                            => ['required', 'string', 'max:30'],
+            'nama_mahasiswa'                 => ['required', 'string', 'max:255'],
+            'jenis_tugas_akhir'               => ['required', 'string', 'in:sempro,skripsi'],
+            'jenis_ta_pilihan'                => ['nullable', 'string', 'in:sidang,jurnal'],
+            'judul_skripsi'                   => ['required', 'string'],
+            'dosen_pembimbing_utama_id'       => ['required', 'exists:dosens,id'],
+            'dosen_pembimbing_pendamping_id'  => ['nullable', 'exists:dosens,id'],
+            'no_wa_aktif'                     => ['nullable', 'string', 'max:20'],
+            'periode_id'                      => ['nullable', 'exists:periodes,id'],
+            'tanggal_pendaftaran'             => ['nullable', 'date'],
+        ]);
+
+        $periode = $validated['periode_id']
+            ? Periode::find($validated['periode_id'])
+            : Periode::where('aktif', true)->first();
+
+        if (!$periode) {
+            $msg = 'Tidak ada periode akademik yang aktif/dipilih.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $jenisBucket = $validated['jenis_tugas_akhir'] === 'sempro' ? ['sempro'] : Sidang::SKRIPSI_BUCKET;
+
+        $user = \App\Models\User::where('nim', $validated['nim'])->first();
+        if ($user && $user->status_kelulusan === 'lulus') {
+            $msg = "Mahasiswa {$validated['nama_mahasiswa']} ({$validated['nim']}) sudah dinyatakan LULUS dan tidak dapat didaftarkan lagi.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $duplicate = Sidang::where('nim', $validated['nim'])
+            ->whereIn('jenis_tugas_akhir', $jenisBucket)
+            ->where('periode_id', $periode->id)
+            ->exists();
+
+        if ($duplicate) {
+            $msg = "Mahasiswa {$validated['nama_mahasiswa']} ({$validated['nim']}) sudah memiliki pendaftaran " .
+                ($validated['jenis_tugas_akhir'] === 'sempro' ? 'Sempro' : 'Skripsi') . " pada periode {$periode->nama_periode}.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $actualJenis = $validated['jenis_tugas_akhir'] === 'skripsi'
+            ? ($validated['jenis_ta_pilihan'] ?? 'sidang')
+            : 'sempro';
+
+        $sidang = Sidang::create([
+            'nim'                            => $validated['nim'],
+            'nama_mahasiswa'                 => $validated['nama_mahasiswa'],
+            'judul_skripsi'                  => $validated['judul_skripsi'],
+            'dosen_pembimbing_utama_id'      => $validated['dosen_pembimbing_utama_id'],
+            'dosen_pembimbing_pendamping_id' => $validated['dosen_pembimbing_pendamping_id'] ?? null,
+            'jenis_tugas_akhir'               => $actualJenis,
+            'jalur_ta'                        => $validated['jenis_tugas_akhir'] === 'sempro' ? ($validated['jenis_ta_pilihan'] ?? null) : null,
+            'periode_id'                      => $periode->id,
+            'tanggal_pendaftaran'             => $validated['tanggal_pendaftaran'] ?? now()->timezone('Asia/Jakarta')->format('Y-m-d'),
+            'no_wa_aktif'                     => $validated['no_wa_aktif'] ?? null,
+            'verifikasi_status'               => 'disetujui',
+            'verifikasi_tanggal'              => now(),
+        ]);
+
+        ActivityLogger::log(
+            'created',
+            $sidang,
+            "Mendaftarkan {$sidang->nama_mahasiswa} ({$sidang->nim}) secara manual untuk periode {$periode->nama_periode} (oleh admin/koordinator)."
+        );
+
+        $message = "Mahasiswa {$sidang->nama_mahasiswa} ({$sidang->nim}) berhasil didaftarkan.";
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
         }
 
         return back()->with('success', $message);
@@ -330,7 +466,11 @@ class PendaftaranController extends Controller
             'ids.*'  => ['integer', 'exists:sidangs,id'],
         ]);
 
-        $count = Sidang::whereIn('id', $validated['ids'])->delete();
+        // ->get()->each->delete() (not a query-builder ->delete()) so the
+        // model's deleting() hook fires per record and cleans up uploaded files.
+        $rows = Sidang::whereIn('id', $validated['ids'])->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         $message = "🗑️ {$count} data pendaftaran berhasil dihapus. Mahasiswa terkait kini dapat melakukan pendaftaran ulang.";
 
@@ -359,7 +499,7 @@ class PendaftaranController extends Controller
                 $i + 1, $s->nim, $s->nama_mahasiswa, $s->no_wa_aktif ?? '-', $s->judul_skripsi,
                 $s->pembimbingUtama?->nama_dosen ?? '-', $s->pembimbingPendamping?->nama_dosen ?? '-',
                 $s->periode?->nama_periode ?? '-',
-                $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->translatedFormat('l, d/m/Y') : '-',
+                \App\Support\TanggalIndo::lengkap($s->tanggal_pendaftaran),
                 ucfirst($s->verifikasi_status ?? 'menunggu'),
                 $s->verifikasi_komentar ?? '-',
             ];
@@ -385,7 +525,7 @@ class PendaftaranController extends Controller
                 ucfirst($s->jenis_tugas_akhir),
                 $s->pembimbingUtama?->nama_dosen ?? '-', $s->pembimbingPendamping?->nama_dosen ?? '-',
                 $s->periode?->nama_periode ?? '-',
-                $s->tanggal_pendaftaran ? \Carbon\Carbon::parse($s->tanggal_pendaftaran)->locale('id')->translatedFormat('l, d/m/Y') : '-',
+                \App\Support\TanggalIndo::lengkap($s->tanggal_pendaftaran),
                 ucfirst($s->verifikasi_status ?? 'menunggu'),
                 $s->verifikasi_komentar ?? '-',
             ];

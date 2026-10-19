@@ -54,7 +54,7 @@
             display: flex; flex-wrap: wrap; gap: .75rem; align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,.07); border: 1px solid #f1f5f9;
         }
-        .toolbar-search { position: relative; flex: 1; min-width: 200px; }
+        .toolbar-search { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
         .toolbar-search svg {
             position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
             color: #94a3b8; pointer-events: none;
@@ -290,13 +290,21 @@
     <div class="sidang-page" x-data="{
         currentView: 'table',
         selectedIds: [],
+        // Dipakai goToAutoPlot() supaya mahasiswa yang SUDAH terjadwal (kini juga
+        // bisa dicentang untuk Edit Massal) tidak ikut dikirim ke Asisten Plotting
+        // Otomatis — endpoint itu memang hanya memproses yang tanggalnya masih kosong.
+        unscheduledIds: {{ Js::from($unscheduledIds) }},
         goToAutoPlot() {
-            if (this.selectedIds.length === 0) return;
+            const ids = this.selectedIds.filter(id => this.unscheduledIds.includes(String(id)));
+            if (ids.length === 0) {
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Pilih minimal satu mahasiswa yang belum terjadwal untuk Asisten Plotting Otomatis.', type: 'warning' } }));
+                return;
+            }
             const params = new URLSearchParams();
             params.set('generate', '1');
             params.set('periode_id', '{{ request('periode_id', $activePeriode->id ?? '') }}');
             params.set('jenis', 'skripsi');
-            this.selectedIds.forEach(id => params.append('ids[]', id));
+            ids.forEach(id => params.append('ids[]', id));
             window.location.href = '{{ route('jadwal.auto-plot.index') }}?' + params.toString();
         },
         openBulkManual() {
@@ -304,6 +312,7 @@
             document.getElementById('bulk-jadwalkan-result').innerHTML = '';
             hideModalAlert('form-bulk-jadwalkan-alert');
             openModal('modal-bulk-jadwalkan');
+            if (typeof refreshBulkPengujiAvailability === 'function') refreshBulkPengujiAvailability();
         },
         async submitBulkJadwalkan() {
             const tanggal = document.getElementById('bulk-tanggal').value;
@@ -334,9 +343,9 @@
                 });
                 const result = await response.json();
                 if (response.ok && result.success) {
-                    let html = `<div class="text-emerald-700 font-bold mb-1">✅ ${result.berhasil.length} mahasiswa berhasil dijadwalkan.</div>`;
+                    let html = `<div class='text-emerald-700 font-bold mb-1'>✅ ${result.berhasil.length} mahasiswa berhasil dijadwalkan.</div>`;
                     if (result.gagal && result.gagal.length > 0) {
-                        html += `<div class="text-rose-600 font-bold mb-1 mt-2">⚠️ ${result.gagal.length} gagal:</div><ul class="list-disc pl-4 space-y-0.5 text-slate-600">`;
+                        html += `<div class='text-rose-600 font-bold mb-1 mt-2'>⚠️ ${result.gagal.length} gagal:</div><ul class='list-disc pl-4 space-y-0.5 text-slate-600'>`;
                         result.gagal.forEach(g => { html += `<li><strong>${g.nama}</strong>: ${g.alasan}</li>`; });
                         html += '</ul>';
                     }
@@ -411,26 +420,40 @@
 
 
         {{-- Page header --}}
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Jadwal Sidang Skripsi</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Plotting, kelola jadwal, dan visualisasikan sidang skripsi mahasiswa.</p>
-            </div>
-            
-            <div class="flex items-center gap-3 flex-wrap">
-                @if(($scheduleConflictCount ?? 0) > 0 || ($ruleViolationCount ?? 0) > 0)
-                    <a href="{{ route('jadwal-ujian.export-bentrok') }}" class="btn btn-danger btn-sm">
-                        ⚠️ Export Jadwal Bentrok
-                    </a>
-                @endif
-                {{-- View Toggle --}}
-                <div class="view-toggle">
-                    <button @click="currentView = 'table'" :class="currentView === 'table' ? 'active' : ''" class="view-toggle-btn">
-                        📋 Tabel
-                    </button>
-                    <button @click="currentView = 'calendar'; $nextTick(() => initCalendar())" :class="currentView === 'calendar' ? 'active' : ''" class="view-toggle-btn">
-                        📅 Kalender
-                    </button>
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-6">
+            <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11.5px] font-bold text-indigo-200 border border-white/10 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Modul Penjadwalan Sidang Skripsi
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Jadwal Sidang Skripsi</h1>
+                    <p class="text-indigo-200/90 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">Plotting, kelola jadwal, dan visualisasikan sidang skripsi mahasiswa.</p>
+                </div>
+
+                <div class="flex items-center gap-3 flex-wrap shrink-0">
+                    @if(Auth::user()->isSuperAdmin())
+                        <a href="{{ route('jadwal.semua.index') }}" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-md font-semibold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer">
+                            📅 Lihat Semua Jadwal
+                        </a>
+                    @endif
+                    @if(($scheduleConflictCount ?? 0) > 0 || ($ruleViolationCount ?? 0) > 0)
+                        <a href="{{ route('jadwal-ujian.export-bentrok') }}" class="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg cursor-pointer">
+                            ⚠️ Export Jadwal Bentrok
+                        </a>
+                    @endif
+                    {{-- View Toggle --}}
+                    <div class="view-toggle">
+                        <button @click="currentView = 'table'" :class="currentView === 'table' ? 'active' : ''" class="view-toggle-btn">
+                            📋 Tabel
+                        </button>
+                        <button @click="currentView = 'calendar'; $nextTick(() => initCalendar())" :class="currentView === 'calendar' ? 'active' : ''" class="view-toggle-btn">
+                            📅 Kalender
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -469,50 +492,62 @@
                     <input type="text" name="search" value="{{ request('search') }}" @input.debounce.500ms="submitSearch($event.target.form)" placeholder="Cari NIM, nama, judul…">
                 </div>
                 
-                <select name="per_page" class="filter-select" @change="submitSearch($event.target.form)">
-                    <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
-                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>Tampilkan 10 data</option>
-                    <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
-                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Tampilkan 100 data</option>
-                </select>
-
-                <select name="status" class="filter-select" @change="submitSearch($event.target.form)">
-                    <option value="">Semua Status</option>
-                    <option value="belum" {{ request('status')=='belum'?'selected':'' }}>Belum Dijadwalkan</option>
-                    <option value="sudah" {{ request('status')=='sudah'?'selected':'' }}>Sudah Dijadwal</option>
-                </select>
-
-                <select name="jenis" class="filter-select" @change="submitSearch($event.target.form)">
-                    <option value="">Semua Jenis</option>
-                    <option value="skripsi" {{ request('jenis')=='skripsi'?'selected':'' }}>Skripsi</option>
-                    <option value="jurnal" {{ request('jenis')=='jurnal'?'selected':'' }}>Jurnal</option>
-                </select>
-
-                <select name="periode_id" class="filter-select" @change="submitSearch($event.target.form)">
-                    @foreach ($periodes as $p)
-                        <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode->id ?? null) == $p->id) ? 'selected' : '' }}>
-                            {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
-                        </option>
-                    @endforeach
-                </select>
-
-                <select name="gelombang" class="filter-select" @change="submitSearch($event.target.form)">
-                    <option value="">Semua Gelombang</option>
-                    @foreach ($gelombangOptions ?? [] as $g)
-                        <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
-                    @endforeach
-                </select>
-
-                <select name="tanggal" class="filter-select" @change="submitSearch($event.target.form)">
-                    <option value="">Semua Tanggal</option>
-                    @foreach ($daftarTanggal as $t)
-                        <option value="{{ $t->format('Y-m-d') }}" {{ request('tanggal')==$t->format('Y-m-d')?'selected':'' }}>
-                            {{ $t->translatedFormat('d M Y') }}
-                        </option>
-                    @endforeach
-                </select>
-
-                <x-filter-popover :active="request()->hasAny(['dosen_pembimbing_id','dosen_penguji_id'])">
+                <x-filter-popover :active="request()->hasAny(['jenis','status','tanggal','periode_id','gelombang','per_page','dosen_pembimbing_id','dosen_penguji_id'])">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tampilkan</label>
+                        <select name="per_page" class="filter-select w-full">
+                            <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>Tampilkan 5 data</option>
+                            <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>Tampilkan 10 data</option>
+                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>Tampilkan 25 data</option>
+                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Tampilkan 100 data</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status Jadwal</label>
+                        <select name="status" class="filter-select w-full">
+                            <option value="">Semua Status</option>
+                            <option value="belum" {{ request('status')=='belum'?'selected':'' }}>Belum Dijadwalkan</option>
+                            <option value="sudah" {{ request('status')=='sudah'?'selected':'' }}>Sudah Dijadwal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Jenis</label>
+                        <select name="jenis" class="filter-select w-full">
+                            <option value="">Semua Jenis</option>
+                            <option value="skripsi" {{ request('jenis')=='skripsi'?'selected':'' }}>Skripsi</option>
+                            <option value="jurnal" {{ request('jenis')=='jurnal'?'selected':'' }}>Jurnal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Periode</label>
+                        <select name="periode_id" class="filter-select w-full">
+                            @foreach ($periodes as $p)
+                                <option value="{{ $p->id }}" {{ (request('periode_id', $activePeriode->id ?? null) == $p->id) ? 'selected' : '' }}>
+                                    {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gelombang</label>
+                        <select name="gelombang" class="filter-select w-full">
+                            <option value="">Semua Gelombang</option>
+                            @foreach ($gelombangOptions ?? [] as $g)
+                                <option value="{{ $g }}" {{ (string) request('gelombang') === (string) $g ? 'selected' : '' }}>Gelombang {{ $g }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tanggal</label>
+                        <select name="tanggal" class="filter-select w-full">
+                            <option value="">Semua Tanggal</option>
+                            @foreach ($daftarTanggal as $t)
+                                <option value="{{ $t->format('Y-m-d') }}" {{ request('tanggal')==$t->format('Y-m-d')?'selected':'' }}>
+                                    {{ $t->translatedFormat('d M Y') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dosen Pembimbing</label>
                         <select name="dosen_pembimbing_id" class="filter-select w-full">
@@ -540,11 +575,11 @@
             </form>
 
             {{-- Bulk Action Bar --}}
-            <div x-show="selectedIds.length > 0" x-cloak class="flex items-center justify-between gap-3 bg-violet-50 border border-violet-200 rounded-2xl p-3.5">
-                <span class="text-xs font-bold text-violet-800" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
+            <div x-show="selectedIds.length > 0" x-cloak class="flex items-center justify-between gap-3 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 rounded-2xl p-3.5">
+                <span class="text-xs font-bold text-violet-800 dark:text-violet-300" x-text="selectedIds.length + ' mahasiswa dipilih'"></span>
                 <div class="flex items-center gap-2">
                     <button type="button" @click="goToAutoPlot()" class="btn btn-primary btn-sm">📅 Jadwalkan Terpilih (Otomatis)</button>
-                    <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot Manual (Massal)</button>
+                    <button type="button" @click="openBulkManual()" class="btn btn-primary btn-sm">🗓️ Plot / Edit Jadwal (Massal)</button>
                     <button type="button" @click="selectedIds = []" class="btn btn-outline btn-sm">Batalkan Pilihan</button>
                 </div>
             </div>
@@ -556,13 +591,13 @@
                         <thead>
                             <tr>
                                 <th style="width:32px; text-align:center;">
-                                    <input type="checkbox" @click="selectedIds = $event.target.checked ? {{ Js::from($sidangs->where('tanggal', null)->pluck('id')->map(fn($id) => (string) $id)->values()) }} : []">
+                                    <input type="checkbox" @click="selectedIds = $event.target.checked ? {{ Js::from($sidangs->pluck('id')->map(fn($id) => (string) $id)->values()) }} : []">
                                 </th>
                                 <th style="width:42px; text-align:center;">No</th>
                                 <th style="width:90px;">Tgl Daftar</th>
                                 <th>NIM</th>
                                 <th>Nama Mahasiswa</th>
-                                <th>Status</th>
+                                <th>Status &amp; Hasil Ujian</th>
                                 <th>Periode</th>
                                 <th>Dosbing Utama</th>
                                 <th>Dosbing Pendamping</th>
@@ -576,31 +611,54 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @php $prevGroupKey = null; @endphp
                             @forelse ($sidangs as $item)
                                 @php
                                     $hasConflict      = isset($conflictMap[$item->id]);
                                     $hasSchedule      = $hasConflict && !empty($conflictMap[$item->id]['schedule']);
                                     $hasRuleViolation = $hasConflict && !empty($conflictMap[$item->id]['rules']);
+                                    $groupKey = $item->pembimbing_group_key;
+                                    $group = $pembimbingGroups[$groupKey] ?? null;
                                 @endphp
+                                {{-- Header grup: mahasiswa dikelompokkan per pasangan dosen pembimbing
+                                     (Pembimbing Utama otomatis jadi Penguji 2) supaya mudah dipilih &
+                                     diplot massal sekaligus — sama seperti Jadwal Sempro. --}}
+                                @if($group && $groupKey !== $prevGroupKey)
+                                    @php $prevGroupKey = $groupKey; @endphp
+                                    <tr class="bg-violet-50/70 dark:bg-violet-950/30">
+                                        <td colspan="16" class="py-2 px-3">
+                                            <div class="flex flex-wrap items-center justify-between gap-2" x-data="{ groupIds: {{ Js::from($group['ids']) }} }">
+                                                <div class="text-xs font-extrabold text-violet-900 dark:text-violet-200">
+                                                    👥 {{ $group['label'] }}
+                                                    <span class="ml-1 font-semibold text-violet-700 dark:text-violet-300">— {{ count($group['ids']) }} mahasiswa</span>
+                                                    @if($group['belum_terjadwal'] > 0)
+                                                        <span class="ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">{{ $group['belum_terjadwal'] }} belum terjadwal</span>
+                                                    @endif
+                                                </div>
+                                                <button type="button" class="btn btn-outline btn-sm"
+                                                    @click="groupIds.every(id => selectedIds.includes(id)) ? (selectedIds = selectedIds.filter(id => !groupIds.includes(id))) : (selectedIds = [...new Set([...selectedIds, ...groupIds])])"
+                                                    x-text="groupIds.every(id => selectedIds.includes(id)) ? 'Batalkan Pilihan Grup' : 'Pilih Semua di Grup Ini'"></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                                 <tr class="{{ $hasSchedule ? 'conflict-schedule' : ($hasRuleViolation ? 'conflict-rule' : '') }}">
                                     <td style="text-align:center; vertical-align: middle;">
-                                        @if(empty($item->tanggal))
-                                            <input type="checkbox" x-model="selectedIds" value="{{ $item->id }}">
-                                        @endif
+                                        <input type="checkbox" x-model="selectedIds" value="{{ $item->id }}">
                                     </td>
                                     <td style="text-align:center; color:#475569; vertical-align: middle;">
                                         <div class="flex flex-col items-center justify-center">
                                             <span class="font-bold text-xs">{{ ($sidangs->currentPage() - 1) * $sidangs->perPage() + $loop->iteration }}</span>
                                             @if($hasSchedule)
-                                                <span class="text-red-600 text-xs" title="Bentrok Jadwal">⚠️</span>
+                                                <span class="text-red-600 dark:text-red-400 text-xs" title="Bentrok Jadwal">⚠️</span>
                                             @elseif($hasRuleViolation)
-                                                <span class="text-orange-500 text-xs" title="Pelanggaran Aturan">❌</span>
+                                                <span class="text-orange-500 dark:text-orange-400 text-xs" title="Pelanggaran Aturan">❌</span>
                                             @endif
                                         </div>
                                     </td>
                                     <td>
                                         @if($item->tanggal_pendaftaran)
-                                            <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md whitespace-nowrap">
+                                            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/60 px-2 py-1 rounded-md whitespace-nowrap">
                                                 {{ $item->tanggal_pendaftaran->format('d/m/Y') }}
                                             </span>
                                         @else
@@ -636,9 +694,15 @@
                                         @endif
                                     </td>
                                     <td>
-                                        {!! $item->getJadwalStatusHtml() !!}
+                                        <div class="flex flex-col items-start gap-1">
+                                            {!! $item->getJadwalStatusHtml() !!}
+                                            {!! $item->hasil_ujian_html !!}
+                                            @if($item->canSetHasilUjian())
+                                                <button type="button" title="Ubah hasil ujian (Lulus / Tidak Lulus)" class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors" onclick="openHasilUjian('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->status_ujian }}')">✏️ {{ $item->status_ujian ? 'Ubah Hasil' : 'Set Hasil' }}</button>
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td><span class="text-xs font-semibold text-slate-500">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
+                                    <td><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                     <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                     <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                     <td><span class="dosen-chip ketua {{ $hasSchedule && in_array($item->ketua_penguji_id, array_column(array_filter(($conflictMap[$item->id]['schedule'] ?? []), fn($m) => str_contains($m,'Ketua')), 0)) ? 'ring-1 ring-red-400' : '' }}">{{ $item->ketuaPenguji ? $item->ketuaPenguji->nama_dosen : '—' }}</span></td>
@@ -668,12 +732,12 @@
                                         </span>
                                     </td>
                                     <td class="text-right space-x-1 whitespace-nowrap">
-                                        <button class="btn btn-primary btn-sm"
-                                            onclick="openJadwalkan({{ $item->id }}, '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->ketua_penguji_id ?? '' }}', '{{ $item->anggota_penguji_1_id ?? '' }}', '{{ $item->anggota_penguji_2_id ?? '' }}', '{{ $item->dosen_pembimbing_utama_id ?? '' }}', '{{ addslashes($item->pembimbingUtama->nama_dosen ?? '') }}')">
-                                            📅 {{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}
+                                        <button class="btn btn-primary btn-sm" title="{{ empty($item->tanggal) ? 'Jadwalkan' : 'Edit Jadwal' }}"
+                                            onclick="openJadwalkan({{ $item->id }}, '{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}', '{{ $item->nim }}', '{{ $item->tanggal ? $item->tanggal->format('Y-m-d') : '' }}', '{{ $item->jam ?? '' }}', '{{ $item->ruang_id ?? '' }}', '{{ $item->ketua_penguji_id ?? '' }}', '{{ $item->anggota_penguji_1_id ?? '' }}', '{{ $item->anggota_penguji_2_id ?? '' }}', '{{ $item->dosen_pembimbing_utama_id ?? '' }}', '{{ addslashes($item->pembimbingUtama->nama_dosen ?? '') }}')">
+                                            📅
                                         </button>
-                                        <button class="btn btn-outline btn-sm"
-                                            onclick="openEdit({{ $item->id }}, {{ json_encode([
+                                        <button class="btn btn-outline btn-sm" title="Edit Data"
+                                            onclick="openEdit('{{ $item->hash_id }}', {{ json_encode([
                                                 'id' => $item->id,
                                                 'nim' => $item->nim,
                                                 'nama_mahasiswa' => $item->nama_mahasiswa,
@@ -684,6 +748,7 @@
                                                 'anggota_penguji_1_id' => $item->anggota_penguji_1_id,
                                                 'anggota_penguji_2_id' => $item->anggota_penguji_2_id,
                                                 'ruang_id' => $item->ruang_id,
+                                                'ruang_label' => $item->ruang ? $item->ruang->kode_ruangan . ' (' . $item->ruang->nama_ruangan . ')' : null,
                                                 'periode_id' => $item->periode_id,
                                                 'tanggal' => $item->tanggal ? $item->tanggal->format('Y-m-d') : '',
                                                 'tanggal_pendaftaran' => $item->tanggal_pendaftaran ? $item->tanggal_pendaftaran->format('Y-m-d') : '',
@@ -694,16 +759,16 @@
                                             ]) }})">
                                             ✏️
                                         </button>
-                                        <button class="btn btn-danger btn-sm"
-                                            onclick="openDelete({{ $item->id }}, '{{ addslashes($item->nama_mahasiswa) }}')">
+                                        <button class="btn btn-danger btn-sm" title="Hapus"
+                                            onclick="openDelete('{{ $item->hash_id }}', '{{ addslashes($item->nama_mahasiswa) }}')">
                                             🗑
                                         </button>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="16" class="py-12 text-center text-slate-400">
-                                        <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    <td colspan="17" class="py-12 text-center text-slate-400 dark:text-slate-500">
+                                        <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                         <h3>Belum ada data skripsi</h3>
                                         <p style="font-size:.85rem;">Import Excel atau tambah data secara manual.</p>
                                         <div class="flex gap-3 justify-center mt-4">
@@ -729,7 +794,6 @@
         <div x-show="currentView === 'calendar'" id="calendar-container" class="calendar-container" x-cloak>
             <div id="calendar-view" data-events="{{ json_encode($calendarEvents->values()) }}"></div>
         </div>
-    </div>
 
     {{-- ════════════════════════════════════════════════════════════════ --}}
     {{-- MODAL: TAMBAH DATA                                              --}}
@@ -804,7 +868,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="ketua_penguji_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -813,7 +877,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="anggota_penguji_1_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -888,26 +952,26 @@
                     </div>
                     {{-- Dynamic Conflict Warning Box: 2 sections --}}
                     <div id="edit-conflict-schedule-box"
-                         class="mb-3 rounded-xl border border-red-200 bg-red-50 p-3.5"
+                         class="mb-3 rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/30 p-3.5"
                          style="display:none;">
                         <div class="flex items-start gap-2">
                             <span class="text-base">⚠️</span>
                             <div class="flex-1">
-                                <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 mb-1.5">Bentrok Jadwal</strong>
-                                <ul id="edit-conflict-schedule-list" class="list-disc list-inside space-y-1 text-xs font-medium text-red-800"></ul>
-                                <p class="mt-2 text-[11px] italic text-red-600">* Sesuaikan Jam, Ruangan, atau Penguji agar bentrok hilang.</p>
+                                <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 mb-1.5">Bentrok Jadwal</strong>
+                                <ul id="edit-conflict-schedule-list" class="list-disc list-inside space-y-1 text-xs font-medium text-red-800 dark:text-red-300"></ul>
+                                <p class="mt-2 text-[11px] italic text-red-600 dark:text-red-400">* Sesuaikan Jam, Ruangan, atau Penguji agar bentrok hilang.</p>
                             </div>
                         </div>
                     </div>
                     <div id="edit-conflict-rules-box"
-                         class="mb-3 rounded-xl border border-orange-200 bg-orange-50 p-3.5"
+                         class="mb-3 rounded-xl border border-orange-200 dark:border-orange-800/60 bg-orange-50 dark:bg-orange-950/30 p-3.5"
                          style="display:none;">
                         <div class="flex items-start gap-2">
                             <span class="text-base">❌</span>
                             <div class="flex-1">
-                                <strong class="block text-xs font-bold uppercase tracking-wider text-orange-700 mb-1.5">Pelanggaran Aturan Skripsi</strong>
-                                <ul id="edit-conflict-rules-list" class="list-disc list-inside space-y-1 text-xs font-medium text-orange-800"></ul>
-                                <p class="mt-2 text-[11px] italic text-orange-600">* Aturan: (1) Pembimbing Utama wajib menjadi Penguji 2. (2) Pembimbing Pendamping tidak boleh menguji.</p>
+                                <strong class="block text-xs font-bold uppercase tracking-wider text-orange-700 dark:text-orange-400 mb-1.5">Pelanggaran Aturan Skripsi</strong>
+                                <ul id="edit-conflict-rules-list" class="list-disc list-inside space-y-1 text-xs font-medium text-orange-800 dark:text-orange-300"></ul>
+                                <p class="mt-2 text-[11px] italic text-orange-600 dark:text-orange-400">* Aturan: (1) Pembimbing Utama wajib menjadi Penguji 2. (2) Pembimbing Pendamping tidak boleh menguji.</p>
                             </div>
                         </div>
                     </div>
@@ -966,7 +1030,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Ketua Penguji <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="ketua_penguji_id" id="edit-ketua" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -975,7 +1039,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="anggota_penguji_1_id" id="edit-penguji1" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -999,11 +1063,11 @@
                         <div class="form-section-title">Jadwal & Ruangan</div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
                                 <input type="date" name="tanggal" id="edit-tanggal" class="form-control text-xs p-2.5">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai *</label>
                                 <select name="jam_mulai" id="edit-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -1011,7 +1075,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Selesai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Selesai *</label>
                                 <select name="jam_selesai" id="edit-jam-selesai" class="form-control text-xs p-2.5 bg-white cursor-pointer">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -1020,7 +1084,7 @@
                             </div>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Keterangan (Opsional)</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan / Keterangan (Opsional)</label>
                             <input type="text" name="keterangan" id="edit-keterangan" placeholder="Catatan tambahan..." class="form-control text-xs p-2.5">
                         </div>
                         <div class="form-grid-2">
@@ -1072,66 +1136,91 @@
     </div>
 
     {{-- ════════════════════════════════════════════════════════════════ --}}
+    {{-- MODAL: HASIL UJIAN                                                --}}
+    {{-- ════════════════════════════════════════════════════════════════ --}}
+    <div id="modal-hasil-ujian" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-hasil-ujian')">
+        <div class="modal-box modal-sm">
+            <div class="modal-header">
+                <span class="modal-title">🎓 Hasil Ujian</span>
+                <button class="modal-close" onclick="closeModal('modal-hasil-ujian')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>Hasil ujian sidang untuk <strong id="hasil-ujian-nama">?</strong></p>
+                <p class="text-xs mt-1">Status saat ini: <strong id="hasil-ujian-sekarang">-</strong></p>
+                <p class="text-[11px] text-slate-500 mt-1">Setelah waktu ujian lewat, status otomatis <strong>Lulus</strong>. Pilih <strong>Tidak Lulus / Remidi</strong> bila mahasiswa harus mengulang — perubahan langsung tampil di progress mahasiswa.</p>
+                <div id="form-hasil-ujian-alert" class="modal-alert" style="display:none;">
+                    <span>⚠️</span>
+                    <span id="form-hasil-ujian-alert-text"></span>
+                </div>
+                <div class="flex gap-3 mt-4">
+                    <button type="button" id="btn-hasil-lulus" class="btn btn-success" style="flex:1;" onclick="submitHasilUjian('lulus')">🎓 Lulus</button>
+                    <button type="button" id="btn-hasil-tidak-lulus" class="btn btn-danger" style="flex:1;" onclick="submitHasilUjian('tidak_lulus')">✕ Tidak Lulus / Remidi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ════════════════════════════════════════════════════════════════ --}}
     {{-- MODAL: DETAIL JADWAL KALENDER                                     --}}
     {{-- ════════════════════════════════════════════════════════════════ --}}
     <div id="modal-detail" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-detail')">
         <div class="modal-box">
-            <div class="modal-header bg-slate-50 border-b border-slate-100">
+            <div class="modal-header bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                 <span class="modal-title font-bold">📄 Detail Jadwal Skripsi</span>
                 <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
             </div>
             <div class="modal-body space-y-4">
-                <div id="detail-conflict-box" class="rounded-xl border border-red-200 bg-red-50 p-3.5" style="display:none;">
+                <div id="detail-conflict-box" class="rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/30 p-3.5" style="display:none;">
                     <div class="flex items-start gap-2">
                         <span class="text-base">⚠️</span>
                         <div class="flex-1">
-                            <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 mb-1">Masalah Jadwal / Pelanggaran Aturan</strong>
-                            <div id="detail-conflict-text" class="text-xs font-semibold text-red-800 leading-snug"></div>
+                            <strong class="block text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 mb-1">Masalah Jadwal / Pelanggaran Aturan</strong>
+                            <div id="detail-conflict-text" class="text-xs font-semibold text-red-800 dark:text-red-300 leading-snug"></div>
                         </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Jenis Ujian</span>
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jenis Ujian</span>
                     <span class="col-span-2"><span id="detail-jenis" class="badge"></span></span>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">NIM / Nama</span>
-                    <span class="col-span-2 text-slate-800 font-semibold"><span id="detail-nim" class="nim-pill"></span> <span id="detail-nama" class="ml-1"></span></span>
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">NIM / Nama</span>
+                    <span class="col-span-2 text-slate-800 dark:text-slate-100 font-semibold"><span id="detail-nim" class="nim-pill"></span> <span id="detail-nama" class="ml-1"></span></span>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Judul Skripsi</span>
-                    <span class="col-span-2 text-slate-700 text-sm leading-relaxed" id="detail-judul"></span>
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Judul Skripsi</span>
+                    <span class="col-span-2 text-slate-700 dark:text-slate-300 text-sm leading-relaxed" id="detail-judul"></span>
                 </div>
-                
-                <hr class="border-slate-100">
-                
-                <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pembimbing</span>
-                    <div class="col-span-2 space-y-1">
-                        <div><span class="text-xs font-semibold text-slate-400">Utama:</span> <span id="detail-dosbing" class="text-slate-800 font-medium"></span></div>
-                        <div><span class="text-xs font-semibold text-slate-400">Pendamping:</span> <span id="detail-dosbing-p" class="text-slate-800 font-medium"></span></div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Penguji</span>
-                    <div class="col-span-2 space-y-1">
-                        <div><span class="text-xs font-semibold text-slate-400">Ketua:</span> <span id="detail-ketua" class="text-slate-800 font-medium"></span></div>
-                        <div><span class="text-xs font-semibold text-slate-400">Anggota 1:</span> <span id="detail-penguji1" class="text-slate-800 font-medium"></span></div>
-                        <div><span class="text-xs font-semibold text-slate-400">Anggota 2:</span> <span id="detail-penguji2" class="text-slate-800 font-medium"></span></div>
-                    </div>
-                </div>
-                
-                <hr class="border-slate-100">
+
+                <hr class="border-slate-100 dark:border-slate-700">
 
                 <div class="grid grid-cols-3 gap-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Jadwal & Ruang</span>
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pembimbing</span>
                     <div class="col-span-2 space-y-1">
-                        <div class="text-slate-800 font-semibold" id="detail-jadwal"></div>
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Utama:</span> <span id="detail-dosbing" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Pendamping:</span> <span id="detail-dosbing-p" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Penguji</span>
+                    <div class="col-span-2 space-y-1">
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Ketua:</span> <span id="detail-ketua" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Anggota 1:</span> <span id="detail-penguji1" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                        <div><span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Anggota 2:</span> <span id="detail-penguji2" class="text-slate-800 dark:text-slate-200 font-medium"></span></div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100 dark:border-slate-700">
+
+                <div class="grid grid-cols-3 gap-2">
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jadwal & Ruang</span>
+                    <div class="col-span-2 space-y-1">
+                        <div class="text-slate-800 dark:text-slate-200 font-semibold" id="detail-jadwal"></div>
                         <div><span class="schedule-ruang" id="detail-ruang"></span></div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer bg-slate-50 border-t border-slate-100">
+            <div class="modal-footer bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
                 <button type="button" class="btn btn-outline" onclick="closeModal('modal-detail')">Tutup</button>
                 <button type="button" class="btn btn-primary" onclick="openEditFromDetail()">✏️ Edit Ruangan / Penguji / Jam</button>
             </div>
@@ -1155,9 +1244,9 @@
                         <span id="form-jadwalkan-alert-text"></span>
                     </div>
                     <input type="hidden" id="jadwalkan-sidang-id">
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl mb-4 text-xs">
-                        <div class="font-bold text-slate-800 text-sm" id="jadwalkan-mhs-nama"></div>
-                        <div class="text-slate-500 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
+                    <div class="p-3.5 bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-600 rounded-xl mb-4 text-xs">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 text-sm" id="jadwalkan-mhs-nama"></div>
+                        <div class="text-slate-500 dark:text-slate-400 font-semibold mt-0.5" id="jadwalkan-mhs-nim"></div>
                     </div>
 
                     {{-- Info Box Kesediaan Menguji Dosen: awalnya tampilkan semua slot, otomatis
@@ -1180,7 +1269,11 @@
                                             <span class="text-purple-700 font-bold ml-1">({{ \Carbon\Carbon::parse($kd->tanggal)->locale('id')->translatedFormat('l, d F Y') }})</span>
                                         </div>
                                         <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                                            ⏰ {{ $kd->jam_mulai }} - {{ $kd->jam_selesai }} WIB
+                                            @if($kd->jam_mulai && $kd->jam_selesai)
+                                                ⏰ {{ $kd->jam_mulai }} - {{ $kd->jam_selesai }} WIB
+                                            @else
+                                                ✓ Tersedia (jam fleksibel)
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
@@ -1205,12 +1298,12 @@
                         <div class="form-section-title">Waktu & Tempat Sidang</div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
                                 <input type="date" name="tanggal" id="jadwalkan-tanggal" class="form-control text-xs p-2.5" required onchange="refreshPengujiAvailability()">
-                                <p class="text-[10px] text-emerald-600 font-semibold mt-1" id="jadwalkan-tanggal-hint"></p>
+                                <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1" id="jadwalkan-tanggal-hint"></p>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai *</label>
                                 <select name="jam_mulai" id="jadwalkan-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required onchange="refreshPengujiAvailability()">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -1218,7 +1311,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Jam Selesai *</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Selesai *</label>
                                 <select name="jam_selesai" id="jadwalkan-jam-selesai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required onchange="refreshPengujiAvailability()">
                                     @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'] as $t)
                                         <option value="{{ $t }}">{{ $t }}</option>
@@ -1227,7 +1320,7 @@
                             </div>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Keterangan (Opsional)</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan / Keterangan (Opsional)</label>
                             <input type="text" name="keterangan" id="jadwalkan-keterangan" placeholder="Catatan tambahan..." class="form-control text-xs p-2.5">
                         </div>
                         <div class="form-group mt-3">
@@ -1252,7 +1345,7 @@
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-[10px] text-rose-600 font-bold mt-1" id="jadwalkan-ketua-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
+                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-ketua-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                             </div>
                             <div class="form-group">
                                 <label>Penguji 1 <span style="color:red">*</span></label>
@@ -1262,13 +1355,13 @@
                                         <option value="{{ $d->id }}">{{ $d->nama_dosen }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-[10px] text-rose-600 font-bold mt-1" id="jadwalkan-penguji1-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
+                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji1-warning" style="display:none;">⚠️ Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                             </div>
                             <div class="form-group">
                                 <label>Penguji 2 (Otomatis)</label>
-                                <div class="form-control text-xs p-2.5 bg-slate-100 text-slate-600 font-semibold" id="jadwalkan-penguji2-display">—</div>
-                                <p class="text-[10px] text-slate-400 font-semibold mt-1">Otomatis diisi Pembimbing Utama sesuai aturan komposisi penguji.</p>
-                                <p class="text-[10px] text-rose-600 font-bold mt-1" id="jadwalkan-penguji2-warning" style="display:none;">⚠️ Pembimbing Utama belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
+                                <div class="form-control text-xs p-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold" id="jadwalkan-penguji2-display">—</div>
+                                <p class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Otomatis diisi Pembimbing Utama sesuai aturan komposisi penguji.</p>
+                                <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji2-warning" style="display:none;">⚠️ Pembimbing Utama belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                                 <input type="hidden" name="anggota_penguji_2_id" id="jadwalkan-penguji2">
                             </div>
                         </div>
@@ -1288,7 +1381,7 @@
     <div id="modal-bulk-jadwalkan" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-bulk-jadwalkan')">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">🗓️ Plot Manual Massal</span>
+                <span class="modal-title">🗓️ Plot / Edit Jadwal Massal</span>
                 <button class="modal-close" onclick="closeModal('modal-bulk-jadwalkan')">✕</button>
             </div>
             <div class="modal-body">
@@ -1296,17 +1389,34 @@
                     <span>⚠️</span>
                     <span id="form-bulk-jadwalkan-alert-text"></span>
                 </div>
-                <p class="text-xs text-slate-500 mb-4"><strong x-text="selectedIds.length"></strong> mahasiswa terpilih akan dijadwalkan berurutan pada hari &amp; ruangan yang sama, dengan tim penguji yang sama — sistem otomatis memberi slot jam berbeda per mahasiswa (mulai dari jam yang dipilih, berurutan sesuai durasi per sesi) supaya tidak bentrok ruangan.</p>
+                <p class="text-xs text-slate-500 mb-4"><strong x-text="selectedIds.length"></strong> mahasiswa terpilih akan di-plot/diedit jadwalnya berurutan pada hari &amp; ruangan yang sama, dengan tim penguji yang sama — sistem otomatis memberi slot jam berbeda per mahasiswa (mulai dari jam yang dipilih, berurutan sesuai durasi per sesi) supaya tidak bentrok ruangan. Mahasiswa yang sudah punya jadwal sebelumnya akan DITIMPA dengan jadwal baru ini.</p>
+
+                {{-- Info Box Kesediaan Menguji Dosen — sama seperti di modal plotting satuan,
+                     supaya terlihat dosen mana yang sudah mengisi kesediaan sebelum memilih
+                     tanggal & tim penguji untuk penjadwalan massal. --}}
+                @if(isset($kesediaanDosens) && $kesediaanDosens->count() > 0)
+                    <div class="mb-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-3.5 text-xs">
+                        <div class="flex items-center justify-between font-extrabold text-emerald-900 dark:text-emerald-300 mb-2">
+                            <span class="flex items-center gap-1.5">
+                                <span>📝</span> Dosen Siap Menguji
+                            </span>
+                            <span class="bg-emerald-200 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold" id="bulk-kesediaan-info-count">
+                                {{ $kesediaanDosens->count() }} Slot Terdaftar
+                            </span>
+                        </div>
+                        <div class="max-h-32 overflow-y-auto space-y-1.5 pr-1" id="bulk-kesediaan-info-list"></div>
+                    </div>
+                @endif
 
                 <div class="form-section mt-0">
                     <div class="form-section-title">Waktu &amp; Tempat Sidang</div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal *</label>
-                            <input type="date" id="bulk-tanggal" class="form-control text-xs p-2.5" required>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal *</label>
+                            <input type="date" id="bulk-tanggal" class="form-control text-xs p-2.5" required onchange="refreshBulkPengujiAvailability()">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Jam Mulai (Sesi 1) *</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jam Mulai (Sesi 1) *</label>
                             <select id="bulk-jam-mulai" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
                                 @foreach(['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00'] as $t)
                                     <option value="{{ $t }}">{{ $t }}</option>
@@ -1314,7 +1424,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Durasi per Sesi *</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Durasi per Sesi *</label>
                             <select id="bulk-durasi" class="form-control text-xs p-2.5 bg-white cursor-pointer" required>
                                 <option value="30">30 menit</option>
                                 <option value="60" selected>60 menit</option>
@@ -1356,7 +1466,7 @@
                             </select>
                         </div>
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-1">Penguji 2 otomatis = Pembimbing Utama masing-masing mahasiswa (bisa berbeda per mahasiswa).</p>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Penguji 2 otomatis = Pembimbing Utama masing-masing mahasiswa (bisa berbeda per mahasiswa).</p>
                 </div>
 
                 <div id="bulk-jadwalkan-result" class="mt-2 text-xs"></div>
@@ -1366,6 +1476,7 @@
                 <button type="button" class="btn btn-primary" @click="submitBulkJadwalkan()">💾 Terapkan ke Semua Terpilih</button>
             </div>
         </div>
+    </div>
     </div>
 
     {{-- ════════════════════════════════════════════════════════════════ --}}
@@ -1381,6 +1492,7 @@
             closeModal('modal-detail');
             openJadwalkan(
                 currentDetailEvent.id,
+                props.hash_id,
                 props.mahasiswa,
                 props.nim,
                 currentDetailEvent.startStr ? currentDetailEvent.startStr.split('T')[0] : '',
@@ -1463,13 +1575,26 @@
             return `${INDO_DAYS[d.getDay()]}, ${d.getDate()} ${INDO_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
         }
 
-        // Renders the "Dosen Siap Menguji" info box. With no tanggal picked yet it
-        // shows every kesediaan slot (all dates), same as before; once a tanggal is
-        // picked it narrows down to just that date's dosen (marking any who are
-        // actually already booked elsewhere with an overlapping jam as bentrok).
-        function renderKesediaanInfoBox(tanggal, allEntries, dateEntries, busyByDosen) {
-            const list = document.getElementById('kesediaan-info-list');
-            const countBadge = document.getElementById('kesediaan-info-count');
+        // Dosen biasanya cuma memilih tanggal kesediaan tanpa mengisi jam (lihat
+        // AutoScheduleService) — kalau mulai/selesai kosong, tampilkan label
+        // "Tersedia" generik alih-alih jam kosong yang membingungkan.
+        function jamBadgeHtml(mulai, selesai) {
+            if (mulai && selesai) {
+                return `⏰ ${escapeHtml(mulai)} - ${escapeHtml(selesai)} WIB`;
+            }
+            return '✓ Tersedia (jam fleksibel)';
+        }
+
+        // Renders the "Dosen Siap Menguji" info box into the given list/count
+        // element ids. With no tanggal picked yet it shows every kesediaan slot
+        // (all dates); once a tanggal is picked it narrows down to just that
+        // date's dosen (marking any who are actually already booked elsewhere
+        // with an overlapping jam as bentrok). `idPrefix`-style parameterization
+        // lets the single-row "Plotting Jadwal" modal and the "Plot Manual
+        // Massal" bulk modal share this exact logic against their own elements.
+        function renderKesediaanInfoBoxInto(listId, countId, tanggal, allEntries, dateEntries, busyByDosen) {
+            const list = document.getElementById(listId);
+            const countBadge = document.getElementById(countId);
             if (!list) return;
 
             if (!tanggal) {
@@ -1485,7 +1610,7 @@
                             <span class="text-purple-700 font-bold ml-1">(${formatTanggalIndo(kd.tanggal)})</span>
                         </div>
                         <div class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                            ⏰ ${escapeHtml(kd.mulai)} - ${escapeHtml(kd.selesai)} WIB
+                            ${jamBadgeHtml(kd.mulai, kd.selesai)}
                         </div>
                     </div>`).join('');
                 return;
@@ -1507,10 +1632,14 @@
                             ${isBusy ? '<span class="text-rose-600 font-bold ml-1">⛔ Bentrok jadwal lain</span>' : '<span class="text-emerald-600 font-bold ml-1">✓ Siap</span>'}
                         </div>
                         <div class="font-extrabold ${isBusy ? 'text-rose-600 bg-rose-50 border-rose-200' : 'text-emerald-700 bg-emerald-50 border-emerald-200'} px-2 py-0.5 rounded-md border">
-                            ⏰ ${escapeHtml(kd.mulai)} - ${escapeHtml(kd.selesai)} WIB
+                            ${jamBadgeHtml(kd.mulai, kd.selesai)}
                         </div>
                     </div>`;
             }).join('');
+        }
+
+        function renderKesediaanInfoBox(tanggal, allEntries, dateEntries, busyByDosen) {
+            renderKesediaanInfoBoxInto('kesediaan-info-list', 'kesediaan-info-count', tanggal, allEntries, dateEntries, busyByDosen);
         }
 
         // Flags Ketua Penguji / Penguji 1 / Penguji 2 with a "Hubungi Dosen yang
@@ -1545,13 +1674,15 @@
         // picked, dosen who are actually ready that day float to the top: dosen who
         // submitted "Kesediaan Menguji" for that date AND aren't already booked
         // (as pembimbing/penguji) on another sidang with an overlapping jam.
-        function refreshPengujiAvailability() {
-            const tanggal = document.getElementById('jadwalkan-tanggal').value;
-            const jamMulai = document.getElementById('jadwalkan-jam-mulai')?.value || '';
-            const jamSelesai = document.getElementById('jadwalkan-jam-selesai')?.value || '';
+        // Parameterized so both the single-row "Plotting Jadwal" modal and the
+        // "Plot Manual Massal" bulk modal can reuse this exact logic.
+        function refreshPengujiAvailabilityFor(opts) {
+            const tanggal = document.getElementById(opts.tanggalId)?.value || '';
+            const jamMulai = opts.jamMulaiId ? (document.getElementById(opts.jamMulaiId)?.value || '') : '';
+            const jamSelesai = opts.jamSelesaiId ? (document.getElementById(opts.jamSelesaiId)?.value || '') : '';
             const currentJam = (jamMulai && jamSelesai) ? `${jamMulai} - ${jamSelesai}` : '';
-            const currentSidangId = document.getElementById('jadwalkan-sidang-id')?.value || '';
-            const hint = document.getElementById('jadwalkan-tanggal-hint');
+            const currentSidangId = opts.sidangIdFieldId ? (document.getElementById(opts.sidangIdFieldId)?.value || '') : '';
+            const hint = opts.hintId ? document.getElementById(opts.hintId) : null;
             const dataEl = document.getElementById('kesediaan-data');
             if (!dataEl) return;
 
@@ -1573,7 +1704,7 @@
                 let bookings = [];
                 try { bookings = JSON.parse(calendarEl?.dataset.events || '[]'); } catch (e) { bookings = []; }
                 bookings.forEach(ev => {
-                    if (String(ev.id) === String(currentSidangId)) return;
+                    if (currentSidangId && String(ev.id) === String(currentSidangId)) return;
                     const evDate = (ev.start || '').split('T')[0];
                     if (evDate !== tanggal) return;
                     const props = ev.extendedProps || {};
@@ -1588,7 +1719,7 @@
                 });
             }
 
-            renderKesediaanInfoBox(tanggal, kesediaan, tanggal ? kesediaan.filter(k => k.tanggal === tanggal) : [], busyByDosen);
+            renderKesediaanInfoBoxInto(opts.listId, opts.countId, tanggal, kesediaan, tanggal ? kesediaan.filter(k => k.tanggal === tanggal) : [], busyByDosen);
 
             const count = Object.keys(availableByDosen).length;
             if (hint) {
@@ -1597,7 +1728,7 @@
                     : '';
             }
 
-            ['jadwalkan-ketua', 'jadwalkan-penguji1'].forEach(selectId => {
+            [opts.ketuaSelectId, opts.penguji1SelectId].forEach(selectId => {
                 const select = document.getElementById(selectId);
                 if (!select) return;
                 const currentValue = select.value;
@@ -1615,7 +1746,8 @@
                     grp.label = '✓ Siap / Bersedia Menguji Tanggal Ini';
                     ready.forEach(o => {
                         const kd = availableByDosen[o.value];
-                        grp.appendChild(new Option(`✓ ${o.text} (${kd.mulai}-${kd.selesai})`, o.value));
+                        const label = (kd.mulai && kd.selesai) ? `✓ ${o.text} (${kd.mulai}-${kd.selesai})` : `✓ ${o.text}`;
+                        grp.appendChild(new Option(label, o.value));
                     });
                     select.appendChild(grp);
                 }
@@ -1635,7 +1767,39 @@
                 select.value = currentValue;
             });
 
-            checkPlottedAvailability();
+            if (opts.afterRefresh) opts.afterRefresh();
+        }
+
+        function refreshPengujiAvailability() {
+            refreshPengujiAvailabilityFor({
+                tanggalId: 'jadwalkan-tanggal',
+                jamMulaiId: 'jadwalkan-jam-mulai',
+                jamSelesaiId: 'jadwalkan-jam-selesai',
+                sidangIdFieldId: 'jadwalkan-sidang-id',
+                hintId: 'jadwalkan-tanggal-hint',
+                listId: 'kesediaan-info-list',
+                countId: 'kesediaan-info-count',
+                ketuaSelectId: 'jadwalkan-ketua',
+                penguji1SelectId: 'jadwalkan-penguji1',
+                afterRefresh: checkPlottedAvailability,
+            });
+        }
+
+        // Varian untuk modal "Plot Manual Massal" — tidak ada jam_selesai/id sidang
+        // tunggal (satu tanggal+tim penguji dipakai untuk banyak mahasiswa sekaligus),
+        // jadi parameter itu sengaja dikosongkan.
+        function refreshBulkPengujiAvailability() {
+            refreshPengujiAvailabilityFor({
+                tanggalId: 'bulk-tanggal',
+                jamMulaiId: null,
+                jamSelesaiId: null,
+                sidangIdFieldId: null,
+                hintId: null,
+                listId: 'bulk-kesediaan-info-list',
+                countId: 'bulk-kesediaan-info-count',
+                ketuaSelectId: 'bulk-ketua',
+                penguji1SelectId: 'bulk-penguji1',
+            });
         }
 
         function setPenguji2FromPembimbingUtama(pembimbingUtamaId, pembimbingUtamaNama) {
@@ -1651,9 +1815,9 @@
             }
         }
 
-        function openJadwalkan(id, nama, nim, tgl, jam, ruangId, ketuaId, p1Id, p2Id, pembimbingUtamaId, pembimbingUtamaNama) {
+        function openJadwalkan(id, hashId, nama, nim, tgl, jam, ruangId, ketuaId, p1Id, p2Id, pembimbingUtamaId, pembimbingUtamaNama) {
             const form = document.getElementById('form-jadwalkan');
-            form.action = '/jadwal/skripsi/' + id + '/jadwalkan';
+            form.action = '/jadwal/skripsi/' + hashId + '/jadwalkan';
             document.getElementById('jadwalkan-sidang-id').value = id;
             document.getElementById('jadwalkan-mhs-nama').textContent = nama;
             document.getElementById('jadwalkan-mhs-nim').textContent = 'NIM: ' + nim;
@@ -1674,8 +1838,25 @@
         }
 
 
-        function openEdit(id, data) {
-            document.getElementById('form-edit').action = '/master/skripsi/' + id;
+        // Pilihan ruangan hanya berisi ruangan "Siap Digunakan". Kalau data lama
+        // sudah memakai ruangan yang kini berstatus belum siap, tambahkan opsi
+        // sementara supaya menyimpan form edit tidak diam-diam mengosongkan ruangannya.
+        function setRuangSelectValue(select, ruangId, ruangLabel) {
+            if (!select) return;
+            select.querySelectorAll('option[data-temp-ruang]').forEach(o => o.remove());
+            const id = ruangId ? String(ruangId) : '';
+            if (id && !Array.from(select.options).some(o => o.value === id)) {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = (ruangLabel || 'Ruangan') + ' — belum siap digunakan';
+                opt.dataset.tempRuang = '1';
+                select.appendChild(opt);
+            }
+            select.value = id;
+        }
+
+        function openEdit(hashId, data) {
+            document.getElementById('form-edit').action = '/master/skripsi/' + hashId;
             document.getElementById('edit-nim').value                             = data.nim || '';
             document.getElementById('edit-nama').value                            = data.nama_mahasiswa || '';
             document.getElementById('edit-judul').value                           = data.judul_skripsi || '';
@@ -1684,7 +1865,7 @@
             document.getElementById('edit-ketua').value                           = data.ketua_penguji_id || '';
             document.getElementById('edit-penguji1').value                        = data.anggota_penguji_1_id || '';
             document.getElementById('edit-penguji2').value                        = data.anggota_penguji_2_id || '';
-            document.getElementById('edit-ruangan').value                         = data.ruang_id || '';
+            setRuangSelectValue(document.getElementById('edit-ruangan'), data.ruang_id, data.ruang_label);
             document.getElementById('edit-periode').value                         = data.periode_id || '';
             document.getElementById('edit-tanggal').value                         = data.tanggal || '';
             document.getElementById('edit-tanggal-pendaftaran').value             = data.tanggal_pendaftaran || '';
@@ -1732,10 +1913,50 @@
             openModal('modal-edit');
         }
 
-        function openDelete(id, nama) {
+        function openDelete(hashId, nama) {
             document.getElementById('hapus-nama').textContent = nama;
-            document.getElementById('form-hapus').action = '/master/skripsi/' + id;
+            document.getElementById('form-hapus').action = '/master/skripsi/' + hashId;
             openModal('modal-hapus');
+        }
+
+        let _hasilUjianHashId = null;
+        function openHasilUjian(hashId, nama, statusSekarang) {
+            _hasilUjianHashId = hashId;
+            document.getElementById('hasil-ujian-nama').textContent = nama;
+            const label = { lulus: 'Lulus', tidak_lulus: 'Tidak Lulus / Remidi' }[statusSekarang] || 'Belum ditentukan';
+            document.getElementById('hasil-ujian-sekarang').textContent = label;
+            [['btn-hasil-lulus', 'lulus'], ['btn-hasil-tidak-lulus', 'tidak_lulus']].forEach(([id, val]) => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                btn.style.opacity = (statusSekarang && statusSekarang !== val) ? '.55' : '1';
+                btn.style.outline = statusSekarang === val ? '3px solid rgba(99,102,241,.45)' : 'none';
+                btn.style.outlineOffset = '2px';
+            });
+            hideModalAlert('form-hasil-ujian-alert');
+            openModal('modal-hasil-ujian');
+        }
+
+        async function submitHasilUjian(status) {
+            if (!_hasilUjianHashId) return;
+            hideModalAlert('form-hasil-ujian-alert');
+            try {
+                const basePrefix = window.location.pathname.replace(/\/jadwal-ujian\/?$/, '');
+                const res = await fetch(basePrefix + '/jadwal/' + _hasilUjianHashId + '/hasil-ujian', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ status_ujian: status }),
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    closeModal('modal-hasil-ujian');
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
+                    setTimeout(() => location.reload(), 900);
+                } else {
+                    showModalAlert('form-hasil-ujian-alert', 'form-hasil-ujian-alert-text', data.message || 'Gagal menyimpan hasil ujian.');
+                }
+            } catch (err) {
+                showModalAlert('form-hasil-ujian-alert', 'form-hasil-ujian-alert-text', 'Gagal terhubung ke server.');
+            }
         }
 
         // Initialize FullCalendar
@@ -1819,7 +2040,8 @@
                         jam = `${sh}.${sm} - ${eh}.${em}`;
                     }
 
-                    fetch(`/jadwal/skripsi/${info.event.id}/reschedule`, {
+                    const basePrefix = window.location.pathname.replace(/\/jadwal-ujian\/?$/, '');
+                    fetch(`${basePrefix}/jadwal/skripsi/${info.event.extendedProps.hash_id}/reschedule`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1980,6 +2202,8 @@
                                     input.parentNode.appendChild(errEl);
                                 }
                             });
+                        } else if (Array.isArray(result.conflicts) && result.conflicts.length > 0 && typeof window.showBentrokModal === 'function') {
+                            window.showBentrokModal(result.conflicts);
                         } else {
                             showModalAlert('form-edit-alert', 'form-edit-alert-text', result.message || 'Terjadi kesalahan.');
                         }
@@ -2051,6 +2275,8 @@
                     closeModal('modal-jadwalkan');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || '✅ Jadwal berhasil disimpan!', type: 'success' } }));
                     setTimeout(() => location.reload(), 800);
+                } else if (Array.isArray(result.conflicts) && result.conflicts.length > 0 && typeof window.showBentrokModal === 'function') {
+                    window.showBentrokModal(result.conflicts);
                 } else {
                     showModalAlert('form-jadwalkan-alert', 'form-jadwalkan-alert-text', result.message || 'Terjadi kesalahan saat menyimpan jadwal.');
                 }

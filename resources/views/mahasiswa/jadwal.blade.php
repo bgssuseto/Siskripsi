@@ -47,7 +47,9 @@
             <div class="grid grid-cols-1 gap-6">
                 @foreach($sidangs as $s)
                     @php
-                        $isPlotted = $s->tanggal && $s->ruang_id && $s->ketua_penguji_id;
+                        // Sempro tidak pernah punya ketua penguji, jadi aturannya ada di
+                        // Sidang::isPlotted() (juga dipakai progress di dashboard).
+                        $isPlotted = $s->isPlotted();
                     @endphp
                     <div class="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-800 hover:shadow-lg transition-all duration-300 space-y-5 relative overflow-hidden group">
                         
@@ -144,12 +146,12 @@
                                 <div class="flex items-center gap-2.5">
                                     <span class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-lg shrink-0">✅</span>
                                     <div>
-                                        <p class="text-xs font-extrabold text-emerald-900 dark:text-emerald-300">Pendaftaran Diterima &amp; Terverifikasi</p>
-                                        <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-medium">Silakan bergabung ke grup WhatsApp untuk info & koordinasi lebih lanjut.</p>
+                                        <p class="text-xs font-extrabold text-emerald-900 dark:text-emerald-300">Bergabung ke Grup WhatsApp</p>
+                                        <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 font-medium">Untuk info & koordinasi lebih lanjut seputar pelaksanaan ujian.</p>
                                     </div>
                                 </div>
                                 @if($waLink)
-                                    <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 shrink-0">
+                                    <a href="{{ route('mahasiswa.sidang.join-wa', $s) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 shrink-0">
                                         <span>💬</span> Join Grup WhatsApp
                                     </a>
                                 @else

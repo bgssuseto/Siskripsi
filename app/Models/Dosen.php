@@ -2,21 +2,25 @@
 
 namespace App\Models;
 
+use App\Concerns\HasHashedRouteKey;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Support\Facades\Crypt;
 
 class Dosen extends Model
 {
-    use HasFactory;
+    use HasFactory, HasHashedRouteKey, SoftDeletes;
 
     protected $fillable = [
         'nidn',
         'nama_dosen',
+        'email',
         'alias',
         'kepakaran',
         'jabatan_fungsional',
+        'status_kepegawaian',
         'no_wa',
         'can_fill_kesediaan',
     ];
@@ -36,6 +40,85 @@ class Dosen extends Model
         'Lektor Kepala'   => 4,
         'Guru Besar'      => 5,
     ];
+
+    public const STATUS_AKTIF         = 'aktif';
+    public const STATUS_IZIN_BELAJAR  = 'izin_belajar';
+    public const STATUS_TUGAS_BELAJAR = 'tugas_belajar';
+
+    public const STATUS_KEPEGAWAIAN_LABELS = [
+        self::STATUS_AKTIF         => 'Aktif',
+        self::STATUS_IZIN_BELAJAR  => 'Izin Belajar',
+        self::STATUS_TUGAS_BELAJAR => 'Tugas Belajar',
+    ];
+
+    /**
+     * NIDN placeholder dosen "Super Administrator" (lihat
+     * UserController::destroy(), dibuat otomatis sebagai penampung data saat
+     * dosen asli dihapus) — bukan dosen sungguhan, jadi tidak boleh muncul di
+     * daftar PILIH dosen (pembimbing/penguji/kesediaan, dsb — lihat
+     * scopeExcludingSuperAdminPlaceholder() di bawah).
+     *
+     * SENGAJA bukan global scope: sidang lama yang pembimbing/pengujinya
+     * sudah di-reassign ke placeholder ini (dosen aslinya terhapus) tetap
+     * harus bisa ditampilkan namanya ("Super Administrator") lewat relasi
+     * ketuaPenguji()/pembimbingUtama() dsb — kalau disembunyikan total lewat
+     * global scope, relasi itu akan diam-diam resolve ke null dan field
+     * penguji/pembimbing-nya terlihat kosong di undangan/berita acara/dsb,
+     * bukan cuma hilang dari pilihan baru.
+     */
+    public const NIDN_SUPER_ADMIN_PLACEHOLDER = '0000000000';
+
+    public function getStatusKepegawaianLabelAttribute(): string
+    {
+        return self::STATUS_KEPEGAWAIAN_LABELS[$this->status_kepegawaian] ?? 'Aktif';
+    }
+
+    /**
+     * Kecualikan dosen placeholder "Super Administrator" — pakai ini di
+     * SEMUA query yang membangun daftar PILIHAN dosen (dropdown pembimbing,
+     * penguji, kesediaan menguji, filter admin, dsb). Jangan dipakai pada
+     * query yang menampilkan dosen yang SUDAH tercatat pada suatu data (mis.
+     * lewat relasi ketuaPenguji()), karena itu memang boleh/perlu tetap
+     * menampilkan "Super Administrator" sebagai penanda data yang di-reassign.
+     */
+    public function scopeExcludingSuperAdminPlaceholder($query)
+    {
+        return $query->where('nidn', '!=', self::NIDN_SUPER_ADMIN_PLACEHOLDER);
+    }
+
+    /**
+     * Dosen yang sedang tugas belajar tidak boleh ditugaskan sebagai
+     * Ketua Penguji / Anggota Penguji 1 / Anggota Penguji 2, baik untuk
+     * Sempro maupun Sidang Skripsi — ditegakkan di SidangConflictService
+     * dan dikecualikan dari kandidat otomatis di AutoScheduleService.
+     */
+    public function isTugasBelajar(): bool
+    {
+        return $this->status_kepegawaian === self::STATUS_TUGAS_BELAJAR;
+    }
+
+    /**
+     * URL pencarian resmi PDDIKTI untuk dosen ini (dibuka manual oleh admin di
+     * tab baru — PDDIKTI memakai Cloudflare Turnstile sehingga tidak bisa
+     * di-fetch otomatis dari server/browser kita). Diutamakan cari via NIDN
+     * (lebih presisi), fallback ke nama dosen.
+     */
+    public function getPddiktiSearchUrlAttribute(): string
+    {
+        $query = !empty($this->nidn) && !str_starts_with($this->nidn, 'NIDN-')
+            ? $this->nidn
+            : self::cleanName($this->nama_dosen);
+
+        return 'https://pddikti.kemdiktisaintek.go.id/search/' . urlencode($query);
+    }
+
+    /**
+     * The login account (if any) linked to this dosen record.
+     */
+    public function user(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(User::class, 'dosen_id');
+    }
 
     public function getJabatanRankAttribute(): int
     {
@@ -121,6 +204,18 @@ class Dosen extends Model
         }
         $n = preg_replace('/[^\w\s]/u', ' ', $n);
         return trim(preg_replace('/\s+/', ' ', $n));
+    }
+
+    /**
+     * Fallback initials derived from nama_dosen (titles/degrees stripped) when
+     * no explicit alias has been set — e.g. "Dr. Budi Santoso, M.T." -> "BS".
+     */
+    public function getInitialsAttribute(): string
+    {
+        $words = array_filter(explode(' ', static::cleanName($this->nama_dosen ?? '')));
+        $letters = array_map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)), $words);
+
+        return implode('', array_slice($letters, 0, 3)) ?: '-';
     }
 
     /**

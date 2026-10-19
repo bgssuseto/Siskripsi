@@ -9,7 +9,7 @@
             size: a4 portrait;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Times New Roman', Times, serif;
@@ -150,177 +150,53 @@
         }
         .revisi-table td.catatan { min-height: 55px; height: 65px; }
 
+        /* ── BERITA ACARA SEMPRO (format BA SEMPRO.docx) ── */
+        .ba-kop { width: 100%; border-collapse: collapse; }
+        .ba-kop td { border: none; vertical-align: middle; }
+        .ba-kop-logo { width: 18%; text-align: center; }
+        .ba-kop-logo img { width: 62px; height: auto; }
+        .ba-kop-text { width: 64%; text-align: center; font-size: 13pt; font-weight: bold; line-height: 1.15; }
+        .ba-kop-line { border-top: 2.5px solid #4f81bd; margin-top: 6px; }
+        .ba-title { text-align: center; font-size: 11pt; font-weight: bold; text-transform: uppercase; margin-bottom: 18px; }
+        .ba-body { line-height: 1.75; }
+        .ba-justify { text-align: justify; }
+        .ba-fields { width: 100%; border-collapse: collapse; line-height: 1.75; }
+        .ba-fields td { border: none; vertical-align: top; padding: 0; }
+        .ba-fields-tight { line-height: 1.2; margin-bottom: 14px; }
+        .ba-f-label { width: 34%; }
+        .ba-f-colon { width: 3%; }
+        .ba-keputusan { text-align: center; font-size: 15pt; font-weight: bold; margin: 30px 0 46px; }
+        .ba-sign { width: 100%; border-collapse: collapse; }
+        .ba-sign td { border: none; text-align: center; vertical-align: top; padding: 0 6px; }
+        .ba-sign-name { padding-top: 78px !important; }
+        .ba-nilai, .ba-revisi { width: 100%; border-collapse: collapse; }
+        .ba-nilai th, .ba-nilai td, .ba-revisi th, .ba-revisi td { border: 1px solid #000; text-align: center; vertical-align: middle; }
+        .ba-nilai th, .ba-nilai td { padding: 4px 8px; height: 22px; }
+        .ba-revisi th { padding: 4px 8px; }
+        .ba-revisi-body td { height: 600px; }
+        .ba-revisi-sign { text-align: center; margin-top: 14px; }
+        .ba-bold { font-weight: bold; }
+
+        .ba-nilai-sidang td.kiri { text-align: left; }
+        .ba-nilai-sidang th, .ba-nilai-sidang td { height: 20px; padding: 3px 8px; }
+
         /* ── PAGE BREAK ── */
         .page-break { page-break-before: always; }
     </style>
 </head>
 <body>
+    @php
+        $logoPath = public_path('images/logo_umk.jpeg');
+        $logoBase64 = file_exists($logoPath) ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoPath)) : '';
+    @endphp
 
     @foreach($sidangs as $sidang)
-        @php
-            $isJurnalOrSempro = ($sidang->jenis_tugas_akhir === 'jurnal');
-            $jenisLabel = $sidang->jenis_label;
-            $jenisUpper = strtoupper($jenisLabel);
-
-            $hari  = $sidang->tanggal ? \Carbon\Carbon::parse($sidang->tanggal)->locale('id')->isoFormat('dddd') : '___________';
-            $tanggalIndo = $sidang->tanggal ? \Carbon\Carbon::parse($sidang->tanggal)->locale('id')->isoFormat('D MMMM Y') : '___________';
-            $jamTeks   = $sidang->jam ?? '___________';
-            $ruangTeks = $sidang->ruang?->kode_ruangan ?? '___________';
-
-            $nama         = $sidang->nama_mahasiswa;
-            $nim          = $sidang->nim;
-            $judul        = $sidang->judul_skripsi;
-            $dosbingUtama = $sidang->pembimbingUtama?->nama_dosen;
-            $dosbingPend  = $sidang->pembimbingPendamping?->nama_dosen;
-            $ketuaPenguji = $sidang->ketuaPenguji?->nama_dosen;
-            $penguji1     = $sidang->anggotaPenguji1?->nama_dosen;
-            $penguji2     = $sidang->anggotaPenguji2?->nama_dosen;
-
-            // Determine evaluators dynamically
-            $evaluators = [];
-            if ($ketuaPenguji || $penguji1) {
-                if ($ketuaPenguji) $evaluators[] = ['role' => 'Ketua Penguji', 'name' => $ketuaPenguji];
-                if ($penguji1)     $evaluators[] = ['role' => 'Anggota Penguji 1', 'name' => $penguji1];
-                if ($penguji2)     $evaluators[] = ['role' => 'Anggota Penguji 2', 'name' => $penguji2];
-            } else {
-                if ($dosbingUtama) $evaluators[] = ['role' => 'Pembimbing Utama', 'name' => $dosbingUtama];
-                if ($dosbingPend)  $evaluators[] = ['role' => 'Pembimbing Pendamping', 'name' => $dosbingPend];
-            }
-        @endphp
-
-        {{-- ════════════════════════════════════════════════════════════════
-             HALAMAN 1: BERITA ACARA
-        ════════════════════════════════════════════════════════════════ --}}
-        <div class="kop-wrapper">
-            @if(!empty($kopBase64))
-                <img src="{{ $kopBase64 }}" alt="Kop Surat">
-            @else
-                <div style="text-align:center; font-size:13pt; font-weight:bold; text-transform:uppercase;">UNIVERSITAS MURIA KUDUS</div>
-                <div style="text-align:center; font-size:11pt;">FAKULTAS TEKNIK — PROGRAM STUDI TEKNIK INFORMATIKA</div>
-            @endif
-        </div>
-        <hr class="kop-divider-thick">
-        <hr class="kop-divider-thin">
-
-        <div class="doc-title">BERITA ACARA {{ $isJurnalOrSempro ? 'SEMINAR PROPOSAL SKRIPSI' : 'SIDANG SKRIPSI' }}</div>
-
-        <p style="margin-bottom:12px; line-height:1.6;">
-            Pada hari ini <strong>{{ $hari }}</strong>, {{ $tanggalIndo }}
-            Jam <strong>{{ $jamTeks }}</strong>
-            di <strong>{{ $ruangTeks }}</strong>
-            telah dilaksanakan {{ $isJurnalOrSempro ? 'Seminar Proposal Skripsi' : 'Sidang Skripsi' }}.
-        </p>
-
-        <table class="field-table">
-            <tr><td class="field-label">Nama</td><td class="field-colon">:</td><td class="field-value"><strong>{{ strtoupper($nama) }}</strong></td></tr>
-            <tr><td class="field-label">NIM</td><td class="field-colon">:</td><td class="field-value">{{ $nim }}</td></tr>
-            <tr><td class="field-label">Judul</td><td class="field-colon">:</td><td class="field-value">{{ $judul }}</td></tr>
-            <tr><td class="field-label">Pembimbing Utama</td><td class="field-colon">:</td><td class="field-value">{{ $dosbingUtama ?? '___________' }}</td></tr>
-            @if($dosbingPend)
-            <tr><td class="field-label">Pembimbing Pendamping</td><td class="field-colon">:</td><td class="field-value">{{ $dosbingPend }}</td></tr>
-            @endif
-            @if($ketuaPenguji)
-            <tr><td class="field-label">Ketua Penguji</td><td class="field-colon">:</td><td class="field-value">{{ $ketuaPenguji }}</td></tr>
-            @endif
-            @if($penguji1)
-            <tr><td class="field-label">Anggota Penguji 1</td><td class="field-colon">:</td><td class="field-value">{{ $penguji1 }}</td></tr>
-            @endif
-            @if($penguji2)
-            <tr><td class="field-label">Anggota Penguji 2</td><td class="field-colon">:</td><td class="field-value">{{ $penguji2 }}</td></tr>
-            @endif
-        </table>
-
-        <p class="result-para">
-            Berdasarkan hasil {{ $isJurnalOrSempro ? 'seminar proposal' : 'pengujian pada Sidang Skripsi' }} yang telah dipaparkan, maka {{ $isJurnalOrSempro ? 'proposal skripsi' : 'mahasiswa' }} ini dinyatakan:
-        </p>
-
-        <p style="text-align:center; font-size:12pt; font-weight:bold; border: 1px solid #000; padding: 8px; margin-bottom:14px; letter-spacing:2px;">
-            {{ $isJurnalOrSempro ? 'DITERIMA  /  DITOLAK' : 'LULUS  /  TIDAK LULUS' }}
-        </p>
-
-        {{-- Signatures Table --}}
-        <table class="sign-table">
-            <tr>
-                @foreach($evaluators as $ev)
-                <td style="width: {{ count($evaluators) > 0 ? (100 / count($evaluators)) : 50 }}%;">
-                    {{ $ev['role'] }}
-                    <div class="sign-line"></div>
-                    <div class="sign-name">({{ $ev['name'] }})</div>
-                </td>
-                @endforeach
-            </tr>
-        </table>
-
-        {{-- ════════════════════════════════════════════════════════════════
-             PENILAIAN PAGES (DYNAMIC)
-        ════════════════════════════════════════════════════════════════ --}}
-        @foreach($evaluators as $ev)
-            <div class="page-break"></div>
-
-            <div class="penilaian-title">PENILAIAN {{ $isJurnalOrSempro ? 'SEMINAR PROPOSAL' : 'SIDANG SKRIPSI' }}</div>
-            <table class="field-table">
-                <tr><td class="field-label">Nama</td><td class="field-colon">:</td><td class="field-value"><strong>{{ strtoupper($nama) }}</strong></td></tr>
-                <tr><td class="field-label">NIM</td><td class="field-colon">:</td><td class="field-value">{{ $nim }}</td></tr>
-                <tr><td class="field-label">Judul</td><td class="field-colon">:</td><td class="field-value">{{ $judul }}</td></tr>
-                <tr><td class="field-label">{{ $ev['role'] }}</td><td class="field-colon">:</td><td class="field-value">{{ $ev['name'] }}</td></tr>
-            </table>
-
-            <table class="penilaian-table">
-                <thead>
-                    <tr><th>PENILAIAN</th><th style="width:25%;">PROSENTASE</th><th style="width:25%;">NILAI</th></tr>
-                </thead>
-                <tbody>
-                    @if($isJurnalOrSempro)
-                        <tr><td>Sikap</td><td>20 %</td><td></td></tr>
-                        <tr><td>Presentasi</td><td>30 %</td><td></td></tr>
-                        <tr><td>Penguasaan Teori</td><td>50 %</td><td></td></tr>
-                    @else
-                        <tr><td>Sikap</td><td>10 %</td><td></td></tr>
-                        <tr><td>Presentasi</td><td>10 %</td><td></td></tr>
-                        <tr><td>Penguasaan Teori</td><td>40 %</td><td></td></tr>
-                        <tr><td>Penguasaan Program</td><td>40 %</td><td></td></tr>
-                    @endif
-                    <tr><td colspan="2" style="font-weight:bold; text-align:right;">JUMLAH</td><td></td></tr>
-                </tbody>
-            </table>
-
-            <p style="margin-top:8px; font-weight:bold;">KETERANGAN: {{ $isJurnalOrSempro ? 'DITERIMA / DITOLAK' : 'LULUS / TIDAK LULUS' }}</p>
-            
-            <div class="penilaian-footer">
-                <p>Kudus, {{ $tanggalIndo }}</p>
-                <p style="margin-top:55px;">{{ $ev['name'] }}</p>
-            </div>
-        @endforeach
-
-        {{-- ════════════════════════════════════════════════════════════════
-             LEMBAR REVISI PAGES (DYNAMIC)
-        ════════════════════════════════════════════════════════════════ --}}
-        @foreach($evaluators as $ev)
-            <div class="page-break"></div>
-
-            <div class="revisi-title">LEMBAR REVISI {{ $isJurnalOrSempro ? 'SEMINAR PROPOSAL SKRIPSI' : 'SIDANG SKRIPSI' }}</div>
-            <table class="field-table">
-                <tr><td class="field-label">Nama</td><td class="field-colon">:</td><td class="field-value"><strong>{{ strtoupper($nama) }}</strong></td></tr>
-                <tr><td class="field-label">NIM</td><td class="field-colon">:</td><td class="field-value">{{ $nim }}</td></tr>
-                <tr><td class="field-label">Judul</td><td class="field-colon">:</td><td class="field-value">{{ $judul }}</td></tr>
-            </table>
-            <p style="font-weight:bold; margin-bottom:6px; text-transform:uppercase;">{{ $ev['role'] }}</p>
-            <table class="revisi-table">
-                <thead><tr><th>No</th><th style="width:90%;">CATATAN</th></tr></thead>
-                <tbody>
-                    @for($i=1; $i<=6; $i++)
-                    <tr><td style="text-align:center;">{{ $i }}</td><td class="catatan"></td></tr>
-                    @endfor
-                </tbody>
-            </table>
-            <p style="text-align:right; margin-top:6px;">Kudus, {{ $tanggalIndo }}</p>
-            <table class="sign-table">
-                <tr>
-                    <td style="width:60%;"></td>
-                    <td style="width:40%;">{{ $ev['role'] }}<div class="sign-line"></div><div class="sign-name">({{ $ev['name'] }})</div></td>
-                </tr>
-            </table>
-        @endforeach
+        @if($sidang->jenis_tugas_akhir === 'sempro')
+            @include('administrasi.berita-acara._sempro', ['sidang' => $sidang, 'logoBase64' => $logoBase64])
+        @else
+            {{-- Sidang skripsi & sidang jurnal: format "Berita Acara Skripsi New.docx". --}}
+            @include('administrasi.berita-acara._sidang', ['sidang' => $sidang, 'logoBase64' => $logoBase64])
+        @endif
 
         @if (!$loop->last)
             <div class="page-break"></div>

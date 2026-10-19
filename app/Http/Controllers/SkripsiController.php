@@ -9,11 +9,13 @@ use App\Models\Periode;
 use App\Models\PendaftaranPeriode;
 use App\Services\SidangConflictService;
 use App\Services\ActivityLogger;
+use App\Services\KelulusanService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class SkripsiController extends Controller
 {
@@ -181,8 +183,8 @@ class SkripsiController extends Controller
         );
 
         // Dropdown lists
-        $dosens = Dosen::orderBy('nama_dosen')->get();
-        $ruangs = Ruang::orderBy('kode_ruangan')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
+        $ruangs = Ruang::siapDigunakan()->orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
 
@@ -222,6 +224,7 @@ class SkripsiController extends Controller
                 'borderColor'     => $borderColor,
                 'textColor'       => '#ffffff',
                 'extendedProps'   => [
+                    'hash_id'              => $s->hash_id,
                     'nim'                  => $s->nim,
                     'mahasiswa'            => $s->nama_mahasiswa,
                     'judul'                => $s->judul_skripsi,
@@ -249,8 +252,8 @@ class SkripsiController extends Controller
             ->orderBy('tanggal', 'asc')
             ->pluck('tanggal');
 
-        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->count();
-        $totalJurnal = Sidang::where('jenis_tugas_akhir', 'jurnal')->count();
+        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJurnal = Sidang::where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         return view('master.skripsi.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
@@ -329,7 +332,7 @@ class SkripsiController extends Controller
             $sheet->setCellValue("C{$row}", $s->nama_mahasiswa);
             $sheet->setCellValue("D{$row}", implode(', ', $tipe));
             $sheet->setCellValue("E{$row}", implode("\n", $keterangan));
-            $sheet->setCellValue("F{$row}", $s->tanggal ? $s->tanggal->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("F{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal));
             $sheet->setCellValue("G{$row}", $s->jam ?? '-');
             $sheet->setCellValue("H{$row}", $s->ruang?->kode_ruangan ?? '-');
             
@@ -386,14 +389,14 @@ class SkripsiController extends Controller
             $sheet->setCellValue("D{$row}", $s->judul_skripsi);
             $sheet->setCellValue("E{$row}", ucfirst($s->jenis_tugas_akhir));
             $sheet->setCellValue("F{$row}", $s->periode?->nama_periode ?? '-');
-            $sheet->setCellValue("G{$row}", $s->tanggal_pendaftaran ? $s->tanggal_pendaftaran->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("G{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal_pendaftaran));
             $sheet->setCellValue("H{$row}", $s->pembimbingUtama?->nama_dosen ?? '-');
             $sheet->setCellValue("I{$row}", $s->pembimbingPendamping?->nama_dosen ?? '-');
             $sheet->setCellValue("J{$row}", $s->ketuaPenguji?->nama_dosen ?? '-');
             $sheet->setCellValue("K{$row}", $s->anggotaPenguji1?->nama_dosen ?? '-');
             $sheet->setCellValue("L{$row}", $s->anggotaPenguji2?->nama_dosen ?? '-');
             $sheet->setCellValue("M{$row}", $s->ruang?->kode_ruangan ?? '-');
-            $sheet->setCellValue("N{$row}", $s->tanggal ? $s->tanggal->locale('id')->translatedFormat('l, d/m/Y') : '-');
+            $sheet->setCellValue("N{$row}", \App\Support\TanggalIndo::lengkap($s->tanggal));
             $sheet->setCellValue("O{$row}", $s->jam ?? '-');
         }
 
@@ -485,6 +488,8 @@ class SkripsiController extends Controller
 
     public function jadwalIndex(Request $request): View
     {
+        \App\Services\KelulusanService::autoFinalizePastExams();
+
         $built = $this->buildJadwalSkripsiQuery($request);
         $query = $built['query'];
         $periodeId = $built['periode_id'];
@@ -500,25 +505,52 @@ class SkripsiController extends Controller
         $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang', 'periode'])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->get();
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
 
-        $conflictIds = [];
-        foreach ($conflictMap as $sId => $cEntry) {
-            if (!empty($cEntry['schedule']) || !empty($cEntry['rules'])) {
-                $conflictIds[] = $sId;
+        $allMatching = $query->get();
+
+        // Kelompokkan berdasarkan PASANGAN dosen pembimbing (utama & pendamping,
+        // tanpa memandang urutan perannya) — sama seperti Jadwal Sempro: Pembimbing
+        // Utama selalu auto jadi Penguji 2 (lihat syncPengujiFromPembimbing()),
+        // jadi mahasiswa dengan pasangan pembimbing yang sama paling enak diplot
+        // massal bersamaan (satu dosen = satu pengecekan kesediaan). Di dalam
+        // grup: yang sudah terjadwal (urut tanggal) dulu, lalu yang belum.
+        $pairOf = function ($s) {
+            $dosen = collect([
+                $s->dosen_pembimbing_utama_id ? ['id' => $s->dosen_pembimbing_utama_id, 'nama' => $s->pembimbingUtama->nama_dosen ?? '-'] : null,
+                $s->dosen_pembimbing_pendamping_id ? ['id' => $s->dosen_pembimbing_pendamping_id, 'nama' => $s->pembimbingPendamping->nama_dosen ?? '-'] : null,
+            ])->filter()->unique('id')->sortBy(fn ($d) => mb_strtolower($d['nama']))->values();
+
+            return [
+                'key'   => $dosen->isEmpty() ? 'none' : $dosen->pluck('id')->sort()->implode('-'),
+                'label' => $dosen->isEmpty() ? 'Belum ada pembimbing' : $dosen->pluck('nama')->implode(' & '),
+            ];
+        };
+
+        $pembimbingGroups = [];
+        foreach ($allMatching as $s) {
+            $pair = $pairOf($s);
+            $s->setAttribute('pembimbing_group_key', $pair['key']);
+            $pembimbingGroups[$pair['key']] ??= ['label' => $pair['label'], 'ids' => [], 'belum_terjadwal' => 0];
+            $pembimbingGroups[$pair['key']]['ids'][] = (string) $s->id;
+            if (empty($s->tanggal)) {
+                $pembimbingGroups[$pair['key']]['belum_terjadwal']++;
             }
         }
 
-        $allMatching = $query->get();
+        // Semua id yang belum terjadwal (lintas halaman) — "Pilih Semua di Grup
+        // Ini" bisa memilih mahasiswa di halaman lain, dan Asisten Plotting
+        // Otomatis harus tetap menerimanya.
+        $unscheduledIds = $allMatching->filter(fn ($s) => empty($s->tanggal))->pluck('id')->map(fn ($id) => (string) $id)->values();
 
-        $sortedSidangs = $allMatching->sortBy(function ($s) use ($conflictIds) {
-            $hasConflict = in_array($s->id, $conflictIds);
-            $hasDate     = !empty($s->tanggal) ? 0 : 1;
-            $tglOrder    = $s->tanggal ? $s->tanggal->format('Y-m-d') : '9999-12-31';
+        $sortedSidangs = $allMatching->sortBy(function ($s) use ($pembimbingGroups) {
+            $key = $s->pembimbing_group_key;
 
             return [
-                $hasConflict ? 0 : 1,
-                $hasDate,
-                $tglOrder,
-                $s->id
+                $key === 'none' ? 1 : 0,
+                mb_strtolower($pembimbingGroups[$key]['label']),
+                $key,
+                !empty($s->tanggal) ? 0 : 1,
+                $s->tanggal ? $s->tanggal->format('Y-m-d') . ' ' . $s->jam : '',
+                $s->id,
             ];
         })->values();
 
@@ -582,6 +614,7 @@ class SkripsiController extends Controller
                 'textColor'       => '#ffffff',
                 'editable'        => !$s->tanggal->isPast() || $s->tanggal->isToday(),
                 'extendedProps'   => [
+                    'hash_id'              => $s->hash_id,
                     'nim'                  => $s->nim,
                     'mahasiswa'            => $s->nama_mahasiswa,
                     'judul'                => $s->judul_skripsi,
@@ -604,20 +637,20 @@ class SkripsiController extends Controller
             ];
         });
 
-        $dosens = Dosen::orderBy('nama_dosen')->get();
-        $ruangs = Ruang::orderBy('kode_ruangan')->get();
+        $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
+        $ruangs = Ruang::siapDigunakan()->orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
         $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->orderBy('tanggal')->pluck('tanggal');
-        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->count();
-        $totalJurnal  = Sidang::where('jenis_tugas_akhir', 'jurnal')->count();
+        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJurnal  = Sidang::where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
 
         return view('skripsi.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
             'daftarTanggal', 'totalSkripsi', 'totalJurnal', 'calendarEvents', 'conflictMap', 'kesediaanDosens',
-            'selectedGelombang', 'gelombangOptions'
+            'selectedGelombang', 'gelombangOptions', 'pembimbingGroups', 'unscheduledIds'
         ));
     }
 
@@ -639,7 +672,7 @@ class SkripsiController extends Controller
         $validated = $request->validate([
             'tanggal'              => ['required', 'date'],
             'jam'                  => ['required', 'string', 'max:100'],
-            'ruang_id'             => ['required', 'exists:ruangs,id'],
+            'ruang_id'             => ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)],
             'ketua_penguji_id'     => ['required', 'exists:dosens,id'],
             'anggota_penguji_1_id' => ['required', 'exists:dosens,id'],
             'anggota_penguji_2_id' => ['required', 'exists:dosens,id'],
@@ -647,7 +680,7 @@ class SkripsiController extends Controller
             'tanggal.required'              => 'Tanggal sidang wajib diisi.',
             'jam.required'                  => 'Waktu / Jam sidang wajib dipilih.',
             'ruang_id.required'             => 'Ruangan sidang wajib dipilih.',
-            'ruang_id.exists'               => 'Ruangan yang dipilih tidak valid.',
+            'ruang_id.exists'               => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
             'ketua_penguji_id.required'     => 'Ketua Penguji wajib dipilih.',
             'anggota_penguji_1_id.required' => 'Penguji 1 wajib dipilih.',
             'anggota_penguji_2_id.required' => 'Penguji 2 wajib dipilih.',
@@ -658,7 +691,7 @@ class SkripsiController extends Controller
         $scheduleConflicts = SidangConflictService::checkConflicts($checkData, $sidang->id);
         if (!empty($scheduleConflicts)) {
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)], 422);
+                return response()->json(['success' => false, 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts), 'conflicts' => $scheduleConflicts], 422);
             }
             return back()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
@@ -673,7 +706,22 @@ class SkripsiController extends Controller
         }
 
         $before = $sidang->only(['tanggal', 'jam', 'ruang_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
-        $sidang->update($validated);
+
+        // Unique DB constraint on (ruang_id, tanggal, jam) is the final
+        // backstop if another request just took this exact slot in the narrow
+        // window between checkConflicts() above and this write.
+        try {
+            $sidang->update($validated);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ((int) $e->getCode() === 23000) {
+                $msg = '⚠️ Ruang/jam ini baru saja dipakai jadwal lain. Silakan pilih ruang atau jam yang berbeda.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+                return back()->with('warning', $msg);
+            }
+            throw $e;
+        }
 
         ActivityLogger::log(
             'jadwalkan',
@@ -705,7 +753,7 @@ class SkripsiController extends Controller
             'tanggal'              => ['required', 'date'],
             'jam_mulai'            => ['required', 'string'],
             'durasi_menit'         => ['required', 'integer', 'min:15', 'max:240'],
-            'ruang_id'             => ['required', 'exists:ruangs,id'],
+            'ruang_id'             => ['required', Rule::exists('ruangs', 'id')->where('status', Ruang::STATUS_SIAP)],
             'ketua_penguji_id'     => ['required', 'exists:dosens,id'],
             'anggota_penguji_1_id' => ['required', 'exists:dosens,id'],
         ], [
@@ -714,6 +762,7 @@ class SkripsiController extends Controller
             'jam_mulai.required'             => 'Jam mulai sesi pertama wajib diisi.',
             'durasi_menit.required'          => 'Durasi per sesi wajib diisi.',
             'ruang_id.required'              => 'Ruangan sidang wajib dipilih.',
+            'ruang_id.exists'                => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
             'ketua_penguji_id.required'      => 'Ketua Penguji wajib dipilih.',
             'anggota_penguji_1_id.required'  => 'Penguji 1 wajib dipilih.',
         ]);
@@ -808,6 +857,7 @@ class SkripsiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+                'conflicts' => $scheduleConflicts,
             ], 422);
         }
 
@@ -850,6 +900,10 @@ class SkripsiController extends Controller
             'tanggal_pendaftaran'            => ['nullable', 'date'],
             'jam'                            => ['nullable', 'string', 'max:100'],
             'jenis_tugas_akhir'              => ['required', 'in:skripsi,jurnal'],
+            'kategori_jurnal'                => [$request->input('jenis_tugas_akhir') === 'jurnal' ? 'required' : 'nullable', 'string', Rule::in(Sidang::KATEGORI_JURNAL_OPTIONS)],
+            'link_jurnal'                    => ['nullable', 'url', 'max:500'],
+        ], [
+            'kategori_jurnal.required' => 'Kategori jurnal wajib dipilih untuk jenis Jurnal.',
         ]);
 
         // 1. Check business rules (Pembimbing Utama wajib jadi Penguji 2, Pendamping tidak boleh menguji)
@@ -882,7 +936,8 @@ class SkripsiController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)
+                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+                    'conflicts' => $scheduleConflicts,
                 ], 422);
             }
             return back()->withInput()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
@@ -892,6 +947,11 @@ class SkripsiController extends Controller
         if (empty($validated['periode_id'])) {
             $activePeriode = Periode::where('aktif', true)->first();
             $validated['periode_id'] = $activePeriode ? $activePeriode->id : null;
+        }
+
+        if ($validated['jenis_tugas_akhir'] !== 'jurnal') {
+            $validated['kategori_jurnal'] = null;
+            $validated['link_jurnal'] = null;
         }
 
         $validated['verifikasi_status'] = 'disetujui';
@@ -931,6 +991,10 @@ class SkripsiController extends Controller
             'tanggal_pendaftaran'            => ['nullable', 'date'],
             'jam'                            => ['nullable', 'string', 'max:100'],
             'jenis_tugas_akhir'              => ['required', 'in:skripsi,jurnal'],
+            'kategori_jurnal'                => [$request->input('jenis_tugas_akhir') === 'jurnal' ? 'required' : 'nullable', 'string', Rule::in(Sidang::KATEGORI_JURNAL_OPTIONS)],
+            'link_jurnal'                    => ['nullable', 'url', 'max:500'],
+        ], [
+            'kategori_jurnal.required' => 'Kategori jurnal wajib dipilih untuk jenis Jurnal.',
         ]);
 
         // 1. Check business rules
@@ -951,13 +1015,35 @@ class SkripsiController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts)
+                    'message' => 'Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
+                    'conflicts' => $scheduleConflicts,
                 ], 422);
             }
             return back()->withInput()->with('warning', '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts));
         }
 
-        $sidang->update($validated);
+        if ($validated['jenis_tugas_akhir'] !== 'jurnal') {
+            $validated['kategori_jurnal'] = null;
+            $validated['link_jurnal'] = null;
+        }
+
+        // Unique constraint (nim, jenis_tugas_akhir, periode_id) & (ruang, tanggal,
+        // jam) bisa terlanggar di sini — tampilkan pesan yang jelas alih-alih
+        // "Server Error" mentah.
+        try {
+            $sidang->update($validated);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ((int) $e->getCode() !== 23000) {
+                throw $e;
+            }
+            $msg = str_contains($e->getMessage(), 'nim_jenis_periode')
+                ? '⚠️ Mahasiswa dengan NIM ini sudah memiliki data skripsi lain pada periode yang dipilih.'
+                : '⚠️ Ruang/jam ini sudah dipakai jadwal lain. Silakan pilih ruang atau jam yang berbeda.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->withInput()->with('warning', $msg);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -991,7 +1077,11 @@ class SkripsiController extends Controller
      */
     public function destroyAll(Request $request): RedirectResponse
     {
-        $count = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->delete();
+        // ->get()->each->delete() (not a query-builder ->delete()) so the
+        // model's deleting() hook fires per record and cleans up uploaded files.
+        $rows = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         return redirect()->route('master.skripsi.index')->with('success', "Berhasil menghapus seluruh data skripsi & jurnal ({$count} data berhasil dihapus).");
     }
@@ -1006,7 +1096,9 @@ class SkripsiController extends Controller
             'ids.*' => ['integer', 'exists:sidangs,id'],
         ]);
 
-        $count = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->whereIn('id', $validated['ids'])->delete();
+        $rows = Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->whereIn('id', $validated['ids'])->get();
+        $count = $rows->count();
+        $rows->each->delete();
 
         $message = "🗑️ {$count} data skripsi/jurnal berhasil dihapus.";
 
@@ -1346,11 +1438,21 @@ class SkripsiController extends Controller
             'verifikasi_komentar' => ['nullable', 'string'],
         ]);
 
+        $statusBefore = $sidang->verifikasi_status;
+
         $sidang->update([
             'verifikasi_status'   => $validated['verifikasi_status'],
             'verifikasi_komentar' => $validated['verifikasi_status'] === 'ditolak' ? $validated['verifikasi_komentar'] : null,
             'verifikasi_tanggal'  => now(),
         ]);
+
+        ActivityLogger::log(
+            'verifikasi',
+            $sidang,
+            "Mengubah status verifikasi {$sidang->nama_mahasiswa} ({$sidang->nim}) dari \"{$statusBefore}\" menjadi \"{$validated['verifikasi_status']}\"." .
+                (!empty($validated['verifikasi_komentar']) ? " Catatan: {$validated['verifikasi_komentar']}" : ''),
+            ['before' => ['verifikasi_status' => $statusBefore], 'after' => ['verifikasi_status' => $validated['verifikasi_status']]]
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -1362,5 +1464,42 @@ class SkripsiController extends Controller
         }
 
         return back()->with('success', 'Status verifikasi pendaftaran berhasil diperbarui!');
+    }
+
+    /**
+     * Set the exam result (hasil ujian) for a sidang record — lulus / tidak lulus (remidi).
+     * Only allowed once the exam has actually been scheduled and its date has passed.
+     * Automatically re-syncs the student's overall graduation status afterwards.
+     */
+    public function setHasilUjian(Request $request, Sidang $sidang)
+    {
+        $validated = $request->validate([
+            'status_ujian' => ['required', 'string', 'in:lulus,tidak_lulus'],
+        ]);
+
+        if (!$sidang->canSetHasilUjian()) {
+            $message = 'Hasil ujian hanya bisa diisi setelah tanggal ujian terlaksana.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
+        $sidang->update(['status_ujian' => $validated['status_ujian']]);
+
+        KelulusanService::syncStatus($sidang->nim);
+
+        ActivityLogger::log('hasil-ujian', $sidang, "Hasil ujian {$sidang->nama_mahasiswa} diset: {$validated['status_ujian']}");
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Hasil ujian berhasil disimpan!',
+                'status_ujian' => $validated['status_ujian'],
+                'hasil_ujian_html' => $sidang->fresh()->hasil_ujian_html,
+            ]);
+        }
+
+        return back()->with('success', 'Hasil ujian berhasil disimpan!');
     }
 }

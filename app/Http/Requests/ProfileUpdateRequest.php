@@ -32,4 +32,13 @@ class ProfileUpdateRequest extends FormRequest
             ],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'foto_profil.image' => 'File foto profil harus berupa gambar.',
+            'foto_profil.mimes' => 'Format foto harus JPG, JPEG, PNG, atau WEBP.',
+            'foto_profil.max'   => 'Ukuran foto profil maksimal 2 MB.',
+        ];
+    }
 }
