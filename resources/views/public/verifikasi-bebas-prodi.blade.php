@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="color-scheme" content="light dark">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Verifikasi Surat Bebas Prodi — TI UMK</title>
@@ -9,17 +10,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex items-start sm:items-center justify-center p-4">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex items-start sm:items-center justify-center p-4 dark:text-slate-200 dark:bg-slate-950">
     <div class="max-w-lg w-full my-6">
         <div class="flex items-center gap-3 mb-4 px-1">
             <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI UMK" class="w-10 h-10 object-contain">
             <div>
-                <p class="text-sm font-extrabold text-slate-900 leading-tight">Program Studi Teknik Informatika</p>
-                <p class="text-xs text-slate-500">Fakultas Teknik · Universitas Muria Kudus</p>
+                <p class="text-sm font-extrabold text-slate-900 leading-tight dark:text-slate-100">Program Studi Teknik Informatika</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Fakultas Teknik · Universitas Muria Kudus</p>
             </div>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden dark:bg-slate-800/80 dark:border-slate-700">
             @if($sah)
                 <div class="bg-emerald-600 text-white p-6 text-center">
                     <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
@@ -30,12 +31,12 @@
                 </div>
 
                 <div class="p-6 space-y-5">
-                    <p class="text-sm text-slate-600 leading-relaxed">
+                    <p class="text-sm text-slate-600 leading-relaxed dark:text-slate-400">
                         Surat Keterangan Bebas Prodi berikut diterbitkan oleh Program Studi Teknik Informatika Universitas Muria Kudus
                         dan telah <strong>ditandatangani secara elektronik</strong> oleh Ketua Program Studi.
                     </p>
 
-                    <dl class="divide-y divide-slate-100 text-sm border border-slate-200 rounded-2xl">
+                    <dl class="divide-y divide-slate-100 text-sm border border-slate-200 rounded-2xl dark:divide-slate-700 dark:border-slate-700">
                         @foreach([
                             'Jenis Dokumen'    => 'Surat Keterangan Bebas Prodi',
                             'Nomor Surat'      => $surat->nomor_surat_lengkap,
@@ -47,8 +48,8 @@
                             'Waktu Tanda Tangan' => $surat->verified_at?->timezone('Asia/Jakarta')->locale('id')->translatedFormat('j F Y, H:i') . ' WIB',
                         ] as $label => $value)
                             <div class="flex flex-col sm:flex-row sm:gap-4 px-4 py-2.5">
-                                <dt class="sm:w-40 shrink-0 text-xs font-bold text-slate-500 uppercase tracking-wider sm:pt-0.5">{{ $label }}</dt>
-                                <dd class="font-semibold text-slate-900 break-words">{{ $value }}</dd>
+                                <dt class="sm:w-40 shrink-0 text-xs font-bold text-slate-500 uppercase tracking-wider sm:pt-0.5 dark:text-slate-400">{{ $label }}</dt>
+                                <dd class="font-semibold text-slate-900 break-words dark:text-slate-100">{{ $value }}</dd>
                             </div>
                         @endforeach
                     </dl>
@@ -67,13 +68,13 @@
                     </div>
                     <h1 class="text-xl font-extrabold tracking-wide">{{ $surat ? 'SURAT TIDAK BERLAKU' : 'DOKUMEN TIDAK TERDAFTAR' }}</h1>
                 </div>
-                <div class="p-6 text-sm text-slate-600 leading-relaxed space-y-3">
+                <div class="p-6 text-sm text-slate-600 leading-relaxed space-y-3 dark:text-slate-400">
                     @if($surat)
                         <p>Surat Keterangan Bebas Prodi atas nama <strong>{{ $surat->nama_mahasiswa }}</strong> ({{ $surat->nim }}) dengan kode ini <strong>telah dibatalkan</strong> oleh Program Studi dan tidak sah digunakan untuk pemberkasan.</p>
                     @else
                         <p>Kode verifikasi ini <strong>tidak ditemukan</strong> dalam sistem Program Studi Teknik Informatika UMK. Dokumen yang Anda pindai kemungkinan <strong>bukan surat asli</strong>.</p>
                     @endif
-                    <p class="text-xs text-slate-500">Hubungi Program Studi Teknik Informatika UMK (ti@umk.ac.id) untuk konfirmasi.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Hubungi Program Studi Teknik Informatika UMK (ti@umk.ac.id) untuk konfirmasi.</p>
                 </div>
             @endif
         </div>
