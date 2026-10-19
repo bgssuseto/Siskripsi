@@ -6,6 +6,7 @@
             background: #fff;
             border-radius: 20px;
             padding: 1.5rem;
+            min-width: 0;
             box-shadow: 0 1px 3px rgba(0,0,0,.08);
             border: 1px solid #f1f5f9;
         }
@@ -23,6 +24,16 @@
         .fc-header-toolbar { margin-bottom: 1.25rem !important; }
         .fc-daygrid-day-number { font-size: .82rem !important; font-weight: 700 !important; color: #334155 !important; }
         html.dark .fc-daygrid-day-number { color: #e2e8f0 !important; }
+
+        @media (max-width: 639px) {
+            .calendar-container { padding: .875rem; border-radius: 16px; }
+            .fc .fc-toolbar-title { font-size: 1rem !important; }
+            .fc .fc-toolbar.fc-header-toolbar { margin-bottom: .75rem !important; }
+            .fc .fc-button { padding: .35rem .6rem !important; font-size: .72rem !important; }
+            .fc .fc-list-event-title, .fc .fc-list-event-time { font-size: .78rem; }
+            .fc .fc-footer-toolbar { justify-content: center !important; }
+            .fc .fc-list-event-time { display: none; }
+        }
 
         /* Badges */
         .badge { display: inline-flex; align-items: center; padding: .22rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
@@ -122,20 +133,23 @@
                 const isMobileScreen = window.innerWidth < 640;
 
                 const calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: isMobileScreen ? 'listWeek' : 'dayGridMonth',
+                    initialView: isMobileScreen ? 'listMonth' : 'dayGridMonth',
                     initialDate: firstDate || undefined,
                     locale: 'id',
                     headerToolbar: isMobileScreen
                         ? { left: 'prev,next', center: 'title', right: 'today' }
                         : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
                     footerToolbar: isMobileScreen
-                        ? { right: 'dayGridMonth,listWeek,timeGridDay' }
+                        ? { center: 'listMonth,dayGridMonth' }
                         : false,
                     slotMinTime: '07:00:00',
                     slotMaxTime: '17:00:00',
                     slotDuration: '00:30:00',
                     slotLabelInterval: '00:30:00',
                     allDaySlot: false,
+                    allDayText: '',
+                    buttonText: { today: 'Hari ini', month: 'Bulan', week: 'Minggu', day: 'Hari', list: 'Daftar', listMonth: 'Daftar' },
+                    views: { listMonth: { buttonText: 'Daftar' }, dayGridMonth: { buttonText: 'Bulan' } },
                     events: eventsData,
                     eventContent: function(arg) {
                         const props = arg.event.extendedProps || {};
@@ -192,7 +206,7 @@
         }" x-init="$nextTick(() => initCalendar())">
 
             <!-- Header Section -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800 mb-6">
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-5 sm:p-8 text-white shadow-xl border border-slate-800 mb-5 sm:mb-6">
                 <div class="absolute -right-10 -top-10 w-56 h-56 bg-indigo-500/10 rounded-full blur-3xl"></div>
                 <div class="absolute right-32 -bottom-10 w-44 h-44 bg-purple-500/10 rounded-full blur-2xl"></div>
 
@@ -207,19 +221,19 @@
             </div>
 
             <!-- View Toggle Buttons -->
-            <div class="flex justify-end mb-8">
-                <div class="flex items-center gap-1.5 bg-slate-200/60 p-1.5 rounded-2xl w-fit">
+            <div class="flex sm:justify-end mb-6">
+                <div class="grid grid-cols-2 sm:flex items-center gap-1 bg-slate-200/70 dark:bg-slate-800 p-1 rounded-2xl w-full sm:w-fit ring-1 ring-inset ring-slate-200 dark:ring-slate-700">
                     <button @click="currentView = 'calendar'; $nextTick(() => initCalendar())"
-                            :class="currentView === 'calendar' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer">
+                            :class="currentView === 'calendar' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                         Kalender View
                     </button>
                     <button @click="currentView = 'list'"
-                            :class="currentView === 'list' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer">
+                            :class="currentView === 'list' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
                         </svg>
@@ -233,12 +247,12 @@
                 <div id="calendar-view" data-events="{{ json_encode($calendarEvents) }}"></div>
             </div>
 
-            <div x-show="currentView === 'list'" class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-cloak>
+            <div x-show="currentView === 'list'" class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-8" x-cloak>
                 <!-- Main Timeline (Left 2 cols) -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="lg:col-span-2 space-y-5 lg:space-y-6 min-w-0">
                     <!-- Filters & Search Toolbar -->
-                    <div class="bg-white dark:bg-slate-800/80 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
-                        <form method="GET" action="{{ route('dosen.kalender') }}" class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 w-full">
+                    <div class="bg-white dark:bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
+                        <form method="GET" action="{{ route('dosen.kalender') }}" class="flex flex-col gap-3 w-full">
                             <!-- Hidden input to keep active tab/view as list -->
                             <input type="hidden" name="view" value="list">
 
@@ -251,33 +265,35 @@
                                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama mahasiswa, NIM atau judul..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500">
                             </div>
 
-                            <div class="flex flex-wrap items-center gap-3">
-                                <div>
-                                    <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 dark:text-slate-200 font-semibold cursor-pointer">
+                            <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
+                                <div class="col-span-2 sm:col-span-1">
+                                    <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 dark:text-slate-200 font-semibold cursor-pointer">
                                 </div>
 
-                                <select name="jenis" class="px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 dark:text-slate-200 font-bold cursor-pointer">
+                                <select name="jenis" class="w-full sm:w-auto min-w-0 px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 dark:text-slate-200 font-bold cursor-pointer">
                                     <option value="">Semua Jenis Ujian</option>
                                     <option value="sempro" {{ request('jenis') === 'sempro' ? 'selected' : '' }}>Seminar Proposal</option>
                                     <option value="skripsi" {{ request('jenis') === 'skripsi' ? 'selected' : '' }}>Sidang Skripsi</option>
                                 </select>
 
-                                <select name="status" class="px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 dark:text-slate-200 font-bold cursor-pointer">
+                                <select name="status" class="w-full sm:w-auto min-w-0 px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-slate-700 dark:text-slate-200 font-bold cursor-pointer">
                                     <option value="">Akan Datang (Default)</option>
                                     <option value="terjadwal" {{ request('status') === 'terjadwal' ? 'selected' : '' }}>Terjadwal & Belum Sidang</option>
                                     <option value="proses" {{ request('status') === 'proses' ? 'selected' : '' }}>Proses Ujian</option>
                                     <option value="sudah" {{ request('status') === 'sudah' ? 'selected' : '' }}>Sudah Sidang</option>
                                 </select>
 
-                                <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-855 active:bg-slate-950 text-white font-bold text-xs rounded-xl shadow-sm hover:shadow transition-all shrink-0 cursor-pointer">
-                                    Filter
-                                </button>
+                                <div class="col-span-2 sm:col-span-1 flex gap-2">
+                                    <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer">
+                                        Filter
+                                    </button>
 
-                                @if(request()->anyFilled(['search', 'tanggal', 'jenis', 'status']))
-                                    <a href="{{ route('dosen.kalender', ['view' => 'list']) }}" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all text-center shrink-0">
-                                        Reset
-                                    </a>
-                                @endif
+                                    @if(request()->anyFilled(['search', 'tanggal', 'jenis', 'status']))
+                                        <a href="{{ route('dosen.kalender', ['view' => 'list']) }}" class="flex-1 sm:flex-none px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all text-center">
+                                            Reset
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -288,9 +304,9 @@
                     @endphp
 
                     <!-- Kategori: Seminar Proposal -->
-                    <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm" x-data="{ open: true }">
+                    <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-4 sm:p-6 shadow-sm" x-data="{ open: true }">
                         <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-2 text-left cursor-pointer">
-                            <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
+                            <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-blue-600 shrink-0"></span>
                                 Agenda Seminar Proposal
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">{{ $agendaSempro->count() }}</span>
@@ -300,7 +316,7 @@
                             </svg>
                         </button>
 
-                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="relative pl-6 border-l border-slate-100 dark:border-slate-700 space-y-8 mt-6">
+                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="relative sm:pl-6 sm:border-l border-slate-200 dark:border-slate-700 space-y-3 sm:space-y-5 mt-4 sm:mt-6">
                             @forelse($agendaSempro as $s)
                                 @include('dosen.partials._agenda-item', ['s' => $s, 'dosen' => $dosen])
                             @empty
@@ -312,9 +328,9 @@
                     </div>
 
                     <!-- Kategori: Sidang Skripsi -->
-                    <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm" x-data="{ open: true }">
+                    <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-4 sm:p-6 shadow-sm" x-data="{ open: true }">
                         <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-2 text-left cursor-pointer">
-                            <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
+                            <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-sm sm:text-base flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0"></span>
                                 Agenda Sidang Skripsi
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200">{{ $agendaSkripsi->count() }}</span>
@@ -324,7 +340,7 @@
                             </svg>
                         </button>
 
-                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="relative pl-6 border-l border-slate-100 dark:border-slate-700 space-y-8 mt-6">
+                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="relative sm:pl-6 sm:border-l border-slate-200 dark:border-slate-700 space-y-3 sm:space-y-5 mt-4 sm:mt-6">
                             @forelse($agendaSkripsi as $s)
                                 @include('dosen.partials._agenda-item', ['s' => $s, 'dosen' => $dosen])
                             @empty
@@ -339,7 +355,7 @@
                 <!-- Sidebar Info (Right 1 col) -->
                 <div class="space-y-6">
                     <!-- Color legends -->
-                    <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-6 shadow-sm">
+                    <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-5 sm:p-6 shadow-sm">
                         <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-sm uppercase tracking-wider mb-4">Petunjuk Warna</h3>
                         <div class="space-y-3.5">
                             <div class="flex items-center gap-3">
@@ -360,7 +376,7 @@
                     </div>
 
                     <!-- Academic Info box -->
-                    <div class="bg-gradient-to-tr from-slate-900 to-indigo-950 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="bg-gradient-to-tr from-slate-900 to-indigo-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
                         <div class="absolute -right-10 -bottom-10 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
                         <h3 class="font-extrabold text-sm uppercase tracking-wider text-indigo-300 mb-3">Informasi Tambahan</h3>
                         <p class="text-xs text-slate-300 leading-relaxed font-semibold">

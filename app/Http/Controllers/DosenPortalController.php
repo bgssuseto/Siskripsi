@@ -770,27 +770,31 @@ class DosenPortalController extends Controller
 
         if ($dosen) {
             $id = $dosen->id;
-            $sidangs = Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
+            // Penguji: hanya ujian skripsi (sidang & jurnal).
+            $ujian = Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
                 ->whereNotNull('periode_id')
-                ->where(fn ($q) => $q->where('dosen_pembimbing_utama_id', $id)
-                    ->orWhere('dosen_pembimbing_pendamping_id', $id)
-                    ->orWhere('ketua_penguji_id', $id)
+                ->where(fn ($q) => $q->where('ketua_penguji_id', $id)
                     ->orWhere('anggota_penguji_1_id', $id)
                     ->orWhere('anggota_penguji_2_id', $id))
-                ->get(['periode_id', 'dosen_pembimbing_utama_id', 'dosen_pembimbing_pendamping_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
+                ->get(['periode_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
+            // Pembimbing: sejak Sempro, tiap mahasiswa di periode pertama bimbingan
+            // — SK Pembimbing tidak perlu menunggu periode sidang skripsi.
+            $bimbingan = \App\Services\SkPdfService::bimbinganDosen($id);
 
-            $periodes = Periode::whereIn('id', $sidangs->pluck('periode_id')->unique())->orderByDesc('id')->get();
+            $periodes = Periode::whereIn('id', $ujian->pluck('periode_id')->merge($bimbingan->pluck('periode_id'))->unique())
+                ->orderByDesc('id')->get();
 
-            $rows = $periodes->map(function (Periode $p) use ($sidangs, $id) {
-                $ps = $sidangs->where('periode_id', $p->id);
-                $hitung = fn (string $kolom) => $ps->filter(fn ($s) => (int) $s->{$kolom} === $id)->count();
+            $rows = $periodes->map(function (Periode $p) use ($ujian, $bimbingan, $id) {
+                $u = $ujian->where('periode_id', $p->id);
+                $b = $bimbingan->where('periode_id', $p->id);
+                $hitung = fn ($koleksi, string $kolom) => $koleksi->filter(fn ($s) => (int) $s->{$kolom} === $id)->count();
 
                 return [
                     'periode'    => $p,
-                    'utama'      => $hitung('dosen_pembimbing_utama_id'),
-                    'pendamping' => $hitung('dosen_pembimbing_pendamping_id'),
-                    'ketua'      => $hitung('ketua_penguji_id'),
-                    'anggota'    => $hitung('anggota_penguji_1_id') + $hitung('anggota_penguji_2_id'),
+                    'utama'      => $hitung($b, 'dosen_pembimbing_utama_id'),
+                    'pendamping' => $b->filter(fn ($s) => (int) $s->dosen_pembimbing_utama_id !== $id && (int) $s->dosen_pembimbing_pendamping_id === $id)->count(),
+                    'ketua'      => $hitung($u, 'ketua_penguji_id'),
+                    'anggota'    => $hitung($u, 'anggota_penguji_1_id') + $hitung($u, 'anggota_penguji_2_id'),
                 ];
             });
         }

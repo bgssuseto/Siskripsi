@@ -17,7 +17,7 @@
     <div class="mb-6">
         <h2 class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">SK Pembimbing &amp; Penguji</h2>
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Unduh SK Pembimbing dan SK Penguji ujian skripsi (sidang skripsi &amp; jurnal) Anda per periode. Dokumen berisi surat permohonan SK beserta rekap dan rincian mahasiswa Anda.
+            SK Pembimbing terbit sejak mahasiswa bimbingan Anda disetujui mendaftar Sempro (tanpa menunggu periode sidang skripsi); SK Penguji dihitung dari ujian skripsi (sidang &amp; jurnal). Dokumen berisi surat permohonan SK beserta rekap dan rincian mahasiswa Anda.
         </p>
     </div>
 
@@ -65,7 +65,7 @@
                                     Unduh SK Pembimbing (PDF)
                                 </a>
                             @else
-                                <span class="text-xs text-slate-400 dark:text-slate-500 italic">Tidak ada bimbingan ujian skripsi pada periode ini.</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-500 italic">Tidak ada mahasiswa bimbingan baru pada periode ini.</span>
                             @endif
                         </div>
 
