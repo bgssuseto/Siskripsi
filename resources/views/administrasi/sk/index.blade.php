@@ -20,6 +20,13 @@
                         @endforeach
                     </select>
                     <noscript><button class="ui-btn-secondary">Terapkan</button></noscript>
+                    @if($statusFinal)
+                        @if($statusFinal['final'])
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-200 ring-1 ring-inset ring-teal-200 dark:ring-teal-500/30"><x-icon name="badge-check" class="w-3 h-3" /> SK Final</span>
+                        @else
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-200 ring-1 ring-inset ring-amber-200 dark:ring-amber-500/30"><x-icon name="clock" class="w-3 h-3" /> SK Sementara</span>
+                        @endif
+                    @endif
                 </form>
         </x-page-header>
 
@@ -28,10 +35,6 @@
                 <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ session('warning') }}</span>
                 <button onclick="this.parentElement.remove()" class="text-amber-500 hover:text-amber-800"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
-        @endif
-
-        @if($statusFinal && $selectedPeriode)
-            <x-sk-status-final :status="$statusFinal" :periode="$selectedPeriode" />
         @endif
 
         <!-- 2 Main SK Cards (Excel Export Action Cards) -->

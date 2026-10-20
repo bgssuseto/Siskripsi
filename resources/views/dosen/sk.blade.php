@@ -52,13 +52,18 @@
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <div>
                             <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100">{{ $p->nama_periode }}</h3>
+                            <div class="mt-1 flex flex-wrap items-center gap-1.5">
                             @if($p->aktif)
-                                <span class="inline-flex mt-1 items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">● Periode Aktif</span>
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">● Periode Aktif</span>
                             @endif
+                            @if($row['final'])
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-200 ring-1 ring-inset ring-teal-200 dark:ring-teal-500/30"><x-icon name="badge-check" class="w-3 h-3" /> SK Final</span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-200 ring-1 ring-inset ring-amber-200 dark:ring-amber-500/30"><x-icon name="clock" class="w-3 h-3" /> SK Sementara</span>
+                            @endif
+                            </div>
                         </div>
                     </div>
-
-                    <x-sk-status-final :status="$row['status']" :periode="$p" class="mb-4" />
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {{-- SK Pembimbing --}}
