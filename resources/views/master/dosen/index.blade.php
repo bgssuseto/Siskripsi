@@ -240,7 +240,7 @@
                                 {{ $dosen->email ?? '-' }}
                             </td>
                             <td class="px-6 py-4">
-                                <span class="font-mono font-bold text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg uppercase">{{ $dosen->alias ?: $dosen->initials }}</span>
+                                <span class="font-mono font-bold text-xs text-sky-700 dark:text-sky-200 bg-sky-50 dark:bg-sky-500/15 px-2 py-1 rounded-lg uppercase">{{ $dosen->alias ?: $dosen->initials }}</span>
                             </td>
                             <td class="px-6 py-4 text-slate-600 dark:text-slate-300">
                                 {{ $dosen->kepakaran ?? '-' }}

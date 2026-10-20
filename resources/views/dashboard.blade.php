@@ -189,7 +189,7 @@
                                 {{ $item->tanggal_pendaftaran ? $item->tanggal_pendaftaran->format('d/m/Y') : '-' }}
                             </td>
                             <td class="py-3.5 px-4 whitespace-nowrap">
-                                <span class="font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-md font-semibold text-[11px]">
+                                <span class="font-mono bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-200 px-2 py-0.5 rounded-md font-semibold text-[11px]">
                                     {{ $item->nim }}
                                 </span>
                             </td>

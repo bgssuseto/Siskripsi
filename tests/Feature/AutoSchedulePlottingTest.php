@@ -164,7 +164,7 @@ class AutoSchedulePlottingTest extends TestCase
         $this->actingAs($this->superAdmin)
             ->get(route('jadwal.auto-plot.index'))
             ->assertOk()
-            ->assertSee('-- Semua Gelombang --');
+            ->assertSee('Semua Gelombang');
     }
 
     public function test_gelombang_baru_langsung_terdeteksi_saat_generate_usulan(): void

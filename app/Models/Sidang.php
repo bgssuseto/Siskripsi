@@ -417,7 +417,7 @@ class Sidang extends Model
     public function getJadwalStatusHtml(): string
     {
         if (empty($this->tanggal)) {
-            return '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">● Belum Plotting</span>';
+            return '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap dark:bg-rose-500/15 dark:text-rose-200 dark:border-rose-500/30">● Belum Plotting</span>';
         }
 
         if ($this->jadwal_terpisah) {
@@ -427,32 +427,32 @@ class Sidang extends Model
         $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
         $jadwal = $this->tanggal->format('Y-m-d');
 
-        $detailBadges = '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">📅 ' . e($this->tanggal->locale('id')->translatedFormat('d M Y')) . '</span>';
+        $detailBadges = '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">📅 ' . e($this->tanggal->locale('id')->translatedFormat('d M Y')) . '</span>';
         if (!empty($this->jam)) {
-            $detailBadges .= '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">🕐 ' . e($this->jam) . '</span>';
+            $detailBadges .= '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">🕐 ' . e($this->jam) . '</span>';
         }
         $ruangKode = $this->ruang->kode_ruangan ?? null;
         if (!empty($ruangKode)) {
-            $detailBadges .= '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">📍 ' . e($ruangKode) . '</span>';
+            $detailBadges .= '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">📍 ' . e($ruangKode) . '</span>';
         }
 
         if ($this->isExamEnded()) {
             return '<div class="flex flex-wrap gap-1">' .
-                   '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">✓ Selesai</span>' .
+                   '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-500/15 dark:text-teal-200 dark:border-teal-500/30 whitespace-nowrap">✓ Selesai</span>' .
                    $detailBadges .
                    '</div>';
         }
 
         if ($jadwal > $today) {
             return '<div class="flex flex-wrap gap-1">' .
-                   '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">✓ Terjadwal</span>' .
-                   '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">● Belum Sidang</span>' .
+                   '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/30">✓ Terjadwal</span>' .
+                   '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-500/30">● Belum Sidang</span>' .
                    $detailBadges .
                    '</div>';
         }
 
         return '<div class="flex flex-wrap gap-1">' .
-               '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">⏳ Proses Ujian</span>' .
+               '<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap dark:bg-blue-500/15 dark:text-blue-200 dark:border-blue-500/30">⏳ Proses Ujian</span>' .
                $detailBadges .
                '</div>';
     }
@@ -465,13 +465,13 @@ class Sidang extends Model
     private function getJadwalStatusHtmlTerpisah(): string
     {
         $html = '<div class="flex flex-col gap-1">';
-        $html .= '<span class="inline-flex items-center gap-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap w-fit">🔀 Jadwal Terpisah</span>';
+        $html .= '<span class="inline-flex items-center gap-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap w-fit dark:bg-purple-500/15 dark:text-purple-200 dark:border-purple-500/30">🔀 Jadwal Terpisah</span>';
         $html .= $this->sessionStatusBadgeHtml('Pembimbing Utama', $this->tanggal, $this->jam, $this->ruang->kode_ruangan ?? null);
 
         if ($this->tanggal_pendamping) {
             $html .= $this->sessionStatusBadgeHtml('Pembimbing Pendamping', $this->tanggal_pendamping, $this->jam_pendamping, $this->ruangPendamping->kode_ruangan ?? null);
         } else {
-            $html .= '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap w-fit">⚠️ Sesi Pembimbing Pendamping belum dijadwalkan</span>';
+            $html .= '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap w-fit dark:bg-rose-500/15 dark:text-rose-200 dark:border-rose-500/30">⚠️ Sesi Pembimbing Pendamping belum dijadwalkan</span>';
         }
 
         if ($this->catatan_jadwal_terpisah) {
@@ -490,19 +490,19 @@ class Sidang extends Model
         $tglYmd = $tanggal->format('Y-m-d');
 
         if ($ended) {
-            $statusBadge = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">✓ Selesai</span>';
+            $statusBadge = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-500/15 dark:text-teal-200 dark:border-teal-500/30 whitespace-nowrap">✓ Selesai</span>';
         } elseif ($tglYmd === $today) {
-            $statusBadge = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">⏳ Proses</span>';
+            $statusBadge = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap dark:bg-blue-500/15 dark:text-blue-200 dark:border-blue-500/30">⏳ Proses</span>';
         } else {
-            $statusBadge = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">● Belum</span>';
+            $statusBadge = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-500/30">● Belum</span>';
         }
 
-        $detail = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">📅 ' . e($tanggal->locale('id')->translatedFormat('d M Y')) . '</span>';
+        $detail = '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">📅 ' . e($tanggal->locale('id')->translatedFormat('d M Y')) . '</span>';
         if (!empty($jam)) {
-            $detail .= '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">🕐 ' . e($jam) . '</span>';
+            $detail .= '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">🕐 ' . e($jam) . '</span>';
         }
         if (!empty($ruangKode)) {
-            $detail .= '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">📍 ' . e($ruangKode) . '</span>';
+            $detail .= '<span class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">📍 ' . e($ruangKode) . '</span>';
         }
 
         return '<div class="flex flex-wrap items-center gap-1">' .
@@ -519,11 +519,11 @@ class Sidang extends Model
         $status = $this->verifikasi_status ?? 'menunggu';
         if ($status === 'disetujui') {
             return '<div class="flex flex-col items-center">' .
-                   '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">✓ Terverifikasi Koordinator</span>' .
+                   '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/30">✓ Terverifikasi Koordinator</span>' .
                    '</div>';
         } elseif ($status === 'ditolak') {
             $html = '<div class="flex flex-col items-center gap-1">' .
-                    '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">✕ Ditolak</span>';
+                    '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap dark:bg-rose-500/15 dark:text-rose-200 dark:border-rose-500/30">✕ Ditolak</span>';
             if ($this->verifikasi_komentar) {
                 $html .= '<span class="text-[10px] text-slate-500 font-normal text-center max-w-[200px]">Catatan: ' . e($this->verifikasi_komentar) . '</span>';
             }
@@ -531,7 +531,7 @@ class Sidang extends Model
             return $html;
         } else {
             return '<div class="flex flex-col items-center">' .
-                   '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">⏳ Menunggu Verifikasi</span>' .
+                   '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-500/30">⏳ Menunggu Verifikasi</span>' .
                    '</div>';
         }
     }
@@ -587,14 +587,14 @@ class Sidang extends Model
     public function getHasilUjianHtml(): string
     {
         if ($this->status_ujian === 'lulus') {
-            return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">🎓 Lulus</span>';
+            return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/30">🎓 Lulus</span>';
         }
 
         if ($this->status_ujian === 'tidak_lulus') {
-            return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">✕ Tidak Lulus / Remidi</span>';
+            return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap dark:bg-rose-500/15 dark:text-rose-200 dark:border-rose-500/30">✕ Tidak Lulus / Remidi</span>';
         }
 
-        return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap">Belum Lulus</span>';
+        return '<span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/30 whitespace-nowrap">Belum Lulus</span>';
     }
 
     /**

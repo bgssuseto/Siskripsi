@@ -387,7 +387,7 @@
                                     @else
                                         <div class="flex flex-wrap gap-1.5 items-center">
                                             @foreach($userAccessibleMenus->take(3) as $am)
-                                                <span class="px-2.5 py-1 bg-slate-100 border border-slate-200/80 text-slate-700 text-xs font-medium rounded-lg">
+                                                <span class="px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-medium rounded-lg dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">
                                                     {{ $am->name }}
                                                 </span>
                                             @endforeach
@@ -445,7 +445,7 @@
                             <td class="py-4 px-6 font-bold text-slate-900">{{ $m->name }}</td>
                             <td class="py-4 px-6 font-mono text-xs text-indigo-600 dark:text-indigo-400 font-bold">{{ $m->route ?? '-' }}</td>
                             <td class="py-4 px-6 text-xs">
-                                <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold capitalize">
+                                <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200 font-bold capitalize">
                                     {{ $m->role_default ?? 'all' }}
                                 </span>
                             </td>

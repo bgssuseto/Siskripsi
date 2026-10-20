@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Dosen;
 use App\Models\Kaprodi;
+use App\Models\PendaftaranPeriode;
 use App\Models\Periode;
 use App\Models\Sidang;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -84,9 +85,42 @@ class SkPdfService
     }
 
     /**
+     * Apakah data SK satu periode sudah final? Final bila semester sudah berganti
+     * (periode tidak aktif lagi), ATAU gelombang pendaftaran skripsi terakhir periode
+     * itu sudah ditutup dan tidak ada lagi sidang yang belum/akan dilaksanakan.
+     * Sebelum final, SK Pembimbing di portal dosen hanya terbit sebagai SEMENTARA.
+     */
+    public static function periodeFinal(Periode $periode): bool
+    {
+        if (!$periode->aktif) {
+            return true;
+        }
+
+        $hariIni = now()->timezone('Asia/Jakarta')->toDateString();
+        $gelombangSkripsi = PendaftaranPeriode::where('periode_id', $periode->id)->where('jenis', 'skripsi')->get();
+        if ($gelombangSkripsi->isEmpty()) {
+            return false;
+        }
+
+        $penutupan = $gelombangSkripsi->max(fn ($g) => $g->tanggal_selesai?->toDateString());
+        if ($penutupan === null || $penutupan >= $hariIni) {
+            return false;
+        }
+
+        $masihBerjalan = Sidang::where('periode_id', $periode->id)
+            ->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
+            ->where(fn ($q) => $q->whereNull('verifikasi_status')->orWhere('verifikasi_status', '!=', 'ditolak'))
+            ->where(fn ($q) => $q->whereNull('tanggal')->orWhereDate('tanggal', '>=', $hariIni))
+            ->exists();
+
+        return !$masihBerjalan;
+    }
+
+    /**
+     * @param  bool  $sementara  Tandai PDF sebagai SK SEMENTARA (watermark + catatan, nama file _SEMENTARA)
      * @return array{pdf: \Barryvdh\DomPDF\PDF, filename: string}|null  null bila tidak ada data
      */
-    public static function build(string $mode, array $filter, ?int $hanyaDosenId = null): ?array
+    public static function build(string $mode, array $filter, ?int $hanyaDosenId = null, bool $sementara = false): ?array
     {
         $dosenRincian = self::dosenRincian(self::sidangs($filter), $mode, $hanyaDosenId);
 
@@ -111,11 +145,12 @@ class SkPdfService
             'tanggalSurat' => $tanggalSurat->copy()->locale('id')->translatedFormat('j F Y'),
             'kaprodi'      => rescue(fn () => Kaprodi::untukTanggal($tanggalSurat)?->nama, null, false),
             'kopBase64'    => self::kopSuratBase64(),
+            'sementara'    => $sementara,
         ])->setPaper('a4', 'portrait');
 
         $gelombang = ($filter['gelombang'] ?? '') !== '' && ($filter['gelombang'] ?? null) !== null ? '_Gelombang_' . $filter['gelombang'] : '';
         $dosen = $hanyaDosenId ? '_' . ($dosenRincian->first()['nama_dosen'] ?? '') : '';
-        $filename = trim(preg_replace('/[^\w\.-]+/', '_', ($hanyaDosenId ? 'SK_' : 'Pengajuan_SK_') . ucfirst($mode) . "_{$namaPeriode}{$gelombang}{$dosen}"), '_') . '.pdf';
+        $filename = trim(preg_replace('/[^\w\.-]+/', '_', ($hanyaDosenId ? 'SK_' : 'Pengajuan_SK_') . ucfirst($mode) . ($sementara ? '_SEMENTARA' : '') . "_{$namaPeriode}{$gelombang}{$dosen}"), '_') . '.pdf';
 
         return ['pdf' => $pdf, 'filename' => $filename];
     }

@@ -9,12 +9,6 @@
             <x-slot:actions>
                 <div class="flex items-center gap-2">
                 <button @click="importModal = true" class="ui-btn-secondary"><x-icon name="upload" class="w-4 h-4" /> Import Excel Kesediaan</button>
-                <form action="{{ route('master.kesediaan-dosen.destroy-all') }}" method="POST"
-                      onsubmit="return confirm('⚠️ KONFIRMASI HAPUS SEMUA DATA:\nApakah Anda yakin ingin menghapus SELURUH data kesediaan dosen (semua dosen, semua periode/gelombang)?\n\nTindakan ini tidak dapat dibatalkan!');" class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="ui-btn-danger-soft"><x-icon name="trash" class="w-4 h-4" /> Hapus Semua</button>
-                </form>
             </div>
 
             {{-- ================= MODAL IMPORT KESEDIAAN ================= --}}
@@ -155,7 +149,7 @@
                         <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 align-middle"></span> AKTIF SEKARANG
                     </span>
                 @else
-                    <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 mb-3">
+                    <span class="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-500/30 mb-3">
                         <span class="inline-block w-2 h-2 rounded-full bg-slate-300 align-middle"></span> TIDAK AKTIF — form ditutup atau dikunci
                     </span>
                 @endif
@@ -201,7 +195,7 @@
                     <div class="bg-slate-50/50 dark:bg-slate-700/40 hover:bg-slate-50 dark:hover:bg-slate-700/60 border border-slate-200/80 dark:border-slate-600 rounded-2xl p-4 transition-all duration-200 flex items-center justify-between gap-4 shadow-xs">
                         <div class="min-w-0">
                             <h4 class="font-bold text-slate-800 dark:text-slate-200 text-sm leading-snug truncate" title="{{ $d->nama_dosen }}">{{ $d->nama_dosen }}</h4>
-                            <span class="inline-block mt-1 px-2 py-0.5 rounded bg-slate-200/60 dark:bg-slate-600 text-slate-600 dark:text-slate-300 font-mono text-[10px]">NIDN: {{ $d->nidn }}</span>
+                            <span class="inline-block mt-1 px-2 py-0.5 rounded bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-200 font-mono text-[10px]">NIDN: {{ $d->nidn }}</span>
                             <div class="mt-2">
                                 @if($d->can_fill_kesediaan)
                                     <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -275,7 +269,43 @@
         </form>
 
         {{-- Table Card --}}
+        @php
+            $filterPeriode = request('periode_id') ? $periodes->firstWhere('id', (int) request('periode_id')) : null;
+            $filterDosen   = request('dosen_id') ? $dosens->firstWhere('id', (int) request('dosen_id')) : null;
+            $lingkupReset  = collect([$filterPeriode ? 'periode ' . $filterPeriode->nama_periode : null, $filterDosen ? 'dosen ' . $filterDosen->nama_dosen : null])->filter()->implode(' & ');
+        @endphp
         <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+                <div>
+                    <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Daftar Kesediaan Dosen</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {{ $kesediaans->total() }} kelompok kesediaan{{ $lingkupReset ? ' · filter: ' . $lingkupReset : ' · semua periode' }}
+                    </p>
+                </div>
+                @if($kesediaans->total() > 0)
+                    <form action="{{ route('master.kesediaan-dosen.destroy-all') }}" method="POST"
+                          onsubmit="return confirm(@js($lingkupReset
+                              ? "RESET KESEDIAAN
+
+Hapus semua data kesediaan untuk {$lingkupReset}?
+Dosen dapat mengisi ulang kesediaannya setelah direset.
+
+Tindakan ini tidak dapat dibatalkan."
+                              : "HAPUS SEMUA DATA KESEDIAAN
+
+Hapus SELURUH data kesediaan dosen (semua dosen, semua periode/gelombang)?
+
+Tindakan ini tidak dapat dibatalkan."));">
+                        @csrf
+                        @method('DELETE')
+                        @if($filterPeriode)<input type="hidden" name="periode_id" value="{{ $filterPeriode->id }}">@endif
+                        @if($filterDosen)<input type="hidden" name="dosen_id" value="{{ $filterDosen->id }}">@endif
+                        <button type="submit" class="ui-btn-danger-soft">
+                            <x-icon name="refresh" class="w-4 h-4" /> {{ $lingkupReset ? 'Reset Kesediaan (sesuai filter)' : 'Hapus Semua Kesediaan' }}
+                        </button>
+                    </form>
+                @endif
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                     <thead class="bg-slate-50 dark:bg-slate-700/60 border-b border-slate-200/80 dark:border-slate-600 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -297,7 +327,7 @@
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-slate-800 dark:text-slate-200">{{ $item['dosen']->nama_dosen ?? '-' }}</div>
                                     @if($item['dosen'] && $item['dosen']->nidn)
-                                        <div class="mt-0.5"><span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 font-mono text-[10px]">NIDN: {{ $item['dosen']->nidn }}</span></div>
+                                        <div class="mt-0.5"><span class="px-2 py-0.5 rounded bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-200 font-mono text-[10px]">NIDN: {{ $item['dosen']->nidn }}</span></div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
@@ -315,7 +345,7 @@
                                             Gel. {{ $item['wave']->gelombang }} ({{ ucfirst($item['wave']->jenis) }})
                                         </span>
                                     @elseif($item['periode'])
-                                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md">
+                                        <span class="text-xs font-semibold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/15 px-2 py-1 rounded-md">
                                             {{ $item['periode']->nama_periode }}
                                         </span>
                                     @else

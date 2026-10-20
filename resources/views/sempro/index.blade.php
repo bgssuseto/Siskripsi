@@ -161,7 +161,7 @@
         .badge { display: inline-flex; align-items: center; padding: .25rem .65rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
         .badge-sempro  { background: #f3e8ff; color: #6b21a8; }
 
-        .nim-pill { font-family: 'Courier New', monospace; background: #f1f5f9; color: #475569; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
+        .nim-pill { font-family: 'Courier New', monospace; background: #e0f2fe; color: #0369a1; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
         .judul-text { font-size: .8rem; color: #1e293b; font-weight: 500; line-height: 1.4; max-width: 260px; }
         .dosen-chip { display: inline-block; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: .15rem .5rem; font-size: .75rem; color: #475569; margin: .1rem 0; }
         .dosen-chip.utama { background: #f3e8ff; border-color: #d8b4fe; color: #6b21a8; font-weight: 600; }
@@ -485,7 +485,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                     </td>
                                     <td>
                                         @if($item->tanggal_pendaftaran)
-                                            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md whitespace-nowrap">
+                                            <span class="text-xs font-semibold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/15 px-2 py-1 rounded-md whitespace-nowrap">
                                                 {{ $item->tanggal_pendaftaran->format('d/m/Y') }}
                                             </span>
                                         @else

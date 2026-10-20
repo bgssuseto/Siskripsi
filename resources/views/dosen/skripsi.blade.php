@@ -124,7 +124,7 @@
                                 <!-- Ruangan -->
                                 <td class="py-4 px-6">
                                     @if($s->ruang)
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-200 text-xs font-bold rounded-xl">
                                             {{ $s->ruang->kode_ruangan }}
                                         </span>
                                     @else

@@ -317,8 +317,8 @@
         }
 
         html.dark .nim-pill {
-            background-color: #334155 !important;
-            color: #cbd5e1 !important;
+            background-color: rgba(14, 165, 233, 0.16) !important;
+            color: #7dd3fc !important;
         }
 
         html.dark .judul-text {
@@ -1620,7 +1620,7 @@
                                 @forelse ($upcomingSidangs as $us)
                                     <div class="p-4 hover:bg-slate-50/80 transition-colors">
                                         <div class="flex items-center justify-between gap-2 mb-2">
-                                            <span class="inline-flex px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                            <span class="inline-flex px-2 py-0.5 text-[9px] font-bold rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">
                                                 {{ $us->jenis_tugas_akhir === 'sempro' ? 'Sempro' : 'Sidang Skripsi' }}
                                             </span>
                                             <span class="text-[10px] font-extrabold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">

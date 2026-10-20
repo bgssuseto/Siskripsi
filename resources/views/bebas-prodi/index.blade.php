@@ -77,7 +77,7 @@
                         <tr class="align-top">
                             <td class="px-4 py-3">
                                 <p class="font-extrabold text-slate-800 dark:text-slate-200">{{ $p->nama_mahasiswa }}</p>
-                                <span class="nim-pill inline-block mt-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono text-[10px]">{{ $p->nim }}</span>
+                                <span class="nim-pill inline-block mt-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 font-mono text-[10px] dark:bg-sky-500/15 dark:text-sky-200">{{ $p->nim }}</span>
                             </td>
                             <td class="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold">{{ $p->jalur === 'jurnal' ? 'Jurnal' : 'Sidang' }}</td>
                             <td class="px-4 py-3 space-y-1">

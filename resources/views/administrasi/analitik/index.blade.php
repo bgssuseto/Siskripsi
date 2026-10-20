@@ -131,7 +131,7 @@
                              x-transition:enter-end="opacity-100 translate-y-0"
                              class="mt-2.5 flex flex-wrap gap-1.5">
                             @foreach($row['jadwal'] as $j)
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10.5px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-[10.5px] font-semibold text-indigo-700 dark:text-indigo-200 whitespace-nowrap">
                                 <x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ $j['tanggal_label'] }} <span class="text-slate-300 dark:text-slate-600">·</span> <span class="text-indigo-600 dark:text-indigo-300">{{ $j['jumlah'] }} sidang</span>
                             </span>
                             @endforeach

@@ -800,6 +800,7 @@ class DosenPortalController extends Controller
 
                 return [
                     'periode'       => $p,
+                    'final'         => \App\Services\SkPdfService::periodeFinal($p),
                     'utama'         => $hitung($ps, 'dosen_pembimbing_utama_id'),
                     'pendamping'    => $perGelombang->sum('pendamping'),
                     'ketua'         => $hitung($ps, 'ketua_penguji_id'),
@@ -826,7 +827,14 @@ class DosenPortalController extends Controller
         $gelombang = $request->query('gelombang');
         abort_unless($gelombang === null || $gelombang === 'tanpa' || ctype_digit((string) $gelombang), 404);
 
-        $hasil = \App\Services\SkPdfService::build($mode, ['periode_id' => $periode->id, 'gelombang' => $gelombang], $dosen->id);
+        // Sebelum periode final (gelombang terakhir belum selesai / semester belum berganti):
+        // SK Pembimbing boleh diunduh sebagai SEMENTARA, SK Penguji menunggu final.
+        $final = \App\Services\SkPdfService::periodeFinal($periode);
+        if ($mode === 'penguji' && !$final) {
+            return back()->with('warning', "SK Penguji {$periode->nama_periode} baru dapat diunduh setelah gelombang terakhir selesai / semester berakhir.");
+        }
+
+        $hasil = \App\Services\SkPdfService::build($mode, ['periode_id' => $periode->id, 'gelombang' => $gelombang], $dosen->id, sementara: !$final);
 
         if (!$hasil) {
             $peran = $mode === 'penguji' ? 'penguji' : 'pembimbing';

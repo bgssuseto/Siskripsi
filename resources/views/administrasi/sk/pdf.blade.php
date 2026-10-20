@@ -6,7 +6,7 @@
     Kop surat diulang di setiap halaman.
 
     Variabel: $mode ('pembimbing'|'penguji'), $namaPeriode, $kegiatan, $dosenRincian,
-              $tanggalSurat, $kaprodi, $kopBase64
+              $tanggalSurat, $kaprodi, $kopBase64, $sementara (opsional: SK sementara, belum final)
 --}}
 @php
     $isPenguji  = $mode === 'penguji';
@@ -54,11 +54,31 @@
         table.rincian td.nama { width: 44%; }
         table.rincian td.peran { width: 34%; font-size: 10.5pt; white-space: nowrap; }
         table.rincian tr { page-break-inside: avoid; }
+
+        /* SK SEMENTARA: watermark diagonal di setiap halaman + kotak catatan */
+        .watermark { position: fixed; top: 95mm; left: -10mm; width: 190mm; text-align: center;
+                     font-family: 'Helvetica', Arial, sans-serif; font-size: 78pt; font-weight: bold;
+                     color: #dc2626; opacity: 0.11; transform: rotate(-35deg); letter-spacing: 6px; }
+        .catatan-sementara { border: 1.5px solid #dc2626; background: #fef2f2; color: #991b1b; padding: 7px 10px;
+                             margin-bottom: 12px; font-family: 'Helvetica', Arial, sans-serif; font-size: 9.5pt; line-height: 1.4; }
+        .catatan-kaki { position: fixed; bottom: -12mm; left: 0; right: 0; text-align: center;
+                        font-family: 'Helvetica', Arial, sans-serif; font-size: 8pt; color: #b91c1c; }
     </style>
 </head>
 <body>
     @if(!empty($kopBase64))
         <div class="kop"><img src="{{ $kopBase64 }}" alt="Kop Surat"></div>
+    @endif
+
+    @if(!empty($sementara))
+        <div class="watermark">SEMENTARA</div>
+        <div class="catatan-kaki">SK SEMENTARA — belum final, data dapat bertambah hingga gelombang terakhir {{ $periodeTeks }} selesai.</div>
+        <div class="catatan-sementara">
+            <strong>CATATAN: SK SEMENTARA (BELUM FINAL).</strong>
+            Dokumen ini diterbitkan sebelum seluruh gelombang sidang {{ $periodeTeks }} selesai, sehingga daftar
+            mahasiswa bimbingan masih dapat bertambah atau berubah. Gunakan hanya sebagai rujukan sementara —
+            SK final dapat diunduh kembali setelah gelombang terakhir selesai / semester berakhir.
+        </div>
     @endif
 
     {{-- ═══════════════ SURAT PERMOHONAN ═══════════════ --}}

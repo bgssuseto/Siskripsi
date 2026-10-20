@@ -236,7 +236,7 @@
                                                 <span class="px-3 py-1 text-xs font-extrabold rounded-xl border {{ $roleBadgeClass }}">
                                                     Peran: {{ $role }}
                                                 </span>
-                                                <span class="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200 uppercase dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+                                                <span class="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">
                                                     {{ $s->jenis_tugas_akhir }}
                                                 </span>
                                             </div>

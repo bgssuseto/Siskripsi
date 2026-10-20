@@ -43,7 +43,7 @@
         'danger'  => 'bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
         'warning' => 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
         'info'    => 'bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800',
-        'neutral' => 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600',
+        'neutral' => 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200 border-indigo-200 dark:border-indigo-500/30',
     ];
 
     $kelulusan = collect($steps)->firstWhere('key', 'kelulusan');
@@ -98,7 +98,7 @@
                 <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <h3 class="text-[15px] sm:text-base font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-snug">{{ $title }}</h3>
                     @if(!$isSempro && $progress['registered'] && $progress['jenis_label'])
-                        <span class="inline-flex px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold">{{ $progress['jenis_label'] }}</span>
+                        <span class="inline-flex px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200 text-[10px] font-bold">{{ $progress['jenis_label'] }}</span>
                     @endif
                 </div>
 

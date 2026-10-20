@@ -16,7 +16,7 @@
                 </h2>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Sesi ujian aktif untuk periode akademik saat ini</p>
             </div>
-            <span class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs rounded-2xl border border-slate-200 dark:border-slate-700">
+            <span class="px-3.5 py-1.5 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200 font-extrabold text-xs rounded-2xl border border-indigo-200 dark:border-indigo-500/30">
                 {{ $sidangs->count() }} Jadwal Terdaftar
             </span>
         </div>

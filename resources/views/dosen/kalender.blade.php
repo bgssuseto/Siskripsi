@@ -42,8 +42,8 @@
         html.dark .badge-sempro { background: rgba(29,78,216,.25); color: #93c5fd; }
         html.dark .badge-sidang { background: rgba(21,128,61,.25); color: #86efac; }
         
-        .nim-pill { font-family: 'Plus Jakarta Sans', sans-serif; background: #f1f5f9; color: #475569; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
-        html.dark .nim-pill { background: #334155; color: #94a3b8; }
+        .nim-pill { font-family: 'Plus Jakarta Sans', sans-serif; background: #e0f2fe; color: #0369a1; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
+        html.dark .nim-pill { background: rgba(14,165,233,.16); color: #7dd3fc; }
 
         .schedule-ruang {
             display: inline-flex; align-items: center; gap: .3rem;

@@ -34,15 +34,15 @@
                 }
              }"
              x-effect="if (gelombang && !gelombangOptions.includes(gelombang)) { gelombang = '' }">
-            <form method="GET" action="{{ route('jadwal.auto-plot.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <form method="GET" action="{{ route('jadwal.auto-plot.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                 <input type="hidden" name="generate" value="1">
                 @foreach($sidangIds as $sid)
                     <input type="hidden" name="ids[]" value="{{ $sid }}">
                 @endforeach
 
-                <div>
+                <div class="min-w-0">
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
-                    <select name="periode_id" x-model="periodeId" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
+                    <select name="periode_id" x-model="periodeId" class="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
                         @foreach($periodes as $p)
                         <option value="{{ $p->id }}">
                             {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
@@ -51,47 +51,47 @@
                     </select>
                 </div>
 
-                <div>
+                <div class="min-w-0">
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Jenis</label>
-                    <select name="jenis" x-model="jenis" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
+                    <select name="jenis" x-model="jenis" class="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
                         <option value="skripsi">Sidang Skripsi</option>
                         <option value="sempro">Seminar Proposal (Sempro)</option>
                     </select>
                 </div>
 
-                <div>
+                <div class="min-w-0">
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Gelombang</label>
                     <!-- Opsi diisi ulang otomatis oleh Alpine (lihat x-data di atas) setiap
                          Periode Akademik/Jenis diganti — TANPA reload halaman. -->
-                    <select name="gelombang" x-model="gelombang" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
-                        <option value="">-- Semua Gelombang --</option>
+                    <select name="gelombang" x-model="gelombang" class="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
+                        <option value="">Semua Gelombang</option>
                         <template x-for="g in gelombangOptions" :key="g">
                             <option :value="g" x-text="'Gelombang ' + g"></option>
                         </template>
                     </select>
-                    <p class="mt-1 text-[11px] text-slate-400 dark:text-slate-500" x-show="allWaves.length && gelombangOptions.length === 0">
-                        Belum ada gelombang untuk periode &amp; jenis ini di Master Gelombang.
-                    </p>
                 </div>
 
-                <div>
+                <div class="min-w-0">
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Durasi Slot</label>
-                    <select name="slot_menit" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
+                    <select name="slot_menit" class="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all">
                         @foreach([30, 60, 90, 120] as $m)
                         <option value="{{ $m }}" {{ $slotMinutes === $m ? 'selected' : '' }}>{{ $m }} menit</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div>
+                <div class="sm:col-span-2 lg:col-span-1">
                     <button type="submit"
-                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                            class="w-full h-10 inline-flex items-center justify-center gap-2 px-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-bold text-sm rounded-xl shadow-md shadow-violet-500/25 whitespace-nowrap transition-all duration-200">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                         Buat Usulan Jadwal
                     </button>
                 </div>
+                <p class="sm:col-span-2 lg:col-span-5 -mt-1 text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1.5" x-show="allWaves.length && gelombangOptions.length === 0" x-cloak>
+                    <x-icon name="info" class="w-3.5 h-3.5 shrink-0" /> Belum ada gelombang untuk periode &amp; jenis ini di Master Gelombang.
+                </p>
             </form>
         </div>
 

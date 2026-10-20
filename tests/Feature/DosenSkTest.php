@@ -146,4 +146,41 @@ class DosenSkTest extends TestCase
 
         $this->actingAs($this->userAndi)->get(route('dosen.sk.download', [$this->periode, 'pembimbing']) . '?gelombang=tanpa')->assertOk();
     }
+
+    public function test_periode_berjalan_sk_pembimbing_sementara_dan_sk_penguji_menunggu_final(): void
+    {
+        $aktif = Periode::create(['nama_periode' => 'Semester Berjalan SK ' . uniqid(), 'aktif' => true]);
+        // Gelombang skripsi terakhir masih terbuka → periode belum final.
+        \App\Models\PendaftaranPeriode::create([
+            'periode_id' => $aktif->id, 'jenis' => 'skripsi', 'gelombang' => 3,
+            'tanggal_mulai' => now()->subDay()->format('Y-m-d'), 'tanggal_selesai' => now()->addDays(5)->format('Y-m-d'),
+        ]);
+        Sidang::create([
+            'nim' => 'SKA' . substr(uniqid(), -6), 'nama_mahasiswa' => 'Mhs Berjalan', 'judul_skripsi' => 'J',
+            'jenis_tugas_akhir' => 'sidang', 'verifikasi_status' => 'disetujui', 'periode_id' => $aktif->id,
+            'dosen_pembimbing_utama_id' => $this->andi->id, 'ketua_penguji_id' => $this->andi->id,
+        ]);
+
+        $this->assertFalse(SkPdfService::periodeFinal($aktif));
+        $this->assertTrue(SkPdfService::periodeFinal($this->periode)); // periode tidak aktif = final
+
+        $this->actingAs($this->userAndi)->get(route('dosen.sk.index'))
+            ->assertOk()
+            ->assertSee('SK Sementara')
+            ->assertSee('SK sementara, belum final.')
+            ->assertSee('SK Penguji tersedia setelah gelombang terakhir');
+
+        $res = $this->actingAs($this->userAndi)->get(route('dosen.sk.download', [$aktif, 'pembimbing']));
+        $res->assertOk();
+        $this->assertStringContainsString('SEMENTARA', $res->headers->get('content-disposition'));
+
+        $this->actingAs($this->userAndi)->from(route('dosen.sk.index'))
+            ->get(route('dosen.sk.download', [$aktif, 'penguji']))
+            ->assertRedirect(route('dosen.sk.index'))
+            ->assertSessionHas('warning');
+
+        // Periode lama (final): SK Pembimbing tanpa tanda SEMENTARA.
+        $final = $this->actingAs($this->userAndi)->get(route('dosen.sk.download', [$this->periode, 'pembimbing']));
+        $this->assertStringNotContainsString('SEMENTARA', $final->headers->get('content-disposition'));
+    }
 }

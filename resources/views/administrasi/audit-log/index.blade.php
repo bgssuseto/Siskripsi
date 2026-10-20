@@ -91,7 +91,7 @@
                                         'created' => 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
                                         'updated' => 'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300',
                                         'deleted' => 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300',
-                                        default => 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200',
+                                        default => 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300',
                                     };
                                 @endphp
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ $actionBadgeClass }}">

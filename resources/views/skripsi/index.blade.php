@@ -187,7 +187,7 @@
         .badge { display: inline-flex; align-items: center; padding: .22rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
         .badge-sidang { background: #dbeafe; color: #1d4ed8; }
         .badge-jurnal  { background: #dcfce7; color: #15803d; }
-        .nim-pill { font-family: 'Courier New', monospace; background: #f1f5f9; color: #475569; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
+        .nim-pill { font-family: 'Courier New', monospace; background: #e0f2fe; color: #0369a1; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
         .judul-text { font-size: .8rem; color: #1e293b; font-weight: 500; line-height: 1.4; max-width: 300px; }
 
         .dosen-chip {
@@ -647,7 +647,7 @@
                                     </td>
                                     <td>
                                         @if($item->tanggal_pendaftaran)
-                                            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/60 px-2 py-1 rounded-md whitespace-nowrap">
+                                            <span class="text-xs font-semibold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/15 px-2 py-1 rounded-md whitespace-nowrap">
                                                 {{ $item->tanggal_pendaftaran->format('d/m/Y') }}
                                             </span>
                                         @else

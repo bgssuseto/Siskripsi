@@ -22,7 +22,7 @@
     $hariIni = now()->timezone('Asia/Jakarta')->format('Y-m-d');
     [$statusLabel, $statusCls] = match (true) {
         !$s->tanggal                               => ['Belum Dijadwalkan', 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-200 dark:ring-rose-500/30'],
-        $s->isExamEnded()                          => ['Selesai', 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-700/60 dark:text-slate-300 dark:ring-slate-600'],
+        $s->isExamEnded()                          => ['Selesai', 'bg-teal-50 text-teal-700 ring-teal-200 dark:bg-teal-500/15 dark:text-teal-200 dark:ring-teal-500/30'],
         $s->tanggal->format('Y-m-d') === $hariIni  => ['Hari Ini', 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/15 dark:text-blue-200 dark:ring-blue-500/30'],
         default                                    => ['Akan Datang', 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-200 dark:ring-emerald-500/30'],
     };
@@ -79,7 +79,7 @@
                 <div class="flex flex-wrap items-center gap-1.5 pt-3 border-t border-slate-100 dark:border-slate-700/60">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-0.5">Peran Anda</span>
                     @foreach($roles as $r)
-                        <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ring-inset {{ $roleColors[$r] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ $r }}</span>
+                        <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ring-inset {{ $roleColors[$r] ?? 'bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-200 dark:ring-indigo-500/30' }}">{{ $r }}</span>
                     @endforeach
                 </div>
             @endif

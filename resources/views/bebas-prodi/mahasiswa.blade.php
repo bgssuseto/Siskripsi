@@ -107,7 +107,7 @@
                             <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200">{{ $judul }}
                                 @if($cara === 'link')<span class="ml-1 px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 text-[9px] font-extrabold uppercase align-middle">Isi Link</span>
                                 @elseif($cara === 'cek')<span class="ml-1 px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 text-[9px] font-extrabold uppercase align-middle">Centang di Form</span>
-                                @else<span class="ml-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 text-[9px] font-extrabold uppercase align-middle">PDF</span>@endif
+                                @else<span class="ml-1 px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200 text-[9px] font-extrabold uppercase align-middle">PDF</span>@endif
                             </p>
                             <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{{ $ket }}</p>
                         </div>

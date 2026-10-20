@@ -4,7 +4,7 @@
     <div class="max-w-7xl mx-auto space-y-6">
 
         <!-- Hero Banner Header -->
-        <x-page-header title="Generate Undangan Sidang Dosen" subtitle="Filter berdasarkan rentang tanggal pendaftaran gelombang sidang untuk membuat dokumen undangan menguji bagi setiap dosen." icon="mail" accent="indigo">
+        <x-page-header title="Generate Undangan Sidang Dosen" subtitle="Pilih periode, jenis ujian, dan gelombang untuk membuat dokumen undangan menguji bagi setiap dosen." icon="mail" accent="indigo">
             <x-slot:actions>
                 @if($dosenList->count() > 0)
                 <span class="ui-chip">Dosen Penguji: <strong class="text-slate-900 dark:text-white">{{ $dosenList->count() }}</strong></span>
@@ -45,9 +45,9 @@
         </div>
         @endif
 
-        <!-- Filter Range Tanggal Pendaftaran & Periode -->
+        <!-- Filter Periode, Jenis & Gelombang -->
         <div class="bg-white dark:bg-slate-800/80 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <form method="GET" action="{{ route('administrasi.undangan.index') }}" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+            <form method="GET" action="{{ route('administrasi.undangan.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
 
                 <!-- Periode -->
                 <div>
@@ -84,20 +84,6 @@
                     </select>
                 </div>
 
-                <!-- Range Tanggal Pendaftaran Mulai -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pendaftaran Dari Tanggal</label>
-                    <input type="date" name="tanggal_pendaftaran_mulai" value="{{ $tglMulai }}"
-                           class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                </div>
-
-                <!-- Range Tanggal Pendaftaran Selesai -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pendaftaran Sampai Tanggal</label>
-                    <input type="date" name="tanggal_pendaftaran_selesai" value="{{ $tglSelesai }}"
-                           class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                </div>
-
                 <!-- Submit Filter -->
                 <div class="flex gap-2">
                     <button type="submit"
@@ -108,7 +94,7 @@
                         Filter Data
                     </button>
 
-                    @if($tglMulai || $tglSelesai || $selectedPeriodeId || request('jenis') || $selectedGelombang)
+                    @if($selectedPeriodeId || request('jenis') || $selectedGelombang)
                     <a href="{{ route('administrasi.undangan.index') }}"
                        class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-medium text-sm rounded-xl transition-all flex items-center justify-center" title="Reset Filter">
                         Reset
@@ -161,7 +147,7 @@
                                 </span>
                             </td>
                             <td class="py-3.5 px-4 text-center">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200">
                                     {{ $item['total_sesi'] }} Sesi Sektor
                                 </span>
                             </td>

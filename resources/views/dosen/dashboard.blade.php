@@ -238,7 +238,7 @@
                     <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Jadwal Ujian & Bimbingan Mahasiswa</h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Daftar jadwal sidang skripsi dan sempro terhubung dengan Anda</p>
                 </div>
-                <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl">
+                <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200 font-bold text-xs rounded-xl">
                     {{ count($stats['recent_schedules']) }} Sesi Terjadwal
                 </span>
             </div>
@@ -279,7 +279,7 @@
                                         <p class="text-xs text-slate-700 dark:text-slate-300 font-medium line-clamp-2">{{ $s->judul_skripsi }}</p>
                                     </td>
                                     <td class="py-4 px-6">
-                                        <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-600">
+                                        <span class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200 text-xs font-bold rounded-lg border border-indigo-200 dark:border-indigo-500/30">
                                             {{ $s->ruang ? $s->ruang->kode_ruangan : '-' }}
                                         </span>
                                     </td>
@@ -303,7 +303,7 @@
                                                     {{ $r['name'] }}
                                                 </span>
                                             @empty
-                                                <span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 whitespace-nowrap">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-500/30 whitespace-nowrap">
                                                     Penguji / Dosbing
                                                 </span>
                                             @endforelse

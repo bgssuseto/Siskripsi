@@ -94,7 +94,7 @@
                             </td>
                             <td class="py-3.5 px-3 font-mono text-slate-700 dark:text-slate-300">{{ $s->jam ?? '-' }}</td>
                             <td class="py-3.5 px-3">
-                                <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[10.5px]">{{ $s->ruang->kode_ruangan ?? '-' }}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-200 font-mono text-[10.5px]">{{ $s->ruang->kode_ruangan ?? '-' }}</span>
                             </td>
                             <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400">
                                 @if($s->jenis_tugas_akhir === 'sempro')

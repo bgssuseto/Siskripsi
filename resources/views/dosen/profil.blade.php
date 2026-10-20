@@ -60,7 +60,7 @@
                     <div class="flex flex-wrap gap-1.5">
                         @if($dosen->bidang_keahlian)
                             @foreach(explode(',', $dosen->bidang_keahlian) as $bk)
-                                <span class="px-2.5 py-1 bg-slate-100 border border-slate-200/80 text-slate-700 text-xs font-bold rounded-lg">{{ trim($bk) }}</span>
+                                <span class="px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-lg dark:bg-indigo-500/15 dark:text-indigo-200 dark:border-indigo-500/30">{{ trim($bk) }}</span>
                             @endforeach
                         @else
                             <span class="text-xs text-slate-400">-</span>

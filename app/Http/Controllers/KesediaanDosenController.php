@@ -304,12 +304,32 @@ class KesediaanDosenController extends Controller
     }
 
     /**
-     * Hapus SELURUH data kesediaan dosen (semua dosen, semua periode/gelombang).
+     * Hapus / reset data kesediaan dosen. Tanpa filter: SELURUH data (semua dosen,
+     * semua periode/gelombang). Dengan filter periode_id dan/atau dosen_id (tombol
+     * "Hapus Semua" di tabel mengirim filter yang sedang aktif): hanya data itu —
+     * dosen bisa mengisi ulang kesediaannya dari awal.
      */
     public function destroyAll(Request $request): RedirectResponse
     {
-        $count = KesediaanDosen::query()->delete();
+        $request->validate([
+            'periode_id' => 'nullable|exists:periodes,id',
+            'dosen_id'   => 'nullable|exists:dosens,id',
+        ]);
 
-        return redirect()->route('master.kesediaan-dosen.index')->with('success', "Berhasil menghapus seluruh data kesediaan dosen ({$count} data berhasil dihapus).");
+        $query = KesediaanDosen::query()
+            ->when($request->filled('periode_id'), fn ($q) => $q->where('periode_id', $request->periode_id))
+            ->when($request->filled('dosen_id'), fn ($q) => $q->where('dosen_id', $request->dosen_id));
+
+        $count = $query->delete();
+
+        $lingkup = collect([
+            $request->filled('periode_id') ? 'periode ' . Periode::find($request->periode_id)?->nama_periode : null,
+            $request->filled('dosen_id') ? 'dosen ' . Dosen::find($request->dosen_id)?->nama_dosen : null,
+        ])->filter()->implode(', ');
+
+        return redirect()->route('master.kesediaan-dosen.index', $request->only('periode_id', 'dosen_id'))
+            ->with('success', $lingkup
+                ? "Kesediaan {$lingkup} berhasil direset ({$count} data dihapus). Dosen dapat mengisi ulang kesediaannya."
+                : "Berhasil menghapus seluruh data kesediaan dosen ({$count} data dihapus).");
     }
 }

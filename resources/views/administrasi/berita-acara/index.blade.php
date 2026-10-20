@@ -140,7 +140,7 @@
                                 {{ $idx + 1 }}
                             </td>
                             <td class="py-3.5 px-4">
-                                <span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-xs rounded-md font-semibold">
+                                <span class="px-2 py-1 bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-200 font-mono text-xs rounded-md font-semibold">
                                     {{ $item->nim }}
                                 </span>
                             </td>

@@ -70,7 +70,7 @@
         .badge-jurnal  { background: #dcfce7; color: #15803d; }
         html.dark .badge-skripsi { background: rgba(29,78,216,.2); color: #93c5fd; }
         html.dark .badge-jurnal  { background: rgba(21,128,61,.2); color: #86efac; }
-        .nim-pill { font-family: 'Courier New', monospace; background: #f1f5f9; color: #475569; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
+        .nim-pill { font-family: 'Courier New', monospace; background: #e0f2fe; color: #0369a1; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
         .judul-text { font-size: .8rem; color: #1e293b; font-weight: 500; line-height: 1.4; max-width: 280px; }
         .dosen-chip { display: inline-block; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: .1rem .45rem; font-size: .75rem; color: #475569; margin: .1rem 0; }
         .dosen-chip.utama { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; font-weight: 600; }
@@ -128,7 +128,7 @@
         html.dark table.data-table tbody tr:hover { background: #0f172a; }
         html.dark table.data-table td { color: #cbd5e1; }
         html.dark .judul-text { color: #f8fafc; }
-        html.dark .nim-pill { background: #0f172a; color: #94a3b8; }
+        html.dark .nim-pill { background: rgba(14,165,233,.16); color: #7dd3fc; }
         html.dark .dosen-chip { background: #0f172a; border-color: #334155; color: #cbd5e1; }
         html.dark .dosen-chip.utama { background: rgba(29,78,216,.2); border-color: rgba(191,219,254,.2); color: #93c5fd; }
         html.dark .dosen-chip.ketua { background: rgba(146,64,14,.2); border-color: rgba(253,230,138,.2); color: #fcd34d; }
@@ -326,7 +326,7 @@
                                 </td>
                                 <td>
                                     @if($item->tanggal_pendaftaran)
-                                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md whitespace-nowrap">
+                                        <span class="text-xs font-semibold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/15 px-2 py-1 rounded-md whitespace-nowrap">
                                             {{ $item->tanggal_pendaftaran->locale('id')->translatedFormat('l, d/m/Y') }}
                                         </span>
                                     @else
