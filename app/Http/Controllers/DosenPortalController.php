@@ -770,41 +770,52 @@ class DosenPortalController extends Controller
 
         if ($dosen) {
             $id = $dosen->id;
-            $sidangs = Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
+            $sebagaiPembimbing = fn ($q) => $q->where('dosen_pembimbing_utama_id', $id)->orWhere('dosen_pembimbing_pendamping_id', $id);
+
+            // Penguji: hanya ujian skripsi (sidang & jurnal).
+            $ujian = Sidang::whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
                 ->whereNotNull('periode_id')
-                ->where(fn ($q) => $q->where('dosen_pembimbing_utama_id', $id)
-                    ->orWhere('dosen_pembimbing_pendamping_id', $id)
-                    ->orWhere('ketua_penguji_id', $id)
-                    ->orWhere('anggota_penguji_1_id', $id)
-                    ->orWhere('anggota_penguji_2_id', $id))
-                ->get(['periode_id', 'gelombang', 'dosen_pembimbing_utama_id', 'dosen_pembimbing_pendamping_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
+                ->where(fn ($q) => $q->where('ketua_penguji_id', $id)->orWhere('anggota_penguji_1_id', $id)->orWhere('anggota_penguji_2_id', $id))
+                ->get(['periode_id', 'ketua_penguji_id', 'anggota_penguji_1_id', 'anggota_penguji_2_id']);
 
-            $periodes = Periode::whereIn('id', $sidangs->pluck('periode_id')->unique())->orderByDesc('id')->get();
+            // Periode tempat dosen ini membimbing — sejak Sempro disetujui maupun ujian skripsi.
+            $periodeBimbingan = Sidang::whereNotNull('periode_id')
+                ->where($sebagaiPembimbing)
+                ->where(fn ($q) => $q->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
+                    ->orWhere(fn ($w) => $w->where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'disetujui')))
+                ->distinct()->pluck('periode_id');
 
-            $rows = $periodes->map(function (Periode $p) use ($sidangs, $id) {
-                $ps = $sidangs->where('periode_id', $p->id);
+            $periodes = Periode::whereIn('id', $ujian->pluck('periode_id')->merge($periodeBimbingan)->unique())->orderByDesc('id')->get();
+
+            $rows = $periodes->map(function (Periode $p) use ($ujian, $id) {
+                $u = $ujian->where('periode_id', $p->id);
                 $hitung = fn ($koleksi, string $kolom) => $koleksi->filter(fn ($s) => (int) $s->{$kolom} === $id)->count();
 
-                // SK Pembimbing per gelombang — terbit begitu gelombang itu punya
-                // mahasiswa, tanpa menunggu gelombang terakhir / ganti semester.
-                $perGelombang = $ps
+                // Bimbingan periode ini (satu baris per mahasiswa) — sama dengan isi PDF SK Pembimbing.
+                $b = \App\Services\SkPdfService::pembimbingSidangs(['periode_id' => $p->id])
+                    ->filter(fn ($s) => (int) $s->dosen_pembimbing_utama_id === $id || (int) $s->dosen_pembimbing_pendamping_id === $id);
+                $peranUtama = fn ($s) => (int) $s->dosen_pembimbing_utama_id === $id;
+
+                // SK Pembimbing per gelombang — terbit begitu gelombang itu punya mahasiswa.
+                $perGelombang = $b
                     ->groupBy(fn ($s) => $s->gelombang ?? 'tanpa')
                     ->map(fn ($g, $kunci) => [
                         'gelombang'  => $kunci,
-                        'utama'      => $hitung($g, 'dosen_pembimbing_utama_id'),
-                        'pendamping' => $g->filter(fn ($s) => (int) $s->dosen_pembimbing_utama_id !== $id && (int) $s->dosen_pembimbing_pendamping_id === $id)->count(),
+                        'utama'      => $g->filter($peranUtama)->count(),
+                        'pendamping' => $g->reject($peranUtama)->count(),
+                        'sempro'     => $g->where('jenis_tugas_akhir', 'sempro')->count(),
                     ])
-                    ->filter(fn ($g) => $g['utama'] + $g['pendamping'] > 0)
                     ->sortBy(fn ($g) => $g['gelombang'] === 'tanpa' ? PHP_INT_MAX : (int) $g['gelombang'])
                     ->values();
 
                 return [
                     'periode'       => $p,
                     'final'         => \App\Services\SkPdfService::periodeFinal($p),
-                    'utama'         => $hitung($ps, 'dosen_pembimbing_utama_id'),
-                    'pendamping'    => $perGelombang->sum('pendamping'),
-                    'ketua'         => $hitung($ps, 'ketua_penguji_id'),
-                    'anggota'       => $hitung($ps, 'anggota_penguji_1_id') + $hitung($ps, 'anggota_penguji_2_id'),
+                    'utama'         => $b->filter($peranUtama)->count(),
+                    'pendamping'    => $b->reject($peranUtama)->count(),
+                    'sempro'        => $b->where('jenis_tugas_akhir', 'sempro')->count(),
+                    'ketua'         => $hitung($u, 'ketua_penguji_id'),
+                    'anggota'       => $hitung($u, 'anggota_penguji_1_id') + $hitung($u, 'anggota_penguji_2_id'),
                     'per_gelombang' => $perGelombang,
                 ];
             });

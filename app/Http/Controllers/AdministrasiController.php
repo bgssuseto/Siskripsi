@@ -1575,7 +1575,8 @@ class AdministrasiController extends Controller
         $jenis = $request->get('jenis'); // 'skripsi' | 'sempro' | null
 
         $selectedGelombang = $request->get('gelombang');
-        $gelombangOptions  = $this->gelombangOptions($selectedPeriodeId ? (int) $selectedPeriodeId : null, 'skripsi');
+        // SK Pembimbing mencakup tahap Sempro → tampilkan gelombang Sempro & Skripsi.
+        $gelombangOptions  = $this->gelombangOptions($selectedPeriodeId ? (int) $selectedPeriodeId : null, null);
 
         $query = Sidang::query();
         if ($selectedPeriodeId) {
@@ -1592,9 +1593,16 @@ class AdministrasiController extends Controller
         $totalJurnal        = (clone $query)->where('jenis_tugas_akhir', 'jurnal')->count();
         $totalSidangReguler = $totalSidangs - $totalJurnal;
 
-        // Unique lecturers count (sesuai jenis yang ditampilkan)
-        $dosenPembimbingIds = (clone $query)->pluck('dosen_pembimbing_utama_id')
-            ->merge((clone $query)->pluck('dosen_pembimbing_pendamping_id'))
+        // SK Pembimbing dihitung sejak tahap Sempro (disetujui) + ujian skripsi, satu
+        // baris per mahasiswa — lihat SkPdfService::pembimbingSidangs().
+        $pembimbingSidangs = \App\Services\SkPdfService::pembimbingSidangs([
+            'periode_id' => $selectedPeriodeId,
+            'gelombang'  => $selectedGelombang,
+        ]);
+        $totalBimbingan       = $pembimbingSidangs->count();
+        $totalBimbinganSempro = $pembimbingSidangs->where('jenis_tugas_akhir', 'sempro')->count();
+        $dosenPembimbingIds = $pembimbingSidangs->pluck('dosen_pembimbing_utama_id')
+            ->merge($pembimbingSidangs->pluck('dosen_pembimbing_pendamping_id'))
             ->filter()->unique();
 
         $dosenPengujiIds = (clone $query)->pluck('ketua_penguji_id')
@@ -1607,9 +1615,9 @@ class AdministrasiController extends Controller
         $sidangsForChart = (clone $query)->get();
         $dosensAll = Dosen::orderBy('nama_dosen')->get();
 
-        $pembimbingChart = $dosensAll->map(function ($d) use ($sidangsForChart) {
-            $total = $sidangsForChart->where('dosen_pembimbing_utama_id', $d->id)->count()
-                + $sidangsForChart->where('dosen_pembimbing_pendamping_id', $d->id)->count();
+        $pembimbingChart = $dosensAll->map(function ($d) use ($pembimbingSidangs) {
+            $total = $pembimbingSidangs->where('dosen_pembimbing_utama_id', $d->id)->count()
+                + $pembimbingSidangs->where('dosen_pembimbing_pendamping_id', $d->id)->count();
             return ['nama' => $d->nama_dosen, 'total' => $total];
         })->filter(fn ($row) => $row['total'] > 0)
             ->sortByDesc('total')->take(8)->values();
@@ -1624,7 +1632,7 @@ class AdministrasiController extends Controller
 
         return view('administrasi.sk.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId',
-            'totalSidangs', 'totalJurnal', 'totalSidangReguler',
+            'totalSidangs', 'totalJurnal', 'totalSidangReguler', 'totalBimbingan', 'totalBimbinganSempro',
             'dosenPembimbingIds', 'dosenPengujiIds', 'jenis',
             'pembimbingChart', 'pengujiChart', 'selectedGelombang', 'gelombangOptions'
         ));
@@ -1660,32 +1668,15 @@ class AdministrasiController extends Controller
     public function exportSkPembimbingExcel(Request $request)
     {
         $selectedPeriodeId = $request->get('periode_id');
-        $tglMulai = $request->get('tanggal_pendaftaran_mulai');
-        $tglSelesai = $request->get('tanggal_pendaftaran_selesai');
-        $query = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'periode']);
 
-        if ($selectedPeriodeId) {
-            $query->where('periode_id', $selectedPeriodeId);
-        }
-
-        if ($tglMulai) {
-            $query->whereDate('tanggal_pendaftaran', '>=', $tglMulai);
-        }
-
-        if ($tglSelesai) {
-            $query->whereDate('tanggal_pendaftaran', '<=', $tglSelesai);
-        }
-
-        $selectedGelombang = $request->get('gelombang');
-        if ($selectedGelombang !== null && $selectedGelombang !== '') {
-            $query->where('gelombang', $selectedGelombang);
-        }
-
-        // SK Pembimbing & Penguji hanya dihitung dari ujian skripsi (skripsi /
-        // sidang / jurnal) — sempro tidak ikut dihitung.
-        $query->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET);
-
-        $sidangs = $query->orderBy('nama_mahasiswa')->get();
+        // Bimbingan sejak tahap Sempro (disetujui) + ujian skripsi, satu baris per
+        // mahasiswa — sama dengan PDF SK Pembimbing (SkPdfService::pembimbingSidangs()).
+        $sidangs = \App\Services\SkPdfService::pembimbingSidangs([
+            'periode_id'      => $selectedPeriodeId,
+            'gelombang'       => $request->get('gelombang'),
+            'tanggal_mulai'   => $request->get('tanggal_pendaftaran_mulai'),
+            'tanggal_selesai' => $request->get('tanggal_pendaftaran_selesai'),
+        ])->load(['pembimbingUtama', 'pembimbingPendamping', 'periode']);
 
         if ($sidangs->isEmpty()) {
             return back()->with('warning', 'Tidak ada data pendaftaran tugas akhir pada filter yang dipilih.');

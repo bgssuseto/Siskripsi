@@ -68,7 +68,7 @@ class DosenSkTest extends TestCase
         }
     }
 
-    public function test_pdf_dosen_hanya_berisi_bagian_dosen_itu_dan_sempro_tidak_dihitung(): void
+    public function test_pdf_dosen_hanya_berisi_bagian_dosen_itu_dan_sempro_tidak_dihitung_untuk_penguji(): void
     {
         $sidangs = SkPdfService::sidangs(['periode_id' => $this->periode->id]);
 
@@ -78,19 +78,41 @@ class DosenSkTest extends TestCase
         $budi = SkPdfService::dosenRincian($sidangs, 'penguji', $this->budi->id);
         $this->assertSame(['Budi SK Dosen'], $budi->pluck('nama_dosen')->all());
         $this->assertSame([0, 1], $budi->first()['jumlah']);
+    }
 
-        // Budi hanya pembimbing sempro → tidak punya SK Pembimbing.
-        $this->assertTrue(SkPdfService::dosenRincian($sidangs, 'pembimbing', $this->budi->id)->isEmpty());
-
-        $this->actingAs($this->userBudi)
-            ->from(route('dosen.sk.index'))
-            ->get(route('dosen.sk.download', [$this->periode, 'pembimbing']))
-            ->assertRedirect(route('dosen.sk.index'))
-            ->assertSessionHas('warning');
+    public function test_sk_pembimbing_dihitung_sejak_sempro_disetujui(): void
+    {
+        // Budi hanya membimbing di tahap Sempro (disetujui) → tetap punya SK Pembimbing.
+        $bimbingan = SkPdfService::sidangs(['periode_id' => $this->periode->id], 'pembimbing');
+        $budi = SkPdfService::dosenRincian($bimbingan, 'pembimbing', $this->budi->id);
+        $this->assertSame([1, 0], $budi->first()['jumlah']);
 
         $this->actingAs($this->userBudi)->get(route('dosen.sk.index'))
             ->assertOk()
-            ->assertSee('Tidak ada bimbingan ujian skripsi pada periode ini.');
+            ->assertSee('1 Pembimbing Utama')
+            ->assertSee('1 mahasiswa masih tahap Sempro');
+
+        $res = $this->actingAs($this->userBudi)->get(route('dosen.sk.download', [$this->periode, 'pembimbing']));
+        $res->assertOk();
+        $this->assertStringStartsWith('%PDF', $res->getContent());
+
+        // Sempro yang belum disetujui tidak dihitung; mahasiswa yang sudah lanjut skripsi tidak dobel.
+        $nim = 'SKX' . substr(uniqid(), -6);
+        Sidang::create(['nim' => 'SKP' . substr(uniqid(), -6), 'nama_mahasiswa' => 'Mhs Pending', 'judul_skripsi' => 'J',
+            'jenis_tugas_akhir' => 'sempro', 'verifikasi_status' => 'menunggu', 'periode_id' => $this->periode->id, 'dosen_pembimbing_utama_id' => $this->budi->id]);
+        foreach (['sempro', 'sidang'] as $jenis) {
+            Sidang::create(['nim' => $nim, 'nama_mahasiswa' => 'Mhs Lanjut', 'judul_skripsi' => 'J', 'jenis_tugas_akhir' => $jenis,
+                'verifikasi_status' => 'disetujui', 'periode_id' => $this->periode->id, 'dosen_pembimbing_utama_id' => $this->budi->id]);
+        }
+        $bimbingan = SkPdfService::pembimbingSidangs(['periode_id' => $this->periode->id])
+            ->filter(fn ($s) => (int) $s->dosen_pembimbing_utama_id === $this->budi->id);
+        $this->assertCount(2, $bimbingan);
+        $this->assertSame('sidang', $bimbingan->firstWhere('nim', $nim)->jenis_tugas_akhir);
+
+        // Admin SK: kartu SK Pembimbing ikut menghitung bimbingan tahap Sempro.
+        $admin = User::create(['name' => 'Admin SK', 'email' => 'admsk-' . uniqid() . '@test.id', 'password' => bcrypt('x'), 'role' => User::ROLE_SUPER_ADMIN]);
+        $this->actingAs($admin)->get(route('administrasi.sk.index', ['periode_id' => $this->periode->id]))
+            ->assertOk()->assertSee('Mahasiswa Bimbingan')->assertSee('masih tahap Sempro');
     }
 
     public function test_mode_tidak_dikenal_404_dan_mahasiswa_tidak_bisa_akses(): void

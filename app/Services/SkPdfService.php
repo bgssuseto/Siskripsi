@@ -16,7 +16,10 @@ use Illuminate\Support\Collection;
  * mahasiswa per dosen). Dipakai menu Administrasi > SK (seluruh dosen) dan menu
  * SK di portal dosen (hanya bagian dosen yang login).
  *
- * SK hanya dihitung dari ujian skripsi (skripsi / sidang / jurnal) — sempro tidak.
+ * SK Penguji dihitung dari ujian skripsi (skripsi / sidang / jurnal) saja.
+ * SK Pembimbing dihitung sejak tahap Sempro (lihat pembimbingSidangs()) — pembimbing
+ * sudah membimbing sejak proposal, sehingga SK-nya bisa terbit di semester berjalan
+ * walau pendaftaran sidang skripsi belum dibuka.
  * Filter gelombang 'tanpa' = pendaftaran tanpa gelombang (input manual admin).
  */
 class SkPdfService
@@ -34,7 +37,39 @@ class SkPdfService
     /**
      * @param  array{periode_id?: ?int, gelombang?: ?string, tanggal_mulai?: ?string, tanggal_selesai?: ?string}  $filter
      */
-    public static function sidangs(array $filter): Collection
+    public static function sidangs(array $filter, string $mode = 'penguji'): Collection
+    {
+        if ($mode === 'pembimbing') {
+            return self::pembimbingSidangs($filter);
+        }
+
+        return self::filtered($filter)
+            ->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
+            ->orderByRaw('tanggal IS NULL')->orderBy('tanggal')->orderBy('jam')->orderBy('nama_mahasiswa')
+            ->get();
+    }
+
+    /**
+     * Mahasiswa bimbingan untuk SK Pembimbing: pendaftaran ujian skripsi (sidang/jurnal)
+     * DAN pendaftaran Sempro yang sudah disetujui. Satu baris per mahasiswa — bila
+     * mahasiswa punya keduanya, data skripsi (tahap terakhir) yang dipakai, sebab
+     * pembimbingnya bisa saja berganti setelah sempro.
+     */
+    public static function pembimbingSidangs(array $filter): Collection
+    {
+        return self::filtered($filter)
+            ->where(fn ($q) => $q->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
+                ->orWhere(fn ($w) => $w->where('jenis_tugas_akhir', 'sempro')->where('verifikasi_status', 'disetujui')))
+            ->where(fn ($q) => $q->whereNotNull('dosen_pembimbing_utama_id')->orWhereNotNull('dosen_pembimbing_pendamping_id'))
+            ->get()
+            ->sortByDesc(fn ($s) => sprintf('%d-%012d', in_array($s->jenis_tugas_akhir, Sidang::SKRIPSI_BUCKET, true) ? 1 : 0, $s->id))
+            ->unique(fn ($s) => $s->nim ?: 'nama:' . $s->nama_mahasiswa)
+            ->sortBy('nama_mahasiswa')
+            ->values();
+    }
+
+    /** Query Sidang dengan filter periode / gelombang / rentang tanggal pendaftaran. */
+    private static function filtered(array $filter): \Illuminate\Database\Eloquent\Builder
     {
         $periodeId = $filter['periode_id'] ?? null;
         $gelombang = $filter['gelombang'] ?? null;
@@ -44,10 +79,7 @@ class SkPdfService
             ->when($gelombang === 'tanpa', fn ($q) => $q->whereNull('gelombang'))
             ->when($gelombang !== null && $gelombang !== '' && $gelombang !== 'tanpa', fn ($q) => $q->where('gelombang', $gelombang))
             ->when($filter['tanggal_mulai'] ?? null, fn ($q, $tgl) => $q->whereDate('tanggal_pendaftaran', '>=', $tgl))
-            ->when($filter['tanggal_selesai'] ?? null, fn ($q, $tgl) => $q->whereDate('tanggal_pendaftaran', '<=', $tgl))
-            ->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
-            ->orderByRaw('tanggal IS NULL')->orderBy('tanggal')->orderBy('jam')->orderBy('nama_mahasiswa')
-            ->get();
+            ->when($filter['tanggal_selesai'] ?? null, fn ($q, $tgl) => $q->whereDate('tanggal_pendaftaran', '<=', $tgl));
     }
 
     /**
@@ -122,7 +154,7 @@ class SkPdfService
      */
     public static function build(string $mode, array $filter, ?int $hanyaDosenId = null, bool $sementara = false): ?array
     {
-        $dosenRincian = self::dosenRincian(self::sidangs($filter), $mode, $hanyaDosenId);
+        $dosenRincian = self::dosenRincian(self::sidangs($filter, $mode), $mode, $hanyaDosenId);
 
         if ($dosenRincian->isEmpty()) {
             return null;
@@ -140,7 +172,7 @@ class SkPdfService
         $pdf = Pdf::loadView('administrasi.sk.pdf', [
             'mode'         => $mode,
             'namaPeriode'  => $namaPeriodeSurat,
-            'kegiatan'     => ['nama' => 'Sidang Skripsi', 'hal' => 'Skripsi'],
+            'kegiatan'     => $mode === 'pembimbing' ? ['nama' => 'Skripsi', 'hal' => 'Skripsi'] : ['nama' => 'Sidang Skripsi', 'hal' => 'Skripsi'],
             'dosenRincian' => $dosenRincian,
             'tanggalSurat' => $tanggalSurat->copy()->locale('id')->translatedFormat('j F Y'),
             'kaprodi'      => rescue(fn () => Kaprodi::untukTanggal($tanggalSurat)?->nama, null, false),

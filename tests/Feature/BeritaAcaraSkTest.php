@@ -75,18 +75,21 @@ class BeritaAcaraSkTest extends TestCase
         $this->actingAs($this->admin)->get(route('administrasi.berita-acara.zip', $params))->assertOk();
     }
 
-    public function test_sk_hanya_menghitung_ujian_skripsi_bukan_sempro(): void
+    public function test_sk_penguji_hanya_ujian_skripsi_sk_pembimbing_sejak_sempro(): void
     {
-        $routes = ['administrasi.sk.export-penguji-pdf', 'administrasi.sk.export-pembimbing-pdf',
-                   'administrasi.sk.export-penguji', 'administrasi.sk.export-pembimbing'];
-
-        // Periode ini hanya berisi sempro → SK tidak boleh mencetak apa pun.
-        foreach ($routes as $route) {
+        // Periode ini hanya berisi sempro (disetujui) → SK Penguji belum bisa dicetak…
+        foreach (['administrasi.sk.export-penguji-pdf', 'administrasi.sk.export-penguji'] as $route) {
             $this->actingAs($this->admin)
                 ->from(route('administrasi.sk.index'))
                 ->get(route($route, ['periode_id' => $this->periode->id, 'jenis_tugas_akhir' => 'sempro']))
                 ->assertRedirect()
                 ->assertSessionHas('warning');
+        }
+        // …tetapi SK Pembimbing sudah bisa, karena bimbingan dihitung sejak Sempro disetujui.
+        foreach (['administrasi.sk.export-pembimbing-pdf', 'administrasi.sk.export-pembimbing'] as $route) {
+            $this->actingAs($this->admin)
+                ->get(route($route, ['periode_id' => $this->periode->id]))
+                ->assertOk();
         }
 
         // Tambah satu ujian skripsi → SK tercetak.
@@ -107,7 +110,7 @@ class BeritaAcaraSkTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('administrasi.sk.index', ['periode_id' => $this->periode->id]))
             ->assertOk()
-            ->assertSee('Hanya ujian skripsi', false);
+            ->assertSee('SK Penguji hanya dari ujian skripsi', false);
 
         foreach (['administrasi.sk.export-penguji-pdf', 'administrasi.sk.export-pembimbing-pdf'] as $route) {
             $res = $this->actingAs($this->admin)->get(route($route, [

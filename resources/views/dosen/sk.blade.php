@@ -14,7 +14,7 @@
     </div>
 
     <x-page-header title="SK Pembimbing & Penguji" icon="badge-check" accent="indigo">
-            <x-slot:description>Unduh SK Pembimbing dan SK Penguji ujian skripsi (sidang skripsi &amp; jurnal) Anda. SK Pembimbing tersedia <strong>per gelombang</strong> — bisa langsung diunduh tanpa menunggu gelombang terakhir atau pergantian semester. Dokumen berisi surat permohonan SK beserta rekap dan rincian mahasiswa Anda.</x-slot:description>
+            <x-slot:description>SK Pembimbing dihitung sejak pendaftaran <strong>Sempro</strong> mahasiswa bimbingan Anda disetujui dan tersedia <strong>per gelombang</strong> — bisa langsung diunduh (sementara) tanpa menunggu gelombang terakhir atau pergantian semester. SK Penguji dihitung dari ujian skripsi (sidang &amp; jurnal). Dokumen berisi surat permohonan SK beserta rekap dan rincian mahasiswa Anda.</x-slot:description>
         </x-page-header>
 
     @if(!$dosen)
@@ -58,6 +58,9 @@
                                 <p class="text-xs text-indigo-700/80 dark:text-indigo-300/80 mt-0.5">
                                     {{ $row['utama'] }} Pembimbing Utama · {{ $row['pendamping'] }} Pembimbing Pendamping
                                 </p>
+                                @if($row['sempro'] > 0)
+                                    <p class="text-[11px] text-indigo-600/80 dark:text-indigo-300/80 mt-0.5">{{ $row['sempro'] }} mahasiswa masih tahap Sempro</p>
+                                @endif
                             </div>
                             @if($totalPembimbing > 0)
                                 @unless($row['final'])
@@ -85,7 +88,7 @@
                                     <a href="{{ route('dosen.sk.download', [$p, 'pembimbing']) }}" class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:underline">Unduh SK Pembimbing seluruh periode →</a>
                                 @endif
                             @else
-                                <span class="text-xs text-slate-400 dark:text-slate-500 italic">Tidak ada bimbingan ujian skripsi pada periode ini.</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-500 italic">Tidak ada mahasiswa bimbingan pada periode ini.</span>
                             @endif
                         </div>
 

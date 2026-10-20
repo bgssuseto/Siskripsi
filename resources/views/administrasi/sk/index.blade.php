@@ -3,7 +3,7 @@
 
     <div class="max-w-7xl mx-auto space-y-6">
         <!-- Hero Banner Header -->
-        <x-page-header title="Generate SK Dekan (Excel Output)" subtitle="Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian Skripsi. Hanya ujian skripsi (sidang & jurnal) yang dihitung — sempro tidak termasuk." icon="badge-check" accent="indigo">
+        <x-page-header title="Generate SK Dekan (Excel Output)" subtitle="Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian Skripsi. SK Pembimbing dihitung sejak Sempro disetujui; SK Penguji hanya dari ujian skripsi (sidang & jurnal)." icon="badge-check" accent="indigo">
             <x-slot:actions>
                 <span class="ui-chip">Periode Aktif: <strong class="text-slate-900 dark:text-white">{{ $selectedPeriode->nama_periode ?? 'Belum Ditentukan' }}</strong></span>
             </x-slot:actions>
@@ -80,14 +80,17 @@
                     <div>
                         <h2 class="text-lg font-extrabold text-slate-900 dark:text-slate-100">1. SK Dekan - Dosen Pembimbing Skripsi</h2>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                            Generate file Excel (.xlsx) Surat Keputusan penetapan <strong>Pembimbing Utama</strong> dan <strong>Pembimbing Pendamping</strong> bagi mahasiswa ujian skripsi (sidang &amp; jurnal) pada periode terpilih — sempro tidak dihitung. Dilengkapi sheet Rekapitulasi Jumlah Bimbingan per Dosen.
+                            Generate file Excel (.xlsx) Surat Keputusan penetapan <strong>Pembimbing Utama</strong> dan <strong>Pembimbing Pendamping</strong> bagi mahasiswa bimbingan pada periode terpilih — dihitung sejak pendaftaran <strong>Sempro disetujui</strong> hingga ujian skripsi (sidang &amp; jurnal), satu baris per mahasiswa. Dilengkapi sheet Rekapitulasi Jumlah Bimbingan per Dosen.
                         </p>
                     </div>
 
                     <div class="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-600 grid grid-cols-2 gap-3 text-center">
                         <div>
-                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Total Mahasiswa</p>
-                            <p class="text-xl font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{{ $totalSidangs }}</p>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Mahasiswa Bimbingan</p>
+                            <p class="text-xl font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{{ $totalBimbingan }}</p>
+                            @if($totalBimbinganSempro > 0)
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400">{{ $totalBimbinganSempro }} masih tahap Sempro</p>
+                            @endif
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Dosen Pembimbing</p>
