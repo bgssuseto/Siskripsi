@@ -190,7 +190,7 @@ class DosenSkTest extends TestCase
             ->assertOk()
             ->assertSee('SK Sementara')
             ->assertSee('SK sementara, belum final.')
-            ->assertSee('SK Penguji tersedia setelah gelombang terakhir');
+            ->assertSee('SK Penguji final (total gelombang 1–3)');
 
         $res = $this->actingAs($this->userAndi)->get(route('dosen.sk.download', [$aktif, 'pembimbing']));
         $res->assertOk();
@@ -204,5 +204,46 @@ class DosenSkTest extends TestCase
         // Periode lama (final): SK Pembimbing tanpa tanda SEMENTARA.
         $final = $this->actingAs($this->userAndi)->get(route('dosen.sk.download', [$this->periode, 'pembimbing']));
         $this->assertStringNotContainsString('SEMENTARA', $final->headers->get('content-disposition'));
+    }
+
+    public function test_sk_final_setelah_sidang_gelombang_1_2_3_terlaksana(): void
+    {
+        $p = Periode::create(['nama_periode' => 'Semester Final Uji ' . uniqid(), 'aktif' => true]);
+        $buatGelombang = fn (int $no, string $mulai, string $selesai) => \App\Models\PendaftaranPeriode::create([
+            'periode_id' => $p->id, 'jenis' => 'skripsi', 'gelombang' => $no, 'tanggal_mulai' => $mulai, 'tanggal_selesai' => $selesai,
+        ]);
+        $buatSidang = fn (int $gel, ?string $tanggal) => tap(Sidang::create([
+            'nim' => 'FIN' . substr(uniqid(), -6), 'nama_mahasiswa' => 'Mhs Final', 'judul_skripsi' => 'J', 'jenis_tugas_akhir' => 'sidang',
+            'verifikasi_status' => 'disetujui', 'periode_id' => $p->id, 'tanggal' => $tanggal,
+            'dosen_pembimbing_utama_id' => $this->andi->id, 'ketua_penguji_id' => $this->andi->id,
+        ]), fn ($s) => Sidang::whereKey($s->id)->update(['gelombang' => $gel]));
+
+        // Gelombang 1 & 2 selesai, gelombang 3 belum ada → belum final.
+        $buatGelombang(1, now()->subDays(60)->toDateString(), now()->subDays(50)->toDateString());
+        $buatGelombang(2, now()->subDays(40)->toDateString(), now()->subDays(30)->toDateString());
+        $buatSidang(1, now()->subDays(45)->toDateString());
+        $buatSidang(2, now()->subDays(25)->toDateString());
+        $status = SkPdfService::statusFinal($p);
+        $this->assertFalse($status['final']);
+        $this->assertSame([true, true, false], array_column($status['gelombang'], 'terlaksana'));
+
+        // Gelombang 3 ditutup tapi sidangnya belum dilaksanakan → masih sementara.
+        $buatGelombang(3, now()->subDays(20)->toDateString(), now()->subDays(10)->toDateString());
+        $sidang3 = $buatSidang(3, now()->addDays(3)->toDateString());
+        $this->assertFalse(SkPdfService::periodeFinal($p));
+
+        // Sidang gelombang 3 terlaksana → final (total gelombang 1–3), SK Penguji bisa diunduh.
+        Sidang::whereKey($sidang3->id)->update(['tanggal' => now()->subDay()->toDateString()]);
+        $this->assertTrue(SkPdfService::periodeFinal($p));
+
+        $this->actingAs($this->userAndi)->get(route('dosen.sk.index', ['periode' => $p->id]))
+            ->assertOk()->assertSee('SK Final')->assertSee('Unduh SK Penguji (PDF)');
+        $res = $this->actingAs($this->userAndi)->get(route('dosen.sk.download', [$p, 'penguji']));
+        $res->assertOk();
+        $this->assertStringNotContainsString('SEMENTARA', $res->headers->get('content-disposition'));
+
+        // Filter periode: periode lain dapat dipilih dari halaman yang sama.
+        $this->actingAs($this->userAndi)->get(route('dosen.sk.index', ['periode' => $this->periode->id]))
+            ->assertOk()->assertSee($this->periode->nama_periode)->assertSee('name="periode"', false);
     }
 }

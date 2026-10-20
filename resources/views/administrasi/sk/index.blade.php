@@ -4,9 +4,23 @@
     <div class="max-w-7xl mx-auto space-y-6">
         <!-- Hero Banner Header -->
         <x-page-header title="Generate SK Dekan (Excel Output)" subtitle="Cetak dan unduh Surat Keputusan (SK) Dekan untuk Penetapan Dosen Pembimbing Skripsi & Tim Dosen Penguji Ujian Skripsi. SK Pembimbing dihitung sejak Sempro disetujui; SK Penguji hanya dari ujian skripsi (sidang & jurnal)." icon="badge-check" accent="indigo">
-            <x-slot:actions>
-                <span class="ui-chip">Periode Aktif: <strong class="text-slate-900 dark:text-white">{{ $selectedPeriode->nama_periode ?? 'Belum Ditentukan' }}</strong></span>
-            </x-slot:actions>
+            <form method="GET" action="{{ route('administrasi.sk.index') }}" class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Filter</span>
+                    <select name="periode_id" aria-label="Periode akademik" onchange="this.form.gelombang.value=''; this.form.submit()"
+                            class="h-10 min-w-[210px] px-3 rounded-xl text-sm font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 cursor-pointer">
+                        @foreach($periodes as $p)
+                            <option value="{{ $p->id }}" @selected($selectedPeriodeId == $p->id)>{{ $p->nama_periode }}{{ $p->aktif ? ' (Aktif)' : '' }}</option>
+                        @endforeach
+                    </select>
+                    <select name="gelombang" aria-label="Gelombang" onchange="this.form.submit()"
+                            class="h-10 px-3 rounded-xl text-sm font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 cursor-pointer">
+                        <option value="">Semua Gelombang</option>
+                        @foreach($gelombangOptions as $g)
+                            <option value="{{ $g['value'] }}" @selected((string) $selectedGelombang === $g['value'])>{{ $g['label'] }}</option>
+                        @endforeach
+                    </select>
+                    <noscript><button class="ui-btn-secondary">Terapkan</button></noscript>
+                </form>
         </x-page-header>
 
         @if(session('warning'))
@@ -16,49 +30,9 @@
             </div>
         @endif
 
-        <!-- Filter Card -->
-        <div class="bg-white dark:bg-slate-800/80 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
-                Filter Data SK Berdasarkan Periode & Tanggal
-            </h3>
-
-            <form method="GET" action="{{ route('administrasi.sk.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
-                    <select name="periode_id" onchange="this.form.gelombang.value=''; this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                        @foreach($periodes as $p)
-                            <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>
-                                {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Gelombang</label>
-                    <select name="gelombang" class="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                        <option value="">-- Semua Gelombang --</option>
-                        @foreach($gelombangOptions as $g)
-                            <option value="{{ $g['value'] }}" {{ (string) $selectedGelombang === $g['value'] ? 'selected' : '' }}>{{ $g['label'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="hidden lg:block"></div>
-
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer">
-                        Terapkan Filter
-                    </button>
-                    @if(request()->anyFilled(['gelombang', 'tanggal_pendaftaran_mulai', 'tanggal_pendaftaran_selesai']))
-                        <a href="{{ route('administrasi.sk.index', ['periode_id' => $selectedPeriodeId]) }}" class="px-3.5 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
-                            Reset
-                        </a>
-                    @endif
-                </div>
-            </form>
-        </div>
+        @if($statusFinal && $selectedPeriode)
+            <x-sk-status-final :status="$statusFinal" :periode="$selectedPeriode" />
+        @endif
 
         <!-- 2 Main SK Cards (Excel Export Action Cards) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

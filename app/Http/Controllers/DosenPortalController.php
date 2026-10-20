@@ -763,10 +763,11 @@ class DosenPortalController extends Controller
      * ujian skripsi (sidang & jurnal — sempro tidak dihitung), lengkap dengan
      * jumlahnya, dan tombol unduh SK Pembimbing & SK Penguji per periode.
      */
-    public function sk(): View
+    public function sk(Request $request): View
     {
         $dosen = Auth::user()->dosen;
         $rows = collect();
+        $row = null;
 
         if ($dosen) {
             $id = $dosen->id;
@@ -787,7 +788,12 @@ class DosenPortalController extends Controller
 
             $periodes = Periode::whereIn('id', $ujian->pluck('periode_id')->merge($periodeBimbingan)->unique())->orderByDesc('id')->get();
 
-            $rows = $periodes->map(function (Periode $p) use ($ujian, $id) {
+            // Hanya periode terpilih yang dihitung detailnya (default: periode aktif, lalu terbaru).
+            $terpilih = $periodes->firstWhere('id', (int) $request->query('periode'))
+                ?? $periodes->firstWhere('aktif', true)
+                ?? $periodes->first();
+
+            $hitungBaris = function (Periode $p) use ($ujian, $id) {
                 $u = $ujian->where('periode_id', $p->id);
                 $hitung = fn ($koleksi, string $kolom) => $koleksi->filter(fn ($s) => (int) $s->{$kolom} === $id)->count();
 
@@ -808,9 +814,12 @@ class DosenPortalController extends Controller
                     ->sortBy(fn ($g) => $g['gelombang'] === 'tanpa' ? PHP_INT_MAX : (int) $g['gelombang'])
                     ->values();
 
+                $status = \App\Services\SkPdfService::statusFinal($p);
+
                 return [
                     'periode'       => $p,
-                    'final'         => \App\Services\SkPdfService::periodeFinal($p),
+                    'status'        => $status,
+                    'final'         => $status['final'],
                     'utama'         => $b->filter($peranUtama)->count(),
                     'pendamping'    => $b->reject($peranUtama)->count(),
                     'sempro'        => $b->where('jenis_tugas_akhir', 'sempro')->count(),
@@ -818,10 +827,13 @@ class DosenPortalController extends Controller
                     'anggota'       => $hitung($u, 'anggota_penguji_1_id') + $hitung($u, 'anggota_penguji_2_id'),
                     'per_gelombang' => $perGelombang,
                 ];
-            });
+            };
+
+            $rows = $periodes; // daftar periode untuk pilihan filter
+            $row  = $terpilih ? $hitungBaris($terpilih) : null;
         }
 
-        return view('dosen.sk', compact('dosen', 'rows'));
+        return view('dosen.sk', compact('dosen', 'rows', 'row'));
     }
 
     /**

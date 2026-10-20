@@ -1630,11 +1630,13 @@ class AdministrasiController extends Controller
         })->filter(fn ($row) => $row['total'] > 0)
             ->sortByDesc('total')->take(8)->values();
 
+        $statusFinal = $selectedPeriode ? \App\Services\SkPdfService::statusFinal($selectedPeriode) : null;
+
         return view('administrasi.sk.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId',
             'totalSidangs', 'totalJurnal', 'totalSidangReguler', 'totalBimbingan', 'totalBimbinganSempro',
             'dosenPembimbingIds', 'dosenPengujiIds', 'jenis',
-            'pembimbingChart', 'pengujiChart', 'selectedGelombang', 'gelombangOptions'
+            'pembimbingChart', 'pengujiChart', 'selectedGelombang', 'gelombangOptions', 'statusFinal'
         ));
     }    /**
      * Helper to generate unique & valid Excel sheet title for a lecturer (Max 31 chars)

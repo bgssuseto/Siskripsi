@@ -116,36 +116,59 @@ class SkPdfService
             ->values();
     }
 
+    /** Jumlah gelombang sidang skripsi per semester; SK final setelah gelombang ini terlaksana. */
+    public const GELOMBANG_TERAKHIR = 3;
+
     /**
-     * Apakah data SK satu periode sudah final? Final bila semester sudah berganti
-     * (periode tidak aktif lagi), ATAU gelombang pendaftaran skripsi terakhir periode
-     * itu sudah ditutup dan tidak ada lagi sidang yang belum/akan dilaksanakan.
-     * Sebelum final, SK Pembimbing di portal dosen hanya terbit sebagai SEMENTARA.
+     * Status final SK satu periode beserta progres tiap gelombang sidang skripsi.
+     *
+     * Final bila sidang skripsi gelombang 1, 2, dan 3 (GELOMBANG_TERAKHIR) semuanya sudah
+     * terlaksana — pendaftaran gelombang ditutup dan tidak ada lagi sidang di gelombang itu
+     * yang belum dijadwalkan / belum dilaksanakan. SK final = total gelombang 1–3, berlaku
+     * untuk SK Pembimbing maupun SK Penguji. Periode yang sudah tidak aktif (semester sudah
+     * berganti) otomatis dianggap final.
+     *
+     * @return array{final: bool, semester_berganti: bool, gelombang: array<int, array{no: int, ada: bool, ditutup: bool, terlaksana: bool}>}
      */
-    public static function periodeFinal(Periode $periode): bool
+    public static function statusFinal(Periode $periode): array
     {
-        if (!$periode->aktif) {
-            return true;
-        }
-
         $hariIni = now()->timezone('Asia/Jakarta')->toDateString();
-        $gelombangSkripsi = PendaftaranPeriode::where('periode_id', $periode->id)->where('jenis', 'skripsi')->get();
-        if ($gelombangSkripsi->isEmpty()) {
-            return false;
-        }
+        $waves = PendaftaranPeriode::where('periode_id', $periode->id)->where('jenis', 'skripsi')->get()->keyBy(fn ($w) => (int) $w->gelombang);
 
-        $penutupan = $gelombangSkripsi->max(fn ($g) => $g->tanggal_selesai?->toDateString());
-        if ($penutupan === null || $penutupan >= $hariIni) {
-            return false;
-        }
-
-        $masihBerjalan = Sidang::where('periode_id', $periode->id)
+        // Sidang skripsi yang belum terlaksana (belum dijadwalkan / jadwalnya hari ini atau nanti).
+        $belumTerlaksana = Sidang::where('periode_id', $periode->id)
             ->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
             ->where(fn ($q) => $q->whereNull('verifikasi_status')->orWhere('verifikasi_status', '!=', 'ditolak'))
             ->where(fn ($q) => $q->whereNull('tanggal')->orWhereDate('tanggal', '>=', $hariIni))
-            ->exists();
+            ->pluck('gelombang');
 
-        return !$masihBerjalan;
+        $jumlah = max(self::GELOMBANG_TERAKHIR, (int) $waves->keys()->max());
+        $gelombang = [];
+        for ($no = 1; $no <= $jumlah; $no++) {
+            $w = $waves->get($no);
+            $ditutup = $w && $w->tanggal_selesai && $w->tanggal_selesai->toDateString() < $hariIni;
+            $gelombang[] = [
+                'no'         => $no,
+                'ada'        => (bool) $w,
+                'ditutup'    => (bool) $ditutup,
+                'terlaksana' => $ditutup && !$belumTerlaksana->contains(fn ($g) => (int) $g === $no),
+            ];
+        }
+
+        $semuaTerlaksana = collect($gelombang)->every(fn ($g) => $g['terlaksana'])
+            && !$belumTerlaksana->contains(fn ($g) => $g === null); // sidang tanpa gelombang juga harus tuntas
+
+        return [
+            'final'             => !$periode->aktif || $semuaTerlaksana,
+            'semester_berganti' => !$periode->aktif,
+            'gelombang'         => $gelombang,
+        ];
+    }
+
+    /** Apakah SK periode ini sudah final? (lihat statusFinal()) */
+    public static function periodeFinal(Periode $periode): bool
+    {
+        return self::statusFinal($periode)['final'];
     }
 
     /**
