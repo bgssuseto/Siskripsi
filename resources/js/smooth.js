@@ -127,14 +127,16 @@ function boxKeyframes(el) {
 
 const COLLAPSED = { height: '0px', paddingTop: '0px', paddingBottom: '0px', marginTop: '0px', marginBottom: '0px' };
 
+const savedOverflow = new WeakMap(); // el -> { value, anim } nilai overflow asli
 function withOverflowHidden(el, anim) {
-    const prev = el.style.overflow;
+    const saved = savedOverflow.get(el);
+    savedOverflow.set(el, { value: saved ? saved.value : el.style.overflow, anim });
     silently(el, () => { el.style.overflow = 'hidden'; });
-    let done = false;
     const restore = () => {
-        if (done) return;
-        done = true;
-        silently(el, () => { el.style.overflow = prev; });
+        const cur = savedOverflow.get(el);
+        if (!cur || cur.anim !== anim) return; // animasi lebih baru yang akan memulihkan
+        savedOverflow.delete(el);
+        silently(el, () => { el.style.overflow = cur.value; });
     };
     anim.addEventListener('finish', restore, { once: true });
     anim.addEventListener('cancel', restore, { once: true });
