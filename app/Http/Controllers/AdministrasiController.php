@@ -205,11 +205,11 @@ class AdministrasiController extends Controller
      * Kosong bila belum ada dosen ber-role koordinator atau tidak ada jadwal
      * (blok tanda tangan lalu tampil seperti biasa tanpa QR).
      *
-     * @return array{ttdUndangan: ?\App\Models\TandaTanganUndangan, qrTtd: ?string, qrRasioLogo: float}
+     * @return array{ttdUndangan: ?\App\Models\TandaTanganUndangan, qrTtd: ?string}
      */
     private function tandaTanganUndangan(Dosen $dosen, ?Dosen $koordinator, string $jenis, ?int $periodeId, string $namaPeriode, $gelombang, $sidangs): array
     {
-        $kosong = ['ttdUndangan' => null, 'qrTtd' => null, 'qrRasioLogo' => 0.0];
+        $kosong = ['ttdUndangan' => null, 'qrTtd' => null];
         if (!$koordinator || $sidangs->isEmpty()) {
             return $kosong;
         }
@@ -226,9 +226,10 @@ class AdministrasiController extends Controller
             return $kosong;
         }
 
-        $qr = \App\Support\QrCode::denganRuangLogo($ttd->url_verifikasi);
+        // Satu gambar PNG (QR + logo TI UMK di tengah) — tampil sama di halaman Cetak & PDF.
+        $qrPng = \App\Support\QrCode::pngDenganLogo($ttd->url_verifikasi, public_path('images/logo-ti-umk-icon.png'));
 
-        return ['ttdUndangan' => $ttd, 'qrTtd' => $qr['uri'], 'qrRasioLogo' => $qr['rasio_logo']];
+        return ['ttdUndangan' => $ttd, 'qrTtd' => $qrPng ?? \App\Support\QrCode::svgDataUri($ttd->url_verifikasi, 8, 'M')];
     }
 
     /**

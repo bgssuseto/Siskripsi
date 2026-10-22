@@ -80,4 +80,17 @@ class RulePengujiPinTest extends TestCase
 
         $this->get(route('master.dosen-penguji-rule.index'))->assertSee('Halaman Rahasia');
     }
+
+    public function test_pindah_ke_halaman_lain_langsung_mengunci_kembali(): void
+    {
+        $this->actingAs($this->admin)->postJson(route('master.dosen-penguji-rule.buka'), ['pin' => '030400'])->assertOk();
+        $this->get(route('master.dosen-penguji-rule.index'))->assertDontSee('Halaman Rahasia');
+
+        // Permintaan AJAX dari halaman itu sendiri tidak mengunci.
+        $this->postJson(route('master.dosen-penguji-rule.aktif'))->assertNoContent();
+        $this->get(route('master.dosen-penguji-rule.index'))->assertDontSee('Halaman Rahasia');
+
+        $this->get(route('dashboard'));
+        $this->get(route('master.dosen-penguji-rule.index'))->assertSee('Halaman Rahasia');
+    }
 }

@@ -308,6 +308,7 @@ Route::middleware('auth')->group(function () {
         // PIN halaman rahasia Rule Komposisi Penguji (buka & kunci kembali)
         Route::post('/master/dosen-penguji-rule/buka', [DosenPengujiRuleController::class, 'buka'])->name('master.dosen-penguji-rule.buka');
         Route::post('/master/dosen-penguji-rule/kunci', [DosenPengujiRuleController::class, 'kunci'])->name('master.dosen-penguji-rule.kunci');
+        Route::post('/master/dosen-penguji-rule/aktif', fn () => response()->noContent())->name('master.dosen-penguji-rule.aktif')->middleware('pin.rule-penguji');
 
         // Bebas Prodi — verifikasi pengajuan & cetak surat (hapus/upload TTD dicek super_admin di controller)
         Route::get('/bebas-prodi', [BebasProdiController::class, 'index'])->name('bebas-prodi.index');

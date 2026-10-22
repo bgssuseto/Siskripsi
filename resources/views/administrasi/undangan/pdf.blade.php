@@ -39,11 +39,11 @@
         }
 
         .kop-surat .kop-logo-umk {
-            height: 46px;
+            height: 80px;
         }
 
         .kop-surat .kop-logo-ti {
-            height: 38px;
+            height: 56px;
         }
 
         .kop-surat .kop-logo-right {
@@ -437,25 +437,23 @@
                 Koordinator Skripsi/Tugas Akhir<br>
                 Program Studi Teknik Informatika
                 @if(!empty($qrTtd))
-                    @php
-                        // Logo TI UMK menutup area tengah QR yang dikosongkan (lihat QrCode::denganRuangLogo).
-                        $ukuranQr = 78;
-                        $sisiLogo = $ukuranQr * ($qrRasioLogo ?? 0);
-                        $padLogo  = 1;
-                    @endphp
-                    <div class="ttd-qr" style="position: relative; width: {{ $ukuranQr }}px; height: {{ $ukuranQr }}px; margin: 4px auto 3px;">
-                        <img src="{{ $qrTtd }}" alt="QR Tanda Tangan Elektronik" style="position: absolute; left: 0; top: 0; width: {{ $ukuranQr }}px; height: {{ $ukuranQr }}px;">
-                        @if(!empty($logoTiBase64) && $sisiLogo > 0)
-                            <img src="{{ $logoTiBase64 }}" alt="TI UMK" style="position: absolute; background: #fff; left: {{ round(($ukuranQr - $sisiLogo) / 2 + $padLogo, 2) }}px; top: {{ round(($ukuranQr - $sisiLogo) / 2 + $padLogo, 2) }}px; width: {{ round($sisiLogo - 2 * $padLogo, 2) }}px; height: {{ round($sisiLogo - 2 * $padLogo, 2) }}px;">
-                        @endif
-                    </div>
+                    {{-- QR (logo TI UMK sudah menyatu di gambar) di samping nama — ringkas supaya muat satu halaman. --}}
+                    <table style="width: auto; margin: 6px auto 0; border-collapse: collapse;">
+                        <tr>
+                            <td style="border: none; padding: 0 8px 0 0; vertical-align: middle;">
+                                <img src="{{ $qrTtd }}" width="64" height="64" alt="QR Tanda Tangan Elektronik" style="width: 64px; height: 64px; display: block;">
+                            </td>
+                            <td style="border: none; padding: 0; vertical-align: middle; text-align: left; font-size: 10.5px;">
+                                <div class="signature-name">{{ $koordinator->nama_dosen ?? '-' }}</div>
+                                <div>NIDN. {{ $koordinator->nidn ?? '-' }}</div>
+                                <div style="margin-top: 3px; font-size: 8px; font-style: italic; color: #555; line-height: 1.3;">Ditandatangani secara elektronik.<br>Pindai QR untuk verifikasi keaslian.</div>
+                            </td>
+                        </tr>
+                    </table>
                 @else
                     <div class="signature-space"></div>
-                @endif
-                <div class="signature-name">{{ $koordinator->nama_dosen ?? '.....................................' }}</div>
-                <div>NIDN. {{ $koordinator->nidn ?? '.....................................' }}</div>
-                @if(!empty($qrTtd))
-                    <div style="margin-top: 3px; font-size: 8px; font-style: italic; color: #555;">Ditandatangani secara elektronik &mdash; pindai QR untuk verifikasi keaslian.</div>
+                    <div class="signature-name">{{ $koordinator->nama_dosen ?? '.....................................' }}</div>
+                    <div>NIDN. {{ $koordinator->nidn ?? '.....................................' }}</div>
                 @endif
             </td>
         </tr>

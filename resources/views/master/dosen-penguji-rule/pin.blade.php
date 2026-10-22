@@ -135,7 +135,7 @@
 
                 <div class="relative px-6 sm:px-8 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-2 text-left">
                     <x-icon name="shield" class="w-4 h-4 shrink-0 mt-px text-indigo-500" />
-                    <span>Halaman terkunci otomatis setelah {{ config('rahasia.rule_penguji.berlaku_menit') }} menit tanpa aktivitas. Setiap percobaan PIN tercatat di Riwayat Aktivitas.</span>
+                    <span>Halaman terkunci otomatis saat Anda pindah halaman atau setelah {{ config('rahasia.rule_penguji.berlaku_menit') }} menit tanpa aktivitas. Setiap percobaan PIN tercatat di Riwayat Aktivitas.</span>
                 </div>
             </div>
         </div>

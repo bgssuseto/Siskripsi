@@ -581,14 +581,20 @@
 
             <!-- Brand / Logo -->
             <div class="flex items-center h-16 px-4 border-b border-white/[0.07] shrink-0">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
-                    <div class="w-9 h-9 shrink-0 rounded-xl bg-white flex items-center justify-center p-1.5 border border-white/10">
-                        <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI-UMK" class="w-full h-full object-contain">
+                <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 min-w-0">
+                    <div class="relative w-10 h-10 shrink-0">
+                        <span aria-hidden="true" class="absolute -inset-0.5 rounded-[14px] bg-gradient-to-br from-indigo-500 via-violet-500 to-sky-400 opacity-60 blur-[6px] transition-opacity group-hover:opacity-90"></span>
+                        <div class="relative w-10 h-10 rounded-xl flex items-center justify-center p-1.5 ring-1 ring-indigo-100 shadow-md shadow-indigo-500/10 transition-transform group-hover:scale-105" style="background-color:#fff">
+                            <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI-UMK" class="w-full h-full object-contain">
+                        </div>
                     </div>
-                    <div class="overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-36 opacity-100' : 'w-0 opacity-0'">
-                        <img x-show="darkMode" src="{{ asset('images/logo-ti-umk-text-white.png') }}" alt="TI-UMK" class="h-4 w-auto object-contain">
-                        <img x-show="!darkMode" src="{{ asset('images/logo-ti-umk-text.png') }}" alt="TI-UMK" class="h-4 w-auto object-contain">
-                        <p class="text-[10px] text-indigo-400 font-semibold uppercase tracking-widest whitespace-nowrap mt-1">Portal Akademik</p>
+                    <div class="overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-40 opacity-100' : 'w-0 opacity-0'">
+                        <img x-show="darkMode" src="{{ asset('images/logo-ti-umk-text-white.png') }}" alt="TI-UMK" class="h-[18px] w-auto object-contain">
+                        <img x-show="!darkMode" src="{{ asset('images/logo-ti-umk-text.png') }}" alt="TI-UMK" class="h-[18px] w-auto object-contain">
+                        <p class="mt-1.5 flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[0_0_0_3px_rgba(99,102,241,0.15)]"></span>
+                            <span class="text-[9.5px] font-extrabold uppercase tracking-[0.2em] bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">Portal Akademik</span>
+                        </p>
                     </div>
                 </a>
 
@@ -1715,19 +1721,6 @@
                         </div>
                     </div>
                     @endif
-
-                    <!-- Standalone Quick Logout Button in Top Right Header -->
-                    <form method="POST" action="{{ route('logout') }}" class="inline-flex">
-                        @csrf
-                        <button type="submit" 
-                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 text-xs font-semibold border border-rose-200/80 transition-colors shadow-sm"
-                                title="Keluar dari Sistem">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                            </svg>
-                            <span class="hidden sm:inline">Logout</span>
-                        </button>
-                    </form>
 
                     <!-- Profile Dropdown Trigger -->
                     <button @click="open = !open"

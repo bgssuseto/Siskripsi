@@ -19,31 +19,23 @@
 
     @if($dosen)
         <!-- Rekap Summary -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
-                <p class="text-xl font-extrabold text-slate-900 dark:text-slate-100 leading-none">{{ $rekap['total'] }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1">Total Riwayat</p>
-            </div>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
-                <p class="text-xl font-extrabold text-blue-600 dark:text-blue-400 leading-none">{{ $rekap['sempro'] }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1">Seminar Proposal</p>
-            </div>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
-                <p class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">{{ $rekap['skripsi'] }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1">Sidang Skripsi</p>
-            </div>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
-                <p class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">{{ $rekap['lulus'] }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1"><x-icon name="academic" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Lulus</p>
-            </div>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
-                <p class="text-xl font-extrabold text-rose-600 dark:text-rose-400 leading-none">{{ $rekap['tidak_lulus'] }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tidak Lulus</p>
-            </div>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4">
-                <p class="text-xl font-extrabold text-slate-400 dark:text-slate-500 leading-none">{{ $rekap['belum'] }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1">Belum Diisi</p>
-            </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
+            @foreach([
+                ['Total Riwayat', $rekap['total'], 'list', 'violet'],
+                ['Seminar Proposal', $rekap['sempro'], 'document', 'blue'],
+                ['Sidang Skripsi', $rekap['skripsi'], 'academic', 'purple'],
+                ['Lulus', $rekap['lulus'], 'check-circle', 'green'],
+                ['Tidak Lulus', $rekap['tidak_lulus'], 'x-circle', 'rose'],
+                ['Belum Diisi', $rekap['belum'], 'clock', 'amber'],
+            ] as [$judul, $nilai, $ikon, $warna])
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-3">
+                    <span class="stat-icon {{ $warna }} w-10 h-10 rounded-xl flex items-center justify-center shrink-0"><x-icon :name="$ikon" class="w-5 h-5" /></span>
+                    <div class="min-w-0">
+                        <p class="text-xl font-extrabold text-slate-900 dark:text-slate-100 leading-none">{{ $nilai }}</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-1 truncate">{{ $judul }}</p>
+                    </div>
+                </div>
+            @endforeach
         </div>
     @endif
 

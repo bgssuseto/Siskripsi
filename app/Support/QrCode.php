@@ -113,7 +113,7 @@ class QrCode
      * URI SVG dan rasio lebar area kosong terhadap lebar gambar (termasuk
      * quiet zone) — dipakai untuk mengukur & memusatkan logo di atasnya.
      *
-     * @return array{uri: string, rasio_logo: float}
+     * @return array{uri: string, rasio_logo: float, piksel: int}
      */
     public static function denganRuangLogo(string $data, float $kosongTengah = 0.26, int $moduleSize = 8): array
     {
@@ -122,7 +122,68 @@ class QrCode
         return [
             'uri'        => 'data:image/svg+xml;base64,' . base64_encode($hasil['svg']),
             'rasio_logo' => $hasil['lebar_kosong'] / $hasil['lebar_total'],
+            'piksel'     => $hasil['lebar_total'] * $moduleSize, // ukuran asli gambar (px)
         ];
+    }
+
+    /**
+     * QR level H berbentuk PNG dengan logo sudah ditempel di tengahnya (satu gambar
+     * utuh) — aman untuk dompdf yang tidak andal menumpuk gambar dengan posisi absolut.
+     * Mengembalikan data URI PNG, atau null bila ekstensi GD tidak tersedia.
+     */
+    public static function pngDenganLogo(string $data, ?string $logoPath = null, int $moduleSize = 8, float $kosongTengah = 0.26): ?string
+    {
+        if (!function_exists('imagecreatetruecolor')) {
+            return null;
+        }
+
+        $qr = new self($data, 'H');
+        $border = 4;
+        $dim = ($qr->size + $border * 2) * $moduleSize;
+
+        $lebarKosong = (int) round($qr->size * $kosongTengah);
+        if ($lebarKosong > 0 && ($qr->size - $lebarKosong) % 2 !== 0) {
+            $lebarKosong++;
+        }
+        $awal = intdiv($qr->size - $lebarKosong, 2);
+        $akhir = $awal + $lebarKosong;
+
+        $img = imagecreatetruecolor($dim, $dim);
+        $putih = imagecolorallocate($img, 255, 255, 255);
+        $hitam = imagecolorallocate($img, 0, 0, 0);
+        imagefill($img, 0, 0, $putih);
+
+        for ($y = 0; $y < $qr->size; $y++) {
+            for ($x = 0; $x < $qr->size; $x++) {
+                $diTengah = $lebarKosong > 0 && $x >= $awal && $x < $akhir && $y >= $awal && $y < $akhir;
+                if ($qr->modules[$y][$x] && !$diTengah) {
+                    $px = ($x + $border) * $moduleSize;
+                    $py = ($y + $border) * $moduleSize;
+                    imagefilledrectangle($img, $px, $py, $px + $moduleSize - 1, $py + $moduleSize - 1, $hitam);
+                }
+            }
+        }
+
+        if ($logoPath && $lebarKosong > 0 && is_file($logoPath) && ($logo = @imagecreatefromstring((string) file_get_contents($logoPath)))) {
+            $pad = $moduleSize;
+            $sisi = $lebarKosong * $moduleSize - 2 * $pad;
+            $pos = ($awal + $border) * $moduleSize + $pad;
+            $lw = imagesx($logo);
+            $lh = imagesy($logo);
+            $skala = min($sisi / $lw, $sisi / $lh);
+            $w = (int) round($lw * $skala);
+            $h = (int) round($lh * $skala);
+            imagealphablending($img, true);
+            imagecopyresampled($img, $logo, $pos + intdiv($sisi - $w, 2), $pos + intdiv($sisi - $h, 2), 0, 0, $w, $h, $lw, $lh);
+            imagedestroy($logo);
+        }
+
+        ob_start();
+        imagepng($img);
+        $png = ob_get_clean();
+        imagedestroy($img);
+
+        return 'data:image/png;base64,' . base64_encode($png);
     }
 
     /** @return array{svg: string, lebar_kosong: int, lebar_total: int} */

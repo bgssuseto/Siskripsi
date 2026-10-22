@@ -11,7 +11,7 @@ return [
         'pin_hash' => env('RULE_PENGUJI_PIN_HASH', '$2y$12$hMRf5OQRyI.jTcJRuaEfFuUgnFF5M6DPhWoSInJ648MPEIWlbIgc.'),
 
         // Kunci otomatis setelah sekian menit tanpa aktivitas di halaman ini.
-        'berlaku_menit' => (int) env('RULE_PENGUJI_PIN_MENIT', 15),
+        'berlaku_menit' => (int) env('RULE_PENGUJI_PIN_MENIT', 5),
 
         // Batas salah PIN sebelum dikunci sementara.
         'maks_percobaan' => 5,

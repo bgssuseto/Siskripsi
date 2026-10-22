@@ -27,6 +27,34 @@
         <x-page-header title="Rule Komposisi Dosen Penguji" icon="shield" accent="indigo">
             <x-slot:description>Atur pasangan dosen yang boleh/tidak boleh satu tim dewan penguji. Dipakai sebagai validasi wajib saat plotting jadwal (manual maupun otomatis).</x-slot:description>
             <x-slot:actions>
+                {{-- Kunci otomatis bila tidak ada aktivitas; aktivitas memperpanjang sesi di server. --}}
+                <span x-data="{
+                        batas: {{ (int) config('rahasia.rule_penguji.berlaku_menit') * 60 }},
+                        sisa: {{ (int) config('rahasia.rule_penguji.berlaku_menit') * 60 }},
+                        terakhirPing: Date.now(),
+                        aktif() {
+                            this.sisa = this.batas;
+                            if (Date.now() - this.terakhirPing > 60000) {
+                                this.terakhirPing = Date.now();
+                                fetch('{{ route('master.dosen-penguji-rule.aktif') }}', { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' } })
+                                    .then(r => { if (r.status === 423) window.location.reload(); }).catch(() => {});
+                            }
+                        },
+                        async kunci() {
+                            try { await fetch('{{ route('master.dosen-penguji-rule.kunci') }}', { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' } }); } catch (e) {}
+                            window.location.reload();
+                        },
+                        init() {
+                            ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(ev => window.addEventListener(ev, () => this.aktif(), { passive: true }));
+                            setInterval(() => { this.sisa--; if (this.sisa <= 0) this.kunci(); }, 1000);
+                        },
+                     }"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-bold ring-1 ring-inset transition-colors"
+                      :class="sisa <= 60 ? 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30' : 'bg-white/80 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700'"
+                      title="Halaman terkunci otomatis bila tidak ada aktivitas">
+                    <x-icon name="clock" class="w-3.5 h-3.5" />
+                    <span>Terkunci dalam <span x-text="Math.floor(Math.max(sisa,0) / 60) + ':' + String(Math.max(sisa,0) % 60).padStart(2, '0')"></span></span>
+                </span>
                 <form method="POST" action="{{ route('master.dosen-penguji-rule.kunci') }}" data-live="off">
                     @csrf
                     <button type="submit" class="ui-btn-secondary" title="Kunci kembali halaman ini (perlu PIN lagi)">

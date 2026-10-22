@@ -1,12 +1,34 @@
 <x-app-layout title="Dashboard Mahasiswa">
 <div class="max-w-7xl mx-auto space-y-5 sm:space-y-6">
     
-    <!-- Welcome Header -->
-    <x-page-header title="Halo, {{ $user->name }}" subtitle="Selamat datang di Sistem Informasi Skripsi TI. Kelola tugas akhir, pendaftaran, dan jadwal sidang Anda." icon="home" accent="indigo">
-            <x-slot:actions>
-                <span class="ui-chip"><x-icon name="academic" class="w-3.5 h-3.5" /> Mahasiswa</span>
-            </x-slot:actions>
-        </x-page-header>
+    <!-- Sambutan + ujian terdekat -->
+    @php
+        $hariIni = now()->timezone('Asia/Jakarta')->startOfDay();
+        $ujianBerikut = $sidangs
+            ->filter(fn ($x) => $x->tanggal && \Carbon\Carbon::parse($x->tanggal)->gte($hariIni))
+            ->sortBy(fn ($x) => \Carbon\Carbon::parse($x->tanggal)->format('Ymd') . ($x->jam ?? ''))
+            ->first();
+        $agendaSambutan = $ujianBerikut ? [
+            'jenis'   => $ujianBerikut->jenis_tugas_akhir === 'sempro' ? 'Seminar Proposal' : ($ujianBerikut->jenis_tugas_akhir === 'jurnal' ? 'Sidang Jurnal' : 'Sidang Skripsi'),
+            'judul'   => 'Ujian ' . ($ujianBerikut->jenis_tugas_akhir === 'sempro' ? 'Seminar Proposal' : 'Sidang') . ' Anda',
+            'sub'     => $ujianBerikut->judul_skripsi,
+            'tanggal' => $ujianBerikut->tanggal,
+            'jam'     => $ujianBerikut->jam ? $ujianBerikut->jam . ' WIB' : null,
+            'ruang'   => $ujianBerikut->ruang?->kode_ruangan,
+            'url'     => Route::has('mahasiswa.jadwal.' . ($ujianBerikut->jenis_tugas_akhir === 'sempro' ? 'sempro' : 'skripsi'))
+                ? route('mahasiswa.jadwal.' . ($ujianBerikut->jenis_tugas_akhir === 'sempro' ? 'sempro' : 'skripsi')) : null,
+        ] : null;
+    @endphp
+    <x-sambutan :nama="$user->name" :peran="'Mahasiswa' . ($user->nim ? ' · ' . $user->nim : '')"
+                subjudul="Pantau progres tugas akhir Anda dari pendaftaran sampai kelulusan. Satu langkah lagi menuju toga! 🎓"
+                :agenda="$agendaSambutan" kosong="Belum ada jadwal ujian. Lengkapi pendaftaran Anda dan pantau progresnya di bawah.">
+        <x-slot:aksi>
+            @if(Route::has('mahasiswa.sempro.index'))<a href="{{ route('mahasiswa.sempro.index') }}" class="ui-btn-terang"><x-icon name="document-add" class="w-4 h-4" /> Pendaftaran Sempro</a>@endif
+            @if(Route::has('mahasiswa.skripsi.index'))<a href="{{ route('mahasiswa.skripsi.index') }}" class="ui-btn-kaca"><x-icon name="academic" class="w-4 h-4" /> Pendaftaran Skripsi</a>@endif
+            @if(Route::has('mahasiswa.jadwal.sempro'))<a href="{{ route('mahasiswa.jadwal.sempro') }}" class="ui-btn-kaca"><x-icon name="calendar" class="w-4 h-4" /> Jadwal Ujian</a>@endif
+            @if(Route::has('mahasiswa.bebas-prodi.index'))<a href="{{ route('mahasiswa.bebas-prodi.index') }}" class="ui-btn-kaca"><x-icon name="badge-check" class="w-4 h-4" /> Bebas Prodi</a>@endif
+        </x-slot:aksi>
+    </x-sambutan>
 
 
 

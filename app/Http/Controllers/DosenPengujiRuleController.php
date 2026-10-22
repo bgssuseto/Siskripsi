@@ -50,9 +50,13 @@ class DosenPengujiRuleController extends Controller
     }
 
     /** Kunci kembali halaman rahasia secara manual. */
-    public function kunci(Request $request): RedirectResponse
+    public function kunci(Request $request): RedirectResponse|JsonResponse
     {
         $request->session()->forget(PinRulePenguji::SESSION_KEY);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('master.dosen-penguji-rule.index')->with('success', 'Halaman Rule Komposisi Penguji telah dikunci.');
     }

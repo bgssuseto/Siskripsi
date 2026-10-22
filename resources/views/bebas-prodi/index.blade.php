@@ -8,7 +8,7 @@
     $label = ['menunggu' => 'Menunggu', 'disetujui' => 'Disetujui', 'ditolak' => 'Ditolak'];
     $isSuperAdmin = Auth::user()->isSuperAdmin();
 @endphp
-<div class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6"
+<div class="space-y-6"
      x-data="{ modal: false, mode: 'disetujui', action: '', nama: '', kaprodiModal: {{ $errors->hasAny(['nama', 'mulai_menjabat', 'selesai_menjabat']) ? 'true' : 'false' }} }">
 
     <x-page-header title="Bebas Prodi" subtitle="Verifikasi pengajuan Surat Keterangan Bebas Prodi mahasiswa." icon="badge-check" accent="teal">
@@ -23,38 +23,58 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-2 grid grid-cols-3 gap-3">
-            @foreach(['menunggu' => 'ring-amber-500', 'disetujui' => 'ring-emerald-500', 'ditolak' => 'ring-rose-500'] as $st => $ring)
-                <a href="{{ route('bebas-prodi.index', ['status' => $status === $st ? null : $st, 'q' => $search ?: null]) }}"
-                   class="stat-card rounded-2xl p-4 shadow-sm transition-all {{ $status === $st ? 'ring-2 ' . $ring : '' }}">
-                    <p class="stat-label text-[11px] uppercase tracking-wider">{{ $label[$st] }}</p>
-                    <p class="stat-value text-2xl mt-1">{{ $counts[$st] ?? 0 }}</p>
-                </a>
-            @endforeach
-        </div>
+    {{-- Ringkasan status (klik untuk menyaring) --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        @php
+            $kartu = [
+                ''          => ['Total Pengajuan', $counts->sum(), 'inbox', 'blue', 'ring-indigo-500'],
+                'menunggu'  => ['Menunggu', $counts['menunggu'] ?? 0, 'clock', 'amber', 'ring-amber-500'],
+                'disetujui' => ['Disetujui', $counts['disetujui'] ?? 0, 'check-circle', 'green', 'ring-emerald-500'],
+                'ditolak'   => ['Ditolak', $counts['ditolak'] ?? 0, 'x-circle', 'rose', 'ring-rose-500'],
+            ];
+        @endphp
+        @foreach($kartu as $st => [$judul, $jumlah, $ikon, $warna, $ring])
+            @php $aktif = $st === '' ? !$status : $status === $st; @endphp
+            <a href="{{ route('bebas-prodi.index', array_filter(['status' => $st && $status !== $st ? $st : null, 'q' => $search ?: null])) }}"
+               class="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-4 flex items-center gap-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all {{ $aktif ? 'ring-2 ' . $ring : '' }}">
+                <span class="stat-icon {{ $warna }} w-11 h-11 rounded-xl flex items-center justify-center shrink-0"><x-icon :name="$ikon" class="w-5 h-5" /></span>
+                <span class="min-w-0">
+                    <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">{{ $judul }}</span>
+                    <span class="block text-2xl font-extrabold text-slate-900 dark:text-slate-100 leading-tight">{{ $jumlah }}</span>
+                </span>
+            </a>
+        @endforeach
+    </div>
 
-        <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-4 border border-slate-200/80 dark:border-slate-700 space-y-1.5">
-            <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Kaprodi Penandatangan</p>
+    {{-- Kaprodi penandatangan --}}
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        <span class="w-11 h-11 rounded-xl bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-300 flex items-center justify-center shrink-0"><x-icon name="pencil" class="w-5 h-5" /></span>
+        <div class="min-w-0 flex-1">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Kaprodi Penandatangan</p>
             @if($kaprodiSekarang)
-                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200">{{ $kaprodiSekarang->nama }}</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Masa jabatan: {{ $kaprodiSekarang->masa_jabatan }}</p>
-                <p class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400"><x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tanda tangan elektronik (QR Code) dibuat otomatis di setiap surat</p>
+                <p class="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">{{ $kaprodiSekarang->nama }}</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Masa jabatan {{ $kaprodiSekarang->masa_jabatan }}</p>
             @else
-                <p class="text-[11px] font-bold text-rose-600 dark:text-rose-400">Belum ada data Kaprodi.</p>
-            @endif
-            @if($isSuperAdmin)
-                <button type="button" @click="kaprodiModal = true" class="mt-1 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg">Kelola Kaprodi</button>
+                <p class="text-sm font-bold text-rose-600 dark:text-rose-400">Belum ada data Kaprodi — surat belum bisa ditandatangani.</p>
             @endif
         </div>
+        <span class="inline-flex items-center gap-1.5 self-start sm:self-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30">
+            <x-icon name="check-circle" class="w-3.5 h-3.5" /> TTE QR otomatis di setiap surat
+        </span>
+        @if($isSuperAdmin)
+            <button type="button" @click="kaprodiModal = true" class="ui-btn-secondary self-start sm:self-center"><x-icon name="users" class="w-4 h-4" /> Kelola Kaprodi</button>
+        @endif
     </div>
 
     <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 overflow-hidden">
         <form method="GET" class="p-4 border-b border-slate-100 dark:border-slate-700 flex flex-wrap gap-2 items-center">
             @if($status)<input type="hidden" name="status" value="{{ $status }}">@endif
-            <input type="search" name="q" value="{{ $search }}" placeholder="Cari nama, NIM, atau nomor surat..."
-                   class="flex-1 min-w-[200px] px-3.5 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-xs bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-            <button class="px-4 py-2 bg-slate-800 dark:bg-slate-600 text-white text-xs font-bold rounded-xl">Cari</button>
+            <div class="relative flex-1 min-w-[200px]">
+                <x-icon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <input type="search" name="q" value="{{ $search }}" placeholder="Cari nama, NIM, atau nomor surat..."
+                       class="w-full pl-9 pr-3.5 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-sm bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+            </div>
+            <button class="ui-btn-primary">Cari</button>
             @if($status || $search)
                 <a href="{{ route('bebas-prodi.index') }}" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white">Reset</a>
             @endif
