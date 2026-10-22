@@ -32,6 +32,14 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string'],
             'password' => ['required', 'string'],
+            'captcha_input' => ['required', new \App\Rules\MathCaptcha('login')],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'captcha_input.required' => 'Hasil hitungan verifikasi keamanan wajib diisi.',
         ];
     }
 

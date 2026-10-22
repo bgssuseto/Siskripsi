@@ -61,6 +61,8 @@ Route::middleware('throttle:60,1')->group(function () {
 
 // Guest routes
 Route::middleware('guest')->group(function () {
+    Route::get('captcha/{form}', [\App\Http\Controllers\CaptchaController::class, 'image'])
+        ->whereIn('form', \App\Support\MathCaptcha::FORMS)->middleware('throttle:60,1')->name('captcha.image');
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');

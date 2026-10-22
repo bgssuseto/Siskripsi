@@ -20,35 +20,7 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        $this->generateCaptcha();
         return view('auth.register');
-    }
-
-    /**
-     * Generate a math captcha challenge and store answer in session.
-     */
-    private function generateCaptcha(): void
-    {
-        $a = rand(1, 20);
-        $b = rand(1, 20);
-        $operators = ['+', '-', '*'];
-        $op = $operators[array_rand($operators)];
-
-        // Keep subtraction positive
-        if ($op === '-' && $b > $a) {
-            [$a, $b] = [$b, $a];
-        }
-
-        $answer = match ($op) {
-            '+' => $a + $b,
-            '-' => $a - $b,
-            '*' => $a * $b,
-        };
-
-        session([
-            'captcha_question' => "{$a} {$op} {$b}",
-            'captcha_answer'   => $answer,
-        ]);
     }
 
     /**
@@ -63,16 +35,13 @@ class RegisteredUserController extends Controller
             'nim'           => ['required', 'string', 'max:30', 'unique:'.User::class],
             'email'         => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password'      => ['required', 'confirmed', Rules\Password::defaults()],
-            'captcha_input'  => ['required', new MathCaptcha()],
+            'captcha_input'  => ['required', new MathCaptcha('register')],
         ], [
             'nim.required'        => 'NIM Mahasiswa wajib diisi saat pendaftaran.',
             'nim.unique'          => 'NIM ini telah terdaftar pada sistem! Jika ini NIM Anda, silakan hubungi Koordinator untuk penyesuaian akun.',
             'email.unique'        => 'Email ini telah terdaftar. Silakan gunakan email lain atau login.',
-            'captcha_input.required' => 'Jawaban captcha wajib diisi.',
+            'captcha_input.required' => 'Hasil hitungan verifikasi keamanan wajib diisi.',
         ]);
-
-        // Regenerate captcha after failed/successful submission
-        $this->generateCaptcha();
 
         $user = User::create([
             // Pendaftaran publik ini selalu untuk akun mahasiswa (wajib isi NIM) —
