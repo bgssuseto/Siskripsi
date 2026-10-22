@@ -170,7 +170,7 @@ class MahasiswaController extends Controller
 
         // Hanya klik pertama yang dicatat (whereNull) — sekaligus tidak menimpa
         // penanda saat mahasiswa klik lagi. Query builder sengaja dipakai supaya
-        // event model Sidang (mis. auto-isi Penguji 2) tidak ikut terpicu hanya
+        // event model Sidang (mis. auto-isi Anggota Penguji 2) tidak ikut terpicu hanya
         // karena sebuah klik.
         Sidang::whereKey($sidang->getKey())->whereNull('wa_joined_at')->update(['wa_joined_at' => now()]);
 

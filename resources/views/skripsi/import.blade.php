@@ -185,8 +185,8 @@
                                 <tr><td>E</td><td>Dosbing Utama</td><td>Nama dosen pembimbing utama</td></tr>
                                 <tr><td>F</td><td>Dosbing Pendamping</td><td>Opsional</td></tr>
                                 <tr><td>G</td><td>Ketua Penguji</td><td>Opsional (disimpan untuk plotting)</td></tr>
-                                <tr><td>H</td><td>Penguji 1</td><td>Opsional</td></tr>
-                                <tr><td>I</td><td>Penguji 2</td><td>Opsional</td></tr>
+                                <tr><td>H</td><td>Anggota Penguji 1</td><td>Opsional</td></tr>
+                                <tr><td>I</td><td>Anggota Penguji 2</td><td>Opsional</td></tr>
                             </tbody>
                         </table>
                     </div>

@@ -102,7 +102,7 @@ class SkripsiController extends Controller
             });
         }
 
-        // Filter Dosen Penguji (Ketua, Penguji 1, atau Penguji 2)
+        // Filter Dosen Penguji (Ketua, Anggota Penguji 1, atau Anggota Penguji 2)
         if ($dosenPengujiId = $request->get('dosen_penguji_id')) {
             $query->where(function ($q) use ($dosenPengujiId) {
                 $q->where('ketua_penguji_id', $dosenPengujiId)
@@ -369,7 +369,7 @@ class SkripsiController extends Controller
         // Header
         $headers = ['No', 'NIM', 'Nama Mahasiswa', 'Judul Skripsi', 'Jenis TA', 'Periode',
                     'Tgl Daftar', 'Dosbing Utama', 'Dosbing Pendamping',
-                    'Ketua Penguji', 'Penguji 1', 'Penguji 2',
+                    'Ketua Penguji', 'Anggota Penguji 1', 'Anggota Penguji 2',
                     'Ruang', 'Tgl Sidang', 'Jam'];
         foreach ($headers as $i => $h) {
             $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
@@ -509,7 +509,7 @@ class SkripsiController extends Controller
 
         // Kelompokkan berdasarkan PASANGAN dosen pembimbing (utama & pendamping,
         // tanpa memandang urutan perannya) — sama seperti Jadwal Sempro: Pembimbing
-        // Utama selalu auto jadi Penguji 2 (lihat syncPengujiFromPembimbing()),
+        // Utama selalu auto jadi Anggota Penguji 2 (lihat syncPengujiFromPembimbing()),
         // jadi mahasiswa dengan pasangan pembimbing yang sama paling enak diplot
         // massal bersamaan (satu dosen = satu pengecekan kesediaan). Di dalam
         // grup: yang sudah terjadwal (urut tanggal) dulu, lalu yang belum.
@@ -682,8 +682,8 @@ class SkripsiController extends Controller
             'ruang_id.required'             => 'Ruangan sidang wajib dipilih.',
             'ruang_id.exists'               => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
             'ketua_penguji_id.required'     => 'Ketua Penguji wajib dipilih.',
-            'anggota_penguji_1_id.required' => 'Penguji 1 wajib dipilih.',
-            'anggota_penguji_2_id.required' => 'Penguji 2 wajib dipilih.',
+            'anggota_penguji_1_id.required' => 'Anggota Penguji 1 wajib dipilih.',
+            'anggota_penguji_2_id.required' => 'Anggota Penguji 2 wajib dipilih.',
         ]);
 
         // Check schedule conflicts
@@ -764,7 +764,7 @@ class SkripsiController extends Controller
             'ruang_id.required'              => 'Ruangan sidang wajib dipilih.',
             'ruang_id.exists'                => 'Ruangan yang dipilih tidak valid atau belum siap digunakan.',
             'ketua_penguji_id.required'      => 'Ketua Penguji wajib dipilih.',
-            'anggota_penguji_1_id.required'  => 'Penguji 1 wajib dipilih.',
+            'anggota_penguji_1_id.required'  => 'Anggota Penguji 1 wajib dipilih.',
         ]);
 
         $durasi = (int) $validated['durasi_menit'];
@@ -790,7 +790,7 @@ class SkripsiController extends Controller
 
             $penguji2Id = $sidang->dosen_pembimbing_utama_id;
             if (!$penguji2Id) {
-                $gagal[] = ['nama' => $sidang->nama_mahasiswa, 'alasan' => 'Pembimbing Utama belum ditentukan, tidak bisa auto-isi Penguji 2.'];
+                $gagal[] = ['nama' => $sidang->nama_mahasiswa, 'alasan' => 'Pembimbing Utama belum ditentukan, tidak bisa auto-isi Anggota Penguji 2.'];
                 continue;
             }
 
@@ -906,7 +906,7 @@ class SkripsiController extends Controller
             'kategori_jurnal.required' => 'Kategori jurnal wajib dipilih untuk jenis Jurnal.',
         ]);
 
-        // 1. Check business rules (Pembimbing Utama wajib jadi Penguji 2, Pendamping tidak boleh menguji)
+        // 1. Check business rules (Pembimbing Utama wajib jadi Anggota Penguji 2, Pendamping tidak boleh menguji)
         $ruleErrors = SidangConflictService::checkBusinessRules($validated);
         if (!empty($ruleErrors)) {
             if ($request->expectsJson()) {

@@ -179,46 +179,68 @@
     </div>
 
     {{-- ============ TABEL 2: Detail Mahasiswa Ujian ============ --}}
-    <table class="tbl-detail">
-        <thead>
-            <tr>
-                <th style="width: 4%;">No</th>
-                <th style="width: 16%;">Nama</th>
-                <th style="width: 17%;">Ketua Penguji</th>
-                <th style="width: 17%;">Penguji 1</th>
-                <th style="width: 17%;">Penguji2</th>
-                <th style="width: 14%;">Hari</th>
-                <th style="width: 9%;">Jam</th>
-                <th style="width: 6%;">Ruang</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($detailSidangs as $idx => $s)
-                @php
-                    $hariNama = $s->tanggal
-                        ? \Carbon\Carbon::parse($s->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y')
-                        : '-';
-                    $ruangKode = $s->ruang ? $s->ruang->kode_ruangan : '-';
-                @endphp
+    {{-- Sempro: Anggota Penguji 1 & 2 saja. Skripsi: Ketua Penguji + Anggota Penguji 1 & 2.
+         Bila datanya campuran, tabel dipisah per jenis supaya kolomnya tetap tepat. --}}
+    @php
+        $grupDetail = collect($detailSidangs)
+            ->groupBy(fn ($s) => $s->jenis_tugas_akhir === 'sempro' ? 'sempro' : 'skripsi')
+            ->sortKeys(); // sempro dulu, lalu skripsi
+        $judulGrup = ['sempro' => 'Seminar Proposal', 'skripsi' => 'Sidang Skripsi'];
+    @endphp
+    @forelse($grupDetail as $jenisGrup => $itemGrup)
+        @php
+            $labelDewan = \App\Models\Sidang::labelDewanPengujiUndangan($jenisGrup);
+            $lebarDewan = count($labelDewan) === 3 ? 17 : 22;
+        @endphp
+        @if($grupDetail->count() > 1)
+            <div style="font-weight: bold; margin: 10px 0 4px;">{{ $judulGrup[$jenisGrup] }}</div>
+        @endif
+        <table class="tbl-detail">
+            <thead>
                 <tr>
-                    <td class="center">{{ $idx + 1 }}</td>
-                    <td class="nama-col">{{ strtoupper($s->nama_mahasiswa) }}</td>
-                    <td>{{ $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-' }}</td>
-                    <td>{{ $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-' }}</td>
-                    <td>{{ $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-' }}</td>
-                    <td>{{ $hariNama }}</td>
-                    <td class="center">{{ $s->jam ?? '-' }}</td>
-                    <td class="center">{{ $ruangKode }}</td>
+                    <th style="width: 4%;">No</th>
+                    <th style="width: 16%;">Nama</th>
+                    @foreach($labelDewan as $label)
+                        <th style="width: {{ $lebarDewan }}%;">{{ $label }}</th>
+                    @endforeach
+                    <th style="width: 14%;">Hari</th>
+                    <th style="width: 9%;">Jam</th>
+                    <th style="width: 6%;">Ruang</th>
                 </tr>
-            @empty
+            </thead>
+            <tbody>
+                @foreach($itemGrup->values() as $idx => $s)
+                    @php
+                        $hariNama = $s->tanggal
+                            ? \Carbon\Carbon::parse($s->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y')
+                            : '-';
+                        $ruangKode = $s->ruang ? $s->ruang->kode_ruangan : '-';
+                        $dewan = $s->dewanPengujiUndangan();
+                    @endphp
+                    <tr>
+                        <td class="center">{{ $idx + 1 }}</td>
+                        <td class="nama-col">{{ strtoupper($s->nama_mahasiswa) }}</td>
+                        @foreach($labelDewan as $label)
+                            <td>{{ $dewan[$label] ?? '-' }}</td>
+                        @endforeach
+                        <td>{{ $hariNama }}</td>
+                        <td class="center">{{ $s->jam ?? '-' }}</td>
+                        <td class="center">{{ $ruangKode }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @empty
+        <table class="tbl-detail">
+            <tbody>
                 <tr>
-                    <td colspan="8" class="center" style="font-style: italic; padding: 8px;">
+                    <td class="center" style="font-style: italic; padding: 8px;">
                         Tidak ada data ujian yang terplotting.
                     </td>
                 </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    @endforelse
 
 </body>
 </html>

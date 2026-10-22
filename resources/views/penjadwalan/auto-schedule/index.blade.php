@@ -4,8 +4,8 @@
     <div class="space-y-6">
 
         <!-- Header -->
-        <x-page-header title="Asisten Plotting Jadwal Otomatis" icon="lightning" accent="violet" class="!mb-0">
-            <x-slot:description>Usulan jadwal dibuat otomatis dari irisan kesediaan dosen yang terlibat & ruang Master Ruang yang masih kosong, dibatasi jam operasional <strong>09.00–17.00</strong>. Setiap baris bisa <strong>ditinjau dan diedit langsung</strong> — tanggal, jam, ruangan, maupun dewan penguji — sebelum diterapkan. Ketua/Penguji 1 yang belum diisi dipilihkan otomatis sesuai <strong>Rule Komposisi Dosen Penguji</strong> (pasangan terlarang tidak akan dipasangkan) dan <strong>jenjang jabatan fungsional</strong> (Asisten Ahli &lt; Lektor &lt; Lektor Kepala &lt; Guru Besar — Penguji 1 tidak akan melebihi jenjang Ketua Penguji), dengan prioritas dosen yang beban mengujinya masih di bawah jumlah mahasiswa yang ia luluskan. Ruang diusahakan tidak berpindah-pindah bagi dewan penguji yang sama dalam satu hari.</x-slot:description>
+        <x-page-header title="Asisten Plotting Jadwal Otomatis" icon="lightning" accent="violet">
+            <x-slot:description>Usulan jadwal dibuat otomatis dari irisan kesediaan dosen yang terlibat & ruang Master Ruang yang masih kosong, dibatasi jam operasional <strong>09.00–17.00</strong>. Setiap baris bisa <strong>ditinjau dan diedit langsung</strong> — tanggal, jam, ruangan, maupun dewan penguji — sebelum diterapkan. Ketua/Anggota Penguji 1 yang belum diisi dipilihkan otomatis sesuai <strong>Rule Komposisi Dosen Penguji</strong> (pasangan terlarang tidak akan dipasangkan) dan <strong>jenjang jabatan fungsional</strong> (Asisten Ahli &lt; Lektor &lt; Lektor Kepala &lt; Guru Besar — Anggota Penguji 1 tidak akan melebihi jenjang Ketua Penguji), dengan prioritas dosen yang beban mengujinya masih di bawah jumlah mahasiswa yang ia luluskan. Ruang diusahakan tidak berpindah-pindah bagi dewan penguji yang sama dalam satu hari.</x-slot:description>
         </x-page-header>
 
         @if(!empty($sidangIds))
@@ -197,14 +197,14 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Penguji 1</label>
+                                            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Anggota Penguji 1</label>
                                             <select name="{{ $fieldPrefix }}[anggota_penguji_1_id]" class="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-violet-500">
                                                 @foreach($dosens as $d)
                                                 <option value="{{ $d->id }}" {{ (int) $d->id === (int) $p['anggota_penguji_1_id'] ? 'selected' : '' }}>{{ $d->nama_dosen }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="text-[10px] text-slate-400 dark:text-slate-500">Penguji 2 otomatis = Pembimbing Utama.</div>
+                                        <div class="text-[10px] text-slate-400 dark:text-slate-500">Anggota Penguji 2 otomatis = Pembimbing Utama.</div>
                                     </div>
                                     @else
                                     <div class="text-xs text-slate-500 dark:text-slate-400">

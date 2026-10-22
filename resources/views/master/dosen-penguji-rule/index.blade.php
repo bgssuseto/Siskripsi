@@ -46,7 +46,7 @@
                 Cara Kerja Rule Ini
             </p>
             <ul class="list-disc list-inside space-y-1 pl-1">
-                <li><b>Tidak Boleh</b> = larangan keras (berlaku dua arah). Jika dua dosen di daftar ini dipasangkan sebagai <b>Ketua Penguji dan Penguji 1</b> pada sidang yang sama, sistem akan menolak penyimpanan jadwal. Penguji 2 (otomatis diisi Pembimbing Utama) tidak diperiksa aturan ini.</li>
+                <li><b>Tidak Boleh</b> = larangan keras (berlaku dua arah). Jika dua dosen di daftar ini dipasangkan sebagai <b>Ketua Penguji dan Anggota Penguji 1</b> pada sidang yang sama, sistem akan menolak penyimpanan jadwal. Anggota Penguji 2 (otomatis diisi Pembimbing Utama) tidak diperiksa aturan ini.</li>
                 <li><b>Boleh</b> = daftar pasangan yang direkomendasikan/didahulukan, sifatnya catatan saja dan tidak membatasi pasangan lain yang tidak disebutkan di sini.</li>
                 <li>Selain itu, sistem juga otomatis menolak jika <b>Anggota Penguji 1</b> memiliki jabatan fungsional lebih tinggi dari <b>Ketua Penguji</b>.</li>
             </ul>

@@ -77,16 +77,16 @@ class SidangConflictService
      * Rules:
      *   1. Dosen Pembimbing Utama WAJIB menjadi Anggota Penguji 2.
      *   2. Dosen Pembimbing Pendamping TIDAK BOLEH menjadi penguji mana pun
-     *      (Ketua Penguji, Penguji 1, atau Penguji 2).
+     *      (Ketua Penguji, Anggota Penguji 1, atau Anggota Penguji 2).
      *
      * @param array $data  Validated field array (or model attributes)
      * @return array       List of human-readable error messages (empty = OK)
      */
     /**
-     * Ketua Penguji, Penguji 1, dan Penguji 2 wajib 3 dosen berbeda — berlaku
+     * Ketua Penguji, Anggota Penguji 1, dan Anggota Penguji 2 wajib 3 dosen berbeda — berlaku
      * untuk semua jenis tugas akhir. Tanpa ini, dosen yang sama bisa terpilih
      * di lebih dari satu peran penguji sekaligus (mis. menjadi Ketua Penguji
-     * sekaligus Penguji 1 pada sidang yang sama) tanpa terdeteksi oleh aturan
+     * sekaligus Anggota Penguji 1 pada sidang yang sama) tanpa terdeteksi oleh aturan
      * lain, karena itu bukan "bentrok" dengan record lain melainkan
      * inkonsistensi di dalam satu record itu sendiri.
      */
@@ -132,10 +132,10 @@ class SidangConflictService
             if ($pembimbingUtamaId !== $penguji2Id) {
                 $dosenUtama = Dosen::find($pembimbingUtamaId);
                 $namaDosen  = $dosenUtama?->nama_dosen ?? 'Pembimbing Utama';
-                $errors[] = "Aturan 1 – Pelanggaran: Dosen Pembimbing Utama ({$namaDosen}) WAJIB menjadi Anggota Penguji 2 untuk mahasiswa bimbingannya. Silakan isi Penguji 2 dengan dosen yang sama.";
+                $errors[] = "Aturan 1 – Pelanggaran: Dosen Pembimbing Utama ({$namaDosen}) WAJIB menjadi Anggota Penguji 2 untuk mahasiswa bimbingannya. Silakan isi Anggota Penguji 2 dengan dosen yang sama.";
             }
         } elseif ($pembimbingUtamaId && !$penguji2Id) {
-            // Penguji 2 belum diisi, ingatkan
+            // Anggota Penguji 2 belum diisi, ingatkan
             $dosenUtama = Dosen::find($pembimbingUtamaId);
             $namaDosen  = $dosenUtama?->nama_dosen ?? 'Pembimbing Utama';
             $errors[] = "Aturan 1 – Peringatan: Anggota Penguji 2 harus diisi dengan Dosen Pembimbing Utama ({$namaDosen}).";
@@ -167,8 +167,8 @@ class SidangConflictService
     /**
      * Validasi Rule Komposisi Dosen Penguji (master data terpisah):
      *   1. Pasangan dosen yang ditandai "tidak boleh" TIDAK BOLEH menjadi
-     *      Ketua Penguji dan Penguji 1 sekaligus pada sidang yang sama.
-     *      (Penguji 2 — yang otomatis diisi Pembimbing Utama — tidak ikut
+     *      Ketua Penguji dan Anggota Penguji 1 sekaligus pada sidang yang sama.
+     *      (Anggota Penguji 2 — yang otomatis diisi Pembimbing Utama — tidak ikut
      *      diperiksa dalam aturan ini.)
      *   2. Anggota Penguji 1 TIDAK BOLEH memiliki jabatan fungsional lebih
      *      tinggi dari Ketua Penguji.
@@ -187,18 +187,18 @@ class SidangConflictService
         $ketuaPengujiId = (int) ($data['ketua_penguji_id'] ?? 0);
         $penguji1Id     = (int) ($data['anggota_penguji_1_id'] ?? 0);
 
-        // ── Rule: pasangan Ketua Penguji <-> Penguji 1 yang dilarang ────────────
+        // ── Rule: pasangan Ketua Penguji <-> Anggota Penguji 1 yang dilarang ────────────
         if ($ketuaPengujiId && $penguji1Id && $ketuaPengujiId !== $penguji1Id) {
             $blocked = DosenPengujiRule::blockedPartnersFor($ketuaPengujiId);
             if (in_array($penguji1Id, $blocked)) {
                 $dosens = Dosen::whereIn('id', [$ketuaPengujiId, $penguji1Id])->get()->keyBy('id');
                 $namaKetua = $dosens[$ketuaPengujiId]->nama_dosen ?? 'Dosen';
                 $namaP1 = $dosens[$penguji1Id]->nama_dosen ?? 'Dosen';
-                $errors[] = "Komposisi Penguji – Pelanggaran: {$namaKetua} dan {$namaP1} tidak boleh menjadi Ketua Penguji dan Penguji 1 sekaligus (sesuai Rule Komposisi Dosen Penguji).";
+                $errors[] = "Komposisi Penguji – Pelanggaran: {$namaKetua} dan {$namaP1} tidak boleh menjadi Ketua Penguji dan Anggota Penguji 1 sekaligus (sesuai Rule Komposisi Dosen Penguji).";
             }
         }
 
-        // ── Rule: Penguji 1 tidak boleh berjabatan fungsional lebih tinggi dari Ketua Penguji ──
+        // ── Rule: Anggota Penguji 1 tidak boleh berjabatan fungsional lebih tinggi dari Ketua Penguji ──
         if ($ketuaPengujiId && $penguji1Id && $ketuaPengujiId !== $penguji1Id) {
             $ketua = Dosen::find($ketuaPengujiId);
             $p1 = Dosen::find($penguji1Id);
@@ -229,8 +229,8 @@ class SidangConflictService
 
         $roles = array_filter([
             'Ketua Penguji'    => $data['ketua_penguji_id']     ?? null,
-            'Penguji 1'        => $data['anggota_penguji_1_id'] ?? null,
-            'Penguji 2'        => $data['anggota_penguji_2_id'] ?? null,
+            'Anggota Penguji 1'        => $data['anggota_penguji_1_id'] ?? null,
+            'Anggota Penguji 2'        => $data['anggota_penguji_2_id'] ?? null,
         ]);
 
         if (empty($roles)) {
@@ -287,8 +287,8 @@ class SidangConflictService
             'Pembimbing Utama'      => $data['dosen_pembimbing_utama_id']      ?? null,
             'Pembimbing Pendamping' => $isSemproNew ? ($data['dosen_pembimbing_pendamping_id'] ?? null) : null,
             'Ketua Penguji'         => $data['ketua_penguji_id']               ?? null,
-            'Penguji 1'             => $data['anggota_penguji_1_id']           ?? null,
-            'Penguji 2'             => $data['anggota_penguji_2_id']           ?? null,
+            'Anggota Penguji 1'             => $data['anggota_penguji_1_id']           ?? null,
+            'Anggota Penguji 2'             => $data['anggota_penguji_2_id']           ?? null,
         ]);
 
         foreach ($existing as $item) {
@@ -316,8 +316,8 @@ class SidangConflictService
                 'Pembimbing Utama'      => $item->dosen_pembimbing_utama_id,
                 'Pembimbing Pendamping' => $isSemproItem ? $item->dosen_pembimbing_pendamping_id : null,
                 'Ketua Penguji'         => $item->ketua_penguji_id,
-                'Penguji 1'             => $item->anggota_penguji_1_id,
-                'Penguji 2'             => $item->anggota_penguji_2_id,
+                'Anggota Penguji 1'             => $item->anggota_penguji_1_id,
+                'Anggota Penguji 2'             => $item->anggota_penguji_2_id,
             ]);
 
             foreach ($newDosenRoles as $newRole => $newDosenId) {
@@ -448,11 +448,11 @@ class SidangConflictService
                 'Pembimbing Utama'      => $sesi['dosen_pembimbing_utama_id'] ?? null,
                 'Pembimbing Pendamping' => $sesi['dosen_pembimbing_pendamping_id'] ?? null,
                 'Ketua Penguji'         => $sesi['ketua_penguji_id'] ?? null,
-                'Penguji 1'             => $sesi['anggota_penguji_1_id'] ?? null,
+                'Anggota Penguji 1'             => $sesi['anggota_penguji_1_id'] ?? null,
             ]);
             $otherDosenRoles = array_filter([
                 'Pembimbing Pendamping' => $other->dosen_pembimbing_pendamping_id,
-                'Penguji 1'             => $other->anggota_penguji_1_id,
+                'Anggota Penguji 1'             => $other->anggota_penguji_1_id,
             ]);
 
             foreach ($newDosenRoles as $newRole => $newDosenId) {
@@ -559,16 +559,16 @@ class SidangConflictService
                         'Pembimbing Utama'      => $a->dosen_pembimbing_utama_id,
                         'Pembimbing Pendamping' => $a->jenis_tugas_akhir === 'sempro' ? $a->dosen_pembimbing_pendamping_id : null,
                         'Ketua Penguji'         => $a->ketua_penguji_id,
-                        'Penguji 1'             => $a->anggota_penguji_1_id,
-                        'Penguji 2'             => $a->anggota_penguji_2_id,
+                        'Anggota Penguji 1'             => $a->anggota_penguji_1_id,
+                        'Anggota Penguji 2'             => $a->anggota_penguji_2_id,
                     ]);
 
                     $examinersB = array_filter([
                         'Pembimbing Utama'      => $b->dosen_pembimbing_utama_id,
                         'Pembimbing Pendamping' => $b->jenis_tugas_akhir === 'sempro' ? $b->dosen_pembimbing_pendamping_id : null,
                         'Ketua Penguji'         => $b->ketua_penguji_id,
-                        'Penguji 1'             => $b->anggota_penguji_1_id,
-                        'Penguji 2'             => $b->anggota_penguji_2_id,
+                        'Anggota Penguji 1'             => $b->anggota_penguji_1_id,
+                        'Anggota Penguji 2'             => $b->anggota_penguji_2_id,
                     ]);
 
                     foreach ($examinersA as $roleA => $dosenIdA) {

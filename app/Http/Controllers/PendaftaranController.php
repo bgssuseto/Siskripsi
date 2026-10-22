@@ -163,7 +163,7 @@ class PendaftaranController extends Controller
             });
         }
 
-        // Filter Dosen Penguji (Ketua, Penguji 1, atau Penguji 2)
+        // Filter Dosen Penguji (Ketua, Anggota Penguji 1, atau Anggota Penguji 2)
         if ($dosenPengujiId = $request->get('dosen_penguji_id')) {
             $query->where(function ($q) use ($dosenPengujiId) {
                 $q->where('ketua_penguji_id', $dosenPengujiId)

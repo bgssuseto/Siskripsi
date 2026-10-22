@@ -157,7 +157,7 @@
     <div class="data-page space-y-6">
 
         {{-- Header halaman --}}
-        <x-page-header title="Data Skripsi" subtitle="Kelola data mahasiswa sidang skripsi dan jurnal." icon="academic" accent="violet" class="!mb-0">
+        <x-page-header title="Data Skripsi" subtitle="Kelola data mahasiswa sidang skripsi dan jurnal." icon="academic" accent="violet">
             <x-slot:actions>
                 <a href="{{ route('master.skripsi.export', request()->query()) }}" class="ui-btn-secondary">
                     <x-icon name="download" class="w-4 h-4" /> Export Excel
@@ -309,8 +309,8 @@
                             <th>Dosbing Utama</th>
                             <th>Dosbing Pendamping</th>
                             <th>Ketua Penguji</th>
-                            <th>Penguji 1</th>
-                            <th>Penguji 2</th>
+                            <th>Anggota Penguji 1</th>
+                            <th>Anggota Penguji 2</th>
                             <th>Jenis</th>
                             <th style="width:160px; text-align:right;">Aksi</th>
                         </tr>
@@ -557,7 +557,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Anggota Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
                                 <select name="anggota_penguji_1_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -566,7 +566,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 2</label>
+                                <label>Anggota Penguji 2</label>
                                 <select name="anggota_penguji_2_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -681,7 +681,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
+                                <label>Anggota Penguji 1 <span class="text-xs font-normal text-slate-400">(diisi saat Penjadwalan)</span></label>
                                 <select name="anggota_penguji_1_id" id="edit-penguji1" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -690,7 +690,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 2</label>
+                                <label>Anggota Penguji 2</label>
                                 <select name="anggota_penguji_2_id" id="edit-penguji2" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)

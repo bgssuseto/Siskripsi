@@ -166,18 +166,14 @@
                         <div x-show="open" x-collapse class="p-4 sm:p-5 space-y-4 bg-slate-50 dark:bg-slate-900/60">
                             @foreach($sidangsInDay as $s)
                                 @php
-                                    $role = '-';
-                                    $roleBadgeClass = 'bg-white text-slate-600 border-slate-200 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-700';
-                                    if ($s->ketua_penguji_id == $dosen->id) {
-                                        $role = 'Ketua Penguji';
-                                        $roleBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30';
-                                    } elseif ($s->anggota_penguji_1_id == $dosen->id) {
-                                        $role = 'Penguji 1';
-                                        $roleBadgeClass = 'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30';
-                                    } elseif ($s->anggota_penguji_2_id == $dosen->id) {
-                                        $role = 'Penguji 2';
-                                        $roleBadgeClass = 'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30';
-                                    }
+                                    // Sempro: Anggota Penguji 1 & 2 saja. Skripsi: Ketua + Anggota Penguji 1 & 2.
+                                    $role = $s->peranPengujiDosen($dosen->id) ?? '-';
+                                    $roleBadgeClass = match ($role) {
+                                        'Ketua Penguji' => 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30',
+                                        '-'             => 'bg-white text-slate-600 border-slate-200 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-700',
+                                        default         => 'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30',
+                                    };
+                                    $dewan = $s->dewanPengujiUndangan();
                                 @endphp
                                 <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-md space-y-4 hover:border-indigo-500/50 transition-all dark:bg-slate-800/80 dark:border-slate-700">
                                     <!-- Top Info -->
@@ -228,24 +224,18 @@
                                         </div>
                                     </div>
 
-                                    <!-- Tim Dewan Penguji (Ketua Penguji, Anggota Penguji 1, Anggota Penguji 2) -->
+                                    <!-- Tim Dewan Penguji (Sempro: Anggota Penguji 1 & 2; Skripsi: Ketua + Anggota Penguji 1 & 2) -->
                                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 dark:bg-slate-900/60 dark:border-slate-700">
                                         <p class="text-[10.5px] font-extrabold text-indigo-600 uppercase tracking-wider flex items-center gap-1.5 dark:text-indigo-300">
                                             <span><x-icon name="users" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Tim Dewan Penguji
                                         </p>
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                                            <div class="flex flex-col gap-0.5">
-                                                <span class="text-amber-600 font-bold text-[10px] uppercase dark:text-amber-400">Ketua Penguji:</span>
-                                                <span class="text-slate-700 font-medium dark:text-slate-300">{{ $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-' }}</span>
-                                            </div>
-                                            <div class="flex flex-col gap-0.5">
-                                                <span class="text-indigo-600 font-bold text-[10px] uppercase dark:text-indigo-300">Anggota Penguji 1:</span>
-                                                <span class="text-slate-700 font-medium dark:text-slate-300">{{ $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-' }}</span>
-                                            </div>
-                                            <div class="flex flex-col gap-0.5">
-                                                <span class="text-indigo-600 font-bold text-[10px] uppercase dark:text-indigo-300">Anggota Penguji 2:</span>
-                                                <span class="text-slate-700 font-medium dark:text-slate-300">{{ $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-' }}</span>
-                                            </div>
+                                        <div class="grid grid-cols-1 {{ count($dewan) === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }} gap-2 text-xs">
+                                            @foreach($dewan as $label => $nama)
+                                                <div class="flex flex-col gap-0.5">
+                                                    <span class="{{ $label === 'Ketua Penguji' ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-300' }} font-bold text-[10px] uppercase">{{ $label }}:</span>
+                                                    <span class="text-slate-700 font-medium dark:text-slate-300">{{ $nama ?? '-' }}</span>
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
                                 </div>

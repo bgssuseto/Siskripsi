@@ -378,14 +378,14 @@
           @if(($jenisUndangan ?? 'sempro') === 'sempro')
             <th style="width: 10%;">NIM</th>
             <th style="width: 17%;">Nama</th>
-            <th style="width: 19%;">Penguji 1</th>
-            <th style="width: 19%;">Penguji 2</th>
+            <th style="width: 19%;">Anggota Penguji 1</th>
+            <th style="width: 19%;">Anggota Penguji 2</th>
           @else
             <th style="width: 9%;">NIM</th>
             <th style="width: 14%;">Nama</th>
             <th style="width: 14%;">Ketua Penguji</th>
-            <th style="width: 13%;">Penguji 1</th>
-            <th style="width: 13%;">Penguji 2</th>
+            <th style="width: 13%;">Anggota Penguji 1</th>
+            <th style="width: 13%;">Anggota Penguji 2</th>
           @endif
           <th style="width: 16%;">Hari, Tanggal</th>
           <th class="center" style="width: 8%;">Jam</th>

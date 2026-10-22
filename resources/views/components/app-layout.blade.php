@@ -1605,8 +1605,8 @@
                                                     // mencerminkan pembimbing (lihat Sidang::syncPengujiFromPembimbing())
                                                     // — sudah tercakup 2 baris di atas, dilewati di sini supaya tidak dobel.
                                                     if (!$isSemproUs && $us->ketua_penguji_id == $dosenId) $peran[] = 'Ketua Penguji';
-                                                    if (!$isSemproUs && $us->anggota_penguji_1_id == $dosenId) $peran[] = 'Penguji 1';
-                                                    if (!$isSemproUs && $us->anggota_penguji_2_id == $dosenId) $peran[] = 'Penguji 2';
+                                                    if (!$isSemproUs && $us->anggota_penguji_1_id == $dosenId) $peran[] = 'Anggota Penguji 1';
+                                                    if (!$isSemproUs && $us->anggota_penguji_2_id == $dosenId) $peran[] = 'Anggota Penguji 2';
                                                 @endphp
                                                 <div class="flex items-center gap-1">
                                                     <span><x-icon name="user" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Peran:</span>

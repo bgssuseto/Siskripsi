@@ -189,7 +189,7 @@
                                         @endif
                                     </div>
                                     <div class="flex items-start justify-between gap-2">
-                                        <span class="text-slate-500 dark:text-slate-400 font-medium shrink-0">Penguji 1:</span>
+                                        <span class="text-slate-500 dark:text-slate-400 font-medium shrink-0">Anggota Penguji 1:</span>
                                         @if($s->anggotaPenguji1)
                                             <strong class="text-slate-900 dark:text-slate-100 font-bold text-right">{{ $s->anggotaPenguji1->nama_dosen }}</strong>
                                         @else
@@ -197,7 +197,7 @@
                                         @endif
                                     </div>
                                     <div class="flex items-start justify-between gap-2">
-                                        <span class="text-slate-500 dark:text-slate-400 font-medium shrink-0">Penguji 2:</span>
+                                        <span class="text-slate-500 dark:text-slate-400 font-medium shrink-0">Anggota Penguji 2:</span>
                                         @if($s->anggotaPenguji2)
                                             <strong class="text-slate-900 dark:text-slate-100 font-bold text-right">{{ $s->anggotaPenguji2->nama_dosen }}</strong>
                                         @else

@@ -19,7 +19,7 @@
          tglValue: '',
      }">
     
-    <x-page-header title="Verifikasi Pendaftaran Sempro" subtitle="Periksa kelayakan pendaftaran, validasi berkas persyaratan, dan berikan persetujuan untuk meneruskan mahasiswa ke Master Data Sempro." icon="clipboard" accent="indigo" class="!mb-0">
+    <x-page-header title="Verifikasi Pendaftaran Sempro" subtitle="Periksa kelayakan pendaftaran, validasi berkas persyaratan, dan berikan persetujuan untuk meneruskan mahasiswa ke Master Data Sempro." icon="clipboard" accent="indigo">
         <x-slot:actions>
             <span class="ui-chip"><x-icon name="inbox" class="w-3.5 h-3.5" /> {{ $counts['total'] }} berkas</span>
             <button type="button" @click="adminModal = true" class="ui-btn-primary">

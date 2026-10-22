@@ -4,7 +4,7 @@
     <div class="space-y-6">
 
         <!-- Header -->
-        <x-page-header title="Dashboard Analitik Koordinator/Kaprodi" icon="chart" accent="indigo" class="!mb-0">
+        <x-page-header title="Dashboard Analitik Koordinator/Kaprodi" icon="chart" accent="indigo">
             <x-slot:description>Rekap beban bimbingan &amp; menguji dosen, keterpakaian ruang, dan timeline sidang dalam satu tampilan level program studi.</x-slot:description>
         </x-page-header>
 

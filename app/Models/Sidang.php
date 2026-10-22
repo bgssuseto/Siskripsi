@@ -141,12 +141,63 @@ class Sidang extends Model
      * berubah (mis. saat revisi pendaftaran) dewan pengujinya ikut berubah, tidak
      * nyangkut ke pembimbing lama. Pemetaan kolomnya sengaja mengikuti konvensi
      * tampilan yang sudah ada (undangan/pdf.blade.php, undangan/preview.blade.php):
-     * Ketua Penguji <-> Pembimbing Utama, Penguji 1 <-> Pembimbing Pendamping.
+     * Ketua Penguji <-> Pembimbing Utama, Anggota Penguji 1 <-> Pembimbing Pendamping.
      *
      * Untuk Skripsi/Sidang/Jurnal, HANYA anggota_penguji_2_id yang di-default ke
      * pembimbing utama SAAT MASIH KOSONG — ketua_penguji_id & anggota_penguji_1_id
      * memang sengaja diisi manual atau oleh Asisten Plotting dengan dosen lain.
      */
+    /**
+     * Dewan penguji untuk undangan menguji (cetak, PDF, DOCX, Excel, link jadwal dosen).
+     * Sempro hanya punya Anggota Penguji 1 & 2 (= pembimbing utama & pendamping, disimpan di
+     * kolom ketua_penguji_id & anggota_penguji_1_id — lihat syncPengujiFromPembimbing());
+     * sidang skripsi/jurnal: Ketua Penguji, Anggota Penguji 1, Anggota Penguji 2.
+     *
+     * @return array<string, ?string>  [label peran => nama dosen | null]
+     */
+    public function dewanPengujiUndangan(): array
+    {
+        if ($this->jenis_tugas_akhir === 'sempro') {
+            return [
+                'Anggota Penguji 1' => $this->ketuaPenguji?->nama_dosen ?? $this->pembimbingUtama?->nama_dosen,
+                'Anggota Penguji 2' => $this->anggotaPenguji1?->nama_dosen ?? $this->pembimbingPendamping?->nama_dosen,
+            ];
+        }
+
+        return [
+            'Ketua Penguji'     => $this->ketuaPenguji?->nama_dosen,
+            'Anggota Penguji 1' => $this->anggotaPenguji1?->nama_dosen,
+            'Anggota Penguji 2' => $this->anggotaPenguji2?->nama_dosen,
+        ];
+    }
+
+    /** Label kolom dewan penguji undangan untuk satu jenis ujian ('sempro' | lainnya). */
+    public static function labelDewanPengujiUndangan(string $jenis): array
+    {
+        return $jenis === 'sempro'
+            ? ['Anggota Penguji 1', 'Anggota Penguji 2']
+            : ['Ketua Penguji', 'Anggota Penguji 1', 'Anggota Penguji 2'];
+    }
+
+    /** Peran seorang dosen sebagai penguji pada ujian ini (istilah undangan), atau null. */
+    public function peranPengujiDosen(int $dosenId): ?string
+    {
+        if ($this->jenis_tugas_akhir === 'sempro') {
+            return match (true) {
+                (int) $this->ketua_penguji_id === $dosenId     => 'Anggota Penguji 1',
+                (int) $this->anggota_penguji_1_id === $dosenId => 'Anggota Penguji 2',
+                default => null,
+            };
+        }
+
+        return match (true) {
+            (int) $this->ketua_penguji_id === $dosenId     => 'Ketua Penguji',
+            (int) $this->anggota_penguji_1_id === $dosenId => 'Anggota Penguji 1',
+            (int) $this->anggota_penguji_2_id === $dosenId => 'Anggota Penguji 2',
+            default => null,
+        };
+    }
+
     protected static function syncPengujiFromPembimbing($sidang): void
     {
         if ($sidang->jenis_tugas_akhir === 'sempro') {

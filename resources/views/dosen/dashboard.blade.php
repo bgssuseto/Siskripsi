@@ -294,8 +294,8 @@
                                             // pembimbing (Sidang::syncPengujiFromPembimbing()) — sudah tercakup 2 baris di
                                             // atas, dilewati di sini supaya tidak dobel.
                                             if (!$isSemproRow && $s->ketua_penguji_id == $dosenId) $roles[] = ['name' => 'Ketua Penguji', 'class' => 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700'];
-                                            if (!$isSemproRow && $s->anggota_penguji_1_id == $dosenId) $roles[] = ['name' => 'Penguji 1', 'class' => 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700'];
-                                            if (!$isSemproRow && $s->anggota_penguji_2_id == $dosenId) $roles[] = ['name' => 'Penguji 2', 'class' => 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700'];
+                                            if (!$isSemproRow && $s->anggota_penguji_1_id == $dosenId) $roles[] = ['name' => 'Anggota Penguji 1', 'class' => 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700'];
+                                            if (!$isSemproRow && $s->anggota_penguji_2_id == $dosenId) $roles[] = ['name' => 'Anggota Penguji 2', 'class' => 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700'];
                                         @endphp
                                         <div class="flex flex-wrap gap-1.5 justify-center items-center">
                                             @forelse($roles as $r)

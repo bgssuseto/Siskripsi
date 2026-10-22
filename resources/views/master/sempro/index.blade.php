@@ -145,7 +145,7 @@
     <div class="data-page space-y-6">
 
         {{-- Header halaman --}}
-        <x-page-header title="Data Sempro" subtitle="Kelola data mahasiswa seminar proposal (sempro)." icon="document" accent="indigo" class="!mb-0">
+        <x-page-header title="Data Sempro" subtitle="Kelola data mahasiswa seminar proposal (sempro)." icon="document" accent="indigo">
             <x-slot:actions>
                 <a href="{{ route('master.sempro.export', request()->query()) }}" class="ui-btn-secondary">
                     <x-icon name="download" class="w-4 h-4" /> Export Excel

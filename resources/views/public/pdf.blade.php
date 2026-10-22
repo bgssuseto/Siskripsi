@@ -218,8 +218,8 @@
                 <th style="width: 17%;">Nama Mahasiswa</th>
                 <th style="width: 11%;">Peran</th>
                 <th style="width: 14%;">Ketua Penguji</th>
-                <th style="width: 14%;">Penguji 1</th>
-                <th style="width: 14%;">Penguji 2</th>
+                <th style="width: 14%;">Anggota Penguji 1</th>
+                <th style="width: 14%;">Anggota Penguji 2</th>
                 <th style="width: 10%;">Hari</th>
                 <th style="width: 6%;">Jam</th>
                 <th style="width: 0%;">Ruang</th>
@@ -233,9 +233,9 @@
                         if ($s->ketua_penguji_id == $dosen->id) {
                             $role = 'Ketua Penguji';
                         } elseif ($s->anggota_penguji_1_id == $dosen->id) {
-                            $role = 'Penguji 1';
+                            $role = 'Anggota Penguji 1';
                         } elseif ($s->anggota_penguji_2_id == $dosen->id) {
-                            $role = 'Penguji 2';
+                            $role = 'Anggota Penguji 2';
                         }
                     }
                     $ketuaNama = $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : ($s->pembimbingUtama ? $s->pembimbingUtama->nama_dosen : '-');

@@ -2,7 +2,7 @@
 <div class="max-w-7xl mx-auto space-y-5 sm:space-y-6">
     
     <!-- Welcome Header -->
-    <x-page-header title="Halo, {{ $user->name }}" subtitle="Selamat datang di Sistem Informasi Skripsi TI. Kelola tugas akhir, pendaftaran, dan jadwal sidang Anda." icon="home" accent="indigo" class="!mb-0">
+    <x-page-header title="Halo, {{ $user->name }}" subtitle="Selamat datang di Sistem Informasi Skripsi TI. Kelola tugas akhir, pendaftaran, dan jadwal sidang Anda." icon="home" accent="indigo">
             <x-slot:actions>
                 <span class="ui-chip"><x-icon name="academic" class="w-3.5 h-3.5" /> Mahasiswa</span>
             </x-slot:actions>

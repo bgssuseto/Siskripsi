@@ -306,7 +306,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
     }">
 
         {{-- Header halaman --}}
-        <x-page-header title="Jadwal Sempro" subtitle="Penjadwalan seminar proposal mahasiswa." icon="calendar" accent="indigo" class="!mb-0">
+        <x-page-header title="Jadwal Sempro" subtitle="Penjadwalan seminar proposal mahasiswa." icon="calendar" accent="indigo">
             <x-slot:actions>
                 @if(Auth::user()->isSuperAdmin())
                     <a href="{{ route('jadwal.semua.index') }}" class="ui-btn-secondary">

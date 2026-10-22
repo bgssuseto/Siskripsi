@@ -112,7 +112,7 @@
                 <div>
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Daftar Dosen Penguji</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Menampilkan {{ $dosenList->count() }} dosen penguji (Ketua Penguji, Penguji 1, dan Penguji 2) pada gelombang pendaftaran ini.
+                        Menampilkan {{ $dosenList->count() }} dosen penguji ({{ $jenisUndangan === 'sempro' ? 'Anggota Penguji 1 dan Anggota Penguji 2' : 'Ketua Penguji, Anggota Penguji 1, dan Anggota Penguji 2' }}) pada gelombang pendaftaran ini.
                     </p>
                 </div>
             </div>

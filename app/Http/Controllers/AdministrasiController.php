@@ -457,8 +457,8 @@ class AdministrasiController extends Controller
         if ($jenisUndangan !== 'sempro') {
             $table2->addCell(2500)->addText('Ketua Penguji', ['bold' => true, 'size' => 9]);
         }
-        $table2->addCell(2500)->addText('Penguji 1', ['bold' => true, 'size' => 9]);
-        $table2->addCell(2500)->addText('Penguji 2', ['bold' => true, 'size' => 9]);
+        $table2->addCell(2500)->addText('Anggota Penguji 1', ['bold' => true, 'size' => 9]);
+        $table2->addCell(2500)->addText('Anggota Penguji 2', ['bold' => true, 'size' => 9]);
         $table2->addCell(2200)->addText('Hari', ['bold' => true, 'size' => 9]);
         $table2->addCell(1500)->addText('Jam', ['bold' => true, 'size' => 9]);
         $table2->addCell(1200)->addText('Ruang', ['bold' => true, 'size' => 9]);
@@ -896,7 +896,7 @@ class AdministrasiController extends Controller
 
     /**
      * Export Rekap Dosen Penguji – multi-sheet Excel (.xlsx)
-     * Format: 1 sheet per dosen, columns: NIM | Nama Mahasiswa | Peran | Ketua Penguji | Penguji 1 | Penguji 2 | Hari | Jam | Ruangan
+     * Format: 1 sheet per dosen, columns: NIM | Nama Mahasiswa | Peran | Ketua Penguji | Anggota Penguji 1 | Anggota Penguji 2 | Hari | Jam | Ruangan
      */
     public function generateRekapDosenPengujiExcel(Request $request)
     {
@@ -974,55 +974,43 @@ class AdministrasiController extends Controller
             $sheetTitle = mb_substr($cleanTitle, 0, 31);
             $sheet->setTitle($sheetTitle ?: 'Dosen ' . ($sheetIndex + 1));
 
-            // ── Header Row ──
-            $headers = ['NIM', 'Nama Mahasiswa', 'Peran', 'Ketua Penguji', 'Penguji 1', 'Penguji 2', 'Hari', 'Jam', 'Ruangan'];
+            // ── Header Row ── (Sempro: Anggota Penguji 1 & 2; Skripsi: + Ketua Penguji)
+            $labelDewan = Sidang::labelDewanPengujiUndangan($jenisUndangan);
+            $headers = array_merge(['NIM', 'Nama Mahasiswa', 'Peran'], $labelDewan, ['Hari', 'Jam', 'Ruangan']);
+            $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
             foreach ($headers as $colIdx => $headerText) {
                 $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
                 $sheet->setCellValue("{$colLetter}1", $headerText);
             }
 
-            $headerRange = 'A1:I1';
+            $headerRange = "A1:{$lastCol}1";
             $sheet->getStyle($headerRange)->getFont()->setBold(true);
             $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
             // ── Data Rows ──
             $currentRow = 2;
             foreach ($mySidangs as $s) {
-                // Determine role of this dosen in this sidang
-                $role = '-';
-                if ($s->ketua_penguji_id == $dosen->id) {
-                    $role = 'Ketua Penguji';
-                } elseif ($s->anggota_penguji_1_id == $dosen->id) {
-                    $role = 'Penguji 1';
-                } elseif ($s->anggota_penguji_2_id == $dosen->id) {
-                    $role = 'Penguji 2';
-                }
-
-                $ketuaNama = $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-';
-                $penguji1Nama = $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-';
-                $penguji2Nama = $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-';
-
                 $tglStr = $s->tanggal
                     ? Carbon::parse($s->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y')
                     : '-';
-
                 $ruangKode = $s->ruang ? $s->ruang->kode_ruangan : '-';
+                $dewan = $s->dewanPengujiUndangan();
 
-                $sheet->setCellValue("A{$currentRow}", $s->nim);
-                $sheet->setCellValue("B{$currentRow}", $s->nama_mahasiswa);
-                $sheet->setCellValue("C{$currentRow}", $role);
-                $sheet->setCellValue("D{$currentRow}", $ketuaNama);
-                $sheet->setCellValue("E{$currentRow}", $penguji1Nama);
-                $sheet->setCellValue("F{$currentRow}", $penguji2Nama);
-                $sheet->setCellValue("G{$currentRow}", $tglStr);
-                $sheet->setCellValue("H{$currentRow}", $s->jam ?? '-');
-                $sheet->setCellValue("I{$currentRow}", $ruangKode);
+                $baris = array_merge(
+                    [$s->nim, $s->nama_mahasiswa, $s->peranPengujiDosen($dosen->id) ?? '-'],
+                    array_map(fn ($label) => $dewan[$label] ?? '-', $labelDewan),
+                    [$tglStr, $s->jam ?? '-', $ruangKode]
+                );
+                foreach ($baris as $colIdx => $nilai) {
+                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
+                    $sheet->setCellValue("{$colLetter}{$currentRow}", $nilai ?? '-');
+                }
 
                 $currentRow++;
             }
 
             // Auto-size columns
-            foreach (range(1, 9) as $colIdx) {
+            foreach (range(1, count($headers)) as $colIdx) {
                 $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
                 $sheet->getColumnDimension($colLetter)->setAutoSize(true);
             }
@@ -1181,15 +1169,18 @@ class AdministrasiController extends Controller
         $sheet->getStyle('A7')->getFont()->setBold(true);
 
         // ── Table Header Row ──
-        $headers = ['NIM', 'Nama Mahasiswa', 'Peran', 'Ketua Penguji', 'Penguji 1', 'Penguji 2', 'Hari', 'Jam', 'Ruangan'];
+        // Sempro: Anggota Penguji 1 & 2 saja. Skripsi: Ketua Penguji + Anggota Penguji 1 & 2.
+        $labelDewan = Sidang::labelDewanPengujiUndangan($jenisUndangan);
+        $headers = array_merge(['NIM', 'Nama Mahasiswa', 'Peran'], $labelDewan, ['Hari', 'Jam', 'Ruangan']);
         $startRow = 9;
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
 
         foreach ($headers as $colIdx => $headerText) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
             $sheet->setCellValue("{$colLetter}{$startRow}", $headerText);
         }
 
-        $headerRange = "A9:I9";
+        $headerRange = "A9:{$lastCol}9";
         $sheet->getStyle($headerRange)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
         $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF1E293B');
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
@@ -1198,47 +1189,35 @@ class AdministrasiController extends Controller
         $currentRow = 10;
 
         foreach ($mySidangs as $s) {
-            $role = '-';
-            if ($s->ketua_penguji_id == $dosen->id) {
-                $role = 'Ketua Penguji';
-            } elseif ($s->anggota_penguji_1_id == $dosen->id) {
-                $role = 'Penguji 1';
-            } elseif ($s->anggota_penguji_2_id == $dosen->id) {
-                $role = 'Penguji 2';
-            }
-
-            $ketuaNama = $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-';
-            $penguji1Nama = $s->anggotaPenguji1 ? $s->anggotaPenguji1->nama_dosen : '-';
-            $penguji2Nama = $s->anggotaPenguji2 ? $s->anggotaPenguji2->nama_dosen : '-';
-
             $tglStr = $s->tanggal ? Carbon::parse($s->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y') : '-';
             $ruangKode = $s->ruang ? $s->ruang->kode_ruangan : '-';
+            $dewan = $s->dewanPengujiUndangan();
 
-            $sheet->setCellValue("A{$currentRow}", $s->nim);
-            $sheet->setCellValue("B{$currentRow}", $s->nama_mahasiswa);
-            $sheet->setCellValue("C{$currentRow}", $role);
-            $sheet->setCellValue("D{$currentRow}", $ketuaNama);
-            $sheet->setCellValue("E{$currentRow}", $penguji1Nama);
-            $sheet->setCellValue("F{$currentRow}", $penguji2Nama);
-            $sheet->setCellValue("G{$currentRow}", $tglStr);
-            $sheet->setCellValue("H{$currentRow}", $s->jam ?? '-');
-            $sheet->setCellValue("I{$currentRow}", $ruangKode);
+            $baris = array_merge(
+                [$s->nim, $s->nama_mahasiswa, $s->peranPengujiDosen($dosen->id) ?? '-'],
+                array_map(fn ($label) => $dewan[$label] ?? '-', $labelDewan),
+                [$tglStr, $s->jam ?? '-', $ruangKode]
+            );
+
+            foreach ($baris as $colIdx => $nilai) {
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
+                $sheet->setCellValue("{$colLetter}{$currentRow}", $nilai ?? '-');
+            }
 
             $currentRow++;
         }
 
         // Apply Borders
         $lastRow = max($startRow, $currentRow - 1);
-        $dataRange = "A9:I{$lastRow}";
-        $sheet->getStyle($dataRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle("A9:{$lastCol}{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
         // Alignment
         $sheet->getStyle("A10:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("B10:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("E10:I{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("E10:{$lastCol}{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Auto width columns
-        foreach (range(1, 9) as $colIdx) {
+        foreach (range(1, count($headers)) as $colIdx) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
             $sheet->getColumnDimension($colLetter)->setAutoSize(true);
         }

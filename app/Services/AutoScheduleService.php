@@ -23,7 +23,7 @@ class AutoScheduleService
      * kesediaan dosen yang terlibat dan slot ruang yang masih kosong.
      *
      * Aturan tambahan:
-     *  - Jika Ketua Penguji / Penguji 1 belum diisi, dipilih otomatis dari
+     *  - Jika Ketua Penguji / Anggota Penguji 1 belum diisi, dipilih otomatis dari
      *    dosen yang punya kesediaan pada slot terkait, diprioritaskan yang
      *    beban mengujinya masih di bawah jumlah mahasiswa yang ia luluskan
      *    sebagai Pembimbing Utama.
@@ -113,7 +113,7 @@ class AutoScheduleService
         $proposals = [];
         $unresolved = [];
 
-        // Trio Ketua Penguji + Penguji 1 yang TERAKHIR berhasil dipasangkan secara
+        // Trio Ketua Penguji + Anggota Penguji 1 yang TERAKHIR berhasil dipasangkan secara
         // otomatis untuk setiap tanggal, dicoba dipakai ulang dulu sebelum memilih
         // pasangan baru — supaya dewan penguji yang sama menempel di satu tanggal
         // (dan, lewat preferensi pickRuang(), di satu ruang) sepanjang hari alih-alih
@@ -135,7 +135,7 @@ class AutoScheduleService
                 if ($result) {
                     $proposals[] = $result;
                 } else {
-                    $unresolved[] = self::unresolvedEntry($sidang, 'Tidak ditemukan kombinasi Ketua/Penguji 1 & slot kosong yang cocok dari kesediaan yang ada.');
+                    $unresolved[] = self::unresolvedEntry($sidang, 'Tidak ditemukan kombinasi Ketua/Anggota Penguji 1 & slot kosong yang cocok dari kesediaan yang ada.');
                 }
                 continue;
             }
@@ -148,7 +148,7 @@ class AutoScheduleService
                 }
             } else {
                 $requiredDosenIds['Ketua Penguji'] = $sidang->ketua_penguji_id;
-                $requiredDosenIds['Penguji 1'] = $sidang->anggota_penguji_1_id;
+                $requiredDosenIds['Anggota Penguji 1'] = $sidang->anggota_penguji_1_id;
                 // anggota_penguji_2_id sudah otomatis = pembimbing utama (Sidang::booted())
 
                 $compositionErrors = SidangConflictService::checkPengujiCompositionRules([
@@ -231,7 +231,7 @@ class AutoScheduleService
                         'dosen'                => $requiredDosenIds,
                         'beban'                => self::bebanForDosen($requiredDosenIds, $bebanDosen),
                         'ketua_penguji_id'     => $requiredDosenIds['Ketua Penguji'] ?? null,
-                        'anggota_penguji_1_id' => $requiredDosenIds['Penguji 1'] ?? null,
+                        'anggota_penguji_1_id' => $requiredDosenIds['Anggota Penguji 1'] ?? null,
                     ];
 
                     foreach ($uniqueDosenIds as $dosenId) {
@@ -256,7 +256,7 @@ class AutoScheduleService
     /**
      * Hitung beban "meluluskan" (jumlah mahasiswa sudah sidang skripsi dengan
      * dosen sbg Pembimbing Utama) vs "menguji" (jumlah keikutsertaan sbg
-     * Ketua/Penguji 1/Penguji 2 pada sidang yang sudah selesai) tiap dosen.
+     * Ketua/Anggota Penguji 1/Anggota Penguji 2 pada sidang yang sudah selesai) tiap dosen.
      * Skor lebih tinggi = lebih "berhutang" menguji, diprioritaskan lebih dulu.
      */
     public static function calculateBebanDosen(): array
@@ -309,7 +309,7 @@ class AutoScheduleService
     }
 
     /**
-     * Jalur khusus saat Ketua Penguji / Penguji 1 belum diisi manual: cari
+     * Jalur khusus saat Ketua Penguji / Anggota Penguji 1 belum diisi manual: cari
      * tanggal+slot dari kesediaan Pembimbing Utama, lalu pilih 2 dosen lain
      * (bukan pembimbing utama/pendamping) yang tersedia di slot yang sama,
      * diprioritaskan yang skor "beban menguji"-nya paling tinggi.
@@ -387,7 +387,7 @@ class AutoScheduleService
                     continue;
                 }
 
-                // Coba pakai ulang dulu trio Ketua/Penguji 1 terakhir yang berhasil
+                // Coba pakai ulang dulu trio Ketua/Anggota Penguji 1 terakhir yang berhasil
                 // dipasangkan di tanggal ini (kalau ada, masih tersedia di slot ini,
                 // dan tidak melanggar Rule Komposisi terhadap pembimbing utama
                 // mahasiswa ini) — supaya dewan penguji tidak berganti-ganti tiap
@@ -430,7 +430,7 @@ class AutoScheduleService
                 $requiredDosenIds = [
                     'Pembimbing Utama' => $utamaId,
                     'Ketua Penguji'    => $ketuaId,
-                    'Penguji 1'        => $p1Id,
+                    'Anggota Penguji 1'        => $p1Id,
                 ];
 
                 foreach ($dosenTerlibat as $dosenId) {
@@ -464,10 +464,10 @@ class AutoScheduleService
 
     /**
      * Dari daftar kandidat yang tersedia di slot yang sama (sudah terurut
-     * prioritas beban menguji), cari pasangan Ketua Penguji + Penguji 1 yang
+     * prioritas beban menguji), cari pasangan Ketua Penguji + Anggota Penguji 1 yang
      * TIDAK melanggar Rule Komposisi Dosen Penguji (pasangan terlarang &
      * jenjang jabatan fungsional) — baik terhadap satu sama lain maupun
-     * terhadap Pembimbing Utama (yang otomatis jadi Penguji 2).
+     * terhadap Pembimbing Utama (yang otomatis jadi Anggota Penguji 2).
      */
     private static function pickValidPengujiPair(array $kandidat, int $utamaId): ?array
     {

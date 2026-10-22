@@ -408,7 +408,7 @@
                                 <li><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> <strong>{{ $scheduleConflictCount }}</strong> skripsi memiliki <em>bentrok jadwal</em> (ruangan atau penguji bersamaan). Ditandai badge merah di tabel.</li>
                             @endif
                             @if($ruleViolationCount > 0)
-                                <li><x-icon name="x-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> <strong>{{ $ruleViolationCount }}</strong> skripsi memiliki <em>pelanggaran aturan</em> (Pembimbing Utama bukan Penguji 2, atau Pembimbing Pendamping menguji). Ditandai badge oranye di tabel.</li>
+                                <li><x-icon name="x-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> <strong>{{ $ruleViolationCount }}</strong> skripsi memiliki <em>pelanggaran aturan</em> (Pembimbing Utama bukan Anggota Penguji 2, atau Pembimbing Pendamping menguji). Ditandai badge oranye di tabel.</li>
                             @endif
                         </ul>
                         <p class="text-xs mt-1.5 opacity-75">Klik <x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> pada baris tersebut untuk melihat detail dan memperbaiki.</p>
@@ -591,8 +591,8 @@
                                 <th>Dosbing Utama</th>
                                 <th>Dosbing Pendamping</th>
                                 <th>Ketua Penguji</th>
-                                <th>Penguji 1</th>
-                                <th>Penguji 2</th>
+                                <th>Anggota Penguji 1</th>
+                                <th>Anggota Penguji 2</th>
                                 <th>Jadwal Sidang</th>
                                 <th>Ruangan</th>
                                 <th>Jenis</th>
@@ -610,7 +610,7 @@
                                     $group = $pembimbingGroups[$groupKey] ?? null;
                                 @endphp
                                 {{-- Header grup: mahasiswa dikelompokkan per pasangan dosen pembimbing
-                                     (Pembimbing Utama otomatis jadi Penguji 2) supaya mudah dipilih &
+                                     (Pembimbing Utama otomatis jadi Anggota Penguji 2) supaya mudah dipilih &
                                      diplot massal sekaligus — sama seperti Jadwal Sempro. --}}
                                 @if($group && $groupKey !== $prevGroupKey)
                                     @php $prevGroupKey = $groupKey; @endphp
@@ -866,7 +866,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
+                                <label>Anggota Penguji 1 <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="anggota_penguji_1_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -875,7 +875,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 2</label>
+                                <label>Anggota Penguji 2</label>
                                 <select name="anggota_penguji_2_id" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -960,7 +960,7 @@
                             <div class="flex-1">
                                 <strong class="block text-xs font-bold uppercase tracking-wider text-orange-700 dark:text-orange-400 mb-1.5">Pelanggaran Aturan Skripsi</strong>
                                 <ul id="edit-conflict-rules-list" class="list-disc list-inside space-y-1 text-xs font-medium text-orange-800 dark:text-orange-300"></ul>
-                                <p class="mt-2 text-[11px] italic text-orange-600 dark:text-orange-400">* Aturan: (1) Pembimbing Utama wajib menjadi Penguji 2. (2) Pembimbing Pendamping tidak boleh menguji.</p>
+                                <p class="mt-2 text-[11px] italic text-orange-600 dark:text-orange-400">* Aturan: (1) Pembimbing Utama wajib menjadi Anggota Penguji 2. (2) Pembimbing Pendamping tidak boleh menguji.</p>
                             </div>
                         </div>
                     </div>
@@ -1028,7 +1028,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
+                                <label>Anggota Penguji 1 <span class="text-xs font-normal text-slate-400 dark:text-slate-500">(diisi saat Penjadwalan)</span></label>
                                 <select name="anggota_penguji_1_id" id="edit-penguji1" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -1037,7 +1037,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 2</label>
+                                <label>Anggota Penguji 2</label>
                                 <select name="anggota_penguji_2_id" id="edit-penguji2" class="form-control">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -1337,7 +1337,7 @@
                                 <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-ketua-warning" style="display:none;"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 1 <span style="color:red">*</span></label>
+                                <label>Anggota Penguji 1 <span style="color:red">*</span></label>
                                 <select name="anggota_penguji_1_id" id="jadwalkan-penguji1" class="form-control" required onchange="checkPlottedAvailability()">
                                     <option value="">-- Pilih Dosen --</option>
                                     @foreach ($dosens as $d)
@@ -1347,7 +1347,7 @@
                                 <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji1-warning" style="display:none;"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Dosen ini belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
                             </div>
                             <div class="form-group">
-                                <label>Penguji 2 (Otomatis)</label>
+                                <label>Anggota Penguji 2 (Otomatis)</label>
                                 <div class="form-control text-xs p-2.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold" id="jadwalkan-penguji2-display">—</div>
                                 <p class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Otomatis diisi Pembimbing Utama sesuai aturan komposisi penguji.</p>
                                 <p class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1" id="jadwalkan-penguji2-warning" style="display:none;"><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Pembimbing Utama belum mengisi kesediaan pada tanggal ini. Hubungi Dosen yang bersangkutan.</p>
@@ -1446,7 +1446,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Penguji 1 <span style="color:red">*</span></label>
+                            <label>Anggota Penguji 1 <span style="color:red">*</span></label>
                             <select id="bulk-penguji1" class="form-control" required>
                                 <option value="">-- Pilih Dosen --</option>
                                 @foreach ($dosens as $d)
@@ -1455,7 +1455,7 @@
                             </select>
                         </div>
                     </div>
-                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Penguji 2 otomatis = Pembimbing Utama masing-masing mahasiswa (bisa berbeda per mahasiswa).</p>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Anggota Penguji 2 otomatis = Pembimbing Utama masing-masing mahasiswa (bisa berbeda per mahasiswa).</p>
                 </div>
 
                 <div id="bulk-jadwalkan-result" class="mt-2 text-xs"></div>
@@ -1631,7 +1631,7 @@
             renderKesediaanInfoBoxInto('kesediaan-info-list', 'kesediaan-info-count', tanggal, allEntries, dateEntries, busyByDosen);
         }
 
-        // Flags Ketua Penguji / Penguji 1 / Penguji 2 with a "Hubungi Dosen yang
+        // Flags Ketua Penguji / Anggota Penguji 1 / Anggota Penguji 2 with a "Hubungi Dosen yang
         // bersangkutan" note whenever the dosen currently plotted into that role
         // did not declare kesediaan for the selected tanggal.
         function checkPlottedAvailability() {
@@ -1659,7 +1659,7 @@
             });
         }
 
-        // Rebuild the Ketua/Penguji 1 dropdowns so, as soon as a tanggal (and jam) is
+        // Rebuild the Ketua/Anggota Penguji 1 dropdowns so, as soon as a tanggal (and jam) is
         // picked, dosen who are actually ready that day float to the top: dosen who
         // submitted "Kesediaan Menguji" for that date AND aren't already booked
         // (as pembimbing/penguji) on another sidang with an overlapping jam.
@@ -1815,7 +1815,7 @@
             if (document.getElementById('jadwalkan-jam-mulai')) document.getElementById('jadwalkan-jam-mulai').value = parsed.mulai;
             if (document.getElementById('jadwalkan-jam-selesai')) document.getElementById('jadwalkan-jam-selesai').value = parsed.selesai;
             document.getElementById('jadwalkan-ruang').value = ruangId || '';
-            // Penguji 2 is always the Pembimbing Utama by rule; if this sidang already had
+            // Anggota Penguji 2 is always the Pembimbing Utama by rule; if this sidang already had
             // a penguji_2 saved (p2Id) that differs, still default the field to pembimbing
             // utama since that's the only value the backend will accept going forward.
             setPenguji2FromPembimbingUtama(pembimbingUtamaId, pembimbingUtamaNama);
@@ -2248,7 +2248,7 @@
             hideModalAlert('form-jadwalkan-alert');
 
             if (!document.getElementById('jadwalkan-penguji2').value) {
-                showModalAlert('form-jadwalkan-alert', 'form-jadwalkan-alert-text', '⚠️ Pembimbing Utama belum ditentukan untuk mahasiswa ini, sehingga Penguji 2 tidak bisa diisi otomatis. Silakan tetapkan Pembimbing Utama terlebih dahulu.');
+                showModalAlert('form-jadwalkan-alert', 'form-jadwalkan-alert-text', '⚠️ Pembimbing Utama belum ditentukan untuk mahasiswa ini, sehingga Anggota Penguji 2 tidak bisa diisi otomatis. Silakan tetapkan Pembimbing Utama terlebih dahulu.');
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origText; }
                 return;
             }

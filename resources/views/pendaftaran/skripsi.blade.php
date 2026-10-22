@@ -19,7 +19,7 @@
          tglValue: '',
      }">
     
-    <x-page-header title="Pendaftaran Sidang Skripsi" subtitle="Periksa kelayakan pendaftaran, validasi berkas persyaratan, dan berikan persetujuan untuk meneruskan mahasiswa ke Master Skripsi." icon="clipboard" accent="violet" class="!mb-0">
+    <x-page-header title="Pendaftaran Sidang Skripsi" subtitle="Periksa kelayakan pendaftaran, validasi berkas persyaratan, dan berikan persetujuan untuk meneruskan mahasiswa ke Master Skripsi." icon="clipboard" accent="violet">
         <x-slot:actions>
             <span class="ui-chip"><x-icon name="inbox" class="w-3.5 h-3.5" /> {{ $counts['total'] }} berkas</span>
             <button type="button" @click="adminModal = true" class="ui-btn-primary">

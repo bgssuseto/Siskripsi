@@ -4,7 +4,7 @@
     <div class="space-y-6">
 
         <!-- Header -->
-        <x-page-header title="Rekap Dosen Pembimbing" icon="users" accent="teal" class="!mb-0">
+        <x-page-header title="Rekap Dosen Pembimbing" icon="users" accent="teal">
             <x-slot:description>Jumlah mahasiswa bimbingan per dosen, dipisah antara Pembimbing Utama dan Pembimbing Pendamping.</x-slot:description>
             <x-slot:actions>
                 @if($dosenRows->count() > 0)
