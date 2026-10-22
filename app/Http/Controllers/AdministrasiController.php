@@ -185,10 +185,7 @@ class AdministrasiController extends Controller
         // Rekap sesi (menggabungkan slot waktu berurutan per hari & ruang)
         $rekapSesi = $this->buildSimplifiedSessions($mySidangs);
 
-        $koordinator = \App\Models\User::where('role', \App\Models\User::ROLE_KOORDINATOR)
-            ->whereNotNull('dosen_id')
-            ->with('dosen')
-            ->first()?->dosen;
+        $koordinator = \App\Support\KoordinatorSkripsi::dosen();
 
         return [
             'dosen'         => $dosen,
@@ -200,7 +197,38 @@ class AdministrasiController extends Controller
             'koordinator'   => $koordinator,
             'kopBase64'     => $this->imageToBase64(public_path('images/kop_surat.png')),
             'logoTiBase64'  => $this->imageToBase64(public_path('images/logo-ti-umk-icon.png')),
-        ];
+        ] + $this->tandaTanganUndangan($dosen, $koordinator, $jenisUndangan, $periode?->id, $namaPeriode, $selectedGelombang, $mySidangs);
+    }
+
+    /**
+     * QR tanda tangan elektronik Koordinator Skripsi untuk satu undangan.
+     * Kosong bila belum ada dosen ber-role koordinator atau tidak ada jadwal
+     * (blok tanda tangan lalu tampil seperti biasa tanpa QR).
+     *
+     * @return array{ttdUndangan: ?\App\Models\TandaTanganUndangan, qrTtd: ?string, qrRasioLogo: float}
+     */
+    private function tandaTanganUndangan(Dosen $dosen, ?Dosen $koordinator, string $jenis, ?int $periodeId, string $namaPeriode, $gelombang, $sidangs): array
+    {
+        $kosong = ['ttdUndangan' => null, 'qrTtd' => null, 'qrRasioLogo' => 0.0];
+        if (!$koordinator || $sidangs->isEmpty()) {
+            return $kosong;
+        }
+
+        try {
+            $ttd = \App\Models\TandaTanganUndangan::untuk(
+                $dosen, $koordinator, $jenis, $periodeId, $namaPeriode,
+                ($gelombang === null || $gelombang === '') ? null : (string) $gelombang,
+                $sidangs
+            );
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Tabel belum dimigrasi — undangan tetap bisa dicetak tanpa QR.
+            report($e);
+            return $kosong;
+        }
+
+        $qr = \App\Support\QrCode::denganRuangLogo($ttd->url_verifikasi);
+
+        return ['ttdUndangan' => $ttd, 'qrTtd' => $qr['uri'], 'qrRasioLogo' => $qr['rasio_logo']];
     }
 
     /**
@@ -652,10 +680,7 @@ class AdministrasiController extends Controller
             return back()->with('warning', 'Tidak ada dosen penguji pada filter pendaftaran yang dipilih.');
         }
 
-        $koordinator = \App\Models\User::where('role', \App\Models\User::ROLE_KOORDINATOR)
-            ->whereNotNull('dosen_id')
-            ->with('dosen')
-            ->first()?->dosen;
+        $koordinator = \App\Support\KoordinatorSkripsi::dosen();
 
         $invType = $jenisUndangan === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $zipFilename = "Undangan_{$invType}_" . str_replace(['/', ' '], '_', $namaPeriode) . ".zip";
@@ -700,7 +725,7 @@ class AdministrasiController extends Controller
                 'totalUji'      => $mySidangs->count(),
                 'jenisUndangan' => $jenisUndangan,
                 'koordinator'   => $koordinator,
-            ]);
+            ] + $this->tandaTanganUndangan($dosen, $koordinator, $jenisUndangan, $periode?->id, $namaPeriode, $selectedGelombang, $mySidangs));
 
             $pdf->setPaper('a4', 'landscape');
 
@@ -1368,7 +1393,23 @@ class AdministrasiController extends Controller
             ->when($request->filled('tanggal_pendaftaran_mulai'), fn ($q) => $q->whereDate('tanggal_pendaftaran', '>=', $request->get('tanggal_pendaftaran_mulai')))
             ->when($request->filled('tanggal_pendaftaran_selesai'), fn ($q) => $q->whereDate('tanggal_pendaftaran', '<=', $request->get('tanggal_pendaftaran_selesai')))
             ->when($jenis === 'sempro', fn ($q) => $q->where('jenis_tugas_akhir', 'sempro'))
-            ->when($jenis === 'skripsi', fn ($q) => $q->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']));
+            ->when($jenis === 'skripsi', fn ($q) => $q->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal']))
+            // Pencarian: tiap kata harus cocok dengan NIM, nama, judul, ruang, atau nama dosen.
+            ->when(trim((string) $request->get('q')) !== '', function ($q) use ($request) {
+                $kataKunci = preg_split('/\s+/', trim((string) $request->get('q')));
+                foreach (array_slice($kataKunci, 0, 6) as $kata) {
+                    $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $kata) . '%';
+                    $q->where(function ($w) use ($like) {
+                        $w->where('nim', 'like', $like)
+                          ->orWhere('nama_mahasiswa', 'like', $like)
+                          ->orWhere('judul_skripsi', 'like', $like);
+                        foreach (['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2'] as $rel) {
+                            $w->orWhereHas($rel, fn ($d) => $d->where('nama_dosen', 'like', $like));
+                        }
+                        $w->orWhereHas('ruang', fn ($r) => $r->where('kode_ruangan', 'like', $like)->orWhere('nama_ruangan', 'like', $like));
+                    });
+                }
+            });
     }
 
     /**

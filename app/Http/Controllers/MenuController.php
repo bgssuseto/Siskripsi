@@ -6,177 +6,264 @@ use App\Models\Menu;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class MenuController extends Controller
 {
+    /** Role yang hak akses menunya diatur di sini (super_admin selalu akses penuh). */
+    public const ROLE_DIATUR = [User::ROLE_KOORDINATOR, User::ROLE_DOSEN, User::ROLE_MAHASISWA];
+
+    /** Kelompok menu (kolom role_default) — menentukan bagian sidebar tempat menu tampil. */
+    public const KELOMPOK = ['koordinator', 'dosen', 'mahasiswa', 'super_admin', 'all'];
+
     /**
-     * Display Menu Management dashboard for Super Admin
+     * Halaman Manajemen Menu & Hak Akses: struktur menu (pohon induk/sub-menu),
+     * hak akses per role, dan akses khusus per user — dikelola tanpa reload.
      */
     public function index(Request $request): View
     {
-        // Seed default system menus if table is empty
         $this->ensureDefaultMenusExist();
 
         $menus = Menu::orderBy('sort_order')->orderBy('id')->get();
-        $users = User::with('menus')->orderBy('name')->get();
 
-        $selectedUserId = $request->get('user_id');
-        $selectedUser = $selectedUserId ? User::with('menus')->find($selectedUserId) : null;
+        $roleMenu = collect(self::ROLE_DIATUR)->mapWithKeys(fn ($role) => [
+            $role => DB::table('role_menu')->where('role', $role)->pluck('menu_id')->map(fn ($id) => (int) $id)->values(),
+        ]);
 
-        return view('admin.menus.index', compact('menus', 'users', 'selectedUser'));
+        $statistik = [
+            'total'       => $menus->count(),
+            'aktif'       => $menus->where('is_active', true)->count(),
+            'userKhusus'  => DB::table('user_menu')->distinct()->count('user_id'),
+            'jumlahUser'  => User::selectRaw('role, count(*) as n')->groupBy('role')->pluck('n', 'role'),
+        ];
+
+        // Nama route GET tanpa parameter — saran isian "Route" saat menambah/mengubah menu.
+        $daftarRoute = collect(Route::getRoutes()->getRoutes())
+            ->filter(fn ($r) => $r->getName() && in_array('GET', $r->methods(), true) && !str_contains($r->uri(), '{'))
+            ->map(fn ($r) => $r->getName())
+            ->reject(fn ($n) => str_starts_with($n, 'ignition.') || str_starts_with($n, 'sanctum.') || str_starts_with($n, 'verifikasi.') || $n === 'storage.local')
+            ->unique()->sort()->values();
+
+        $daftarIkon = ['home', 'document', 'document-add', 'academic', 'calendar', 'clipboard', 'clipboard-list', 'users', 'user',
+            'user-circle', 'cog', 'chart', 'mail', 'badge-check', 'shield', 'clock', 'check-circle', 'info', 'upload', 'download',
+            'printer', 'search', 'filter', 'link', 'chat', 'building', 'map-pin', 'credit-card', 'sparkles', 'inbox', 'book', 'lock',
+            'bell', 'eye', 'folder', 'list', 'flag', 'database', 'presentation', 'lightning', 'key', 'tag'];
+
+        return view('admin.menus.index', compact('menus', 'roleMenu', 'statistik', 'daftarRoute', 'daftarIkon'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    /** Data menu untuk halaman (JSON ringkas, dipakai juga setelah simpan). */
+    public static function menuJson(Menu $m): array
     {
-        $validated = $request->validate([
+        return [
+            'id'           => $m->id,
+            'hid'          => $m->hash_id,
+            'name'         => $m->name,
+            'route'        => $m->route,
+            'icon'         => $m->icon,
+            'role_default' => $m->role_default ?? 'all',
+            'parent_id'    => $m->parent_id,
+            'is_active'    => (bool) $m->is_active,
+            'sort_order'   => (int) $m->sort_order,
+        ];
+    }
+
+    private function aturanValidasi(?Menu $menu = null): array
+    {
+        return [
             'name'         => ['required', 'string', 'max:255'],
             'route'        => ['nullable', 'string', 'max:255'],
             'icon'         => ['nullable', 'string', 'max:255'],
-            'role_default' => ['nullable', 'string', 'in:mahasiswa,super_admin,koordinator,dosen,all'],
+            'role_default' => ['nullable', 'string', 'in:' . implode(',', self::KELOMPOK)],
+            'parent_id'    => ['nullable', 'integer', 'exists:menus,id', function ($attr, $value, $fail) use ($menu) {
+                if (!$value) return;
+                $induk = Menu::find($value);
+                if ($induk?->parent_id) {
+                    $fail('Induk harus menu utama (bukan sub-menu).');
+                }
+                if ($menu && ((int) $value === $menu->id || Menu::where('parent_id', $menu->id)->exists())) {
+                    $fail($menu->id === (int) $value ? 'Menu tidak bisa menjadi induk dirinya sendiri.' : 'Menu yang memiliki sub-menu tidak bisa dijadikan sub-menu.');
+                }
+            }],
             'sort_order'   => ['nullable', 'integer'],
-        ]);
+        ];
+    }
+
+    private function jawab(Request $request, string $pesan, array $extra = [], int $status = 200)
+    {
+        User::clearAccessibleMenusCache();
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => $status < 400, 'message' => $pesan] + $extra, $status);
+        }
+
+        return redirect()->route('admin.menus.index')->with($status < 400 ? 'success' : 'error', $pesan);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate($this->aturanValidasi());
+        $validated['role_default'] ??= 'all';
+        $validated['is_active'] = $request->boolean('is_active', true);
+
+        // Urutan otomatis: taruh paling bawah di antara saudaranya.
+        if (!isset($validated['sort_order'])) {
+            $validated['sort_order'] = (int) Menu::where('parent_id', $validated['parent_id'] ?? null)
+                ->where('role_default', $validated['role_default'])->max('sort_order') + 1;
+        }
 
         $menu = Menu::create($validated);
 
         ActivityLogger::log('created', $menu, "Menambahkan menu sistem baru: {$menu->name}" . ($menu->route ? " (route: {$menu->route})" : '') . '.');
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Menu sistem berhasil ditambahkan!',
-                'menu' => $menu
-            ]);
-        }
-
-        return redirect()->route('admin.menus.index')->with('success', 'Menu sistem berhasil ditambahkan!');
+        return $this->jawab($request, 'Menu sistem berhasil ditambahkan!', ['menu' => self::menuJson($menu)]);
     }
 
-    /**
-     * Update an existing menu
-     */
     public function update(Request $request, Menu $menu)
     {
-        $validated = $request->validate([
-            'name'         => ['required', 'string', 'max:255'],
-            'route'        => ['nullable', 'string', 'max:255'],
-            'role_default' => ['nullable', 'string', 'in:mahasiswa,super_admin,koordinator,dosen,all'],
-            'sort_order'   => ['nullable', 'integer'],
-        ]);
+        $validated = $request->validate($this->aturanValidasi($menu));
 
-        if ($request->has('icon')) {
-            $validated['icon'] = $request->input('icon');
+        if (!$request->has('icon')) {
+            unset($validated['icon']);
         }
+        if (!$request->has('parent_id')) {
+            unset($validated['parent_id']);
+        }
+        if (!isset($validated['sort_order'])) {
+            unset($validated['sort_order']);
+        }
+        $validated['is_active'] = $request->boolean('is_active');
 
-        $validated['is_active'] = $request->has('is_active');
-
-        $before = $menu->only(['name', 'route', 'role_default', 'sort_order', 'is_active']);
+        $before = $menu->only(['name', 'route', 'role_default', 'parent_id', 'sort_order', 'is_active']);
         $menu->update($validated);
 
-        ActivityLogger::log(
-            'updated',
-            $menu,
-            "Memperbarui menu sistem: {$menu->name}.",
-            ['before' => $before, 'after' => $menu->only(['name', 'route', 'role_default', 'sort_order', 'is_active'])]
-        );
+        ActivityLogger::log('updated', $menu, "Memperbarui menu sistem: {$menu->name}.",
+            ['before' => $before, 'after' => $menu->only(['name', 'route', 'role_default', 'parent_id', 'sort_order', 'is_active'])]);
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Menu berhasil diperbarui!',
-                'menu' => $menu
-            ]);
-        }
-
-        return redirect()->route('admin.menus.index')->with('success', 'Menu berhasil diperbarui!');
+        return $this->jawab($request, 'Menu berhasil diperbarui!', ['menu' => self::menuJson($menu->fresh())]);
     }
 
-    /**
-     * Delete a menu
-     */
+    /** Aktifkan / nonaktifkan menu (menu nonaktif hilang dari sidebar semua role). */
+    public function toggle(Request $request, Menu $menu)
+    {
+        $menu->update(['is_active' => !$menu->is_active]);
+
+        ActivityLogger::log('updated', $menu, ($menu->is_active ? 'Mengaktifkan' : 'Menonaktifkan') . " menu: {$menu->name}.");
+
+        return $this->jawab($request, "Menu {$menu->name} " . ($menu->is_active ? 'diaktifkan.' : 'dinonaktifkan.'), ['menu' => self::menuJson($menu)]);
+    }
+
+    /** Simpan urutan baru menu-menu bersaudara (daftar id sesuai urutan tampil). */
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:menus,id'],
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach (array_values($validated['ids']) as $urutan => $id) {
+                Menu::whereKey($id)->update(['sort_order' => $urutan + 1]);
+            }
+        });
+
+        ActivityLogger::log('updated', null, 'Mengubah urutan ' . count($validated['ids']) . ' menu.');
+
+        return $this->jawab($request, 'Urutan menu disimpan.');
+    }
+
     public function destroy(Request $request, Menu $menu)
     {
+        if (Menu::where('parent_id', $menu->id)->exists()) {
+            return $this->jawab($request, "Menu {$menu->name} masih memiliki sub-menu. Pindahkan atau hapus sub-menunya terlebih dahulu.", [], 422);
+        }
+
         $menuName = $menu->name;
+        DB::table('role_menu')->where('menu_id', $menu->id)->delete();
+        DB::table('user_menu')->where('menu_id', $menu->id)->delete();
         $menu->delete();
 
         ActivityLogger::log('deleted', $menu, "Menghapus menu sistem: {$menuName}.");
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Menu berhasil dihapus!'
-            ]);
-        }
-
-        return redirect()->route('admin.menus.index')->with('success', 'Menu berhasil dihapus!');
+        return $this->jawab($request, 'Menu berhasil dihapus!');
     }
 
     /**
-     * Assign custom additional menus to a specific user
+     * Cari user untuk tab "Akses Khusus User" (dimuat sebagian, tidak semua
+     * user sekaligus). Menyertakan menu dari role dan menu khusus user tsb.
      */
+    public function users(Request $request)
+    {
+        $q    = trim((string) $request->get('q'));
+        $role = $request->get('role');
+
+        $users = User::query()
+            ->with(['menus:id', 'additionalRoles'])
+            ->when($q !== '', fn ($w) => $w->where(fn ($x) => $x->where('name', 'like', "%{$q}%")->orWhere('email', 'like', "%{$q}%")))
+            ->when(in_array($role, [User::ROLE_SUPER_ADMIN, ...self::ROLE_DIATUR], true), fn ($w) => $w->where('role', $role))
+            ->when($request->boolean('khusus'), fn ($w) => $w->whereHas('menus'))
+            ->orderBy('name')
+            ->paginate(15);
+
+        return response()->json([
+            'data' => $users->getCollection()->map(fn (User $u) => [
+                'hid'       => $u->hash_id,
+                'name'      => $u->name,
+                'email'     => $u->email,
+                'role'      => $u->role,
+                'roles'     => $u->getRoleNames(),
+                'role_label'=> $u->role_label,
+                'custom'    => $u->menus->pluck('id')->map(fn ($id) => (int) $id)->values(),
+            ])->values(),
+            'total'     => $users->total(),
+            'halaman'   => $users->currentPage(),
+            'terakhir'  => $users->lastPage(),
+        ]);
+    }
+
+    /** Akses menu tambahan khusus untuk satu user (di luar menu dari role-nya). */
     public function assignUserMenus(Request $request, User $user)
     {
-        $menuIds = $request->input('menu_ids', []);
+        $request->validate([
+            'menu_ids'   => ['array'],
+            'menu_ids.*' => ['integer', 'exists:menus,id'],
+        ]);
+
+        // Simpan hanya menu tambahan — menu yang sudah didapat dari role tidak perlu diduplikasi.
+        $dariRole = DB::table('role_menu')->whereIn('role', $user->getRoleNames())->pluck('menu_id')->map(fn ($id) => (int) $id)->all();
+        $menuIds = collect($request->input('menu_ids', []))->map(fn ($id) => (int) $id)->diff($dariRole)->unique()->values()->all();
 
         $user->menus()->sync($menuIds);
 
-        ActivityLogger::log('updated', $user, "Mengatur akses menu kustom untuk user {$user->name} ({$user->email}) — " . count($menuIds) . ' menu diberikan.');
+        ActivityLogger::log('updated', $user, "Mengatur akses menu khusus untuk user {$user->name} ({$user->email}) — " . count($menuIds) . ' menu tambahan.');
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "Akses menu kustom untuk user {$user->name} berhasil diperbarui!"
-            ]);
-        }
-
-        return redirect()->route('admin.menus.index', ['user_id' => $user->id])
-            ->with('success', "Akses menu kustom untuk user {$user->name} berhasil diperbarui!");
+        return $this->jawab($request, "Akses khusus untuk {$user->name} berhasil disimpan.", ['custom' => $menuIds]);
     }
 
-    /**
-     * Assign dynamic menus to a specific role (e.g. dosen)
-     */
+    /** Hak akses menu default untuk satu role (koordinator / dosen / mahasiswa). */
     public function assignRoleMenus(Request $request, string $role)
     {
-        $validated = $request->validate([
-            'menu_ids' => ['array'],
-            'menu_ids.*' => ['exists:menus,id'],
+        abort_unless(in_array($role, self::ROLE_DIATUR, true), 404);
+
+        $request->validate([
+            'menu_ids'   => ['array'],
+            'menu_ids.*' => ['integer', 'exists:menus,id'],
         ]);
 
-        $menuIds = $request->input('menu_ids', []);
+        $menuIds = collect($request->input('menu_ids', []))->map(fn ($id) => (int) $id)->unique()->values();
 
-        // Delete existing menus for this role
-        \Illuminate\Support\Facades\DB::table('role_menu')->where('role', $role)->delete();
+        DB::transaction(function () use ($role, $menuIds) {
+            DB::table('role_menu')->where('role', $role)->delete();
+            DB::table('role_menu')->insert($menuIds->map(fn ($id) => [
+                'role' => $role, 'menu_id' => $id, 'created_at' => now(), 'updated_at' => now(),
+            ])->all());
+        });
 
-        // Insert new ones
-        $insertData = array_map(function ($menuId) use ($role) {
-            return [
-                'role' => $role,
-                'menu_id' => $menuId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }, $menuIds);
+        ActivityLogger::log('updated', null, "Mengatur hak akses menu untuk role {$role} — " . $menuIds->count() . ' menu diberikan.');
 
-        if (!empty($insertData)) {
-            \Illuminate\Support\Facades\DB::table('role_menu')->insert($insertData);
-        }
-
-        ActivityLogger::log('updated', null, "Mengatur hak akses menu default untuk role {$role} — " . count($menuIds) . ' menu diberikan.');
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "Hak akses menu untuk role {$role} berhasil diperbarui!"
-            ]);
-        }
-
-        return redirect()->route('admin.menus.index')
-            ->with('success', "Hak akses menu untuk role {$role} berhasil diperbarui!");
+        return $this->jawab($request, 'Hak akses role ' . ucfirst($role) . ' berhasil disimpan.', ['menu_ids' => $menuIds]);
     }
 
     /**
@@ -184,6 +271,10 @@ class MenuController extends Controller
      */
     public function ensureDefaultMenusExist(): void
     {
+        // Menu default yang baru dibuat pada pemanggilan ini tetap diberi hak akses
+        // default role-nya; menu lama tidak disentuh (akses yang dicabut tidak kembali).
+        $idTerakhir = (int) Menu::max('id');
+        $baru = fn ($m) => $m->id > $idTerakhir;
         $defaultMenus = [
             [
                 'name'         => 'Dashboard Mahasiswa',
@@ -317,11 +408,11 @@ class MenuController extends Controller
             ]
         );
         $manajemenMenuItem = Menu::where('route', 'admin.menus.index')->first();
-        if ($manajemenMenuItem) {
+        if ($manajemenMenuItem && !$manajemenMenuItem->parent_id) {
             $manajemenMenuItem->update(['parent_id' => $manajemenParent->id, 'sort_order' => 1]);
         }
         $manajemenUserItem = Menu::where('route', 'users.index')->first();
-        if ($manajemenUserItem) {
+        if ($manajemenUserItem && !$manajemenUserItem->parent_id) {
             $manajemenUserItem->update(['parent_id' => $manajemenParent->id, 'sort_order' => 2]);
         }
 
@@ -367,7 +458,9 @@ class MenuController extends Controller
                 'sort_order'   => 22,
             ]
         );
-        $semproMenu->update(['parent_id' => $jadwalMenu->id]);
+        if (!$semproMenu->parent_id) {
+            $semproMenu->update(['parent_id' => $jadwalMenu->id]);
+        }
 
         $skripsiMenu = Menu::firstOrCreate(
             ['route' => 'dosen.jadwal.skripsi'],
@@ -379,7 +472,9 @@ class MenuController extends Controller
                 'sort_order'   => 23,
             ]
         );
-        $skripsiMenu->update(['parent_id' => $jadwalMenu->id]);
+        if (!$skripsiMenu->parent_id) {
+            $skripsiMenu->update(['parent_id' => $jadwalMenu->id]);
+        }
 
         // Seed Riwayat Menguji (top-level, bukan submenu Jadwal — ini rekap/
         // laporan histori, bukan penjadwalan yang sedang berjalan).
@@ -423,11 +518,16 @@ class MenuController extends Controller
             })
             ->get();
 
-        foreach ($dosenMenus as $dm) {
-            \Illuminate\Support\Facades\DB::table('role_menu')->updateOrInsert(
-                ['role' => 'dosen', 'menu_id' => $dm->id],
-                ['created_at' => now(), 'updated_at' => now()]
-            );
+        // Hanya diisi sekali (role belum punya hak akses sama sekali) — supaya
+        // menu yang sengaja dicabut lewat Manajemen Menu tidak kembali lagi.
+        $roleKosong = !\Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'dosen')->exists();
+        {
+            foreach ($dosenMenus->filter(fn ($x) => $roleKosong || $baru($x)) as $dm) {
+                \Illuminate\Support\Facades\DB::table('role_menu')->updateOrInsert(
+                    ['role' => 'dosen', 'menu_id' => $dm->id],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
+            }
         }
 
         // ── Seed Mahasiswa Menus (Pendaftaran & Penjadwalan with submenus) ──
@@ -451,7 +551,9 @@ class MenuController extends Controller
                 'sort_order'   => 3,
             ]
         );
-        $mhsSemproDaftar->update(['parent_id' => $mhsPendaftaranParent->id]);
+        if (!$mhsSemproDaftar->parent_id) {
+            $mhsSemproDaftar->update(['parent_id' => $mhsPendaftaranParent->id]);
+        }
 
         $mhsSkripsiDaftar = Menu::firstOrCreate(
             ['route' => 'mahasiswa.skripsi.index'],
@@ -463,7 +565,9 @@ class MenuController extends Controller
                 'sort_order'   => 4,
             ]
         );
-        $mhsSkripsiDaftar->update(['parent_id' => $mhsPendaftaranParent->id]);
+        if (!$mhsSkripsiDaftar->parent_id) {
+            $mhsSkripsiDaftar->update(['parent_id' => $mhsPendaftaranParent->id]);
+        }
 
         $mhsPenjadwalanParent = Menu::firstOrCreate(
             ['name' => 'Penjadwalan', 'role_default' => 'mahasiswa'],
@@ -485,7 +589,9 @@ class MenuController extends Controller
                 'sort_order'   => 6,
             ]
         );
-        $mhsJadwalSempro->update(['parent_id' => $mhsPenjadwalanParent->id]);
+        if (!$mhsJadwalSempro->parent_id) {
+            $mhsJadwalSempro->update(['parent_id' => $mhsPenjadwalanParent->id]);
+        }
 
         $mhsJadwalSkripsi = Menu::firstOrCreate(
             ['route' => 'mahasiswa.jadwal.skripsi'],
@@ -497,7 +603,9 @@ class MenuController extends Controller
                 'sort_order'   => 7,
             ]
         );
-        $mhsJadwalSkripsi->update(['parent_id' => $mhsPenjadwalanParent->id]);
+        if (!$mhsJadwalSkripsi->parent_id) {
+            $mhsJadwalSkripsi->update(['parent_id' => $mhsPenjadwalanParent->id]);
+        }
 
         Menu::firstOrCreate(
             ['route' => 'mahasiswa.bebas-prodi.index'],
@@ -527,11 +635,16 @@ class MenuController extends Controller
             })
             ->get();
 
-        foreach ($mhsMenus as $mm) {
-            \Illuminate\Support\Facades\DB::table('role_menu')->updateOrInsert(
-                ['role' => 'mahasiswa', 'menu_id' => $mm->id],
-                ['created_at' => now(), 'updated_at' => now()]
-            );
+        // Hanya diisi sekali (role belum punya hak akses sama sekali) — supaya
+        // menu yang sengaja dicabut lewat Manajemen Menu tidak kembali lagi.
+        $roleKosong = !\Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'mahasiswa')->exists();
+        {
+            foreach ($mhsMenus->filter(fn ($x) => $roleKosong || $baru($x)) as $mm) {
+                \Illuminate\Support\Facades\DB::table('role_menu')->updateOrInsert(
+                    ['role' => 'mahasiswa', 'menu_id' => $mm->id],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
+            }
         }
 
         // ── Seed Koordinator Menus (Dashboard, Data, Penjadwalan, Pendaftaran, with submenus) ──
@@ -548,12 +661,16 @@ class MenuController extends Controller
             ['route' => 'master.skripsi.index'],
             ['name' => 'Data Skripsi', 'parent_id' => $koordDataParent->id, 'icon' => 'academic', 'role_default' => 'koordinator', 'sort_order' => 32]
         );
-        $koordDataSkripsi->update(['parent_id' => $koordDataParent->id]);
+        if (!$koordDataSkripsi->parent_id) {
+            $koordDataSkripsi->update(['parent_id' => $koordDataParent->id]);
+        }
         $koordDataSempro = Menu::firstOrCreate(
             ['route' => 'master.sempro.index'],
             ['name' => 'Data Sempro', 'parent_id' => $koordDataParent->id, 'icon' => 'document', 'role_default' => 'koordinator', 'sort_order' => 33]
         );
-        $koordDataSempro->update(['parent_id' => $koordDataParent->id]);
+        if (!$koordDataSempro->parent_id) {
+            $koordDataSempro->update(['parent_id' => $koordDataParent->id]);
+        }
 
         $koordPenjadwalanParent = Menu::firstOrCreate(
             ['name' => 'Penjadwalan', 'role_default' => 'koordinator'],
@@ -563,22 +680,30 @@ class MenuController extends Controller
             ['route' => 'jadwal-ujian.index'],
             ['name' => 'Jadwal Sidang Skripsi', 'parent_id' => $koordPenjadwalanParent->id, 'icon' => 'calendar', 'role_default' => 'koordinator', 'sort_order' => 35]
         );
-        $koordJadwalSkripsi->update(['parent_id' => $koordPenjadwalanParent->id]);
+        if (!$koordJadwalSkripsi->parent_id) {
+            $koordJadwalSkripsi->update(['parent_id' => $koordPenjadwalanParent->id]);
+        }
         $koordJadwalSempro = Menu::firstOrCreate(
             ['route' => 'jadwal-sempro.index'],
             ['name' => 'Jadwal Sempro', 'parent_id' => $koordPenjadwalanParent->id, 'icon' => 'calendar', 'role_default' => 'koordinator', 'sort_order' => 36]
         );
-        $koordJadwalSempro->update(['parent_id' => $koordPenjadwalanParent->id]);
+        if (!$koordJadwalSempro->parent_id) {
+            $koordJadwalSempro->update(['parent_id' => $koordPenjadwalanParent->id]);
+        }
         $koordKesediaan = Menu::firstOrCreate(
             ['route' => 'master.kesediaan-dosen.index'],
             ['name' => 'Kesediaan Dosen', 'parent_id' => $koordPenjadwalanParent->id, 'icon' => 'clipboard', 'role_default' => 'koordinator', 'sort_order' => 37]
         );
-        $koordKesediaan->update(['parent_id' => $koordPenjadwalanParent->id]);
+        if (!$koordKesediaan->parent_id) {
+            $koordKesediaan->update(['parent_id' => $koordPenjadwalanParent->id]);
+        }
         $koordAutoPlot = Menu::firstOrCreate(
             ['route' => 'jadwal.auto-plot.index'],
             ['name' => 'Asisten Plotting Otomatis', 'parent_id' => $koordPenjadwalanParent->id, 'icon' => 'calendar', 'role_default' => 'koordinator', 'sort_order' => 38]
         );
-        $koordAutoPlot->update(['parent_id' => $koordPenjadwalanParent->id]);
+        if (!$koordAutoPlot->parent_id) {
+            $koordAutoPlot->update(['parent_id' => $koordPenjadwalanParent->id]);
+        }
 
         $koordPendaftaranParent = Menu::firstOrCreate(
             ['name' => 'Pendaftaran', 'role_default' => 'koordinator'],
@@ -588,12 +713,16 @@ class MenuController extends Controller
             ['route' => 'pendaftaran.skripsi'],
             ['name' => 'Verifikasi Skripsi', 'parent_id' => $koordPendaftaranParent->id, 'icon' => 'academic', 'role_default' => 'koordinator', 'sort_order' => 40]
         );
-        $koordVerifSkripsi->update(['parent_id' => $koordPendaftaranParent->id]);
+        if (!$koordVerifSkripsi->parent_id) {
+            $koordVerifSkripsi->update(['parent_id' => $koordPendaftaranParent->id]);
+        }
         $koordVerifSempro = Menu::firstOrCreate(
             ['route' => 'pendaftaran.sempro'],
             ['name' => 'Verifikasi Sempro', 'parent_id' => $koordPendaftaranParent->id, 'icon' => 'document', 'role_default' => 'koordinator', 'sort_order' => 41]
         );
-        $koordVerifSempro->update(['parent_id' => $koordPendaftaranParent->id]);
+        if (!$koordVerifSempro->parent_id) {
+            $koordVerifSempro->update(['parent_id' => $koordPendaftaranParent->id]);
+        }
 
         // ── Extra pages made manageable via Manajemen Menu, but NOT part of the
         //    koordinator default seed below — super_admin grants these explicitly
@@ -622,7 +751,8 @@ class MenuController extends Controller
         // Manajemen Menu, silently wiping out any manual access super_admin granted
         // via "Atur Akses Role Koordinator" moments earlier. Guarding it lets manual
         // customization persist across page loads like every other role already does.
-        if (!\Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'koordinator')->exists()) {
+        $koordinatorKosong = !\Illuminate\Support\Facades\DB::table('role_menu')->where('role', 'koordinator')->exists();
+        {
             $koordinatorDefaultRoutes = [
                 'dashboard',
                 'master.skripsi.index',
@@ -641,7 +771,7 @@ class MenuController extends Controller
                 })
                 ->get();
 
-            foreach ($koordinatorMenus as $km) {
+            foreach ($koordinatorMenus->filter(fn ($x) => $koordinatorKosong || $baru($x)) as $km) {
                 \Illuminate\Support\Facades\DB::table('role_menu')->updateOrInsert(
                     ['role' => 'koordinator', 'menu_id' => $km->id],
                     ['created_at' => now(), 'updated_at' => now()]

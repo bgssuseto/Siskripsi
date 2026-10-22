@@ -49,6 +49,8 @@ class ActivityLog extends Model
             'created'    => 'Tambah Data',
             'updated'    => 'Ubah Data',
             'deleted'    => 'Hapus Data',
+            'pin_dibuka' => 'Buka PIN Rahasia',
+            'pin_gagal'  => 'PIN Salah',
             default      => ucfirst((string) $action),
         };
     }

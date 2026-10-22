@@ -55,6 +55,7 @@ Route::post('/kesediaan-publik/{token}', [PublicKesediaanController::class, 'sto
 
 // Verifikasi keaslian surat (tujuan QR tanda tangan elektronik) — publik, tanpa login
 Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/verifikasi/undangan/{kode}', [VerifikasiDokumenController::class, 'undangan'])->name('verifikasi.undangan');
     Route::get('/verifikasi/{kode}', [VerifikasiDokumenController::class, 'bebasProdi'])->name('verifikasi.bebas-prodi');
     Route::get('/verifikasi/{kode}/surat', [VerifikasiDokumenController::class, 'bebasProdiSurat'])->name('verifikasi.bebas-prodi.surat');
 });
@@ -235,9 +236,9 @@ Route::middleware('auth')->group(function () {
         // Data Master - Rule Komposisi Dosen Penguji (index/view dipindah ke grup
         // menu.permission di bawah — koordinator bisa diberi akses lihat lewat
         // "Atur Akses Role Koordinator"; mutasi tetap super_admin-only)
-        Route::post('/master/dosen-penguji-rule', [DosenPengujiRuleController::class, 'store'])->name('master.dosen-penguji-rule.store');
-        Route::put('/master/dosen-penguji-rule/{dosenPengujiRule}', [DosenPengujiRuleController::class, 'update'])->name('master.dosen-penguji-rule.update');
-        Route::delete('/master/dosen-penguji-rule/{dosenPengujiRule}', [DosenPengujiRuleController::class, 'destroy'])->name('master.dosen-penguji-rule.destroy');
+        Route::post('/master/dosen-penguji-rule', [DosenPengujiRuleController::class, 'store'])->name('master.dosen-penguji-rule.store')->middleware('pin.rule-penguji');
+        Route::put('/master/dosen-penguji-rule/{dosenPengujiRule}', [DosenPengujiRuleController::class, 'update'])->name('master.dosen-penguji-rule.update')->middleware('pin.rule-penguji');
+        Route::delete('/master/dosen-penguji-rule/{dosenPengujiRule}', [DosenPengujiRuleController::class, 'destroy'])->name('master.dosen-penguji-rule.destroy')->middleware('pin.rule-penguji');
 
         // Data Skripsi (mutasi data tetap super_admin-only; index/export dipindah ke
         // grup di bawah supaya koordinator bisa diberi akses lihat/export saja)
@@ -303,7 +304,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/administrasi/sk/export-penguji-pdf', [AdministrasiController::class, 'exportSkPengujiPdf'])->name('administrasi.sk.export-penguji-pdf');
         Route::get('/administrasi/audit-log', [AuditLogController::class, 'index'])->name('administrasi.audit-log.index');
         Route::get('/administrasi/analitik', [AnalitikController::class, 'index'])->name('administrasi.analitik.index');
-        Route::get('/master/dosen-penguji-rule', [DosenPengujiRuleController::class, 'index'])->name('master.dosen-penguji-rule.index');
+        Route::get('/master/dosen-penguji-rule', [DosenPengujiRuleController::class, 'index'])->name('master.dosen-penguji-rule.index')->middleware('pin.rule-penguji');
+        // PIN halaman rahasia Rule Komposisi Penguji (buka & kunci kembali)
+        Route::post('/master/dosen-penguji-rule/buka', [DosenPengujiRuleController::class, 'buka'])->name('master.dosen-penguji-rule.buka');
+        Route::post('/master/dosen-penguji-rule/kunci', [DosenPengujiRuleController::class, 'kunci'])->name('master.dosen-penguji-rule.kunci');
 
         // Bebas Prodi — verifikasi pengajuan & cetak surat (hapus/upload TTD dicek super_admin di controller)
         Route::get('/bebas-prodi', [BebasProdiController::class, 'index'])->name('bebas-prodi.index');
@@ -396,6 +400,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:super_admin')->group(function () {
         Route::get('/kelola-menu', [MenuController::class, 'index'])->name('admin.menus.index');
         Route::post('/kelola-menu', [MenuController::class, 'store'])->name('admin.menus.store');
+        Route::get('/kelola-menu/users', [MenuController::class, 'users'])->name('admin.menus.users');
+        Route::post('/kelola-menu/urutan', [MenuController::class, 'reorder'])->name('admin.menus.reorder');
+        Route::post('/kelola-menu/{menu}/toggle', [MenuController::class, 'toggle'])->name('admin.menus.toggle');
         Route::put('/kelola-menu/{menu}', [MenuController::class, 'update'])->name('admin.menus.update');
         Route::delete('/kelola-menu/{menu}', [MenuController::class, 'destroy'])->name('admin.menus.destroy');
         Route::post('/kelola-menu/user/{user}', [MenuController::class, 'assignUserMenus'])->name('admin.menus.assign');

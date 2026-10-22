@@ -74,6 +74,9 @@
         .judul-text { font-size: .8rem; color: #1e293b; font-weight: 500; line-height: 1.4; max-width: 280px; }
         .dosen-chip { display: inline-block; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: .1rem .45rem; font-size: .75rem; color: #475569; margin: .1rem 0; }
         .dosen-chip.utama { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; font-weight: 600; }
+        .dosen-chip.pendamping { background: #f0fdfa; border-color: #99f6e4; color: #0f766e; font-weight: 600; }
+        .dosen-chip.anggota { background: #f5f3ff; border-color: #ddd6fe; color: #6d28d9; font-weight: 600; }
+        .dosen-chip.kosong { background: transparent; border-color: transparent; color: #94a3b8; }
         .dosen-chip.ketua { background: #fef3c7; border-color: #fde68a; color: #92400e; font-weight: 600; }
 
         /* Modal */
@@ -131,6 +134,9 @@
         html.dark .nim-pill { background: rgba(14,165,233,.16); color: #7dd3fc; }
         html.dark .dosen-chip { background: #0f172a; border-color: #334155; color: #cbd5e1; }
         html.dark .dosen-chip.utama { background: rgba(29,78,216,.2); border-color: rgba(191,219,254,.2); color: #93c5fd; }
+        html.dark .dosen-chip.pendamping { background-color: rgba(20,184,166,.15) !important; border-color: rgba(45,212,191,.35) !important; color: #5eead4 !important; }
+        html.dark .dosen-chip.anggota { background-color: rgba(139,92,246,.18) !important; border-color: rgba(167,139,250,.35) !important; color: #c4b5fd !important; }
+        html.dark .dosen-chip.kosong { background-color: transparent !important; border-color: transparent !important; color: #64748b !important; }
         html.dark .dosen-chip.ketua { background: rgba(146,64,14,.2); border-color: rgba(253,230,138,.2); color: #fcd34d; }
 
         html.dark .modal-box { background: #1e293b; border: 1px solid #334155; }
@@ -371,10 +377,10 @@
                                 </td>
                                 <td><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                 <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
-                                <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
+                                <td><span class="dosen-chip {{ $item->pembimbingPendamping ? 'pendamping' : 'kosong' }}">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                 <td><span class="dosen-chip ketua">{{ $item->ketuaPenguji ? $item->ketuaPenguji->nama_dosen : '—' }}</span></td>
-                                <td><span class="dosen-chip">{{ $item->anggotaPenguji1 ? $item->anggotaPenguji1->nama_dosen : '—' }}</span></td>
-                                <td><span class="dosen-chip">{{ $item->anggotaPenguji2 ? $item->anggotaPenguji2->nama_dosen : '—' }}</span></td>
+                                <td><span class="dosen-chip {{ $item->anggotaPenguji1 ? 'anggota' : 'kosong' }}">{{ $item->anggotaPenguji1 ? $item->anggotaPenguji1->nama_dosen : '—' }}</span></td>
+                                <td><span class="dosen-chip {{ $item->anggotaPenguji2 ? 'anggota' : 'kosong' }}">{{ $item->anggotaPenguji2 ? $item->anggotaPenguji2->nama_dosen : '—' }}</span></td>
                                 <td>
                                     @if($item->jenis_tugas_akhir === 'skripsi')
                                         <span class="badge badge-skripsi">Skripsi</span>

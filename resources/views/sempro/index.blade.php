@@ -157,6 +157,9 @@
         html.dark .nim-pill { background-color: #334155 !important; color: #cbd5e1 !important; }
         html.dark .dosen-chip { background-color: #334155 !important; border-color: #475569 !important; color: #cbd5e1 !important; }
         html.dark .dosen-chip.utama { background-color: rgba(147, 51, 234, 0.25) !important; border-color: rgba(147, 51, 234, 0.5) !important; color: #c084fc !important; }
+        html.dark .dosen-chip.pendamping { background-color: rgba(20,184,166,.15) !important; border-color: rgba(45,212,191,.35) !important; color: #5eead4 !important; }
+        html.dark .dosen-chip.anggota { background-color: rgba(139,92,246,.18) !important; border-color: rgba(167,139,250,.35) !important; color: #c4b5fd !important; }
+        html.dark .dosen-chip.kosong { background-color: transparent !important; border-color: transparent !important; color: #64748b !important; }
 
         .badge { display: inline-flex; align-items: center; padding: .25rem .65rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
         .badge-sempro  { background: #f3e8ff; color: #6b21a8; }
@@ -165,6 +168,9 @@
         .judul-text { font-size: .8rem; color: #1e293b; font-weight: 500; line-height: 1.4; max-width: 260px; }
         .dosen-chip { display: inline-block; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: .15rem .5rem; font-size: .75rem; color: #475569; margin: .1rem 0; }
         .dosen-chip.utama { background: #f3e8ff; border-color: #d8b4fe; color: #6b21a8; font-weight: 600; }
+        .dosen-chip.pendamping { background: #f0fdfa; border-color: #99f6e4; color: #0f766e; font-weight: 600; }
+        .dosen-chip.anggota { background: #f5f3ff; border-color: #ddd6fe; color: #6d28d9; font-weight: 600; }
+        .dosen-chip.kosong { background: transparent; border-color: transparent; color: #94a3b8; }
 
         .schedule-cell { min-width: 140px; }
         .schedule-hari { font-weight: 700; color: #1e293b; font-size: .8rem; }
@@ -519,7 +525,7 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                                     </td>
                                     <td><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                     <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
-                                    <td><span class="dosen-chip">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
+                                    <td><span class="dosen-chip {{ $item->pembimbingPendamping ? 'pendamping' : 'kosong' }}">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                     <td class="schedule-cell">
                                         @if($item->tanggal)
                                             <div class="schedule-hari">{{ $item->tanggal->locale('id')->translatedFormat('l, d F Y') }}</div>

@@ -54,15 +54,28 @@
 
         <!-- Filter Range Tanggal Pendaftaran & Periode -->
         <div class="bg-white dark:bg-slate-800/80 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <form method="GET" action="{{ route('administrasi.berita-acara.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+            <form method="GET" action="{{ route('administrasi.berita-acara.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 @if(($jenis ?? '') !== '')
                     <input type="hidden" name="jenis" value="{{ $jenis }}">
                 @endif
 
+                <!-- Pencarian (langsung diterapkan saat mengetik) -->
+                <div class="md:col-span-6 lg:col-span-4">
+                    <label for="cari-berita-acara" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Cari Mahasiswa</label>
+                    <div class="relative" x-data>
+                        <x-icon name="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        <input id="cari-berita-acara" type="search" name="q" value="{{ request('q') }}" autocomplete="off"
+                               placeholder="NIM, nama, judul, dosen, atau ruang…"
+                               @keydown.window.slash="if (!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) { $event.preventDefault(); $el.focus(); }"
+                               class="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        <kbd class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 items-center px-1.5 h-5 rounded-md border border-slate-200 dark:border-slate-600 text-[10px] font-bold text-slate-400 pointer-events-none">/</kbd>
+                    </div>
+                </div>
+
                 <!-- Periode -->
-                <div>
+                <div class="md:col-span-6 lg:col-span-3">
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Periode Akademik</label>
-                    <select name="periode_id" onchange="this.form.gelombang.value=''; this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
+                    <select name="periode_id" onchange="this.form.gelombang.value=''; this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
                         @foreach($periodes as $p)
                         <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>
                             {{ $p->nama_periode }} {{ $p->aktif ? '(Aktif)' : '' }}
@@ -72,39 +85,29 @@
                 </div>
 
                 <!-- Gelombang -->
-                <div>
+                <div class="md:col-span-6 lg:col-span-2">
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Gelombang</label>
-                    <select name="gelombang" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
-                        <option value="">-- Semua Gelombang --</option>
+                    <select name="gelombang" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
+                        <option value="">Semua</option>
                         @foreach($gelombangOptions as $g)
                             <option value="{{ $g['value'] }}" {{ (string) $selectedGelombang === $g['value'] ? 'selected' : '' }}>{{ $g['label'] }}</option>
                         @endforeach
                     </select>
-                    @if($gelombangOptions->isEmpty())
-                        <p class="text-[10.5px] text-amber-600 dark:text-amber-400 mt-1">Belum ada gelombang di Master Gelombang untuk periode ini.</p>
-                    @endif
                 </div>
 
-                <div class="hidden md:block"></div>
-
-                <!-- Submit Filter -->
-                <div class="flex gap-2">
-                    <button type="submit"
-                            class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl shadow-md transition-all cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                        </svg>
-                        Filter Data
+                <!-- Submit / Reset -->
+                <div class="md:col-span-6 lg:col-span-3 flex gap-2">
+                    <button type="submit" class="ui-btn-primary flex-1 justify-center">
+                        <x-icon name="filter" class="w-4 h-4" /> Terapkan
                     </button>
-
-                    @if(request()->hasAny(['periode_id', 'gelombang', 'tanggal_pendaftaran_mulai', 'tanggal_pendaftaran_selesai']))
-                    <a href="{{ route('administrasi.berita-acara.index', array_filter(['jenis' => $jenis])) }}"
-                       class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 font-medium text-sm rounded-xl transition-all flex items-center justify-center" title="Reset Filter">
-                        Reset
-                    </a>
+                    @if(request()->hasAny(['periode_id', 'gelombang', 'q', 'tanggal_pendaftaran_mulai', 'tanggal_pendaftaran_selesai']))
+                    <a href="{{ route('administrasi.berita-acara.index', array_filter(['jenis' => $jenis])) }}" class="ui-btn-secondary justify-center" title="Reset Filter">Reset</a>
                     @endif
                 </div>
 
+                @if($gelombangOptions->isEmpty())
+                    <p class="md:col-span-12 -mt-2 text-[10.5px] text-amber-600 dark:text-amber-400">Belum ada gelombang di Master Gelombang untuk periode ini.</p>
+                @endif
             </form>
         </div>
 
@@ -115,7 +118,11 @@
                 <div>
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-base">Daftar Sidang Mahasiswa</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Menampilkan {{ $sidangs->count() }} data pelaksanaan ujian sidang mahasiswa pada gelombang pendaftaran yang dipilih.
+                        @if(request('q'))
+                            Ditemukan <strong class="text-slate-700 dark:text-slate-200">{{ $sidangs->count() }}</strong> data untuk pencarian “{{ request('q') }}”.
+                        @else
+                            Menampilkan {{ $sidangs->count() }} data pelaksanaan ujian mahasiswa pada filter yang dipilih.
+                        @endif
                     </p>
                 </div>
             </div>
@@ -162,9 +169,14 @@
                                 @endif
                             </td>
                             <td class="py-3.5 px-4 text-center">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ ($item->jenis_tugas_akhir === 'sidang' || $item->jenis_tugas_akhir === 'skripsi') ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300' : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300' }}">
-                                    {{ ($item->jenis_tugas_akhir === 'sidang' || $item->jenis_tugas_akhir === 'skripsi') ? 'Skripsi' : 'Jurnal' }}
-                                </span>
+                                @php
+                                    [$jenisLabel, $jenisCls] = match ($item->jenis_tugas_akhir) {
+                                        'sempro' => ['Sempro', 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'],
+                                        'jurnal' => ['Jurnal', 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300'],
+                                        default  => ['Skripsi', 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300'],
+                                    };
+                                @endphp
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $jenisCls }}">{{ $jenisLabel }}</span>
                             </td>
                             <td class="py-3.5 px-4 text-center flex items-center justify-center gap-1.5">
                                 <!-- Preview Button -->
@@ -193,8 +205,13 @@
                                     <svg class="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
-                                    <p class="font-semibold text-slate-600 dark:text-slate-300">Belum ada data sidang</p>
-                                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Gunakan filter range tanggal pendaftaran di atas untuk menampilkan mahasiswa yang terdaftar sidang.</p>
+                                    @if(request('q'))
+                                        <p class="font-semibold text-slate-600 dark:text-slate-300">Tidak ada yang cocok dengan “{{ request('q') }}”</p>
+                                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Periksa ejaan, coba kata kunci lain (NIM, nama, judul, dosen, ruang), atau pilih periode/gelombang lain.</p>
+                                    @else
+                                        <p class="font-semibold text-slate-600 dark:text-slate-300">Belum ada data sidang</p>
+                                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Pilih periode dan gelombang di atas untuk menampilkan mahasiswa yang terdaftar.</p>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

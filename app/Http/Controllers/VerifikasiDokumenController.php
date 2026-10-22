@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BebasProdi;
+use App\Models\TandaTanganUndangan;
 use App\Services\SuratBebasProdi;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,5 +31,13 @@ class VerifikasiDokumenController extends Controller
         abort_unless($surat && $surat->status === BebasProdi::STATUS_DISETUJUI, 404);
 
         return SuratBebasProdi::stream($surat);
+    }
+
+    /** Tujuan QR tanda tangan Koordinator Skripsi pada undangan menguji. */
+    public function undangan(string $kode): View
+    {
+        $ttd = TandaTanganUndangan::with('dosen')->where('kode', $kode)->first();
+
+        return view('public.verifikasi-undangan', ['ttd' => $ttd]);
     }
 }

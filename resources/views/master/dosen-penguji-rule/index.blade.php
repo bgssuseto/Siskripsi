@@ -27,6 +27,13 @@
         <x-page-header title="Rule Komposisi Dosen Penguji" icon="shield" accent="indigo">
             <x-slot:description>Atur pasangan dosen yang boleh/tidak boleh satu tim dewan penguji. Dipakai sebagai validasi wajib saat plotting jadwal (manual maupun otomatis).</x-slot:description>
             <x-slot:actions>
+                <form method="POST" action="{{ route('master.dosen-penguji-rule.kunci') }}" data-live="off">
+                    @csrf
+                    <button type="submit" class="ui-btn-secondary" title="Kunci kembali halaman ini (perlu PIN lagi)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        Kunci
+                    </button>
+                </form>
                 <button @click="createModal = true" @disabled($dosenBelumAdaRule->isEmpty()) class="ui-btn-primary">
                     <x-icon name="plus" class="w-4 h-4" /> Tambah Rule
                 </button>

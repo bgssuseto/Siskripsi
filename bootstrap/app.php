@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'menu.permission' => \App\Http\Middleware\CheckMenuPermission::class,
+            'pin.rule-penguji' => \App\Http\Middleware\PinRulePenguji::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

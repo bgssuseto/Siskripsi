@@ -64,7 +64,9 @@ class SuperAdminPlaceholderHiddenTest extends TestCase
 
     public function test_halaman_rule_komposisi_dosen_penguji_tidak_menampilkan_super_administrator(): void
     {
-        $this->actingAs($this->superAdmin)->get(route('master.dosen-penguji-rule.index'))
+        $this->actingAs($this->superAdmin)
+            ->withSession([\App\Http\Middleware\PinRulePenguji::SESSION_KEY => now()->addMinutes(5)->timestamp])
+            ->get(route('master.dosen-penguji-rule.index'))
             ->assertOk()
             ->assertSee('Dr. Dosen Asli Dua')
             ->assertDontSee('Super Administrator');

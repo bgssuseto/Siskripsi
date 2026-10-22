@@ -264,7 +264,7 @@
 <body>
 
   <div class="btn-print-bar">
-    <button onclick="window.print()" class="btn-print"><x-icon name="printer" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Cetak Undangan</button>
+    <button onclick="window.print()" class="btn-print"><x-icon name="printer" class="inline-block" style="width:1.1em;height:1.1em;vertical-align:-0.2em" /> Cetak Undangan</button>
     <button onclick="window.close()" class="btn-close">Tutup</button>
   </div>
 
@@ -438,9 +438,27 @@
         Mengetahui,<br>
         Koordinator Skripsi/Tugas Akhir<br>
         Program Studi Teknik Informatika
-        <div class="signature-space"></div>
+        @if(!empty($qrTtd))
+                    @php
+                        // Logo TI UMK menutup area tengah QR yang dikosongkan (lihat QrCode::denganRuangLogo).
+                        $ukuranQr = 96;
+                        $sisiLogo = $ukuranQr * ($qrRasioLogo ?? 0);
+                        $padLogo  = 1;
+                    @endphp
+                    <div class="ttd-qr" style="position: relative; width: {{ $ukuranQr }}px; height: {{ $ukuranQr }}px; margin: 4px auto 3px;">
+                        <img src="{{ $qrTtd }}" alt="QR Tanda Tangan Elektronik" style="position: absolute; left: 0; top: 0; width: {{ $ukuranQr }}px; height: {{ $ukuranQr }}px;">
+                        @if(!empty($logoTiBase64) && $sisiLogo > 0)
+                            <img src="{{ $logoTiBase64 }}" alt="TI UMK" style="position: absolute; background: #fff; left: {{ round(($ukuranQr - $sisiLogo) / 2 + $padLogo, 2) }}px; top: {{ round(($ukuranQr - $sisiLogo) / 2 + $padLogo, 2) }}px; width: {{ round($sisiLogo - 2 * $padLogo, 2) }}px; height: {{ round($sisiLogo - 2 * $padLogo, 2) }}px;">
+                        @endif
+                    </div>
+                @else
+                    <div class="signature-space"></div>
+                @endif
         <div class="signature-name">{{ $koordinator->nama_dosen ?? '.....................................' }}</div>
         <div>NIDN. {{ $koordinator->nidn ?? '.....................................' }}</div>
+                @if(!empty($qrTtd))
+                    <div style="margin-top: 3px; font-size: 10.5px; font-style: italic; color: #555;">Ditandatangani secara elektronik &mdash; pindai QR untuk verifikasi keaslian.</div>
+                @endif
       </td>
     </tr>
   </table>
