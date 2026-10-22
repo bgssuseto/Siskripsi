@@ -2,22 +2,24 @@
 
 namespace App\Rules;
 
+use App\Support\MathCaptcha as Captcha;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
+/**
+ * Validasi jawaban CAPTCHA hitungan untuk form tertentu ('login' / 'register').
+ * Soal langsung hangus setelah dicek (lihat App\Support\MathCaptcha::check()).
+ */
 class MathCaptcha implements ValidationRule
 {
+    public function __construct(private string $form = 'register')
+    {
+    }
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $expected = session('captcha_answer');
-
-        if ($expected === null) {
-            $fail('Sesi verifikasi captcha telah kedaluwarsa. Silakan muat ulang halaman.');
-            return;
-        }
-
-        if ((int) $value !== (int) $expected) {
-            $fail('Jawaban captcha tidak sesuai. Silakan coba lagi.');
+        if ($pesan = Captcha::check($this->form, $value)) {
+            $fail($pesan);
         }
     }
 }

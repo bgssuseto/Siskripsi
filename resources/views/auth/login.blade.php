@@ -79,6 +79,9 @@
             @enderror
         </div>
 
+        {{-- Verifikasi keamanan (CAPTCHA hitungan berupa gambar) --}}
+        <x-math-captcha form="login" />
+
         <div class="flex items-center justify-between">
             <label class="flex items-center gap-2 cursor-pointer group">
                 <input type="checkbox" name="remember" id="remember" class="w-4 h-4 rounded border-gray-300 dark:border-slate-600 dark:bg-slate-800 text-indigo-600 focus:ring-indigo-500/20 transition-colors">
