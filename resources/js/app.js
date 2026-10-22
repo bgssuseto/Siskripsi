@@ -1,8 +1,11 @@
 import Alpine from 'alpinejs';
 import morph from '@alpinejs/morph';
+import collapse from '@alpinejs/collapse';
 import { initLiveFilter } from './live-filter';
+import { initSmooth } from './smooth';
 
 Alpine.plugin(morph);
+Alpine.plugin(collapse);
 
 window.Alpine = Alpine;
 
@@ -121,5 +124,6 @@ document.addEventListener('wheel', function (event) {
     event.preventDefault();
 }, { passive: false });
 
+initSmooth();
 Alpine.start();
 initLiveFilter();

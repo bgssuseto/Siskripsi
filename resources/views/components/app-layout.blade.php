@@ -710,12 +710,7 @@
 
                                         <!-- Submenu -->
                                         <div x-show="open && sidebarOpen"
-                                             x-transition:enter="transition-all duration-200 ease-out"
-                                             x-transition:enter-start="opacity-0 -translate-y-2"
-                                             x-transition:enter-end="opacity-100 translate-y-0"
-                                             x-transition:leave="transition-all duration-150 ease-in"
-                                             x-transition:leave-start="opacity-100 translate-y-0"
-                                             x-transition:leave-end="opacity-0 -translate-y-2"
+                                             x-collapse.duration.250ms
                                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                                              x-cloak>
                                             
@@ -828,12 +823,7 @@
 
                                         <!-- Submenu -->
                                         <div x-show="open && sidebarOpen"
-                                             x-transition:enter="transition-all duration-200 ease-out"
-                                             x-transition:enter-start="opacity-0 -translate-y-2"
-                                             x-transition:enter-end="opacity-100 translate-y-0"
-                                             x-transition:leave="transition-all duration-150 ease-in"
-                                             x-transition:leave-start="opacity-100 translate-y-0"
-                                             x-transition:leave-end="opacity-0 -translate-y-2"
+                                             x-collapse.duration.250ms
                                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                                              x-cloak>
                                             
@@ -893,12 +883,7 @@
                             @endif
                         </button>
                         <div x-show="manajemenOpen && sidebarOpen"
-                             x-transition:enter="transition-all duration-200 ease-out"
-                             x-transition:enter-start="opacity-0 -translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition-all duration-150 ease-in"
-                             x-transition:leave-start="opacity-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             x-collapse.duration.250ms
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
                             <a href="{{ route('admin.menus.index') }}"
@@ -949,12 +934,7 @@
                             @endif
                         </button>
                         <div x-show="dataMasterOpen && sidebarOpen"
-                             x-transition:enter="transition-all duration-200 ease-out"
-                             x-transition:enter-start="opacity-0 -translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition-all duration-150 ease-in"
-                             x-transition:leave-start="opacity-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             x-collapse.duration.250ms
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
                             <a href="{{ route('master.dosen.index') }}"
@@ -1012,12 +992,7 @@
                             @endif
                         </button>
                         <div x-show="pendaftaranNavOpen && sidebarOpen"
-                             x-transition:enter="transition-all duration-200 ease-out"
-                             x-transition:enter-start="opacity-0 -translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition-all duration-150 ease-in"
-                             x-transition:leave-start="opacity-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             x-collapse.duration.250ms
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
                             <a href="{{ route('pendaftaran.sempro') }}"
@@ -1073,12 +1048,7 @@
                             @endif
                         </button>
                         <div x-show="dataOpen && sidebarOpen"
-                             x-transition:enter="transition-all duration-200 ease-out"
-                             x-transition:enter-start="opacity-0 -translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition-all duration-150 ease-in"
-                             x-transition:leave-start="opacity-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             x-collapse.duration.250ms
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
                             <a href="{{ route('master.skripsi.index') }}"
@@ -1120,12 +1090,7 @@
                             @endif
                         </button>
                         <div x-show="penjadwalanOpen && sidebarOpen"
-                             x-transition:enter="transition-all duration-200 ease-out"
-                             x-transition:enter-start="opacity-0 -translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition-all duration-150 ease-in"
-                             x-transition:leave-start="opacity-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             x-collapse.duration.250ms
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
                             <a href="{{ route('jadwal-ujian.index') }}"
@@ -1183,12 +1148,7 @@
                             @endif
                         </button>
                         <div x-show="administrasiOpen && sidebarOpen"
-                             x-transition:enter="transition-all duration-200 ease-out"
-                             x-transition:enter-start="opacity-0 -translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition-all duration-150 ease-in"
-                             x-transition:leave-start="opacity-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 -translate-y-2"
+                             x-collapse.duration.250ms
                              class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                              x-cloak>
 
@@ -1209,9 +1169,7 @@
                                     </svg>
                                 </button>
                                 <div x-show="open"
-                                     x-transition:enter="transition-all duration-150 ease-out"
-                                     x-transition:enter-start="opacity-0 -translate-y-1"
-                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     x-collapse.duration.250ms
                                      class="mt-0.5 ml-3 pl-3 border-l border-white/[0.05] space-y-0.5"
                                      x-cloak>
                                     @php $jenisSkripsi = request()->get('jenis') === 'skripsi'; @endphp
@@ -1253,9 +1211,7 @@
                                     </svg>
                                 </button>
                                 <div x-show="open"
-                                     x-transition:enter="transition-all duration-150 ease-out"
-                                     x-transition:enter-start="opacity-0 -translate-y-1"
-                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     x-collapse.duration.250ms
                                      class="mt-0.5 ml-3 pl-3 border-l border-white/[0.05] space-y-0.5"
                                      x-cloak>
                                     @php $jenisSempro = request()->get('jenis') === 'sempro'; @endphp
@@ -1382,12 +1338,7 @@
                                         @endif
                                     </button>
                                     <div x-show="open && sidebarOpen"
-                                         x-transition:enter="transition-all duration-200 ease-out"
-                                         x-transition:enter-start="opacity-0 -translate-y-2"
-                                         x-transition:enter-end="opacity-100 translate-y-0"
-                                         x-transition:leave="transition-all duration-150 ease-in"
-                                         x-transition:leave-start="opacity-100 translate-y-0"
-                                         x-transition:leave-end="opacity-0 -translate-y-2"
+                                         x-collapse.duration.250ms
                                          class="mt-1 ml-4 pl-4 border-l border-white/[0.07] space-y-0.5"
                                          x-cloak>
                                         @foreach($kChildren as $kChild)

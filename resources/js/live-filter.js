@@ -54,7 +54,15 @@ function showProgress(on) {
         progressEl.className = 'live-filter-progress';
         document.body.appendChild(progressEl);
     }
-    progressEl.classList.toggle('is-active', on);
+    clearTimeout(progressEl._doneTimer);
+    if (on) {
+        progressEl.classList.remove('is-done');
+        progressEl.classList.add('is-active');
+    } else if (progressEl.classList.contains('is-active')) {
+        // Selesaikan bar sampai 100% lalu pudar — bukan mundur ke 0.
+        progressEl.classList.replace('is-active', 'is-done');
+        progressEl._doneTimer = setTimeout(() => progressEl.classList.remove('is-done'), 450);
+    }
     document.getElementById('page-content')?.classList.toggle('live-filter-loading', on);
 }
 
@@ -122,7 +130,7 @@ async function liveLoad(url, { scrollToTop = false } = {}) {
         if (executableScripts(current) !== executableScripts(next)) return fullNavigate(url);
 
         const active = document.activeElement;
-        window.Alpine.morph(current, next, {
+        const morph = () => window.Alpine.morph(current, next, {
             updating(el, toEl, childrenOnly, skip) {
                 if (el.nodeType !== 1) return;
                 if (el === active && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return skip();
@@ -134,6 +142,8 @@ async function liveLoad(url, { scrollToTop = false } = {}) {
                 if (el.children.length > 0 && toEl.children.length === 0 && toEl.textContent.trim() === '') return skip();
             },
         });
+        // Perubahan massal hasil filter tidak perlu dianimasikan satu per satu.
+        window.withoutAnimation ? window.withoutAnimation(morph) : morph();
 
         window.history.replaceState(window.history.state, '', url.toString());
         if (scrollToTop) current.scrollIntoView({ behavior: 'smooth', block: 'start' });

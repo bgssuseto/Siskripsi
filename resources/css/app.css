@@ -137,8 +137,16 @@ html.dark .fc {
     pointer-events: none;
 }
 .live-filter-progress.is-active { width: 75%; opacity: 1; transition: width 2.5s cubic-bezier(.1, .7, .2, 1), opacity .1s; }
+.live-filter-progress.is-done { width: 100%; opacity: 0; transition: width .2s ease-out, opacity .25s ease .2s; }
 #page-content.live-filter-loading table tbody,
 #page-content.live-filter-loading [data-live-results] { opacity: .55; transition: opacity .15s; }
+#page-content table tbody,
+#page-content [data-live-results] { transition: opacity .2s ease-out; }
+
+/* Scroll ke anchor / scrollIntoView terasa halus (kecuali pengguna minta kurangi gerakan). */
+@media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+}
 
 /* ══════════════════════════════════════════════════════════════════════
    UI kit seragam (dipakai header halaman, toolbar, dan kartu statistik).
