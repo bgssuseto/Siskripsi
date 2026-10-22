@@ -34,4 +34,28 @@ class KesediaanResetTest extends TestCase
         $this->actingAs($admin)->delete(route('master.kesediaan-dosen.destroy-all'))->assertSessionHas('success');
         $this->assertSame(0, KesediaanDosen::count());
     }
+
+    public function test_reset_kesediaan_per_gelombang_tidak_menghapus_gelombang_lain(): void
+    {
+        $admin = User::create(['name' => 'Admin Reset Gel', 'email' => 'resetg-' . uniqid() . '@test.id', 'password' => bcrypt('x'), 'role' => User::ROLE_SUPER_ADMIN]);
+        $dosen = Dosen::create(['nama_dosen' => 'Dosen Reset Gel', 'nidn' => 'RSG' . uniqid()]);
+        $p = Periode::create(['nama_periode' => 'Reset Gel ' . uniqid(), 'aktif' => false]);
+        $g1 = \App\Models\PendaftaranPeriode::create(['periode_id' => $p->id, 'jenis' => 'skripsi', 'gelombang' => 1, 'tanggal_mulai' => '2026-09-01', 'tanggal_selesai' => '2026-09-30']);
+        $g2 = \App\Models\PendaftaranPeriode::create(['periode_id' => $p->id, 'jenis' => 'skripsi', 'gelombang' => 2, 'tanggal_mulai' => '2026-10-01', 'tanggal_selesai' => '2026-10-31']);
+        foreach ([$g1, $g2] as $g) {
+            KesediaanDosen::create(['dosen_id' => $dosen->id, 'periode_id' => $p->id, 'wave_id' => $g->id, 'tanggal' => now()->addDays(3)->format('Y-m-d'), 'jam_mulai' => '08:00', 'jam_selesai' => '12:00']);
+        }
+
+        $this->actingAs($admin)->get(route('master.kesediaan-dosen.index', ['periode_id' => $p->id, 'wave_id' => $g1->id]))
+            ->assertOk()
+            ->assertSee('Reset Kesediaan (sesuai filter)')
+            ->assertSee('gelombang 1 (Skripsi)');
+
+        $this->actingAs($admin)->delete(route('master.kesediaan-dosen.destroy-all'), ['periode_id' => $p->id, 'wave_id' => $g1->id])
+            ->assertRedirect(route('master.kesediaan-dosen.index', ['periode_id' => $p->id, 'wave_id' => $g1->id]))
+            ->assertSessionHas('success');
+
+        $this->assertSame(0, KesediaanDosen::where('wave_id', $g1->id)->count());
+        $this->assertSame(1, KesediaanDosen::where('wave_id', $g2->id)->count());
+    }
 }

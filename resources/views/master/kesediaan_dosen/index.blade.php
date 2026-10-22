@@ -260,10 +260,21 @@
                         @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gelombang</label>
+                    <select name="wave_id" class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                        <option value="">Semua Gelombang</option>
+                        @foreach ($waves->when(request('periode_id'), fn ($c) => $c->where('periode_id', (int) request('periode_id'))) as $w)
+                            <option value="{{ $w->id }}" {{ (string) request('wave_id') === (string) $w->id ? 'selected' : '' }}>
+                                {{ request('periode_id') ? '' : ($w->periode->nama_periode ?? '') . ' — ' }}Gel. {{ $w->gelombang }} ({{ ucfirst($w->jenis) }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
             </x-filter-popover>
 
             <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-xs transition-colors cursor-pointer">Filter</button>
-            @if(request()->hasAny(['search','dosen_id','periode_id','per_page']))
+            @if(request()->hasAny(['search','dosen_id','periode_id','wave_id','per_page']))
                 <a href="{{ route('master.kesediaan-dosen.index') }}" class="px-4 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-sm rounded-xl transition-colors"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset</a>
             @endif
         </form>
@@ -272,7 +283,12 @@
         @php
             $filterPeriode = request('periode_id') ? $periodes->firstWhere('id', (int) request('periode_id')) : null;
             $filterDosen   = request('dosen_id') ? $dosens->firstWhere('id', (int) request('dosen_id')) : null;
-            $lingkupReset  = collect([$filterPeriode ? 'periode ' . $filterPeriode->nama_periode : null, $filterDosen ? 'dosen ' . $filterDosen->nama_dosen : null])->filter()->implode(' & ');
+            $filterWave    = request('wave_id') ? $waves->firstWhere('id', (int) request('wave_id')) : null;
+            $lingkupReset  = collect([
+                $filterPeriode ? 'periode ' . $filterPeriode->nama_periode : null,
+                $filterWave ? 'gelombang ' . $filterWave->gelombang . ' (' . ucfirst($filterWave->jenis) . ')' : null,
+                $filterDosen ? 'dosen ' . $filterDosen->nama_dosen : null,
+            ])->filter()->implode(' & ');
         @endphp
         <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden mb-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-slate-100 dark:border-slate-700">
@@ -299,6 +315,7 @@ Tindakan ini tidak dapat dibatalkan."));">
                         @csrf
                         @method('DELETE')
                         @if($filterPeriode)<input type="hidden" name="periode_id" value="{{ $filterPeriode->id }}">@endif
+                        @if($filterWave)<input type="hidden" name="wave_id" value="{{ $filterWave->id }}">@endif
                         @if($filterDosen)<input type="hidden" name="dosen_id" value="{{ $filterDosen->id }}">@endif
                         <button type="submit" class="ui-btn-danger-soft">
                             <x-icon name="refresh" class="w-4 h-4" /> {{ $lingkupReset ? 'Reset Kesediaan (sesuai filter)' : 'Hapus Semua Kesediaan' }}

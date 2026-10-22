@@ -27,6 +27,10 @@ class KesediaanDosenController extends Controller
             $query->where('periode_id', $request->periode_id);
         }
 
+        if ($request->filled('wave_id')) {
+            $query->where('wave_id', $request->wave_id);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($outer) use ($search) {
@@ -313,21 +317,25 @@ class KesediaanDosenController extends Controller
     {
         $request->validate([
             'periode_id' => 'nullable|exists:periodes,id',
+            'wave_id'    => 'nullable|exists:pendaftaran_periodes,id',
             'dosen_id'   => 'nullable|exists:dosens,id',
         ]);
 
         $query = KesediaanDosen::query()
             ->when($request->filled('periode_id'), fn ($q) => $q->where('periode_id', $request->periode_id))
+            ->when($request->filled('wave_id'), fn ($q) => $q->where('wave_id', $request->wave_id))
             ->when($request->filled('dosen_id'), fn ($q) => $q->where('dosen_id', $request->dosen_id));
 
         $count = $query->delete();
 
+        $wave = $request->filled('wave_id') ? PendaftaranPeriode::find($request->wave_id) : null;
         $lingkup = collect([
             $request->filled('periode_id') ? 'periode ' . Periode::find($request->periode_id)?->nama_periode : null,
+            $wave ? "gelombang {$wave->gelombang} (" . ucfirst($wave->jenis) . ')' : null,
             $request->filled('dosen_id') ? 'dosen ' . Dosen::find($request->dosen_id)?->nama_dosen : null,
         ])->filter()->implode(', ');
 
-        return redirect()->route('master.kesediaan-dosen.index', $request->only('periode_id', 'dosen_id'))
+        return redirect()->route('master.kesediaan-dosen.index', $request->only('periode_id', 'wave_id', 'dosen_id'))
             ->with('success', $lingkup
                 ? "Kesediaan {$lingkup} berhasil direset ({$count} data dihapus). Dosen dapat mengisi ulang kesediaannya."
                 : "Berhasil menghapus seluruh data kesediaan dosen ({$count} data dihapus).");
