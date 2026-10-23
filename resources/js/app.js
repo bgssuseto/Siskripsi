@@ -3,6 +3,7 @@ import morph from '@alpinejs/morph';
 import collapse from '@alpinejs/collapse';
 import { initLiveFilter } from './live-filter';
 import { initSmooth } from './smooth';
+import './calendar-kit';
 
 Alpine.plugin(morph);
 Alpine.plugin(collapse);

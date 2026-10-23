@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Sidang;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,9 +19,44 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user();
+
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user'      => $user,
+            'dosen'     => $user->isDosen() ? $user->dosen : null,
+            'dosenStat' => $user->isDosen() && $user->dosen ? $this->statistikDosen($user->dosen->id) : null,
+            'tugasAkhir'=> $user->isMahasiswa() && $user->nim ? $this->tugasAkhirMahasiswa($user->nim) : null,
         ]);
+    }
+
+    /** Ringkasan keterlibatan dosen (seluruh periode). */
+    private function statistikDosen(int $dosenId): array
+    {
+        $base = Sidang::query();
+        $pembimbing = (clone $base)->where(fn ($q) => $q->where('dosen_pembimbing_utama_id', $dosenId)->orWhere('dosen_pembimbing_pendamping_id', $dosenId));
+        $penguji = (clone $base)->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)
+            ->where(fn ($q) => $q->where('ketua_penguji_id', $dosenId)->orWhere('anggota_penguji_1_id', $dosenId)->orWhere('anggota_penguji_2_id', $dosenId));
+
+        return [
+            'bimbingan_sempro'  => (clone $pembimbing)->where('jenis_tugas_akhir', 'sempro')->count(),
+            'bimbingan_skripsi' => (clone $pembimbing)->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)->count(),
+            'menguji'           => $penguji->count(),
+            'akan_datang'       => Sidang::whereDate('tanggal', '>=', now()->timezone('Asia/Jakarta')->toDateString())
+                ->where(fn ($q) => $q->where('dosen_pembimbing_utama_id', $dosenId)->orWhere('dosen_pembimbing_pendamping_id', $dosenId)
+                    ->orWhere('ketua_penguji_id', $dosenId)->orWhere('anggota_penguji_1_id', $dosenId)->orWhere('anggota_penguji_2_id', $dosenId))
+                ->count(),
+        ];
+    }
+
+    /** Pendaftaran Sempro & Skripsi terbaru milik mahasiswa. */
+    private function tugasAkhirMahasiswa(string $nim): array
+    {
+        $terbaru = fn ($q) => $q->with(['pembimbingUtama', 'pembimbingPendamping', 'periode'])->latest('id')->first();
+
+        return [
+            'sempro'  => $terbaru(Sidang::where('nim', $nim)->where('jenis_tugas_akhir', 'sempro')),
+            'skripsi' => $terbaru(Sidang::where('nim', $nim)->whereIn('jenis_tugas_akhir', Sidang::SKRIPSI_BUCKET)),
+        ];
     }
 
     /**
@@ -41,6 +77,9 @@ class ProfileController extends Controller
         } else {
             $user->fill($request->safe()->only(['name', 'email', 'no_hp']));
         }
+
+        // Akun dosen terhubung ke Master Dosen (lihat sinkronisasi di bawah).
+        $dosen = $user->isDosen() ? $user->dosen : null;
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
@@ -81,9 +120,21 @@ class ProfileController extends Controller
 
         $user->save();
 
-        // Update NIDN for dosen role
-        if ($user->hasRole('dosen') && $user->dosen && $request->filled('nidn')) {
-            $user->dosen->update(['nidn' => $request->input('nidn')]);
+        // Dosen: profil = data Master Dosen. Nama, NIDN, email, no. WhatsApp &
+        // kepakaran disimpan ke Master Dosen juga (jabatan fungsional & status
+        // kepegawaian tetap dikelola admin karena memengaruhi aturan penguji).
+        if ($dosen) {
+            $dosen->fill(array_filter([
+                'nama_dosen' => $user->name,
+                'email'      => $user->email,
+                'no_wa'      => $user->no_hp,
+                'nidn'       => $request->filled('nidn') ? trim($request->input('nidn')) : null,
+            ], fn ($v) => $v !== null));
+            $dosen->kepakaran = $request->filled('kepakaran') ? trim($request->input('kepakaran')) : $dosen->kepakaran;
+            if (!$request->filled('no_hp')) {
+                $dosen->no_wa = null;
+            }
+            $dosen->save();
         }
 
         return Redirect::route('profile.edit')->with('success', 'Profil Anda berhasil diperbarui!');

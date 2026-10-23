@@ -21,29 +21,33 @@
     // Status ringkas (satu badge) — detail tanggal/jam/ruang ditampilkan sekali di bawah.
     $hariIni = now()->timezone('Asia/Jakarta')->format('Y-m-d');
     [$statusLabel, $statusCls] = match (true) {
-        !$s->tanggal                               => ['Belum Dijadwalkan', 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-200 dark:ring-rose-500/30'],
-        $s->isExamEnded()                          => ['Selesai', 'bg-teal-50 text-teal-700 ring-teal-200 dark:bg-teal-500/15 dark:text-teal-200 dark:ring-teal-500/30'],
-        $s->tanggal->format('Y-m-d') === $hariIni  => ['Hari Ini', 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/15 dark:text-blue-200 dark:ring-blue-500/30'],
-        default                                    => ['Akan Datang', 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-200 dark:ring-emerald-500/30'],
+        !$s->tanggal                               => ['Belum Dijadwalkan', 'cal-badge-conflict'],
+        $s->isExamEnded()                          => ['Selesai', 'cal-badge-done'],
+        $s->tanggal->format('Y-m-d') === $hariIni  => ['Hari Ini', 'cal-badge-jurnal'],
+        default                                    => ['Akan Datang', 'cal-badge-soon'],
+    };
+
+    // Badge jenis ujian — sama dengan badge di kalender (resources/css/calendar.css).
+    [$jenisKey, $jenisLabel, $accent] = match (true) {
+        $isSempro                           => ['sempro', 'Seminar Proposal', 'bg-indigo-500'],
+        $s->jenis_tugas_akhir === 'jurnal'  => ['jurnal', 'Sidang Jurnal', 'bg-amber-500'],
+        default                             => ['skripsi', 'Sidang Skripsi', 'bg-emerald-500'],
     };
 @endphp
 <!-- Timeline Item -->
 <div class="relative">
     <!-- Dot marker (garis timeline hanya tampil mulai layar sm) -->
     <div class="hidden sm:block absolute -left-[31px] top-5 w-4 h-4 rounded-full border-4 border-white dark:border-slate-800 shadow-sm
-        {{ $isSempro ? 'bg-blue-600' : 'bg-emerald-600' }}"></div>
+        {{ $accent }}"></div>
 
     <article class="relative overflow-hidden bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-        <span class="absolute inset-y-0 left-0 w-1 {{ $isSempro ? 'bg-blue-600' : 'bg-emerald-600' }}"></span>
+        <span class="absolute inset-y-0 left-0 w-1 {{ $accent }}"></span>
 
         <div class="p-4 sm:p-5 pl-5 sm:pl-6 space-y-3">
             <!-- Jenis & status -->
             <div class="flex flex-wrap items-center gap-1.5">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide ring-1 ring-inset
-                    {{ $isSempro ? 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/15 dark:text-blue-200 dark:ring-blue-500/30' : 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-200 dark:ring-emerald-500/30' }}">
-                    {{ $isSempro ? 'Sempro' : 'Sidang Skripsi' }}
-                </span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ring-inset {{ $statusCls }}">{{ $statusLabel }}</span>
+                <span class="cal-badge cal-badge-{{ $jenisKey }}">{{ $jenisLabel }}</span>
+                <span class="cal-badge {{ $statusCls }}">{{ $statusLabel }}</span>
             </div>
 
             <!-- Mahasiswa -->
@@ -79,7 +83,7 @@
                 <div class="flex flex-wrap items-center gap-1.5 pt-3 border-t border-slate-100 dark:border-slate-700/60">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-0.5">Peran Anda</span>
                     @foreach($roles as $r)
-                        <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ring-inset {{ $roleColors[$r] ?? 'bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-200 dark:ring-indigo-500/30' }}">{{ $r }}</span>
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ring-1 ring-inset {{ $roleColors[$r] ?? 'bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-200 dark:ring-indigo-500/30' }}">{{ $r }}</span>
                     @endforeach
                 </div>
             @endif

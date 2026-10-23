@@ -19,7 +19,8 @@ class ProfileUpdateRequest extends FormRequest
         return [
             'name'  => ['required', 'string', 'max:255'],
             'nim'   => ['nullable', 'string', 'max:30', Rule::unique(User::class)->ignore($this->user()->id)],
-            'nidn'  => ['nullable', 'string', 'max:20'],
+            'nidn'  => ['nullable', 'string', 'max:50', Rule::unique('dosens', 'nidn')->ignore($this->user()->dosen_id)],
+            'kepakaran' => ['nullable', 'string', 'max:255'],
             'no_hp' => ['nullable', 'string', 'max:20'],
             'foto_profil' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'email' => [
@@ -39,6 +40,7 @@ class ProfileUpdateRequest extends FormRequest
             'foto_profil.image' => 'File foto profil harus berupa gambar.',
             'foto_profil.mimes' => 'Format foto harus JPG, JPEG, PNG, atau WEBP.',
             'foto_profil.max'   => 'Ukuran foto profil maksimal 2 MB.',
+            'nidn.unique'       => 'NIDN ini sudah dipakai dosen lain di Master Dosen.',
         ];
     }
 }

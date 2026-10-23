@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './calendar.css';
 
 /* Tailwind v4 defaults dark: to prefers-color-scheme (OS setting). This app
    toggles dark mode manually via a `dark` class on <html> (see app-layout.blade.php),
@@ -108,23 +109,6 @@ html.dark .bg-indigo-100 {
     background-color: rgba(67, 97, 238, 0.18) !important;
     color: #8b9cf7 !important;
     border-color: rgba(67, 97, 238, 0.35) !important;
-}
-
-/* ── FullCalendar Button Override ── */
-html .fc {
-    --fc-button-bg-color: #4361ee !important;
-    --fc-button-border-color: #3251d4 !important;
-    --fc-button-hover-bg-color: #3251d4 !important;
-    --fc-button-hover-border-color: #2a43b0 !important;
-    --fc-button-active-bg-color: #2a43b0 !important;
-}
-
-html.dark .fc {
-    --fc-button-bg-color: #6b7ff3 !important;
-    --fc-button-border-color: #5472f0 !important;
-    --fc-button-hover-bg-color: #5472f0 !important;
-    --fc-button-hover-border-color: #4361ee !important;
-    --fc-button-active-bg-color: #4361ee !important;
 }
 
 /* ── Live search / filter ── */

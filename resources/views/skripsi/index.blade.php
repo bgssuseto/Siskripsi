@@ -271,24 +271,7 @@
         html.dark .alert-error svg { stroke: #fca5a5 !important; }
         html.dark .alert-error p { color: #fca5a5 !important; opacity: 0.85; }
 
-        /* ── Calendar container ── */
-        .calendar-container {
-            background: #fff; border-radius: 20px; padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #f1f5f9;
-        }
         
-        /* Customizing FullCalendar */
-        .fc { font-family: 'Inter', sans-serif !important; }
-        .fc-col-header-cell-cushion { font-size: .8rem; font-weight: 700; color: #475569; text-transform: uppercase; }
-        .fc-event { border-radius: 6px !important; padding: .1rem .3rem !important; cursor: pointer !important; font-size: .75rem !important; font-weight: 600 !important; }
-        .fc-header-toolbar { margin-bottom: 1.25rem !important; }
-        .fc-button-primary {
-            background-color: #4361ee !important; border-color: #4361ee !important; border-radius: 8px !important;
-            font-size: .85rem !important; font-weight: 600 !important;
-        }
-        .fc-button-primary:hover { background-color: #3251d4 !important; border-color: #3251d4 !important; }
-        .fc-button-active { background-color: #2a43b0 !important; border-color: #2a43b0 !important; }
-        .fc-daygrid-day-number { font-size: .82rem !important; font-weight: 700 !important; color: #334155 !important; }
 
         @media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
             html.dark table.sidang-table thead th { background: #0f172a !important; color: #94a3b8 !important; border-bottom-color: #334155 !important; }
@@ -786,8 +769,12 @@
         </div>
 
         {{-- ── TAMPILAN KALENDER ── --}}
-        <div x-show="currentView === 'calendar'" id="calendar-container" class="calendar-container" x-cloak>
-            <div id="calendar-view" data-events="{{ json_encode($calendarEvents->values()) }}"></div>
+        <div x-show="currentView === 'calendar'" id="calendar-container" x-cloak>
+            <x-calendar-frame title="Kalender Jadwal Skripsi"
+                              subtitle="Seret jadwal untuk memindahkan tanggal/jam; klik untuk membuka detail."
+                              :legend="['skripsi', 'jurnal']" :conflict="true">
+                <div id="calendar-view" data-events="{{ json_encode($calendarEvents->values()) }}"></div>
+            </x-calendar-frame>
         </div>
 
     {{-- ════════════════════════════════════════════════════════════════ --}}
@@ -1956,8 +1943,8 @@
 
         // Initialize FullCalendar
         function initCalendar() {
-            if (calendar) {
-                calendar.render();
+            if (calendar && document.body.contains(calendar.el)) {
+                calendar.updateSize();
                 return;
             }
             
@@ -1973,6 +1960,7 @@
             const isMobileScreen = window.innerWidth < 640;
 
             calendar = new FullCalendar.Calendar(calendarEl, {
+                ...CalendarKit.options(),
                 initialView: isMobileScreen ? 'listWeek' : 'dayGridMonth',
                 initialDate: firstDate || undefined,
                 locale: 'id',
@@ -1992,32 +1980,8 @@
                 eventStartEditable: true,
                 eventDurationEditable: false,
                 events: eventsData,
-                eventContent: function(arg) {
-                    const props = arg.event.extendedProps || {};
-                    const jam = props.jam && props.jam !== '-' ? props.jam : '';
-                    const ruang = props.ruang && props.ruang !== 'TBA' ? props.ruang : '';
-                    const meta = [jam, ruang].filter(Boolean).join(' · ');
-                    const wrap = document.createElement('div');
-                    wrap.style.cssText = 'overflow:hidden; line-height:1.25; padding:1px 3px; width:100%;';
-                    if (meta) {
-                        const metaLine = document.createElement('div');
-                        metaLine.style.cssText = 'font-size:9px; font-weight:800; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
-                        metaLine.textContent = meta;
-                        wrap.appendChild(metaLine);
-                    }
-                    const titleLine = document.createElement('div');
-                    titleLine.style.cssText = 'font-size:10px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
-                    titleLine.textContent = arg.event.title;
-                    wrap.appendChild(titleLine);
-                    return { domNodes: [wrap] };
-                },
-                eventDidMount: function(info) {
-                    if (info.event.backgroundColor) {
-                        info.el.style.setProperty('background-color', info.event.backgroundColor, 'important');
-                        info.el.style.setProperty('border-color', info.event.borderColor || info.event.backgroundColor, 'important');
-                        info.el.style.setProperty('color', '#ffffff', 'important');
-                    }
-                },
+                eventContent: CalendarKit.eventContent,
+                eventDidMount: CalendarKit.eventDidMount,
                 eventDrop: function(info) {
                     const start = info.event.start;
                     const y = start.getFullYear();
@@ -2094,6 +2058,7 @@
                 }
             });
             calendar.render();
+            CalendarKit.register(calendar);
         }
 
         // Intercept Form Submissions

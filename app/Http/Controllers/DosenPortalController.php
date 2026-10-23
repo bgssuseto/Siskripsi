@@ -495,10 +495,18 @@ class DosenPortalController extends Controller
                  if (!$isSempro && $s->anggota_penguji_1_id === $dosen->id) $roles[] = 'Anggota Penguji 1';
                  if (!$isSempro && $s->anggota_penguji_2_id === $dosen->id) $roles[] = 'Anggota Penguji 2';
 
+                // Jam mulai/selesai supaya jadwal juga tampil di tampilan Minggu/Hari
+                // (slot "seharian" dimatikan di kalender).
+                $tgl = $s->tanggal->format('Y-m-d');
+                $range = \App\Services\SidangConflictService::parseJamRange($s->jam);
+                $fmt = fn (int $m) => sprintf('%sT%02d:%02d:00', $tgl, intdiv($m, 60), $m % 60);
+
                 return [
                     'id'              => $s->id,
-                    'title'           => ($isSempro ? 'Sempro: ' : 'Sidang: ') . $s->nama_mahasiswa,
-                    'start'           => $s->tanggal->format('Y-m-d'),
+                    'title'           => $s->nama_mahasiswa,
+                    'start'           => $range ? $fmt($range['start']) : $tgl,
+                    'end'             => $range ? $fmt($range['end']) : null,
+                    'allDay'          => !$range,
                     'color'           => $eventColor,
                     'backgroundColor' => $eventColor,
                     'borderColor'     => $borderColor,
@@ -507,7 +515,7 @@ class DosenPortalController extends Controller
                         'nim'            => $s->nim,
                         'mahasiswa'      => $s->nama_mahasiswa,
                         'judul'          => $s->judul_skripsi,
-                        'jenis'          => $isSempro ? 'Seminar Proposal' : 'Sidang Skripsi',
+                        'jenis'          => $isSempro ? 'Seminar Proposal' : ($s->jenis_tugas_akhir === 'jurnal' ? 'Sidang Jurnal' : 'Sidang Skripsi'),
                         'dosbing'        => $s->pembimbingUtama ? $s->pembimbingUtama->nama_dosen : '-',
                         'dosbing_p'      => $s->pembimbingPendamping ? $s->pembimbingPendamping->nama_dosen : '-',
                         'ketua_penguji'  => $s->ketuaPenguji ? $s->ketuaPenguji->nama_dosen : '-',

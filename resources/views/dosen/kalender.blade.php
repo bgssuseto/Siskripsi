@@ -1,47 +1,6 @@
 <x-app-layout title="Kalender Akademik Dosen">
     @push('styles')
     <style>
-        /* ── Calendar container ── */
-        .calendar-container {
-            background: #fff;
-            border-radius: 20px;
-            padding: 1.5rem;
-            min-width: 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,.08);
-            border: 1px solid #f1f5f9;
-        }
-        html.dark .calendar-container {
-            background: #1e293b;
-            border-color: #334155;
-            box-shadow: 0 1px 3px rgba(0,0,0,.3);
-        }
-        
-        /* Customizing FullCalendar */
-        .fc { font-family: 'Plus Jakarta Sans', sans-serif !important; }
-        .fc-col-header-cell-cushion { font-size: .8rem; font-weight: 700; color: #475569; text-transform: uppercase; }
-        html.dark .fc-col-header-cell-cushion { color: #94a3b8 !important; }
-        .fc-event { border-radius: 6px !important; padding: .1rem .3rem !important; cursor: pointer !important; font-size: .75rem !important; font-weight: 600 !important; }
-        .fc-header-toolbar { margin-bottom: 1.25rem !important; }
-        .fc-daygrid-day-number { font-size: .82rem !important; font-weight: 700 !important; color: #334155 !important; }
-        html.dark .fc-daygrid-day-number { color: #e2e8f0 !important; }
-
-        @media (max-width: 639px) {
-            .calendar-container { padding: .875rem; border-radius: 16px; }
-            .fc .fc-toolbar-title { font-size: 1rem !important; }
-            .fc .fc-toolbar.fc-header-toolbar { margin-bottom: .75rem !important; }
-            .fc .fc-button { padding: .35rem .6rem !important; font-size: .72rem !important; }
-            .fc .fc-list-event-title, .fc .fc-list-event-time { font-size: .78rem; }
-            .fc .fc-footer-toolbar { justify-content: center !important; }
-            .fc .fc-list-event-time { display: none; }
-        }
-
-        /* Badges */
-        .badge { display: inline-flex; align-items: center; padding: .22rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
-        .badge-sempro { background: #dbeafe; color: #1d4ed8; }
-        .badge-sidang { background: #dcfce7; color: #15803d; }
-        html.dark .badge-sempro { background: rgba(29,78,216,.25); color: #93c5fd; }
-        html.dark .badge-sidang { background: rgba(21,128,61,.25); color: #86efac; }
-        
         .nim-pill { font-family: 'Plus Jakarta Sans', sans-serif; background: #e0f2fe; color: #0369a1; padding: .15rem .5rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
         html.dark .nim-pill { background: rgba(14,165,233,.16); color: #7dd3fc; }
 
@@ -115,59 +74,35 @@
             initCalendar() {
                 const calendarEl = document.getElementById('calendar-view');
                 if (!calendarEl) return;
-                
+                if (calendarEl._fc) { calendarEl._fc.updateSize(); return; }
+
                 const eventsData = JSON.parse(calendarEl.getAttribute('data-events') || '[]');
-                const firstDate = (eventsData.length > 0 && eventsData[0].start) ? eventsData[0].start.split('T')[0] : null;
+                const today = new Date().toISOString().slice(0, 10);
+                const upcoming = eventsData.find(e => (e.start || '').slice(0, 10) >= today);
+                const firstDate = (upcoming || eventsData[0] || {}).start;
                 const isMobileScreen = window.innerWidth < 640;
 
                 const calendar = new FullCalendar.Calendar(calendarEl, {
+                    ...CalendarKit.options(),
                     initialView: isMobileScreen ? 'listMonth' : 'dayGridMonth',
-                    initialDate: firstDate || undefined,
+                    initialDate: firstDate ? firstDate.slice(0, 10) : undefined,
                     locale: 'id',
                     headerToolbar: isMobileScreen
                         ? { left: 'prev,next', center: 'title', right: 'today' }
-                        : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
-                    footerToolbar: isMobileScreen
-                        ? { center: 'listMonth,dayGridMonth' }
-                        : false,
+                        : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
+                    footerToolbar: isMobileScreen ? { center: 'listMonth,dayGridMonth' } : false,
                     slotMinTime: '07:00:00',
-                    slotMaxTime: '17:00:00',
+                    slotMaxTime: '18:00:00',
                     slotDuration: '00:30:00',
-                    slotLabelInterval: '00:30:00',
+                    slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
                     allDaySlot: false,
-                    allDayText: '',
-                    buttonText: { today: 'Hari ini', month: 'Bulan', week: 'Minggu', day: 'Hari', list: 'Daftar', listMonth: 'Daftar' },
                     views: { listMonth: { buttonText: 'Daftar' }, dayGridMonth: { buttonText: 'Bulan' } },
                     events: eventsData,
-                    eventContent: function(arg) {
-                        const props = arg.event.extendedProps || {};
-                        const jam = props.jam && props.jam !== '-' ? props.jam : '';
-                        const ruang = props.ruang && props.ruang !== 'TBA' ? props.ruang : '';
-                        const meta = [jam, ruang].filter(Boolean).join(' · ');
-                        const wrap = document.createElement('div');
-                        wrap.style.cssText = 'overflow:hidden; line-height:1.25; padding:1px 3px; width:100%;';
-                        if (meta) {
-                            const metaLine = document.createElement('div');
-                            metaLine.style.cssText = 'font-size:9px; font-weight:800; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
-                            metaLine.textContent = meta;
-                            wrap.appendChild(metaLine);
-                        }
-                        const titleLine = document.createElement('div');
-                        titleLine.style.cssText = 'font-size:10px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
-                        titleLine.textContent = arg.event.title;
-                        wrap.appendChild(titleLine);
-                        return { domNodes: [wrap] };
-                    },
-                    eventDidMount: function(info) {
-                        if (info.event.backgroundColor) {
-                            info.el.style.setProperty('background-color', info.event.backgroundColor, 'important');
-                            info.el.style.setProperty('border-color', info.event.borderColor || info.event.backgroundColor, 'important');
-                            info.el.style.setProperty('color', '#ffffff', 'important');
-                        }
-                    },
+                    eventContent: CalendarKit.eventContent,
+                    eventDidMount: CalendarKit.eventDidMount,
                     eventClick: function(info) {
                         const props = info.event.extendedProps;
-                        
+
                         document.getElementById('detail-nim').textContent = props.nim;
                         document.getElementById('detail-nama').textContent = props.mahasiswa;
                         document.getElementById('detail-judul').textContent = props.judul;
@@ -177,19 +112,20 @@
                         document.getElementById('detail-penguji1').textContent = props.penguji_1;
                         document.getElementById('detail-penguji2').textContent = props.penguji_2;
                         document.getElementById('detail-peran').textContent = props.role;
-                        
+
                         const dateStr = info.event.start.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                        document.getElementById('detail-jadwal').textContent = dateStr + ' | ' + props.jam;
-                        document.getElementById('detail-ruang').textContent = '📍 Ruangan: ' + props.ruang;
-                        
+                        document.getElementById('detail-jadwal').textContent = dateStr + ' · ' + props.jam;
+                        document.getElementById('detail-ruang').textContent = 'Ruang ' + props.ruang;
+
                         const jenisBadge = document.getElementById('detail-jenis');
                         jenisBadge.textContent = props.jenis;
-                        jenisBadge.className = 'badge ' + (props.jenis === 'Seminar Proposal' ? 'badge-sempro' : 'badge-sidang');
+                        jenisBadge.className = 'cal-badge cal-badge-' + CalendarKit.jenisKey(props);
 
                         document.getElementById('modal-detail').style.display = 'flex';
                     }
                 });
                 calendar.render();
+                calendarEl._fc = CalendarKit.register(calendar);
             }
         }" x-init="$nextTick(() => initCalendar())">
 
@@ -219,8 +155,10 @@
             </div>
 
             <!-- Calendar View -->
-            <div x-show="currentView === 'calendar'" id="calendar-container" class="calendar-container mb-8" x-cloak>
-                <div id="calendar-view" data-events="{{ json_encode($calendarEvents) }}"></div>
+            <div x-show="currentView === 'calendar'" id="calendar-container" class="mb-8" x-cloak>
+                <x-calendar-frame title="Kalender Ujian Saya" subtitle="Seluruh jadwal ujian yang Anda bimbing atau uji. Klik jadwal untuk melihat detail.">
+                    <div id="calendar-view" data-events="{{ json_encode($calendarEvents) }}"></div>
+                </x-calendar-frame>
             </div>
 
             <div x-show="currentView === 'list'" class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-8" x-cloak>
@@ -334,20 +272,12 @@
                     <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-200/80 dark:border-slate-700 p-5 sm:p-6 shadow-sm">
                         <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-sm uppercase tracking-wider mb-4">Petunjuk Warna</h3>
                         <div class="space-y-3.5">
-                            <div class="flex items-center gap-3">
-                                <span class="w-3.5 h-3.5 rounded-full bg-blue-600 shrink-0"></span>
-                                <div>
-                                    <p class="text-xs font-bold text-slate-900 dark:text-slate-100">Seminar Proposal</p>
-                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Ujian pemaparan proposal judul skripsi.</p>
+                            @foreach([['sempro', 'Seminar Proposal', 'Ujian pemaparan proposal skripsi.'], ['skripsi', 'Sidang Skripsi', 'Sidang naskah skripsi akhir.'], ['jurnal', 'Sidang Jurnal', 'Sidang jalur publikasi jurnal.']] as [$key, $label, $desc])
+                                <div class="flex items-start gap-3">
+                                    <span class="cal-badge cal-badge-{{ $key }} mt-0.5">{{ $label }}</span>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-snug">{{ $desc }}</p>
                                 </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="w-3.5 h-3.5 rounded-full bg-emerald-600 shrink-0"></span>
-                                <div>
-                                    <p class="text-xs font-bold text-slate-900 dark:text-slate-100">Sidang Skripsi</p>
-                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Sidang pertanggungjawaban naskah skripsi akhir.</p>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
 
@@ -371,11 +301,11 @@
                     <div class="modal-body space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
                             <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Peran Anda</span>
-                            <span class="col-span-2"><span id="detail-peran" class="px-2.5 py-0.5 text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-lg"></span></span>
+                            <span class="col-span-2"><span id="detail-peran" class="cal-badge cal-badge-role no-dot"></span></span>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
                             <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Jenis Ujian</span>
-                            <span class="col-span-2"><span id="detail-jenis" class="badge"></span></span>
+                            <span class="col-span-2"><span id="detail-jenis" class="cal-badge"></span></span>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
                             <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">NIM / Nama</span>
