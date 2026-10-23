@@ -295,6 +295,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/dosen/sk', [DosenPortalController::class, 'sk'])->name('dosen.sk.index');
         Route::get('/dosen/sk/{periode}/{mode}', [DosenPortalController::class, 'skDownload'])->whereIn('mode', ['pembimbing', 'penguji'])->name('dosen.sk.download');
         Route::get('/dosen/kalender', [DosenPortalController::class, 'kalender'])->name('dosen.kalender');
+        Route::get('/dosen/undangan', [DosenPortalController::class, 'undangan'])->name('dosen.undangan.index');
+        Route::get('/dosen/undangan/{periode}/zip', [DosenPortalController::class, 'undanganZip'])->name('dosen.undangan.zip');
+        Route::get('/dosen/undangan/{periode}/{jenis}/{gelombang}', [DosenPortalController::class, 'undanganLihat'])->whereIn('jenis', ['sempro', 'skripsi'])->name('dosen.undangan.lihat');
+        Route::get('/dosen/undangan/{periode}/{jenis}/{gelombang}/pdf', [DosenPortalController::class, 'undanganUnduh'])->whereIn('jenis', ['sempro', 'skripsi'])->name('dosen.undangan.unduh');
         Route::get('/dosen/profil', fn() => redirect()->route('profile.edit'))->name('dosen.profil');
         Route::post('/dosen/kesediaan', [DosenPortalController::class, 'storeKesediaan'])->name('dosen.kesediaan.store');
         Route::delete('/dosen/kesediaan/{id}', [DosenPortalController::class, 'destroyKesediaan'])->name('dosen.kesediaan.destroy');

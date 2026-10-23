@@ -501,8 +501,15 @@ class MenuController extends Controller
             ]
         );
 
+        // Undangan menguji milik dosen (berjalan & arsip per semester).
+        Menu::firstOrCreate(
+            ['route' => 'dosen.undangan.index'],
+            ['name' => 'Undangan Menguji', 'parent_id' => null, 'icon' => 'mail', 'role_default' => 'dosen', 'sort_order' => 23]
+        );
+
         // Seed default role_menu mappings for dosen
         $dosenMenuRoutes = [
+            'dosen.undangan.index',
             'dosen.dashboard',
             'dosen.kalender',
             'dosen.profil',

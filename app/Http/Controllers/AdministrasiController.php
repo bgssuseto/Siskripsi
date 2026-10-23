@@ -133,7 +133,7 @@ class AdministrasiController extends Controller
      * buildUndanganPdfForDosen() (versi export PDF) supaya KEDUANYA selalu
      * menampilkan isi & kop surat yang identik.
      */
-    private function buildUndanganContext(Request $request, Dosen $dosen): array
+    public function buildUndanganContext(Request $request, Dosen $dosen): array
     {
         $periodeId = $request->get('periode_id');
         $tglMulai = $request->get('tanggal_pendaftaran_mulai');
@@ -174,7 +174,11 @@ class AdministrasiController extends Controller
         }
 
         $selectedGelombang = $request->get('gelombang');
-        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+        if ($selectedGelombang === 'tanpa') {
+            // Undangan untuk ujian yang tidak terikat gelombang (portal dosen).
+            $query->whereNull('gelombang');
+            $selectedGelombang = null;
+        } elseif ($selectedGelombang !== null && $selectedGelombang !== '') {
             $query->where('gelombang', $selectedGelombang);
         }
 
@@ -260,7 +264,7 @@ class AdministrasiController extends Controller
      * docx/email export. Shared by generateUndanganPdf() and the "kirim email"
      * flow so both stay in sync with a single source of truth.
      */
-    private function buildUndanganPdfForDosen(Request $request, Dosen $dosen): array
+    public function buildUndanganPdfForDosen(Request $request, Dosen $dosen): array
     {
         $context = $this->buildUndanganContext($request, $dosen);
 
@@ -368,7 +372,11 @@ class AdministrasiController extends Controller
         }
 
         $selectedGelombang = $request->get('gelombang');
-        if ($selectedGelombang !== null && $selectedGelombang !== '') {
+        if ($selectedGelombang === 'tanpa') {
+            // Undangan untuk ujian yang tidak terikat gelombang (portal dosen).
+            $query->whereNull('gelombang');
+            $selectedGelombang = null;
+        } elseif ($selectedGelombang !== null && $selectedGelombang !== '') {
             $query->where('gelombang', $selectedGelombang);
         }
 

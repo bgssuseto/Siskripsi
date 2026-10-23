@@ -875,4 +875,159 @@ class DosenPortalController extends Controller
 
         return $hasil['pdf']->download($hasil['filename']);
     }
+
+    // ─────────────────────────── Undangan Menguji ───────────────────────────
+
+    /**
+     * Undangan menguji milik dosen yang login, dikelompokkan per periode, jenis
+     * (sempro/skripsi) dan gelombang. Undangan periode aktif pada gelombang yang
+     * sedang berjalan tampil di "Berjalan"; sisanya otomatis masuk "Arsip".
+     */
+    public function undangan(Request $request): View
+    {
+        $dosen = Auth::user()->dosen;
+        $kelompok = $dosen ? $this->kelompokUndangan($dosen) : collect();
+
+        $berjalan = $kelompok->where('berjalan', true)->values();
+        $arsip = $kelompok->where('berjalan', false)
+            ->groupBy('periode_id')
+            ->map(fn ($items) => [
+                'periode' => $items->first()['periode'],
+                'items'   => $items->sortBy([['gelombang_urut', 'asc'], ['jenis', 'asc']])->values(),
+                'total'   => $items->sum('jumlah'),
+            ])
+            ->sortByDesc(fn ($g) => $g['periode']->id)
+            ->values();
+
+        return view('dosen.undangan', compact('dosen', 'berjalan', 'arsip'));
+    }
+
+    /** Pratinjau (versi cetak HTML) satu undangan milik dosen ini. */
+    public function undanganLihat(Periode $periode, string $jenis, string $gelombang)
+    {
+        $dosen = $this->dosenPemilikUndangan($periode, $jenis, $gelombang);
+
+        return view('administrasi.undangan.preview',
+            app(AdministrasiController::class)->buildUndanganContext($this->requestUndangan($periode, $jenis, $gelombang), $dosen));
+    }
+
+    /** Unduh PDF satu undangan milik dosen ini. */
+    public function undanganUnduh(Periode $periode, string $jenis, string $gelombang)
+    {
+        $dosen = $this->dosenPemilikUndangan($periode, $jenis, $gelombang);
+        $built = app(AdministrasiController::class)->buildUndanganPdfForDosen($this->requestUndangan($periode, $jenis, $gelombang), $dosen);
+
+        return $built['pdf']->download($this->namaFileUndangan($periode, $jenis, $gelombang));
+    }
+
+    /** Unduh seluruh undangan dosen ini pada satu periode/semester sebagai ZIP. */
+    public function undanganZip(Periode $periode)
+    {
+        $dosen = Auth::user()->dosen;
+        abort_unless($dosen, 404);
+
+        $items = $this->kelompokUndangan($dosen)->where('periode_id', $periode->id);
+        abort_if($items->isEmpty(), 404);
+
+        @set_time_limit(300);
+        $admin = app(AdministrasiController::class);
+        $tmp = tempnam(sys_get_temp_dir(), 'undangan_');
+        $zip = new \ZipArchive();
+        $zip->open($tmp, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+        foreach ($items as $it) {
+            $built = $admin->buildUndanganPdfForDosen($this->requestUndangan($periode, $it['jenis'], $it['gelombang_kunci']), $dosen);
+            $zip->addFromString($this->namaFileUndangan($periode, $it['jenis'], $it['gelombang_kunci']), $built['pdf']->output());
+        }
+        $zip->close();
+
+        $nama = 'Undangan_Menguji_' . preg_replace('/[^\w]+/', '_', $periode->nama_periode) . '.zip';
+
+        return response()->download($tmp, $nama)->deleteFileAfterSend(true);
+    }
+
+    /** @return \Illuminate\Support\Collection<int, array> */
+    private function kelompokUndangan(Dosen $dosen)
+    {
+        $id = $dosen->id;
+        $hariIni = now()->timezone('Asia/Jakarta')->startOfDay();
+
+        $sidangs = Sidang::with('periode')
+            ->whereNotNull('periode_id')
+            ->where(fn ($q) => $q->where('ketua_penguji_id', $id)->orWhere('anggota_penguji_1_id', $id)->orWhere('anggota_penguji_2_id', $id))
+            ->get(['id', 'periode_id', 'jenis_tugas_akhir', 'gelombang', 'tanggal']);
+
+        // Gelombang yang sedang berjalan per jenis = gelombang terakhir yang sudah dibuka pada periode aktif.
+        $periodeAktif = Periode::where('aktif', true)->first();
+        $gelombangBerjalan = [];
+        if ($periodeAktif) {
+            foreach (['sempro', 'skripsi'] as $jenis) {
+                $gelombangBerjalan[$jenis] = PendaftaranPeriode::where('periode_id', $periodeAktif->id)
+                    ->where('jenis', $jenis)
+                    ->whereDate('tanggal_mulai', '<=', $hariIni)
+                    ->orderByDesc('tanggal_mulai')->orderByDesc('gelombang')
+                    ->value('gelombang');
+            }
+        }
+
+        return $sidangs
+            ->groupBy(fn ($s) => $s->periode_id . '|' . ($s->jenis_tugas_akhir === 'sempro' ? 'sempro' : 'skripsi') . '|' . ($s->gelombang ?? 'tanpa'))
+            ->map(function ($grup) use ($periodeAktif, $gelombangBerjalan, $hariIni) {
+                $s = $grup->first();
+                $jenis = $s->jenis_tugas_akhir === 'sempro' ? 'sempro' : 'skripsi';
+                $gel = $s->gelombang;
+                $tanggal = $grup->pluck('tanggal')->filter()->map(fn ($t) => \Carbon\Carbon::parse($t))->sort()->values();
+
+                $periodeBerjalan = $periodeAktif && (int) $s->periode_id === (int) $periodeAktif->id;
+                $berjalan = $periodeBerjalan && (
+                    $gel === null
+                        ? ($tanggal->isEmpty() || $tanggal->last()->gte($hariIni))
+                        : ((string) $gel === (string) ($gelombangBerjalan[$jenis] ?? null)
+                            || $tanggal->contains(fn ($t) => $t->gte($hariIni)))
+                );
+
+                return [
+                    'periode_id'      => $s->periode_id,
+                    'periode'         => $s->periode,
+                    'jenis'           => $jenis,
+                    'gelombang'       => $gel,
+                    'gelombang_kunci' => $gel === null ? 'tanpa' : (string) $gel,
+                    'gelombang_urut'  => $gel === null ? 999 : (int) $gel,
+                    'jumlah'          => $grup->count(),
+                    'mulai'           => $tanggal->first(),
+                    'selesai'         => $tanggal->last(),
+                    'berjalan'        => $berjalan,
+                ];
+            })
+            ->values();
+    }
+
+    private function dosenPemilikUndangan(Periode $periode, string $jenis, string $gelombang): Dosen
+    {
+        $dosen = Auth::user()->dosen;
+        abort_unless($dosen && in_array($jenis, ['sempro', 'skripsi'], true), 404);
+
+        $ada = $this->kelompokUndangan($dosen)->contains(fn ($it) => (int) $it['periode_id'] === (int) $periode->id
+            && $it['jenis'] === $jenis && $it['gelombang_kunci'] === $gelombang);
+        abort_unless($ada, 404);
+
+        return $dosen;
+    }
+
+    private function requestUndangan(Periode $periode, string $jenis, string $gelombang): Request
+    {
+        return new Request(['periode_id' => $periode->id, 'jenis' => $jenis, 'gelombang' => $gelombang]);
+    }
+
+    private function namaFileUndangan(Periode $periode, string $jenis, string $gelombang): string
+    {
+        $bagian = [
+            'Undangan',
+            $jenis === 'sempro' ? 'Sempro' : 'Sidang_Skripsi',
+            $gelombang === 'tanpa' ? null : 'Gelombang_' . $gelombang,
+            preg_replace('/[^\w]+/', '_', $periode->nama_periode),
+        ];
+
+        return implode('_', array_filter($bagian)) . '.pdf';
+    }
 }

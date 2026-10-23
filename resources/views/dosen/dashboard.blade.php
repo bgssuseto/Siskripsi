@@ -48,6 +48,7 @@
                 @if($showFormKesediaan && !$isLockedKesediaan)
                     <button type="button" @click="openModal()" class="ui-btn-primary"><x-icon name="plus" class="w-4 h-4" /> Isi Kesediaan</button>
                 @endif
+                @if(Route::has('dosen.undangan.index'))<a href="{{ route('dosen.undangan.index') }}" class="ui-btn-secondary"><x-icon name="mail" class="w-4 h-4" /> Undangan</a>@endif
                 @if(Route::has('dosen.jadwal.sempro'))<a href="{{ route('dosen.jadwal.sempro') }}" class="ui-btn-secondary"><x-icon name="document" class="w-4 h-4" /> Jadwal Sempro</a>@endif
                 @if(Route::has('dosen.jadwal.skripsi'))<a href="{{ route('dosen.jadwal.skripsi') }}" class="ui-btn-secondary"><x-icon name="academic" class="w-4 h-4" /> Jadwal Skripsi</a>@endif
                 @if(Route::has('dosen.kalender'))<a href="{{ route('dosen.kalender') }}" class="ui-btn-secondary"><x-icon name="calendar" class="w-4 h-4" /> Kalender</a>@endif

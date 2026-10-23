@@ -41,6 +41,9 @@ class CheckMenuPermission
             if ($routeName === 'dosen.sk.download') {
                 $checkRouteName = 'dosen.sk.index';
             }
+            if (str_starts_with($routeName, 'dosen.undangan.')) {
+                $checkRouteName = 'dosen.undangan.index';
+            }
 
             // Find if this route is defined in active system menus
             // If it is a menu, verify if user has access to it
