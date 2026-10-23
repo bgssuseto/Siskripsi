@@ -42,13 +42,7 @@
             height: 80px;
         }
 
-        .kop-surat .kop-logo-ti {
-            height: 56px;
-        }
 
-        .kop-surat .kop-logo-right {
-            text-align: right;
-        }
 
         .kop-surat .kop-univ {
             font-size: 14px;
@@ -234,8 +228,36 @@
         }
 
         .signature-col {
-            width: 260px;
+            width: 330px;
             text-align: center;
+            line-height: 1.4;
+        }
+
+        table.signature-block {
+            page-break-inside: avoid;
+        }
+
+        /* Kalimat penutup di samping tanda tangan supaya keduanya selalu satu halaman */
+        table.signature-block td.signature-closing {
+            padding-right: 32px;
+            text-align: justify;
+        }
+
+        .signature-qr {
+            margin: 5px 0 3px;
+            line-height: 0;
+        }
+
+        .signature-nidn {
+            margin-top: 1px;
+        }
+
+        .signature-note {
+            margin-top: 3px;
+            font-size: 7.5px;
+            font-style: italic;
+            color: #64748b;
+            white-space: nowrap;
         }
 
         .signature-space {
@@ -245,6 +267,7 @@
         .signature-name {
             font-weight: bold;
             text-decoration: underline;
+            white-space: nowrap;
         }
 
         /* ===================== FOOTER ===================== */
@@ -259,21 +282,16 @@
 </head>
 <body>
 
-    <!-- ============ KOP SURAT (LOGO UMK KIRI, LOGO TI KANAN) ============ -->
+    <!-- ============ KOP SURAT ============ -->
     <table class="kop-surat">
         <tr>
-            <td style="width: 50%;">
+            <td style="width: 100%;">
                 @if(!empty($kopBase64))
                     <img class="kop-logo-umk" src="{{ $kopBase64 }}" alt="Kop Surat UMK">
                 @else
                     <div class="kop-univ">Universitas Muria Kudus</div>
                     <div class="kop-prodi">Fakultas Teknik &mdash; Program Studi Teknik Informatika</div>
                     <div class="kop-alamat">Jln. Gondangmanis Bae Kudus PO BOX 53, Telp: 0291-438229, Fax: 0291-437198 &mdash; www.umk.ac.id &mdash; ti@umk.ac.id</div>
-                @endif
-            </td>
-            <td class="kop-logo-right" style="width: 50%;">
-                @if(!empty($logoTiBase64))
-                    <img class="kop-logo-ti" src="{{ $logoTiBase64 }}" alt="Logo Teknik Informatika UMK">
                 @endif
             </td>
         </tr>
@@ -421,39 +439,24 @@
         </table>
     </div>
 
-    <div class="letter-body">
-        <p style="margin-top: 6px;">
-            Demikian surat undangan ini kami sampaikan. Atas perhatian dan kesediaan Bapak/Ibu untuk hadir dan meluangkan waktu,
-            kami ucapkan terima kasih.
-        </p>
-    </div>
-
     <!-- ============ SIGNATURE BLOCK ============ -->
     <table class="signature-block">
         <tr>
-            <td></td>
+            <td class="signature-closing">Demikian surat undangan ini kami sampaikan. Atas perhatian dan kesediaan Bapak/Ibu untuk hadir dan meluangkan waktu, kami ucapkan terima kasih.</td>
             <td class="signature-col">
-                Mengetahui,<br>
-                Koordinator Skripsi/Tugas Akhir<br>
-                Program Studi Teknik Informatika
+                <div>Mengetahui,</div>
+                <div>Koordinator Skripsi/Tugas Akhir</div>
+                <div>Program Studi Teknik Informatika</div>
                 @if(!empty($qrTtd))
-                    {{-- QR (logo TI UMK sudah menyatu di gambar) di samping nama — ringkas supaya muat satu halaman. --}}
-                    <table style="width: auto; margin: 6px auto 0; border-collapse: collapse;">
-                        <tr>
-                            <td style="border: none; padding: 0 8px 0 0; vertical-align: middle;">
-                                <img src="{{ $qrTtd }}" width="64" height="64" alt="QR Tanda Tangan Elektronik" style="width: 64px; height: 64px; display: block;">
-                            </td>
-                            <td style="border: none; padding: 0; vertical-align: middle; text-align: left; font-size: 10.5px;">
-                                <div class="signature-name">{{ $koordinator->nama_dosen ?? '-' }}</div>
-                                <div>NIDN. {{ $koordinator->nidn ?? '-' }}</div>
-                                <div style="margin-top: 3px; font-size: 8px; font-style: italic; color: #555; line-height: 1.3;">Ditandatangani secara elektronik.<br>Pindai QR untuk verifikasi keaslian.</div>
-                            </td>
-                        </tr>
-                    </table>
+                    {{-- Tanda tangan elektronik: QR (logo TI UMK menyatu di gambar) di ruang tanda tangan --}}
+                    <div class="signature-qr"><img src="{{ $qrTtd }}" width="60" height="60" alt="QR Tanda Tangan Elektronik" style="width: 60px; height: 60px;"></div>
+                    <div class="signature-name">{{ $koordinator->nama_dosen ?? '-' }}</div>
+                    <div class="signature-nidn">NIDN. {{ $koordinator->nidn ?? '-' }}</div>
+                    <div class="signature-note">Ditandatangani secara elektronik &middot; pindai QR untuk verifikasi</div>
                 @else
                     <div class="signature-space"></div>
                     <div class="signature-name">{{ $koordinator->nama_dosen ?? '.....................................' }}</div>
-                    <div>NIDN. {{ $koordinator->nidn ?? '.....................................' }}</div>
+                    <div class="signature-nidn">NIDN. {{ $koordinator->nidn ?? '.....................................' }}</div>
                 @endif
             </td>
         </tr>

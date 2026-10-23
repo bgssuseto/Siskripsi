@@ -196,7 +196,6 @@ class AdministrasiController extends Controller
             'jenisUndangan' => $jenisUndangan,
             'koordinator'   => $koordinator,
             'kopBase64'     => $this->imageToBase64(public_path('images/kop_surat.png')),
-            'logoTiBase64'  => $this->imageToBase64(public_path('images/logo-ti-umk-icon.png')),
         ] + $this->tandaTanganUndangan($dosen, $koordinator, $jenisUndangan, $periode?->id, $namaPeriode, $selectedGelombang, $mySidangs);
     }
 
@@ -703,8 +702,6 @@ class AdministrasiController extends Controller
             $kopBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
         }
 
-        $logoTiBase64 = $this->imageToBase64(public_path('images/logo-ti-umk-icon.png'));
-
         foreach ($dosens as $dosen) {
             $mySidangs = $sidangs->filter(function ($s) use ($dosen) {
                 return $s->ketua_penguji_id == $dosen->id ||
@@ -722,7 +719,6 @@ class AdministrasiController extends Controller
                 'rekapSesi'     => $rekapSesi,
                 'sidangs'       => $mySidangs,
                 'kopBase64'     => $kopBase64,
-                'logoTiBase64'  => $logoTiBase64,
                 'totalUji'      => $mySidangs->count(),
                 'jenisUndangan' => $jenisUndangan,
                 'koordinator'   => $koordinator,

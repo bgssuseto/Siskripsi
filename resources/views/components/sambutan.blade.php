@@ -6,8 +6,9 @@
     'kosong'    => 'Belum ada agenda ujian terdekat.',
 ])
 @php
-    // Kartu sambutan dashboard dosen & mahasiswa: salam sesuai waktu, tanggal hari ini,
-    // agenda ujian terdekat (dengan hitung mundur), dan tombol akses cepat (slot $aksi).
+    // Kartu sambutan dashboard dosen & mahasiswa: kartu netral dengan aksen tipis,
+    // avatar, salam sesuai waktu, tombol akses cepat (slot $aksi), dan panel agenda
+    // ujian terdekat lengkap dengan hitung mundur.
     $sekarang = now()->timezone('Asia/Jakarta')->locale('id');
     $jam = (int) $sekarang->format('G');
     $salam = match (true) {
@@ -16,40 +17,59 @@
         $jam < 18 => 'Selamat sore',
         default   => 'Selamat malam',
     };
-    $namaDepan = trim(preg_replace('/^(dr\.?|prof\.?|ir\.?)\s+/i', '', explode(',', $nama)[0]));
+    $namaDepan = trim(preg_replace('/^((dr|prof|ir|drs|dra)\.?\s+)+/i', '', explode(',', $nama)[0]));
+    $inisial = collect(preg_split('/\s+/', $namaDepan))->filter()->take(2)
+        ->map(fn ($k) => mb_strtoupper(mb_substr($k, 0, 1)))->implode('');
+    $foto = auth()->user()?->foto_profil;
 
     $hitung = null;
     if ($agenda && !empty($agenda['tanggal'])) {
         $selisih = (int) $sekarang->copy()->startOfDay()->diffInDays(\Carbon\Carbon::parse($agenda['tanggal'])->startOfDay(), false);
         $hitung = match (true) {
-            $selisih <= 0 => ['Hari ini', 'bg-rose-500'],
-            $selisih === 1 => ['Besok', 'bg-amber-500'],
-            default => ['H-' . $selisih, $selisih <= 7 ? 'bg-amber-500' : 'bg-emerald-500'],
+            $selisih <= 0  => ['Hari ini', 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30'],
+            $selisih === 1 => ['Besok', 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30'],
+            $selisih <= 7  => ['H-' . $selisih, 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30'],
+            default        => ['H-' . $selisih, 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30'],
         };
     }
+    $jenisKelas = null;
+    if ($agenda && !empty($agenda['jenis'])) {
+        $j = strtolower($agenda['jenis']);
+        $jenisKelas = str_contains($j, 'proposal') || str_contains($j, 'sempro') ? 'cal-badge-sempro'
+            : (str_contains($j, 'jurnal') ? 'cal-badge-jurnal' : 'cal-badge-skripsi');
+    }
 @endphp
-<section {{ $attributes->merge(['class' => 'relative overflow-hidden rounded-3xl text-white shadow-xl shadow-indigo-900/10 mb-6']) }}
-         style="background: linear-gradient(120deg, #4338ca 0%, #6d28d9 55%, #7c3aed 100%);">
-    {{-- ornamen lembut --}}
-    <span aria-hidden="true" class="pointer-events-none absolute -top-24 -right-16 w-72 h-72 rounded-full" style="background: radial-gradient(circle, rgba(255,255,255,.18), transparent 65%);"></span>
-    <span aria-hidden="true" class="pointer-events-none absolute -bottom-28 left-1/3 w-80 h-80 rounded-full" style="background: radial-gradient(circle, rgba(56,189,248,.22), transparent 65%);"></span>
-    <svg aria-hidden="true" class="pointer-events-none absolute inset-0 w-full h-full opacity-[.07]"><defs><pattern id="titik-sambutan" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="#fff"/></pattern></defs><rect width="100%" height="100%" fill="url(#titik-sambutan)"/></svg>
+<section {{ $attributes->merge(['class' => 'relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 mb-6']) }}>
+    {{-- aksen: garis tipis di atas, cahaya lembut & pola titik samar di kanan --}}
+    <span aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-sky-400"></span>
+    <span aria-hidden="true" class="pointer-events-none absolute -top-28 -right-20 h-72 w-72 rounded-full bg-indigo-400/15 blur-3xl dark:bg-indigo-500/15"></span>
+    <span aria-hidden="true" class="pointer-events-none absolute inset-0 text-slate-300 dark:text-slate-700"
+          style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 18px 18px; -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,.55), transparent 55%); mask-image: linear-gradient(to left, rgba(0,0,0,.55), transparent 55%);"></span>
 
-    <div class="relative p-5 sm:p-7 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-5 lg:gap-8 items-center">
+    <div class="relative grid grid-cols-1 gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-center lg:gap-10">
         <div class="min-w-0">
-            <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full" style="background: rgba(255,255,255,.14);">
-                    <x-icon name="calendar" class="w-3.5 h-3.5" /> {{ $sekarang->translatedFormat('l, j F Y') }}
-                </span>
-                @if($peran)
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full" style="background: rgba(255,255,255,.14);">{{ $peran }}</span>
+            <div class="flex items-center gap-4">
+                @if($foto)
+                    <img src="{{ asset($foto) }}" alt="" class="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-2xl object-cover ring-4 ring-indigo-50 dark:ring-indigo-500/10">
+                @else
+                    <span class="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-base sm:text-lg font-bold text-white shadow-md shadow-indigo-500/20 ring-4 ring-indigo-50 dark:ring-indigo-500/10">{{ $inisial ?: '?' }}</span>
                 @endif
+                <div class="min-w-0">
+                    <p class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                        <span class="inline-flex items-center gap-1.5"><x-icon name="calendar" class="h-3.5 w-3.5" /> {{ $sekarang->translatedFormat('l, j F Y') }}</span>
+                        @if($peran)
+                            <span aria-hidden="true" class="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                            <span class="font-semibold text-indigo-600 dark:text-indigo-400">{{ $peran }}</span>
+                        @endif
+                    </p>
+                    <h1 class="mt-1 text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl dark:text-white">
+                        {{ $salam }}, <span class="text-indigo-600 dark:text-indigo-400">{{ $namaDepan }}</span>
+                    </h1>
+                </div>
             </div>
-            <h1 class="mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
-                {{ $salam }}, <span class="whitespace-nowrap">{{ $namaDepan }}</span> 👋
-            </h1>
+
             @if($subjudul)
-                <p class="mt-1.5 text-sm leading-relaxed max-w-2xl" style="color: rgba(238,242,255,.85);">{{ $subjudul }}</p>
+                <p class="mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ $subjudul }}</p>
             @endif
 
             @isset($aksi)
@@ -57,47 +77,50 @@
             @endisset
         </div>
 
-        {{-- Agenda terdekat --}}
-        <div class="rounded-2xl p-4 sm:p-5 ring-1 backdrop-blur-sm" style="background: rgba(255,255,255,.12); --tw-ring-color: rgba(255,255,255,.2);">
-            <div class="flex items-center justify-between gap-2">
-                <p class="text-[11px] font-extrabold uppercase tracking-[0.14em]" style="color: rgba(224,231,255,.9);">Agenda terdekat</p>
+        {{-- Panel agenda terdekat --}}
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-700/70 dark:bg-slate-800/40">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-2.5 dark:border-slate-700/70">
+                <p class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <x-icon name="clock" class="h-3.5 w-3.5" /> Agenda terdekat
+                </p>
                 @if($hitung)
-                    <span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold text-white {{ $hitung[1] }}">{{ $hitung[0] }}</span>
+                    <span class="rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ring-inset {{ $hitung[1] }}">{{ $hitung[0] }}</span>
                 @endif
             </div>
+
             @if($agenda)
-                <div class="mt-3 flex items-start gap-3">
+                <div class="flex items-start gap-3.5 p-4">
                     @if(!empty($agenda['tanggal']))
                         @php $tgl = \Carbon\Carbon::parse($agenda['tanggal'])->locale('id'); @endphp
-                        <div class="w-14 shrink-0 rounded-xl text-center overflow-hidden shadow-md" style="background:#fff;">
-                            <div class="text-[10px] font-extrabold uppercase py-0.5 text-white bg-rose-500">{{ $tgl->translatedFormat('M') }}</div>
-                            <div class="text-xl font-extrabold leading-tight pt-1" style="color:#1e1b4b;">{{ $tgl->format('j') }}</div>
-                            <div class="text-[10px] font-bold pb-1" style="color:#64748b;">{{ $tgl->translatedFormat('D') }}</div>
+                        <div class="w-14 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                            <div class="bg-rose-500 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{{ $tgl->translatedFormat('M') }}</div>
+                            <div class="pt-1 text-xl font-bold leading-tight text-slate-900 dark:text-white">{{ $tgl->format('j') }}</div>
+                            <div class="pb-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400">{{ $tgl->translatedFormat('D') }}</div>
                         </div>
                     @endif
-                    <div class="min-w-0">
-                        @if(!empty($agenda['jenis']))
-                            <span class="inline-block px-1.5 py-px rounded text-[10px] font-extrabold uppercase tracking-wide" style="background: rgba(255,255,255,.18);">{{ $agenda['jenis'] }}</span>
+                    <div class="min-w-0 flex-1">
+                        @if($jenisKelas)
+                            <span class="cal-badge cal-badge-xs {{ $jenisKelas }}">{{ $agenda['jenis'] }}</span>
                         @endif
-                        <p class="mt-1 text-sm font-extrabold leading-snug break-words">{{ $agenda['judul'] }}</p>
+                        <p class="mt-1.5 break-words text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ $agenda['judul'] }}</p>
                         @if(!empty($agenda['sub']))
-                            <p class="text-[11px] leading-snug line-clamp-2" style="color: rgba(224,231,255,.8);">{{ $agenda['sub'] }}</p>
+                            <p class="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500 dark:text-slate-400">{{ $agenda['sub'] }}</p>
                         @endif
-                        <p class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold" style="color: rgba(238,242,255,.92);">
-                            @if(!empty($agenda['jam']))<span class="inline-flex items-center gap-1"><x-icon name="clock" class="w-3.5 h-3.5" /> {{ $agenda['jam'] }}</span>@endif
-                            @if(!empty($agenda['ruang']))<span class="inline-flex items-center gap-1"><x-icon name="map-pin" class="w-3.5 h-3.5" /> {{ $agenda['ruang'] }}</span>@endif
+                        <p class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                            @if(!empty($agenda['jam']))<span class="inline-flex items-center gap-1"><x-icon name="clock" class="h-3.5 w-3.5 text-slate-400" /> {{ $agenda['jam'] }}</span>@endif
+                            @if(!empty($agenda['ruang']))<span class="inline-flex items-center gap-1"><x-icon name="map-pin" class="h-3.5 w-3.5 text-slate-400" /> Ruang {{ $agenda['ruang'] }}</span>@endif
                         </p>
                     </div>
                 </div>
                 @if(!empty($agenda['url']))
-                    <a href="{{ $agenda['url'] }}" class="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-white/90 hover:text-white">
-                        Lihat detail <x-icon name="arrow-right" class="w-3.5 h-3.5" />
+                    <a href="{{ $agenda['url'] }}" class="flex items-center justify-between border-t border-slate-200 px-4 py-2.5 text-xs font-semibold text-indigo-600 transition hover:bg-white dark:border-slate-700/70 dark:text-indigo-400 dark:hover:bg-slate-800">
+                        Lihat detail jadwal <x-icon name="arrow-right" class="h-3.5 w-3.5" />
                     </a>
                 @endif
             @else
-                <div class="mt-3 flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: rgba(255,255,255,.16);"><x-icon name="sparkles" class="w-5 h-5" /></span>
-                    <p class="text-sm leading-snug" style="color: rgba(238,242,255,.9);">{{ $kosong }}</p>
+                <div class="flex items-center gap-3 p-4">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-500 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-indigo-400 dark:ring-slate-700"><x-icon name="calendar" class="h-5 w-5" /></span>
+                    <p class="text-sm leading-snug text-slate-600 dark:text-slate-400">{{ $kosong }}</p>
                 </div>
             @endif
         </div>

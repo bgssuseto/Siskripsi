@@ -43,15 +43,15 @@
         @endphp
         <x-sambutan :nama="Auth::user()->name" peran="Dosen"
                     :subjudul="$jumlahMingguIni ? 'Anda memiliki ' . $jumlahMingguIni . ' jadwal ujian dalam 7 hari ke depan. Semangat menguji!' : 'Pantau jadwal menguji, mahasiswa bimbingan, dan isi kesediaan menguji Anda dari sini.'"
-                    :agenda="$agendaSambutan" kosong="Belum ada jadwal ujian yang akan datang. Waktunya rehat sejenak ☕">
+                    :agenda="$agendaSambutan" kosong="Belum ada jadwal ujian yang akan datang. Waktunya rehat sejenak.">
             <x-slot:aksi>
                 @if($showFormKesediaan && !$isLockedKesediaan)
-                    <button type="button" @click="openModal()" class="ui-btn-terang"><x-icon name="plus" class="w-4 h-4" /> Isi Kesediaan</button>
+                    <button type="button" @click="openModal()" class="ui-btn-primary"><x-icon name="plus" class="w-4 h-4" /> Isi Kesediaan</button>
                 @endif
-                @if(Route::has('dosen.jadwal.sempro'))<a href="{{ route('dosen.jadwal.sempro') }}" class="ui-btn-kaca"><x-icon name="document" class="w-4 h-4" /> Jadwal Sempro</a>@endif
-                @if(Route::has('dosen.jadwal.skripsi'))<a href="{{ route('dosen.jadwal.skripsi') }}" class="ui-btn-kaca"><x-icon name="academic" class="w-4 h-4" /> Jadwal Skripsi</a>@endif
-                @if(Route::has('dosen.kalender'))<a href="{{ route('dosen.kalender') }}" class="ui-btn-kaca"><x-icon name="calendar" class="w-4 h-4" /> Kalender</a>@endif
-                @if(Route::has('dosen.sk.index'))<a href="{{ route('dosen.sk.index') }}" class="ui-btn-kaca"><x-icon name="badge-check" class="w-4 h-4" /> SK</a>@endif
+                @if(Route::has('dosen.jadwal.sempro'))<a href="{{ route('dosen.jadwal.sempro') }}" class="ui-btn-secondary"><x-icon name="document" class="w-4 h-4" /> Jadwal Sempro</a>@endif
+                @if(Route::has('dosen.jadwal.skripsi'))<a href="{{ route('dosen.jadwal.skripsi') }}" class="ui-btn-secondary"><x-icon name="academic" class="w-4 h-4" /> Jadwal Skripsi</a>@endif
+                @if(Route::has('dosen.kalender'))<a href="{{ route('dosen.kalender') }}" class="ui-btn-secondary"><x-icon name="calendar" class="w-4 h-4" /> Kalender</a>@endif
+                @if(Route::has('dosen.sk.index'))<a href="{{ route('dosen.sk.index') }}" class="ui-btn-secondary"><x-icon name="badge-check" class="w-4 h-4" /> SK</a>@endif
             </x-slot:aksi>
         </x-sambutan>
 

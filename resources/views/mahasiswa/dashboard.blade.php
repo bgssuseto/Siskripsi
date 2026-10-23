@@ -20,13 +20,13 @@
         ] : null;
     @endphp
     <x-sambutan :nama="$user->name" :peran="'Mahasiswa' . ($user->nim ? ' · ' . $user->nim : '')"
-                subjudul="Pantau progres tugas akhir Anda dari pendaftaran sampai kelulusan. Satu langkah lagi menuju toga! 🎓"
+                subjudul="Pantau progres tugas akhir Anda dari pendaftaran sampai kelulusan. Satu langkah lagi menuju toga!"
                 :agenda="$agendaSambutan" kosong="Belum ada jadwal ujian. Lengkapi pendaftaran Anda dan pantau progresnya di bawah.">
         <x-slot:aksi>
-            @if(Route::has('mahasiswa.sempro.index'))<a href="{{ route('mahasiswa.sempro.index') }}" class="ui-btn-terang"><x-icon name="document-add" class="w-4 h-4" /> Pendaftaran Sempro</a>@endif
-            @if(Route::has('mahasiswa.skripsi.index'))<a href="{{ route('mahasiswa.skripsi.index') }}" class="ui-btn-kaca"><x-icon name="academic" class="w-4 h-4" /> Pendaftaran Skripsi</a>@endif
-            @if(Route::has('mahasiswa.jadwal.sempro'))<a href="{{ route('mahasiswa.jadwal.sempro') }}" class="ui-btn-kaca"><x-icon name="calendar" class="w-4 h-4" /> Jadwal Ujian</a>@endif
-            @if(Route::has('mahasiswa.bebas-prodi.index'))<a href="{{ route('mahasiswa.bebas-prodi.index') }}" class="ui-btn-kaca"><x-icon name="badge-check" class="w-4 h-4" /> Bebas Prodi</a>@endif
+            @if(Route::has('mahasiswa.sempro.index'))<a href="{{ route('mahasiswa.sempro.index') }}" class="ui-btn-primary"><x-icon name="document-add" class="w-4 h-4" /> Pendaftaran Sempro</a>@endif
+            @if(Route::has('mahasiswa.skripsi.index'))<a href="{{ route('mahasiswa.skripsi.index') }}" class="ui-btn-secondary"><x-icon name="academic" class="w-4 h-4" /> Pendaftaran Skripsi</a>@endif
+            @if(Route::has('mahasiswa.jadwal.sempro'))<a href="{{ route('mahasiswa.jadwal.sempro') }}" class="ui-btn-secondary"><x-icon name="calendar" class="w-4 h-4" /> Jadwal Ujian</a>@endif
+            @if(Route::has('mahasiswa.bebas-prodi.index'))<a href="{{ route('mahasiswa.bebas-prodi.index') }}" class="ui-btn-secondary"><x-icon name="badge-check" class="w-4 h-4" /> Bebas Prodi</a>@endif
         </x-slot:aksi>
     </x-sambutan>
 

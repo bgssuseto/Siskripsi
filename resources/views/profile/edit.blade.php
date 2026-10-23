@@ -2,18 +2,22 @@
 @php
     $isDosen = $user->isDosen();
     $isMahasiswa = $user->isMahasiswa();
-    $inisial = collect(preg_split('/\s+/', trim($user->name ?? 'U')))->filter()->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode('');
+    // Inisial dari nama tanpa gelar depan (Dr., Prof., Ir., ...) dan gelar belakang.
+    $namaInti = trim(preg_replace('/^((dr|prof|ir|drs|dra)\.?\s+)+/i', '', explode(',', $user->name ?? 'U')[0]));
+    $inisial = collect(preg_split('/\s+/', $namaInti))->filter()->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode('') ?: 'U';
 
+    // [gradien aksen, deskripsi peran, kelas chip peran, kelas cahaya]
     $roleTheme = match (true) {
-        $user->isSuperAdmin()  => ['from-violet-600 to-indigo-600', 'Mengelola seluruh data, penjadwalan, administrasi, dan hak akses sistem.'],
-        $user->isKoordinator() => ['from-sky-600 to-indigo-600', 'Mengelola pendaftaran, penjadwalan, dan administrasi sesuai menu yang diberikan.'],
-        $isDosen               => ['from-amber-500 to-orange-600', 'Membimbing dan menguji Seminar Proposal serta Sidang Skripsi.'],
-        default                => ['from-emerald-500 to-teal-600', 'Mendaftar dan mengikuti Seminar Proposal serta Sidang Skripsi.'],
+        $user->isSuperAdmin()  => ['from-violet-600 to-indigo-600', 'Mengelola seluruh data, penjadwalan, administrasi, dan hak akses sistem.', 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/30', 'bg-violet-400/15'],
+        $user->isKoordinator() => ['from-sky-600 to-indigo-600', 'Mengelola pendaftaran, penjadwalan, dan administrasi sesuai menu yang diberikan.', 'bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/30', 'bg-sky-400/15'],
+        $isDosen               => ['from-amber-500 to-orange-600', 'Membimbing dan menguji Seminar Proposal serta Sidang Skripsi.', 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30', 'bg-amber-400/15'],
+        default                => ['from-emerald-500 to-teal-600', 'Mendaftar dan mengikuti Seminar Proposal serta Sidang Skripsi.', 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30', 'bg-emerald-400/15'],
     };
+    $chip = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ring-inset';
 
     $input = 'w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 transition';
     $label = 'block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5';
-    $card  = 'bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm';
+    $card  = 'bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm';
 
     $statusTa = function ($s) {
         if (!$s) return ['Belum mendaftar', 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'];
@@ -36,46 +40,59 @@
      }">
 
     {{-- ═══════════════ Kartu identitas ═══════════════ --}}
-    <section class="{{ $card }} overflow-hidden">
-        <div class="h-28 sm:h-32 bg-gradient-to-r {{ $roleTheme[0] }} relative">
-            <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 20% 20%, #fff 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff 0 1.5px, transparent 2.5px); background-size: 46px 46px, 64px 64px;"></div>
-        </div>
-        <div class="px-5 sm:px-8 pb-6">
-            <div class="relative flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
-                <div class="relative shrink-0 self-start -mt-12 sm:-mt-14">
+    <section class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <span aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r {{ $roleTheme[0] }}"></span>
+        <span aria-hidden="true" class="pointer-events-none absolute -top-28 -right-20 h-72 w-72 rounded-full blur-3xl {{ $roleTheme[3] }}"></span>
+        <span aria-hidden="true" class="pointer-events-none absolute inset-0 text-slate-300 dark:text-slate-700"
+              style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 18px 18px; -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,.55), transparent 55%); mask-image: linear-gradient(to left, rgba(0,0,0,.55), transparent 55%);"></span>
+
+        <div class="relative grid grid-cols-1 gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center">
+                <div class="relative shrink-0 self-start sm:self-center">
                     <template x-if="preview">
-                        <img :src="preview" alt="{{ $user->name }}" class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover ring-4 ring-white dark:ring-slate-900 shadow-lg bg-white">
+                        <img :src="preview" alt="{{ $user->name }}" class="h-24 w-24 rounded-2xl object-cover bg-white shadow-md ring-4 ring-slate-100 dark:ring-slate-800">
                     </template>
                     <template x-if="!preview">
-                        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl ring-4 ring-white dark:ring-slate-900 shadow-lg bg-gradient-to-br {{ $roleTheme[0] }} text-white flex items-center justify-center text-3xl font-black tracking-tight">{{ $inisial }}</div>
+                        <div class="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br {{ $roleTheme[0] }} text-3xl font-bold tracking-tight text-white shadow-md ring-4 ring-slate-100 dark:ring-slate-800">{{ $inisial }}</div>
                     </template>
                     <label for="foto_profil" title="Ganti foto profil"
-                           class="absolute -bottom-1 -right-1 w-9 h-9 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-md ring-1 ring-slate-200 dark:ring-slate-700 flex items-center justify-center cursor-pointer hover:text-indigo-600 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.66-.9l.82-1.2A2 2 0 0110.07 4h3.86a2 2 0 011.66.9l.82 1.2a2 2 0 001.66.9H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                           class="absolute -bottom-1.5 -right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl bg-white text-slate-600 shadow-md ring-1 ring-slate-200 transition hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.66-.9l.82-1.2A2 2 0 0110.07 4h3.86a2 2 0 011.66.9l.82 1.2a2 2 0 001.66.9H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </label>
                 </div>
 
-                <div class="min-w-0 flex-1 sm:pt-4">
-                    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 break-words">{{ $user->name }}</h1>
-                    <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400 break-all">{{ $user->email }}</p>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Profil Saya</p>
+                    <h1 class="mt-0.5 break-words text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-white">{{ $user->name }}</h1>
+                    <p class="mt-1 flex items-center gap-1.5 break-all text-sm text-slate-500 dark:text-slate-400"><x-icon name="mail" class="h-4 w-4 shrink-0 text-slate-400" /> {{ $user->email }}</p>
                     <div class="mt-3 flex flex-wrap items-center gap-2">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold text-white bg-gradient-to-r {{ $roleTheme[0] }} shadow-sm">
-                            <span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>{{ $user->role_label }}
-                        </span>
+                        <span class="{{ $chip }} {{ $roleTheme[2] }}"><x-icon name="shield" class="h-3.5 w-3.5" /> {{ $user->role_label }}</span>
                         @if($isMahasiswa && $user->nim)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">NIM <span class="ml-1.5 font-mono">{{ $user->nim }}</span></span>
+                            <span class="{{ $chip }} bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">NIM <span class="font-mono">{{ $user->nim }}</span></span>
                         @endif
                         @if($isDosen && $dosen)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">NIDN <span class="ml-1.5 font-mono">{{ $dosen->nidn }}</span></span>
+                            <span class="{{ $chip }} bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">NIDN <span class="font-mono">{{ $dosen->nidn }}</span></span>
                             @if($dosen->jabatan_fungsional)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 ring-1 ring-inset ring-amber-200 dark:ring-amber-500/30">{{ $dosen->jabatan_fungsional }}</span>
+                                <span class="{{ $chip }} bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"><x-icon name="academic" class="h-3.5 w-3.5 text-slate-400" /> {{ $dosen->jabatan_fungsional }}</span>
                             @endif
                         @endif
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Akun aktif</span>
+                        <span class="{{ $chip }} bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Akun aktif</span>
                     </div>
+                    <p class="mt-3 text-sm text-slate-600 dark:text-slate-400">{{ $roleTheme[1] }}</p>
                 </div>
             </div>
-            <p class="mt-4 text-xs text-slate-500 dark:text-slate-400">{{ $roleTheme[1] }}</p>
+
+            {{-- Info singkat akun --}}
+            <dl class="grid grid-cols-2 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/80 text-center lg:w-72 dark:border-slate-700/70 dark:bg-slate-800/40">
+                <div class="border-r border-slate-200 px-4 py-3 dark:border-slate-700/70">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Bergabung</dt>
+                    <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $user->created_at ? $user->created_at->locale('id')->translatedFormat('j M Y') : '—' }}</dd>
+                </div>
+                <div class="px-4 py-3">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">WhatsApp</dt>
+                    <dd class="mt-1 text-sm font-semibold {{ $user->no_hp ? 'text-slate-900 dark:text-slate-100' : 'text-amber-600 dark:text-amber-400' }}">{{ $user->no_hp ?: 'Belum diisi' }}</dd>
+                </div>
+            </dl>
         </div>
     </section>
 
@@ -168,22 +185,32 @@
                 </div>
             @else
                 <div class="{{ $card }} p-5 sm:p-6">
-                    <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100 mb-3">Hak Akses</h2>
-                    <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">{{ $roleTheme[1] }}</p>
+                    <div class="flex items-center justify-between gap-2 mb-4">
+                        <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Hak Akses</h2>
+                        <span class="{{ $chip }} {{ $roleTheme[2] }} !text-[10px] !px-2 !py-0.5">{{ $user->isSuperAdmin() ? 'Akses penuh' : 'Sesuai pengaturan' }}</span>
+                    </div>
+                    <ul class="space-y-2.5">
+                        @foreach([
+                            ['users', 'Pengguna, menu & hak akses', $user->isSuperAdmin()],
+                            ['database', 'Data master dosen, ruang & periode', true],
+                            ['clipboard-list', 'Pendaftaran & verifikasi berkas', true],
+                            ['calendar', 'Penjadwalan Sempro & Skripsi', true],
+                            ['printer', 'Berita acara, undangan & SK', true],
+                        ] as [$ikon, $teks, $tampil])
+                            @if($tampil)
+                                <li class="flex items-center gap-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"><x-icon :name="$ikon" class="h-3.5 w-3.5" /></span>
+                                    {{ $teks }}
+                                </li>
+                            @endif
+                        @endforeach
+                    </ul>
                     @if($user->isKoordinator())
-                        <p class="mt-3 text-[11px] text-slate-500 dark:text-slate-400">Menu yang dapat Anda buka diatur oleh Super Admin melalui Manajemen Menu.</p>
+                        <p class="mt-4 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Menu yang dapat Anda buka diatur oleh Super Admin melalui Manajemen Menu.</p>
                     @endif
                 </div>
             @endif
 
-            <div class="{{ $card }} p-5 sm:p-6">
-                <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100 mb-3">Informasi Akun</h2>
-                <dl class="space-y-2.5 text-xs">
-                    <div class="flex justify-between gap-3"><dt class="text-slate-500 dark:text-slate-400 font-semibold">Terdaftar sejak</dt><dd class="font-bold text-slate-800 dark:text-slate-100">{{ optional($user->created_at)->locale('id')->translatedFormat('j F Y') ?? '—' }}</dd></div>
-                    <div class="flex justify-between gap-3"><dt class="text-slate-500 dark:text-slate-400 font-semibold">Terakhir diperbarui</dt><dd class="font-bold text-slate-800 dark:text-slate-100">{{ optional($user->updated_at)->locale('id')->diffForHumans() ?? '—' }}</dd></div>
-                    <div class="flex justify-between gap-3"><dt class="text-slate-500 dark:text-slate-400 font-semibold">No. WhatsApp</dt><dd class="font-bold text-slate-800 dark:text-slate-100">{{ $user->no_hp ?: '—' }}</dd></div>
-                </dl>
-            </div>
         </aside>
 
         {{-- ═══════════════ Form ═══════════════ --}}
