@@ -26,6 +26,7 @@ use App\Http\Controllers\DosenPortalController;
 use App\Http\Controllers\KesediaanDosenController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\AnalitikController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AutoScheduleController;
 use App\Http\Controllers\BebasProdiController;
@@ -85,105 +86,7 @@ Route::middleware('auth')->group(function () {
     // Berkas pengajuan Bebas Prodi (pemilik atau admin/koordinator — dicek di controller)
     Route::get('/bebas-prodi/{bebasProdi}/berkas', [BebasProdiController::class, 'berkas'])->name('bebas-prodi.berkas');
 
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        if ($user) {
-            if ($user->isDosen()) {
-                return redirect()->route('dosen.dashboard');
-            }
-            if ($user->isMahasiswa()) {
-                return redirect()->route('mahasiswa.dashboard');
-            }
-        }
-
-        // Real Data Metrics
-        $totalMahasiswa     = \App\Models\Sidang::distinct('nim')->count('nim');
-        $totalSempro        = \App\Models\Sidang::where('jenis_tugas_akhir', 'sempro')->count();
-        $totalSkripsi       = \App\Models\Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count();
-        
-        $totalBelumPlotting = \App\Models\Sidang::whereNull('tanggal')->count();
-        $totalTerjadwal     = \App\Models\Sidang::whereNotNull('tanggal')->count();
-        
-        $verifikasiMenunggu  = \App\Models\Sidang::where(function($q) {
-                                  $q->where('verifikasi_status', 'menunggu')
-                                    ->orWhereNull('verifikasi_status');
-                              })->count();
-        $verifikasiDisetujui = \App\Models\Sidang::where('verifikasi_status', 'disetujui')->count();
-        $verifikasiDitolak   = \App\Models\Sidang::where('verifikasi_status', 'ditolak')->count();
-        
-        $totalDosen = \App\Models\Dosen::count();
-        $totalRuang = \App\Models\Ruang::count();
-        $totalUser  = \App\Models\User::count();
-
-        // Chart Data 1: Jalur Tugas Akhir — Sempro vs Skripsi, masing-masing dipecah Reguler vs Jurnal
-        $skripsiRegulerCount = \App\Models\Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang'])->count();
-        $artikelJurnalCount  = \App\Models\Sidang::where('jenis_tugas_akhir', 'jurnal')->count();
-        $semproCount         = \App\Models\Sidang::where('jenis_tugas_akhir', 'sempro')->count();
-
-        $semproRegulerCount = \App\Models\Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->count();
-        $semproJurnalCount  = \App\Models\Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->count();
-        $semproBelumJalurCount = \App\Models\Sidang::where('jenis_tugas_akhir', 'sempro')->whereNull('jalur_ta')->count();
-
-        $jalurCounts = [
-            'Sidang Skripsi (Reguler)' => $skripsiRegulerCount,
-            'Artikel Jurnal'           => $artikelJurnalCount,
-            'Seminar Proposal'         => $semproCount,
-        ];
-
-        // Chart Data 2: Status Verifikasi
-        $verifikasiCounts = [
-            'Menunggu'  => $verifikasiMenunggu,
-            'Disetujui' => $verifikasiDisetujui,
-            'Ditolak'   => $verifikasiDitolak,
-        ];
-
-        // Chart Data 3: Histogram Lulusan Tiap Tahun
-        $yearlyGraduates = \App\Models\Sidang::selectRaw('YEAR(tanggal) as tahun, COUNT(*) as total')
-            ->whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])
-            ->whereNotNull('tanggal')
-            ->where('tanggal', '<=', now()->timezone('Asia/Jakarta')->format('Y-m-d'))
-            ->groupBy('tahun')
-            ->orderBy('tahun', 'asc')
-            ->get();
-
-        if ($yearlyGraduates->isEmpty()) {
-            $currYr = (int) date('Y');
-            $yearlyGraduates = collect([
-                (object)['tahun' => $currYr - 2, 'total' => 0],
-                (object)['tahun' => $currYr - 1, 'total' => 0],
-                (object)['tahun' => $currYr,     'total' => \App\Models\Sidang::whereIn('jenis_tugas_akhir', ['skripsi', 'sidang', 'jurnal'])->count()],
-            ]);
-        }
-
-        $recentActivities = \App\Models\Sidang::with(['periode', 'ruang', 'pembimbingUtama'])
-            ->latest('id')
-            ->take(6)
-            ->get();
-
-        return view('dashboard', compact(
-            'totalMahasiswa',
-            'totalSempro',
-            'totalSkripsi',
-            'totalBelumPlotting',
-            'totalTerjadwal',
-            'verifikasiMenunggu',
-            'verifikasiDisetujui',
-            'verifikasiDitolak',
-            'totalDosen',
-            'totalRuang',
-            'totalUser',
-            'skripsiRegulerCount',
-            'artikelJurnalCount',
-            'semproCount',
-            'semproRegulerCount',
-            'semproJurnalCount',
-            'semproBelumJalurCount',
-            'jalurCounts',
-            'verifikasiCounts',
-            'yearlyGraduates',
-            'recentActivities'
-        ));
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
