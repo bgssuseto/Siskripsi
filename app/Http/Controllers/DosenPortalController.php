@@ -952,10 +952,11 @@ class DosenPortalController extends Controller
         $id = $dosen->id;
         $hariIni = now()->timezone('Asia/Jakarta')->startOfDay();
 
-        $sidangs = Sidang::with('periode')
+        $sidangs = Sidang::with(['periode', 'ruang', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'pembimbingUtama', 'pembimbingPendamping'])
             ->whereNotNull('periode_id')
             ->where(fn ($q) => $q->where('ketua_penguji_id', $id)->orWhere('anggota_penguji_1_id', $id)->orWhere('anggota_penguji_2_id', $id))
-            ->get(['id', 'periode_id', 'jenis_tugas_akhir', 'gelombang', 'tanggal']);
+            ->orderBy('tanggal')->orderBy('jam')
+            ->get();
 
         // Gelombang yang sedang berjalan per jenis = gelombang terakhir yang sudah dibuka pada periode aktif.
         $periodeAktif = Periode::where('aktif', true)->first();
@@ -997,6 +998,9 @@ class DosenPortalController extends Controller
                     'mulai'           => $tanggal->first(),
                     'selesai'         => $tanggal->last(),
                     'berjalan'        => $berjalan,
+                    // Rincian jadwal (seperti link publik dosen): per hari, urut jam.
+                    'sidangs'         => $grup->sortBy(fn ($x) => ($x->tanggal ? \Carbon\Carbon::parse($x->tanggal)->format('Ymd') : '99999999') . ($x->jam ?? ''))->values(),
+                    'selesai_semua'   => $tanggal->isNotEmpty() && $tanggal->last()->lt($hariIni) && $tanggal->count() === $grup->count(),
                 ];
             })
             ->values();
