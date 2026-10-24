@@ -19,8 +19,9 @@ class DokumenController extends Controller
     {
         $user = Auth::user();
 
-        $isOwner = $user->isMahasiswa() && $user->nim === $sidang->nim;
-        $isStaff = $user->isSuperAdmin() || $user->isKoordinator();
+        $isOwner = $user->isMahasiswa() && filled($user->nim) && $user->nim === $sidang->nim;
+        // Koordinator bisa berupa role utama maupun role tambahan pada akun dosen.
+        $isStaff = $user->hasRole([\App\Models\User::ROLE_SUPER_ADMIN, \App\Models\User::ROLE_KOORDINATOR]);
 
         abort_unless($isOwner || $isStaff, 403);
 

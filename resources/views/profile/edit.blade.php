@@ -251,7 +251,13 @@
                         @if($isMahasiswa)
                             <div>
                                 <label for="nim" class="{{ $label }}">NIM</label>
-                                <input type="text" id="nim" name="nim" value="{{ old('nim', $user->nim) }}" class="{{ $input }} font-mono" placeholder="202251xxx">
+                                @if(filled($user->nim))
+                                    <input type="text" id="nim" value="{{ $user->nim }}" class="{{ $input }} font-mono bg-slate-100 dark:bg-slate-800 cursor-not-allowed" readonly aria-readonly="true">
+                                    <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">NIM terkunci karena menjadi kunci data pendaftaran Anda. Hubungi admin bila ada kesalahan.</p>
+                                @else
+                                    <input type="text" id="nim" name="nim" value="{{ old('nim') }}" class="{{ $input }} font-mono" placeholder="202251xxx">
+                                    <p class="mt-1 text-[11px] text-amber-600 dark:text-amber-400">Isi NIM dengan benar — setelah disimpan tidak bisa diubah sendiri.</p>
+                                @endif
                                 @error('nim')<p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>@enderror
                             </div>
                         @elseif($isDosen && $dosen)

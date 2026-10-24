@@ -22,8 +22,6 @@ class MahasiswaController extends Controller
     private function getStudentSidangs($user): Collection
     {
         $nim  = $user->nim ?? null;
-        $name = $user->name ?? null;
-
         $query = Sidang::with([
             'pembimbingUtama',
             'pembimbingPendamping',
@@ -34,13 +32,10 @@ class MahasiswaController extends Controller
             'periode'
         ]);
 
+        // Data hanya dicocokkan lewat NIM. Pencocokan nama dihapus: nama bisa diubah
+        // sendiri di profil sehingga bisa dipakai membuka data mahasiswa lain.
         if ($nim) {
-            // NIM is the reliable identifier — never widen this with a fuzzy name
-            // match, which could pull in another student's records if names overlap.
             return $query->where('nim', $nim)->orderByDesc('id')->get();
-        } elseif ($name) {
-            // No NIM on file yet: fall back to an exact (not substring) name match.
-            return $query->where('nama_mahasiswa', $name)->orderByDesc('id')->get();
         }
 
         return collect();
@@ -55,9 +50,7 @@ class MahasiswaController extends Controller
      */
     private function ownsSidang(Sidang $sidang, $user): bool
     {
-        return $user->nim
-            ? $sidang->nim === $user->nim
-            : $sidang->nama_mahasiswa === $user->name;
+        return filled($user->nim) && $sidang->nim === $user->nim;
     }
 
     /**
@@ -407,7 +400,8 @@ class MahasiswaController extends Controller
 
             // Save new file
             $file = $request->file('file_persyaratan');
-            $fileName = time() . '_' . $validated['nim'] . '_' . $validated['jenis_tugas_akhir'] . '.pdf';
+            // Nama acak (tidak bisa ditebak) — berkas berisi data pribadi mahasiswa.
+            $fileName = $validated['jenis_tugas_akhir'] . '_' . \Illuminate\Support\Str::random(40) . '.pdf';
             $file->move($uploadDir, $fileName);
             $filePath = 'uploads/persyaratan/' . $fileName;
         }
@@ -528,7 +522,7 @@ class MahasiswaController extends Controller
 
         // Store new file
         $file = $request->file('file_persyaratan');
-        $fileName = time() . '_' . $sidang->nim . '_revisi_persyaratan.pdf';
+        $fileName = 'revisi_' . \Illuminate\Support\Str::random(40) . '.pdf';
         $file->move($uploadDir, $fileName);
         
         $sidang->update([

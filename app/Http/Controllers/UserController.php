@@ -94,6 +94,7 @@ class UserController extends Controller
             'password' => ['nullable', 'string', 'min:8'],
             'dosen_id' => ['nullable', 'exists:dosens,id'],
             'jadikan_koordinator' => ['nullable', 'boolean'],
+            'nim' => ['nullable', 'string', 'max:30', Rule::unique('users', 'nim')->ignore($user->id)],
         ]);
 
         // Prevent self role demotion if last super admin
@@ -125,7 +126,31 @@ class UserController extends Controller
             $userData['password'] = Hash::make($validated['password']);
         }
 
-        $user->update($userData);
+        // NIM mahasiswa hanya bisa diubah admin. Saat dikoreksi, data pendaftaran &
+        // Bebas Prodi dengan NIM lama ikut dipindah — kecuali NIM baru sudah punya
+        // data sendiri (jangan sampai data dua mahasiswa tergabung).
+        $nimLama = $user->nim;
+        $nimBaru = $validated['role'] === User::ROLE_MAHASISWA && $request->has('nim')
+            ? (trim((string) ($validated['nim'] ?? '')) ?: null)
+            : $nimLama;
+        if ($nimBaru !== $nimLama) {
+            if ($nimLama && $nimBaru && \App\Models\Sidang::where('nim', $nimBaru)->exists()) {
+                $pesan = "NIM {$nimBaru} sudah memiliki data pendaftaran sendiri — periksa kembali sebelum mengubah.";
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $pesan, 'errors' => ['nim' => [$pesan]]], 422);
+                }
+                return back()->with('error', $pesan);
+            }
+            $userData['nim'] = $nimBaru;
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $userData, $nimLama, $nimBaru) {
+            $user->update($userData);
+            if ($nimLama && $nimBaru && $nimLama !== $nimBaru) {
+                \App\Models\Sidang::where('nim', $nimLama)->update(['nim' => $nimBaru]);
+                \App\Models\BebasProdi::where('nim', $nimLama)->update(['nim' => $nimBaru]);
+            }
+        });
 
         $this->syncKoordinatorRole($user, $request->boolean('jadikan_koordinator'));
 

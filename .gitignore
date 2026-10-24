@@ -25,3 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Berkas unggahan mahasiswa (data pribadi) — jangan pernah di-commit
+/public/uploads/*/*
+!/public/uploads/*/.htaccess

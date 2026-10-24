@@ -13,6 +13,10 @@
 
     RewriteEngine On
 
+    # Berkas pendaftaran mahasiswa (data pribadi) hanya boleh diakses lewat
+    # route /dokumen yang memeriksa hak akses — blokir akses URL langsung.
+    RewriteRule ^uploads/(persyaratan|bukti_pembayaran)/ - [F,L,NC]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

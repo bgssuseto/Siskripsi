@@ -269,7 +269,7 @@ class BebasProdiController extends Controller
     {
         $user    = Auth::user();
         $isOwner = $user->isMahasiswa() && $user->nim && $user->nim === $bebasProdi->nim;
-        $isStaff = $user->isSuperAdmin() || $user->isKoordinator();
+        $isStaff = $user->hasRole([\App\Models\User::ROLE_SUPER_ADMIN, \App\Models\User::ROLE_KOORDINATOR]);
         abort_unless($isOwner || $isStaff, 403);
 
         $disk = Storage::disk('local');

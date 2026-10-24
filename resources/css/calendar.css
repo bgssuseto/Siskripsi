@@ -162,6 +162,9 @@ html.dark .fc .fc-list-day-text, html.dark .fc .fc-list-day-side-text { color: #
 .fc .fc-list-event-graphic { width: 1%; padding-left: 0 !important; padding-right: 0 !important; text-align: center; }
 .fc .fc-list-event-title { width: 100%; overflow-wrap: anywhere; }
 .fc .fc-list-event .cal-ev-top { flex-wrap: wrap; row-gap: 4px; }
+.fc .fc-list-event .cal-ev-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fc .fc-list-event-title .cal-ev-judul { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-transform: none; }
+.cal-ev-time-list { display: none; }
 
 /* ── Badge ── */
 .cal-badge {
@@ -226,8 +229,12 @@ html.cal-lock, html.cal-lock body { overflow: hidden; }
     .fc .fc-toolbar-title { font-size: .98rem; }
     .fc .fc-button, .fc .fc-button-primary { padding: .38rem .6rem; font-size: .7rem; }
     .fc .fc-daygrid-day-frame { min-height: 64px; }
-    .fc .fc-list-event td { padding: 9px 8px; }
-    .fc .fc-list-event-time { font-size: .66rem; white-space: normal; min-width: 3.4rem; }
+    .fc .fc-list-event td { padding: 10px 12px; }
+    /* Kolom jam & titik disembunyikan — jam dipindah ke dalam isi agenda supaya tidak bertumpuk. */
+    .fc .fc-list-event-time, .fc .fc-list-event-graphic { display: none; }
+    .fc .fc-list-event .cal-ev-time-list { display: inline-flex; font-size: .68rem; font-weight: 800; color: #4f46e5; }
+    html.dark .fc .fc-list-event .cal-ev-time-list { color: #a5b4fc; }
+    .fc .fc-list-event-title .cal-ev-title { font-size: .8rem; line-height: 1.3; }
     .fc .fc-list-day-cushion { padding: 7px 10px; }
 }
 @media (prefers-reduced-motion: reduce) {

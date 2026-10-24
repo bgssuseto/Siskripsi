@@ -68,7 +68,12 @@ class ProfileController extends Controller
         
         // Only update nim for mahasiswa, ignore nim/nidn for super_admin
         if ($user->hasRole('mahasiswa')) {
-            $user->fill($request->safe()->only(['name', 'email', 'nim', 'no_hp']));
+            $user->fill($request->safe()->only(['name', 'email', 'no_hp']));
+            // NIM menjadi kunci kepemilikan data (pendaftaran, berkas, surat) — sekali
+            // terisi tidak bisa diubah sendiri oleh mahasiswa, hanya oleh admin.
+            if (blank($user->nim) && filled($request->validated('nim'))) {
+                $user->nim = trim($request->validated('nim'));
+            }
             // Nama mahasiswa diseragamkan HURUF KAPITAL agar konsisten dengan
             // data pendaftaran sidang/sempro.
             if ($user->isDirty('name') && $user->name !== null) {

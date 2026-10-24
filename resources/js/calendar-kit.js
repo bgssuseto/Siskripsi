@@ -75,14 +75,19 @@ const CalendarKit = {
             top.appendChild(el('span', 'cal-ev-time', waktu));
         }
         if (isList && props.role) top.appendChild(el('span', 'cal-badge cal-badge-role no-dot', props.role));
+        // Di HP kolom jam tampilan Daftar disembunyikan; jam tampil di sini.
+        if (isList && jam) top.appendChild(el('span', 'cal-ev-time cal-ev-time-list', jam.replace(/\s*-\s*/, ' – ')));
         wrap.appendChild(top);
 
         wrap.appendChild(el('div', 'cal-ev-title', cleanTitle(arg.event.title)));
 
-        const meta = isList
-            ? [props.nim, ruang ? `Ruang ${ruang}` : '', props.judul].filter(Boolean).join(' · ')
-            : (ruang ? `Ruang ${ruang}` : '');
-        if (meta) wrap.appendChild(el('div', 'cal-ev-meta', meta));
+        if (isList) {
+            const info = [props.nim, ruang ? `Ruang ${ruang}` : ''].filter(Boolean).join(' · ');
+            if (info) wrap.appendChild(el('div', 'cal-ev-meta', info));
+            if (props.judul) wrap.appendChild(el('div', 'cal-ev-meta cal-ev-judul', props.judul));
+        } else if (ruang) {
+            wrap.appendChild(el('div', 'cal-ev-meta', `Ruang ${ruang}`));
+        }
 
         return { domNodes: [wrap] };
     },

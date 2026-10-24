@@ -354,7 +354,7 @@
                             <td class="py-4 px-6 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <!-- Edit Button -->
-                                    <button @click="openEdit({{ json_encode(['id' => $user->hash_id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'dosen_id' => $user->dosen_id, 'jadikan_koordinator' => $user->additionalRoles->contains('role', 'koordinator')]) }})"
+                                    <button @click="openEdit({{ json_encode(['id' => $user->hash_id, 'name' => $user->name, 'email' => $user->email, 'nim' => $user->nim, 'role' => $user->role, 'dosen_id' => $user->dosen_id, 'jadikan_koordinator' => $user->additionalRoles->contains('role', 'koordinator')]) }})"
                                             class="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors cursor-pointer"
                                             title="Edit User">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -519,6 +519,15 @@
                         </select>
                         <template x-if="errors.role">
                             <p class="text-xs text-rose-600 dark:text-rose-400 mt-1 font-semibold" x-text="errors.role[0]"></p>
+                        </template>
+                    </div>
+                    <!-- NIM mahasiswa (kunci data pendaftaran; hanya admin yang bisa mengubah) -->
+                    <div x-show="selectedUser.role === 'mahasiswa'">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">NIM</label>
+                        <input type="text" name="nim" x-model="selectedUser.nim" :disabled="selectedUser.role !== 'mahasiswa'" maxlength="30" placeholder="202251xxx" class="w-full text-sm font-mono rounded-xl border border-slate-200 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-700 px-4 py-2.5 transition-all duration-200">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Bila NIM dikoreksi, data pendaftaran &amp; Bebas Prodi dengan NIM lama ikut dipindahkan.</p>
+                        <template x-if="errors.nim">
+                            <p class="text-xs text-rose-600 dark:text-rose-400 mt-1 font-semibold" x-text="errors.nim[0]"></p>
                         </template>
                     </div>
                     <!-- Link Dosen dropdown (only shown if role is Dosen) -->

@@ -41,7 +41,7 @@
             <p class="mb-2 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Rekap hari & ruang</p>
             <div class="flex flex-wrap gap-2">
                 @foreach($rekap as $r)
-                    <div class="inline-flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 ring-1 ring-inset ring-slate-200 dark:ring-slate-700">
+                    <div class="w-full sm:w-auto inline-flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 ring-1 ring-inset ring-slate-200 dark:ring-slate-700">
                         <span class="w-9 rounded-lg overflow-hidden text-center shrink-0 bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-700">
                             <span class="block text-[8px] font-extrabold uppercase text-white bg-rose-500 leading-[13px]">{{ $r['tanggal']->translatedFormat('M') }}</span>
                             <span class="block text-sm font-extrabold leading-5 text-slate-800 dark:text-slate-100">{{ $r['tanggal']->format('j') }}</span>
@@ -71,14 +71,18 @@
                 };
             @endphp
             <div>
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="w-2 h-2 rounded-full {{ $selisih !== null && $selisih >= 0 ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
-                    <p class="text-sm font-extrabold text-slate-800 dark:text-slate-100">{{ $tgl ? $tgl->translatedFormat('l, j F Y') : 'Tanggal belum ditentukan' }}</p>
-                    <span class="px-1.5 py-px rounded-md text-[10px] font-extrabold {{ $clsHari }}">{{ $labelHari }}</span>
-                    <span class="text-[11px] text-slate-400">· {{ $daftar->count() }} mahasiswa</span>
+                <div class="flex items-start gap-2 mb-2">
+                    <span class="mt-1.5 w-2 h-2 rounded-full shrink-0 {{ $selisih !== null && $selisih >= 0 ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
+                    <div class="min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <p class="text-sm font-extrabold text-slate-800 dark:text-slate-100">{{ $tgl ? $tgl->translatedFormat('l, j F Y') : 'Tanggal belum ditentukan' }}</p>
+                        <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="px-1.5 py-px rounded-md text-[10px] font-extrabold {{ $clsHari }}">{{ $labelHari }}</span>
+                            <span class="text-[11px] text-slate-400">{{ $daftar->count() }} mahasiswa</span>
+                        </span>
+                    </div>
                 </div>
 
-                <ul class="ml-[3px] pl-4 border-l-2 border-dashed border-slate-200 dark:border-slate-700 space-y-2.5">
+                <ul class="ml-[3px] pl-3 sm:pl-4 border-l-2 border-dashed border-slate-200 dark:border-slate-700 space-y-2.5">
                     @foreach($daftar as $s)
                         @php
                             [$mulai, $selesai] = $pecahJam($s->jam);
@@ -86,36 +90,43 @@
                             $dewan = $s->dewanPengujiUndangan();
                         @endphp
                         <li class="rounded-2xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-700 hover:ring-indigo-300 dark:hover:ring-indigo-500/50 transition-all p-3.5 sm:p-4">
-                            <div class="flex gap-3 sm:gap-4">
-                                <div class="w-16 shrink-0 text-center">
-                                    <p class="text-sm font-extrabold text-indigo-700 dark:text-indigo-300 leading-tight">{{ $mulai ?? '—' }}</p>
-                                    @if($selesai)<p class="text-[11px] text-slate-400">s/d {{ $selesai }}</p>@endif
-                                    <p class="mt-1.5 inline-flex items-center gap-0.5 px-1.5 py-px rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            <div class="flex flex-col sm:flex-row gap-2.5 sm:gap-4">
+                                {{-- Jam & ruang: baris di HP, kolom di layar lebar --}}
+                                <div class="flex flex-wrap sm:flex-nowrap sm:flex-col items-center gap-x-2 gap-y-1.5 sm:gap-0 sm:w-16 shrink-0 sm:text-center min-w-0">
+                                    <p class="text-sm font-extrabold text-indigo-700 dark:text-indigo-300 leading-tight whitespace-nowrap">{{ $mulai ?? '—' }}<span class="sm:hidden font-semibold text-slate-400">{{ $selesai ? ' – ' . $selesai : '' }}</span></p>
+                                    @if($selesai)<p class="hidden sm:block text-[11px] text-slate-400 whitespace-nowrap">s/d {{ $selesai }}</p>@endif
+                                    <p class="sm:mt-1.5 inline-flex items-center gap-0.5 px-1.5 py-px rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
                                         <x-icon name="map-pin" class="w-3 h-3" />{{ $s->ruang?->kode_ruangan ?? '—' }}
                                     </p>
+                                    @if($peran)
+                                        <span class="sm:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold ring-1 ring-inset whitespace-nowrap {{ $warnaPeran[$peran] ?? $warnaPeran['Anggota Penguji 1'] }}">
+                                            <x-icon name="user" class="w-3 h-3" /> {{ $peran }}
+                                        </span>
+                                    @endif
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                                    <div class="flex items-start justify-between gap-3">
                                         <div class="min-w-0">
                                             <p class="font-extrabold text-slate-900 dark:text-slate-100 leading-snug break-words">{{ $s->nama_mahasiswa }}</p>
                                             <p class="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">{{ $s->nim }}</p>
                                         </div>
                                         @if($peran)
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold ring-1 ring-inset shrink-0 {{ $warnaPeran[$peran] ?? $warnaPeran['Anggota Penguji 1'] }}">
+                                            <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold ring-1 ring-inset shrink-0 whitespace-nowrap {{ $warnaPeran[$peran] ?? $warnaPeran['Anggota Penguji 1'] }}">
                                                 <x-icon name="user" class="w-3 h-3" /> {{ $peran }}
                                             </span>
                                         @endif
                                     </div>
-                                    <p class="mt-1.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2" title="{{ $s->judul_skripsi }}">{{ $s->judul_skripsi }}</p>
-                                    <div class="mt-2.5 flex flex-wrap gap-1.5">
+                                    <p class="mt-1.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2 break-words" title="{{ $s->judul_skripsi }}">{{ $s->judul_skripsi }}</p>
+                                    {{-- Dewan penguji: tiap baris "Peran — Nama" agar tidak bertumpuk di layar kecil --}}
+                                    <ul class="mt-2.5 grid grid-cols-1 {{ count($dewan) === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2' }} gap-1.5">
                                         @foreach($dewan as $label => $nama)
-                                            @php $diriSendiri = $nama && $nama === $dosen->nama_dosen; @endphp
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] {{ $diriSendiri ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:ring-slate-700' }}">
-                                                <span class="{{ $diriSendiri ? 'text-indigo-100' : 'text-slate-400' }}">{{ str_replace(['Anggota Penguji', 'Ketua Penguji'], ['Anggota', 'Ketua'], $label) }}:</span>
-                                                {{ $diriSendiri ? 'Anda' : ($nama ?? '—') }}
-                                            </span>
+                                            @php $diriSendiri = $peran !== null && $label === $peran; @endphp
+                                            <li class="min-w-0 px-2.5 py-1.5 rounded-lg text-[11px] leading-snug {{ $diriSendiri ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 ring-1 ring-inset ring-slate-200 dark:bg-slate-800/60 dark:text-slate-200 dark:ring-slate-700' }}">
+                                                <span class="block text-[9px] font-extrabold uppercase tracking-wider {{ $diriSendiri ? 'text-indigo-100' : 'text-slate-400' }}">{{ $label }}</span>
+                                                <span class="block font-semibold break-words">{{ $diriSendiri ? 'Anda' : ($nama ?? '—') }}</span>
+                                            </li>
                                         @endforeach
-                                    </div>
+                                    </ul>
                                 </div>
                             </div>
                         </li>

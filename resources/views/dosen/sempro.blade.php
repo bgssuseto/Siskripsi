@@ -71,7 +71,9 @@
     </form>
 
     <!-- Table content with High-Contrast Header & Dark Mode Support -->
-    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden mb-8">
+    @include('dosen.partials._jadwal-kartu', ['aksen' => 'indigo', 'judulKosong' => 'Tidak Ada Jadwal Seminar Proposal'])
+
+    <div class="hidden md:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden mb-8">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse min-w-[900px]">
                 <thead>
@@ -87,14 +89,7 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm font-medium">
                     @if($dosen)
                         @forelse($schedules as $s)
-                            @php
-                                $roles = [];
-                                if($s->dosen_pembimbing_utama_id === $dosen->id) $roles[] = 'Pembimbing Utama';
-                                if($s->dosen_pembimbing_pendamping_id === $dosen->id) $roles[] = 'Pembimbing Pendamping';
-                                if($s->ketua_penguji_id === $dosen->id) $roles[] = 'Ketua Penguji';
-                                if($s->anggota_penguji_1_id === $dosen->id) $roles[] = 'Anggota Penguji 1';
-                                if($s->anggota_penguji_2_id === $dosen->id) $roles[] = 'Anggota Penguji 2';
-                            @endphp
+                            @php $roles = \App\Support\PeranDosen::untuk($s, $dosen->id); @endphp
                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition-colors">
                                 <!-- Jadwal -->
                                 <td class="py-4 px-6">
