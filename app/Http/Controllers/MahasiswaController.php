@@ -188,8 +188,9 @@ class MahasiswaController extends Controller
             ->whereDoesntHave('user', fn ($q) => $q->where('role', \App\Models\User::ROLE_SUPER_ADMIN))
             ->get();
 
-        // All student's registrations
-        $sidangs = $this->getStudentSidangs($user);
+        // Riwayat di halaman Sempro hanya pendaftaran Sempro milik mahasiswa ini
+        // (sebelumnya pendaftaran Skripsi ikut tercampur di tabel "Riwayat Pendaftaran Sempro").
+        $sidangs = $this->getStudentSidangs($user)->where('jenis_tugas_akhir', 'sempro')->values();
 
         $needsCoordinator = $user->nim
             ? KelulusanService::needsCoordinatorForRemidi($user->nim, ['sempro'], $activePeriode?->id)

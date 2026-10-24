@@ -229,7 +229,10 @@
             </div>
 
             @if(count($stats['recent_schedules']) > 0)
-                <div class="overflow-x-auto">
+                <div class="md:hidden p-4">
+                    @include('dosen.partials._jadwal-kartu', ['schedules' => collect($stats['recent_schedules']), 'aksen' => 'indigo', 'judulKosong' => 'Belum Ada Aktivitas', 'kelas' => ''])
+                </div>
+                <div class="hidden md:block overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50/70 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 text-[10px] font-extrabold uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">

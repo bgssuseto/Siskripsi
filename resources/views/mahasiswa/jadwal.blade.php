@@ -8,15 +8,15 @@
     <x-info-persiapan-sidang />
 
     <!-- Main Schedule Section -->
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 p-6 space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div>
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 p-4 sm:p-6 space-y-4">
+        <div class="flex flex-wrap items-start sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div class="min-w-0">
                 <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100">
                     {{ ($type ?? 'sempro') === 'sempro' ? 'Agenda Seminar Proposal' : 'Agenda Sidang Skripsi' }}
                 </h2>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Sesi ujian aktif untuk periode akademik saat ini</p>
             </div>
-            <span class="px-3.5 py-1.5 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200 font-extrabold text-xs rounded-2xl border border-indigo-200 dark:border-indigo-500/30">
+            <span class="whitespace-nowrap px-3 py-1 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-200 font-extrabold text-xs rounded-2xl border border-indigo-200 dark:border-indigo-500/30">
                 {{ $sidangs->count() }} Jadwal Terdaftar
             </span>
         </div>
@@ -41,21 +41,21 @@
                         // Sidang::isPlotted() (juga dipakai progress di dashboard).
                         $isPlotted = $s->isPlotted();
                     @endphp
-                    <div class="p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-800 hover:shadow-lg transition-all duration-300 space-y-5 relative overflow-hidden group">
+                    <div class="p-4 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-800 hover:shadow-lg transition-all duration-300 space-y-5 relative overflow-hidden group">
                         
                         <!-- Header Bar Inside Card -->
                         <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-                            <div class="flex items-center gap-2.5">
-                                <span class="px-3.5 py-1 text-xs font-extrabold rounded-xl uppercase tracking-wider {{ $s->jenis_tugas_akhir === 'sempro' ? 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800' : 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800' }}">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 text-xs font-extrabold rounded-xl uppercase whitespace-nowrap tracking-wider {{ $s->jenis_tugas_akhir === 'sempro' ? 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800' : 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800' }}">
                                     {{ $s->jenis_label }}
                                 </span>
                                 
                                 @if($isPlotted)
-                                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-extrabold rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                                        <x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Terjadwal & Plotting Selesai
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-extrabold rounded-xl whitespace-nowrap bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                        <x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Terjadwal
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1 text-xs font-extrabold rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-extrabold rounded-xl whitespace-nowrap bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs">
                                         <x-icon name="clock" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Belum di-Plotting
                                     </span>
                                 @endif
@@ -69,7 +69,7 @@
                         <!-- Judul Proposal / Skripsi -->
                         <div>
                             <p class="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider mb-1">Judul Tugas Akhir / Skripsi</p>
-                            <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-base leading-relaxed group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            <h3 class="font-extrabold text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-relaxed break-words group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                 "{{ $s->judul_skripsi }}"
                             </h3>
                         </div>
@@ -81,16 +81,16 @@
                                 <div class="flex items-center gap-2 text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                                     <span class="text-base"><x-icon name="calendar" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Jadwal Pelaksanaan Ujian
                                 </div>
-                                <div class="flex justify-between items-center text-xs">
-                                    <span class="text-slate-500 dark:text-slate-400 font-medium">Tanggal Ujian:</span>
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center items-start gap-0.5 sm:gap-2 text-xs">
+                                    <span class="text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Tanggal Ujian:</span>
                                     @if($s->tanggal)
                                         <strong class="text-slate-900 dark:text-slate-100 font-extrabold">{{ $s->tanggal->translatedFormat('l, d/m/Y') }}</strong>
                                     @else
                                         <span class="px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold rounded-lg border border-amber-300 dark:border-amber-800">Belum di-Plotting</span>
                                     @endif
                                 </div>
-                                <div class="flex justify-between items-center text-xs pt-1">
-                                    <span class="text-slate-500 dark:text-slate-400 font-medium">Waktu / Jam:</span>
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center items-start gap-0.5 sm:gap-2 text-xs pt-1.5">
+                                    <span class="text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Waktu / Jam:</span>
                                     @if($s->jam)
                                         <strong class="inline-block bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded font-extrabold">{{ $s->jam }} WIB</strong>
                                     @else
@@ -104,16 +104,16 @@
                                 <div class="flex items-center gap-2 text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                                     <span class="text-base"><x-icon name="map-pin" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Lokasi & Ruang Ujian
                                 </div>
-                                <div class="flex justify-between items-center text-xs">
-                                    <span class="text-slate-500 dark:text-slate-400 font-medium">Ruang Sidang:</span>
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center items-start gap-0.5 sm:gap-2 text-xs">
+                                    <span class="text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Ruang Sidang:</span>
                                     @if($s->ruang)
-                                        <strong class="text-slate-900 dark:text-slate-100 font-extrabold">{{ $s->ruang->nama_ruangan }} ({{ $s->ruang->kode_ruangan }})</strong>
+                                        <strong class="text-slate-900 dark:text-slate-100 font-extrabold sm:text-right break-words">{{ $s->ruang->nama_ruangan }} ({{ $s->ruang->kode_ruangan }})</strong>
                                     @else
                                         <span class="px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold rounded-lg border border-amber-300 dark:border-amber-800">Belum di-Plotting</span>
                                     @endif
                                 </div>
-                                <div class="flex justify-between items-center text-xs pt-1">
-                                    <span class="text-slate-500 dark:text-slate-400 font-medium">Status Verifikasi Berkas:</span>
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center items-start gap-0.5 sm:gap-2 text-xs pt-1.5">
+                                    <span class="text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Status Verifikasi Berkas:</span>
                                     @if(($s->verifikasi_status ?? 'menunggu') === 'disetujui')
                                         <span class="px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold rounded-lg border border-emerald-300 dark:border-emerald-800">Terverifikasi</span>
                                     @elseif(($s->verifikasi_status ?? '') === 'ditolak')
@@ -158,14 +158,14 @@
                                     <span><x-icon name="user" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> {{ $s->jenis_tugas_akhir === 'sempro' ? 'Tim Dosen Pembimbing & Penguji Sempro' : 'Tim Dosen Pembimbing' }}
                                 </p>
                                 <div class="space-y-1 text-xs">
-                                    <div class="flex items-start justify-between gap-2">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-0.5 sm:gap-2">
                                         <span class="text-slate-500 dark:text-slate-400 font-medium shrink-0">Pembimbing 1:</span>
-                                        <strong class="text-slate-900 dark:text-slate-100 font-bold text-right">{{ $s->pembimbingUtama->nama_dosen ?? '-' }}</strong>
+                                        <strong class="text-slate-900 dark:text-slate-100 font-bold sm:text-right break-words">{{ $s->pembimbingUtama->nama_dosen ?? '-' }}</strong>
                                     </div>
-                                    <div class="flex items-start justify-between gap-2 pt-1">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-0.5 sm:gap-2 pt-1">
                                         <span class="text-slate-500 dark:text-slate-400 font-medium shrink-0">Pembimbing 2:</span>
                                         @if($s->pembimbingPendamping)
-                                            <strong class="text-slate-900 dark:text-slate-100 font-bold text-right">{{ $s->pembimbingPendamping->nama_dosen }}</strong>
+                                            <strong class="text-slate-900 dark:text-slate-100 font-bold sm:text-right break-words">{{ $s->pembimbingPendamping->nama_dosen }}</strong>
                                         @else
                                             <span class="text-slate-400 italic text-[11px]">Tanpa Pembimbing 2</span>
                                         @endif
@@ -180,26 +180,26 @@
                                     <span><x-icon name="user" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /><x-icon name="shield" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Dewan Penguji Ujian
                                 </p>
                                 <div class="space-y-1.5 text-xs">
-                                    <div class="flex items-start justify-between gap-2">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-0.5 sm:gap-2">
                                         <span class="text-slate-500 dark:text-slate-400 font-medium shrink-0">Ketua Penguji:</span>
                                         @if($s->ketuaPenguji)
-                                            <strong class="text-slate-900 dark:text-slate-100 font-bold text-right">{{ $s->ketuaPenguji->nama_dosen }}</strong>
+                                            <strong class="text-slate-900 dark:text-slate-100 font-bold sm:text-right break-words">{{ $s->ketuaPenguji->nama_dosen }}</strong>
                                         @else
                                             <span class="px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[10px] font-extrabold rounded-md border border-amber-300 dark:border-amber-800">Belum di-Plotting</span>
                                         @endif
                                     </div>
-                                    <div class="flex items-start justify-between gap-2">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-0.5 sm:gap-2">
                                         <span class="text-slate-500 dark:text-slate-400 font-medium shrink-0">Anggota Penguji 1:</span>
                                         @if($s->anggotaPenguji1)
-                                            <strong class="text-slate-900 dark:text-slate-100 font-bold text-right">{{ $s->anggotaPenguji1->nama_dosen }}</strong>
+                                            <strong class="text-slate-900 dark:text-slate-100 font-bold sm:text-right break-words">{{ $s->anggotaPenguji1->nama_dosen }}</strong>
                                         @else
                                             <span class="px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[10px] font-extrabold rounded-md border border-amber-300 dark:border-amber-800">Belum di-Plotting</span>
                                         @endif
                                     </div>
-                                    <div class="flex items-start justify-between gap-2">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-0.5 sm:gap-2">
                                         <span class="text-slate-500 dark:text-slate-400 font-medium shrink-0">Anggota Penguji 2:</span>
                                         @if($s->anggotaPenguji2)
-                                            <strong class="text-slate-900 dark:text-slate-100 font-bold text-right">{{ $s->anggotaPenguji2->nama_dosen }}</strong>
+                                            <strong class="text-slate-900 dark:text-slate-100 font-bold sm:text-right break-words">{{ $s->anggotaPenguji2->nama_dosen }}</strong>
                                         @else
                                             <span class="px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[10px] font-extrabold rounded-md border border-amber-300 dark:border-amber-800">Belum di-Plotting</span>
                                         @endif
@@ -217,7 +217,7 @@
 
     <!-- Section khusus: Riwayat Sempro Terdahulu (Hanya muncul jika di tab Skripsi & Mahasiswa memiliki data Sempro) -->
     @if(($type ?? '') === 'skripsi' && isset($semproHistory) && $semproHistory->isNotEmpty())
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 p-6 space-y-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 p-4 sm:p-6 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center gap-2">
                     <span class="text-lg"><x-icon name="document" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>

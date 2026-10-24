@@ -18,6 +18,12 @@
         default   => 'Selamat malam',
     };
     $namaDepan = trim(preg_replace('/^((dr|prof|ir|drs|dra)\.?\s+)+/i', '', explode(',', $nama)[0]));
+    // Nama tersimpan HURUF KAPITAL (data mahasiswa) → tampilkan Kapital Tiap Kata, dan
+    // cukup dua kata pertama untuk sapaan supaya tidak memenuhi layar HP.
+    if ($namaDepan === mb_strtoupper($namaDepan)) {
+        $namaDepan = mb_convert_case(mb_strtolower($namaDepan), MB_CASE_TITLE);
+    }
+    $namaSapaan = implode(' ', array_slice(preg_split('/\s+/', $namaDepan), 0, 2));
     $inisial = collect(preg_split('/\s+/', $namaDepan))->filter()->take(2)
         ->map(fn ($k) => mb_strtoupper(mb_substr($k, 0, 1)))->implode('');
     $foto = auth()->user()?->foto_profil;
@@ -63,7 +69,7 @@
                         @endif
                     </p>
                     <h1 class="mt-1 text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl dark:text-white">
-                        {{ $salam }}, <span class="text-indigo-600 dark:text-indigo-400">{{ $namaDepan }}</span>
+                        {{ $salam }}, <span class="text-indigo-600 dark:text-indigo-400" title="{{ $nama }}">{{ $namaSapaan }}</span>
                     </h1>
                 </div>
             </div>

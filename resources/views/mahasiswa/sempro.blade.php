@@ -149,15 +149,15 @@
             </ol>
 
             <!-- Box Informasi Pembayaran BSI -->
-            <div class="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/80 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-200 mt-auto">
-                <div class="flex items-center gap-3">
+            <div class="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-indigo-900 dark:text-indigo-200 mt-auto">
+                <div class="flex items-center gap-3 min-w-0">
                     <span class="text-xl"><x-icon name="credit-card" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
                     <div>
                         <p class="font-extrabold">Pembayaran Administrasi (Bank BSI)</p>
                         <p class="text-[11px] text-indigo-700 dark:text-indigo-300 mt-0.5">No. Rek: <strong class="font-mono font-bold">7318709593</strong> (A.n. Ahmad Abdul Chamid / Alvin R)</p>
                     </div>
                 </div>
-                <span class="px-3 py-1.5 bg-indigo-600 text-white font-extrabold text-xs rounded-lg shadow-sm shrink-0">
+                <span class="self-start sm:self-auto px-3 py-1.5 bg-indigo-600 text-white font-extrabold text-xs rounded-lg shadow-sm shrink-0 whitespace-nowrap">
                     Rp 200.000
                 </span>
             </div>
@@ -431,14 +431,15 @@
     @endif
 
     <!-- History Table -->
-    <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 p-6">
+    <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 p-4 sm:p-6">
         <h2 class="text-base font-extrabold text-slate-800 dark:text-slate-200 mb-4">Riwayat Pendaftaran Sempro</h2>
         @if($sidangs->isEmpty())
             <div class="text-center py-8 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-600">
                 <p class="text-xs text-slate-500 dark:text-slate-400 italic">Belum ada data pendaftaran Seminar Proposal.</p>
             </div>
         @else
-            <div class="overflow-x-auto">
+            @include('mahasiswa.partials._riwayat-kartu', ['sidangs' => $sidangs])
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">

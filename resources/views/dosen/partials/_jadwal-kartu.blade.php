@@ -1,13 +1,14 @@
 {{--
     Tampilan kartu jadwal untuk layar HP (tabel disembunyikan di bawah md).
-    Variabel: $schedules, $dosen, $aksen ('violet' | 'indigo'), $judulKosong
+    Variabel: $schedules, $dosen, $aksen ('violet' | 'indigo'), $judulKosong,
+    opsional: $riwayat (tampilkan hasil ujian/periode/gelombang), $kelas (kelas pembungkus)
 --}}
 @php
     $chipJam = $aksen === 'violet'
         ? 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/30'
         : 'bg-indigo-50 text-indigo-700 ring-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/30';
 @endphp
-<div class="md:hidden space-y-3 mb-8">
+<div class="md:hidden space-y-3 {{ $kelas ?? 'mb-8' }}">
     @if(!$dosen)
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 text-center">
             <h3 class="font-extrabold text-slate-800 dark:text-slate-200">Akun Belum Terhubung</h3>
@@ -31,12 +32,18 @@
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"><x-icon name="map-pin" class="w-3.5 h-3.5" /> {{ $s->ruang?->kode_ruangan ?? '—' }}</span>
                 </div>
                 <div class="min-w-0">
+                    @if($riwayat ?? false)
+                        <p class="mb-1 flex flex-wrap gap-1.5 text-[10px] font-bold">
+                            <span class="px-1.5 py-px rounded {{ $s->jenis_tugas_akhir === 'sempro' ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' }}">{{ $s->jenis_tugas_akhir === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi' }}</span>
+                            <span class="px-1.5 py-px rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ $s->periode->nama_periode ?? '-' }}{{ $s->gelombang ? ' · Gel. ' . $s->gelombang : '' }}</span>
+                        </p>
+                    @endif
                     <p class="font-extrabold text-slate-900 dark:text-slate-100 leading-snug break-words">{{ $s->nama_mahasiswa }}</p>
                     <p class="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">NIM {{ $s->nim }}</p>
                     <p class="mt-1.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3 break-words">{{ $s->judul_skripsi }}</p>
                 </div>
                 <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-                    <div class="text-[11px]">{!! $s->getJadwalStatusHtml() !!}</div>
+                    <div class="text-[11px]">{!! ($riwayat ?? false) ? $s->getHasilUjianHtml() : $s->getJadwalStatusHtml() !!}</div>
                     @if($peran)
                         <div class="flex flex-wrap items-center gap-1">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-0.5">Peran Anda</span>
