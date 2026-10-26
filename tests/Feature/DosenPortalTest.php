@@ -151,7 +151,7 @@ class DosenPortalTest extends TestCase
 
         // 3. Verify user is deleted and Dosen is deleted
         $this->assertDatabaseMissing('users', ['id' => $dosenUser->id]);
-        $this->assertDatabaseMissing('dosens', ['id' => $dosen->id]);
+        $this->assertSoftDeleted('dosens', ['id' => $dosen->id]);
 
         // 4. Verify Super Administrator Dosen exists and is linked to Super Admin User
         $superAdminDosen = Dosen::where('nidn', '0000000000')->first();
@@ -205,23 +205,23 @@ class DosenPortalTest extends TestCase
         $response->assertStatus(302); // Redirects back
 
         // 3. Verify Dosen is deleted
-        $this->assertDatabaseMissing('dosens', ['id' => $dosen->id]);
+        $this->assertSoftDeleted('dosens', ['id' => $dosen->id]);
 
-        // 4. Verify Super Administrator Dosen exists and is linked to Super Admin User
-        $superAdminDosen = Dosen::where('nidn', '0000000000')->first();
-        $this->assertNotNull($superAdminDosen);
-        $superAdmin->refresh();
-        $this->assertEquals($superAdminDosen->id, $superAdmin->dosen_id);
-
-        // 5. Verify data is transferred to Super Administrator Dosen
-        $this->assertDatabaseHas('kesediaan_dosens', [
-            'id' => $kesediaan->id,
-            'dosen_id' => $superAdminDosen->id
-        ]);
+        // 4. Hapus master dosen = soft delete: data bimbingan/penguji & kesediaan
+        //    TETAP tertaut ke dosen ini (tidak dipindah ke Super Administrator),
+        //    supaya kembali utuh bila dosen ditambahkan lagi dengan NIDN yang sama.
+        $this->assertDatabaseHas('kesediaan_dosens', ['id' => $kesediaan->id, 'dosen_id' => $dosen->id]);
         $this->assertDatabaseHas('sidangs', [
             'id' => $sidang->id,
-            'dosen_pembimbing_utama_id' => $superAdminDosen->id,
-            'ketua_penguji_id' => $superAdminDosen->id
+            'dosen_pembimbing_utama_id' => $dosen->id,
+            'ketua_penguji_id' => $dosen->id,
         ]);
+
+        // 5. Ditambahkan lagi dengan NIDN yang sama → data lama kembali.
+        $this->actingAs($superAdmin)->post(route('master.dosen.store'), [
+            'nidn' => '987654321', 'nama_dosen' => 'Test Master Dosen',
+        ]);
+        $this->assertNotSoftDeleted('dosens', ['id' => $dosen->id]);
+        $this->assertSame($dosen->id, $sidang->fresh()->pembimbingUtama?->id);
     }
 }

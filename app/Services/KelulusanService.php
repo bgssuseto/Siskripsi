@@ -52,22 +52,35 @@ class KelulusanService
      */
     public static function autoFinalizePastExams(): void
     {
-        $affectedNims = Sidang::whereNull('status_ujian')
-            ->whereNotNull('tanggal')
-            ->where('tanggal', '<', now())
-            ->pluck('nim')
-            ->unique();
+        // Ujian dianggap selesai setelah JAM SELESAI-nya lewat (bukan sekadar
+        // tanggalnya hari ini) — ujian pukul 13.00 tidak boleh sudah "Lulus" pagi harinya.
+        $sekarang = now()->timezone('Asia/Jakarta');
+        $hariIni = $sekarang->format('Y-m-d');
+        $menitSekarang = (int) $sekarang->format('G') * 60 + (int) $sekarang->format('i');
 
-        if ($affectedNims->isEmpty()) {
+        $kandidat = Sidang::whereNull('status_ujian')
+            ->whereNotNull('tanggal')
+            ->whereDate('tanggal', '<=', $hariIni)
+            ->get(['id', 'nim', 'tanggal', 'jam']);
+
+        $selesai = $kandidat->filter(function ($s) use ($hariIni, $menitSekarang) {
+            if ($s->tanggal->format('Y-m-d') < $hariIni) {
+                return true;
+            }
+            // Hari ini: tunggu jam selesai; tanpa jam yang terbaca, tunggu sampai besok.
+            $jam = SidangConflictService::parseJamRange($s->jam);
+            return $jam !== null && $jam['end'] <= $menitSekarang;
+        });
+
+        if ($selesai->isEmpty()) {
             return;
         }
 
-        Sidang::whereNull('status_ujian')
-            ->whereNotNull('tanggal')
-            ->where('tanggal', '<', now())
+        Sidang::whereIn('id', $selesai->pluck('id'))
+            ->whereNull('status_ujian')
             ->update(['status_ujian' => 'lulus']);
 
-        foreach ($affectedNims as $nim) {
+        foreach ($selesai->pluck('nim')->filter()->unique() as $nim) {
             self::syncStatus($nim);
         }
     }

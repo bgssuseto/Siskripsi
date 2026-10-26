@@ -68,7 +68,7 @@ class PendaftaranWaveTest extends TestCase
 
         // 2. Edit a wave
         $response = $this->actingAs($admin)
-            ->put(route('master.pendaftaran-periode.update', $wave->id), [
+            ->put(route('master.pendaftaran-periode.update', $wave), [
                 'periode_id' => $activePeriode->id,
                 'jenis' => 'sempro',
                 'gelombang' => 2,
@@ -81,7 +81,7 @@ class PendaftaranWaveTest extends TestCase
 
         // 3. Delete a wave
         $response = $this->actingAs($admin)
-            ->delete(route('master.pendaftaran-periode.destroy', $wave->id), [], ['Accept' => 'application/json']);
+            ->delete(route('master.pendaftaran-periode.destroy', $wave), [], ['Accept' => 'application/json']);
 
         $response->assertStatus(200);
         $this->assertNull($wave->fresh());
@@ -91,33 +91,34 @@ class PendaftaranWaveTest extends TestCase
     {
         $student = User::where('email', 'mahasiswa@skripsi.ac.id')->first();
         $this->assertNotNull($student);
+        $student->update(['nim' => '202451000']);
 
         $activePeriode = Periode::where('aktif', true)->first();
         $this->assertNotNull($activePeriode);
 
-        // Get a sample lecturer to be selected as pembimbing
         $dosen = Dosen::first();
         $this->assertNotNull($dosen);
 
-        // Delete all registration waves of jenis sempro in the active period to simulate closed registration
+        // Tutup semua gelombang Sempro di periode aktif.
         PendaftaranPeriode::where('periode_id', $activePeriode->id)
             ->where('jenis', 'sempro')
             ->delete();
 
-        // 1. Submit registration when wave is CLOSED - should return error
-        $response = $this->actingAs($student)
-            ->post(route('mahasiswa.daftar.store'), [
-                'nim' => '202451000',
-                'jenis_tugas_akhir' => 'sempro',
-                'judul_skripsi' => 'Pengembangan Sistem Pengingat Sidang',
-                'dosen_pembimbing_utama_id' => $dosen->id,
-                'bukti_pembayaran' => \Illuminate\Http\UploadedFile::fake()->create('receipt.pdf', 500),
-            ]);
+        $form = fn () => [
+            'nim' => '202451000',
+            'jenis_tugas_akhir' => 'sempro',
+            'judul_skripsi' => 'Pengembangan Sistem Pengingat Sidang',
+            'dosen_pembimbing_utama_id' => $dosen->id,
+            'no_wa_aktif' => '081234567890',
+            'file_persyaratan' => \Illuminate\Http\UploadedFile::fake()->create('persyaratan.pdf', 500, 'application/pdf'),
+        ];
 
-        $response->assertSessionHas('error');
+        // 1. Gelombang TUTUP → ditolak.
+        $this->actingAs($student)->post(route('mahasiswa.daftar.store'), $form())
+            ->assertSessionHas('error');
         $this->assertFalse(Sidang::where('nim', '202451000')->where('jenis_tugas_akhir', 'sempro')->exists());
 
-        // 2. Create an active wave for sempro today
+        // 2. Buka gelombang hari ini.
         PendaftaranPeriode::create([
             'periode_id' => $activePeriode->id,
             'jenis' => 'sempro',
@@ -126,18 +127,16 @@ class PendaftaranWaveTest extends TestCase
             'tanggal_selesai' => now()->addDays(2)->format('Y-m-d'),
         ]);
 
-        // 3. Submit registration when wave is OPEN - should succeed
-        $response = $this->actingAs($student)
-            ->post(route('mahasiswa.daftar.store'), [
-                'nim' => '202451000',
-                'jenis_tugas_akhir' => 'sempro',
-                'judul_skripsi' => 'Pengembangan Sistem Pengingat Sidang',
-                'dosen_pembimbing_utama_id' => $dosen->id,
-                'bukti_pembayaran' => \Illuminate\Http\UploadedFile::fake()->create('receipt.pdf', 500),
-            ]);
+        // 3. Gelombang BUKA → berhasil, berkas tersimpan di penyimpanan privat.
+        $this->actingAs($student)->post(route('mahasiswa.daftar.store'), $form())
+            ->assertSessionHas('success');
+        $sidang = Sidang::where('nim', '202451000')->where('jenis_tugas_akhir', 'sempro')->first();
+        $this->assertNotNull($sidang);
+        $this->assertStringStartsWith('berkas/persyaratan/', $sidang->file_persyaratan);
+        $this->assertFileExists(\App\Support\BerkasMahasiswa::lokasi($sidang->file_persyaratan));
+        $this->assertStringStartsWith(storage_path(), \App\Support\BerkasMahasiswa::lokasi($sidang->file_persyaratan));
 
-        $response->assertSessionHas('success');
-        $this->assertTrue(Sidang::where('nim', '202451000')->where('jenis_tugas_akhir', 'sempro')->exists());
+        \App\Support\BerkasMahasiswa::hapus($sidang->file_persyaratan);
     }
 
     public function test_super_admin_can_verify_registrations(): void
@@ -154,7 +153,7 @@ class PendaftaranWaveTest extends TestCase
 
         // 1. Verify/Approve the registration
         $response = $this->actingAs($admin)
-            ->post(route('master.sidang.verifikasi', $sidang->id), [
+            ->post(route('master.sidang.verifikasi', $sidang), [
                 'verifikasi_status' => 'disetujui',
             ]);
 
@@ -163,7 +162,7 @@ class PendaftaranWaveTest extends TestCase
 
         // 2. Reject the registration with comment
         $response = $this->actingAs($admin)
-            ->post(route('master.sidang.verifikasi', $sidang->id), [
+            ->post(route('master.sidang.verifikasi', $sidang), [
                 'verifikasi_status' => 'ditolak',
                 'verifikasi_komentar' => 'Berkas Transkrip Nilai belum diunggah.',
             ]);
@@ -177,6 +176,7 @@ class PendaftaranWaveTest extends TestCase
     {
         $student = User::where('email', 'mahasiswa@skripsi.ac.id')->first();
         $this->assertNotNull($student);
+        $student->update(['nim' => '202451099']);
 
         $activePeriode = Periode::where('aktif', true)->first();
         $this->assertNotNull($activePeriode);
@@ -184,7 +184,6 @@ class PendaftaranWaveTest extends TestCase
         $dosen = Dosen::first();
         $this->assertNotNull($dosen);
 
-        // Make sure there is an open wave
         PendaftaranPeriode::updateOrCreate([
             'periode_id' => $activePeriode->id,
             'jenis' => 'sempro',
@@ -194,7 +193,6 @@ class PendaftaranWaveTest extends TestCase
             'tanggal_selesai' => now()->addDays(2)->format('Y-m-d'),
         ]);
 
-        // Create a rejected registration record
         $sidang = Sidang::create([
             'nim' => '202451099',
             'nama_mahasiswa' => $student->name,
@@ -204,49 +202,38 @@ class PendaftaranWaveTest extends TestCase
             'periode_id' => $activePeriode->id,
             'tanggal_pendaftaran' => now()->subDays(1),
             'verifikasi_status' => 'ditolak',
-            'verifikasi_komentar' => 'Salah bukti bayar',
-            'bukti_pembayaran' => 'uploads/bukti_pembayaran/old.pdf',
+            'verifikasi_komentar' => 'Berkas kurang lengkap',
         ]);
 
-        // Submit revision with updated title, new file upload should overwrite/revise
-        $response = $this->actingAs($student)
-            ->post(route('mahasiswa.daftar.store'), [
-                'nim' => '202451099',
-                'jenis_tugas_akhir' => 'sempro',
-                'judul_skripsi' => 'Judul Revisi Yang Benar',
-                'dosen_pembimbing_utama_id' => $dosen->id,
-                'bukti_pembayaran' => \Illuminate\Http\UploadedFile::fake()->create('new_receipt.png', 300),
-            ]);
+        $this->actingAs($student)->post(route('mahasiswa.daftar.store'), [
+            'nim' => '202451099',
+            'jenis_tugas_akhir' => 'sempro',
+            'judul_skripsi' => 'Judul Revisi Yang Benar',
+            'dosen_pembimbing_utama_id' => $dosen->id,
+            'no_wa_aktif' => '081234567890',
+            'file_persyaratan' => \Illuminate\Http\UploadedFile::fake()->create('revisi.pdf', 300, 'application/pdf'),
+        ])->assertSessionHas('success');
 
-        $response->assertSessionHas('success');
-        
         $fresh = $sidang->fresh();
-        $this->assertEquals('Judul Revisi Yang Benar', $fresh->judul_skripsi);
+        $this->assertEquals('JUDUL REVISI YANG BENAR', mb_strtoupper($fresh->judul_skripsi));
         $this->assertEquals('menunggu', $fresh->verifikasi_status);
         $this->assertNull($fresh->verifikasi_komentar);
-        $this->assertStringEndsWith('.png', $fresh->bukti_pembayaran);
-        $this->assertTrue(file_exists(public_path($fresh->bukti_pembayaran)));
-        
-        // Clean up uploaded file if it was created
-        if (file_exists(public_path($fresh->bukti_pembayaran))) {
-            @unlink(public_path($fresh->bukti_pembayaran));
-        }
+        $this->assertTrue(\App\Support\BerkasMahasiswa::ada($fresh->file_persyaratan));
+
+        \App\Support\BerkasMahasiswa::hapus($fresh->file_persyaratan);
     }
 
     public function test_student_can_update_receipt_only(): void
     {
         $student = User::where('email', 'mahasiswa@skripsi.ac.id')->first();
         $this->assertNotNull($student);
+        $student->update(['nim' => '202451098']);
 
         $activePeriode = Periode::where('aktif', true)->first();
-        $this->assertNotNull($activePeriode);
-
         $dosen = Dosen::first();
-        $this->assertNotNull($dosen);
 
-        // Create a rejected registration record with old file path
         $sidang = Sidang::create([
-            'nim' => $student->nim ?? '202451099',
+            'nim' => '202451098',
             'nama_mahasiswa' => $student->name,
             'judul_skripsi' => 'Judul Test',
             'dosen_pembimbing_utama_id' => $dosen->id,
@@ -255,26 +242,26 @@ class PendaftaranWaveTest extends TestCase
             'tanggal_pendaftaran' => now(),
             'verifikasi_status' => 'ditolak',
             'verifikasi_komentar' => 'Komentar salah',
-            'bukti_pembayaran' => 'uploads/bukti_pembayaran/old.pdf',
         ]);
 
-        $response = $this->actingAs($student)
-            ->post(route('mahasiswa.sidang.update-bukti', $sidang->id), [
-                'bukti_pembayaran' => \Illuminate\Http\UploadedFile::fake()->create('revisi.png', 400),
-            ]);
-
-        $response->assertSessionHas('success');
+        // Hanya mengganti berkas persyaratan (tanpa mengisi ulang formulir).
+        $this->actingAs($student)->post(route('mahasiswa.sidang.update-bukti', $sidang), [
+            'file_persyaratan' => \Illuminate\Http\UploadedFile::fake()->create('revisi.pdf', 400, 'application/pdf'),
+        ])->assertSessionHas('success');
 
         $fresh = $sidang->fresh();
         $this->assertEquals('menunggu', $fresh->verifikasi_status);
         $this->assertNull($fresh->verifikasi_komentar);
-        $this->assertStringEndsWith('.png', $fresh->bukti_pembayaran);
-        $this->assertTrue(file_exists(public_path($fresh->bukti_pembayaran)));
+        $this->assertStringStartsWith('berkas/persyaratan/', $fresh->file_persyaratan);
+        $this->assertTrue(\App\Support\BerkasMahasiswa::ada($fresh->file_persyaratan));
 
-        // Clean up
-        if (file_exists(public_path($fresh->bukti_pembayaran))) {
-            @unlink(public_path($fresh->bukti_pembayaran));
-        }
+        // Mahasiswa lain tidak boleh mengganti berkas milik orang lain.
+        $lain = User::create(['name' => 'Mhs Lain', 'email' => 'lain' . uniqid() . '@test.id', 'password' => bcrypt('x'), 'role' => User::ROLE_MAHASISWA, 'nim' => 'LAIN' . substr(uniqid(), -5)]);
+        $this->actingAs($lain)->post(route('mahasiswa.sidang.update-bukti', $sidang), [
+            'file_persyaratan' => \Illuminate\Http\UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
+        ])->assertForbidden();
+
+        \App\Support\BerkasMahasiswa::hapus($fresh->file_persyaratan);
     }
 
     public function test_excel_import_automatically_verifies_registrations(): void

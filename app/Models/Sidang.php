@@ -115,6 +115,12 @@ class Sidang extends Model
             static::syncJalurTa($sidang);
         });
 
+        // Email ke mahasiswa saat berkas diverifikasi / jadwal ditetapkan (dikirim
+        // tertunda oleh penjadwal — lihat NotifikasiService).
+        static::updated(function ($sidang) {
+            \App\Services\NotifikasiService::catatPerubahan($sidang);
+        });
+
         // Deleting a registration (so the student can re-register) previously
         // left its uploaded file_persyaratan/bukti_pembayaran orphaned on disk
         // forever — clean them up alongside the record. Bulk-delete controllers
@@ -122,13 +128,7 @@ class Sidang extends Model
         // for this hook to fire.
         static::deleting(function ($sidang) {
             foreach (['file_persyaratan', 'bukti_pembayaran'] as $field) {
-                $path = $sidang->{$field};
-                if ($path) {
-                    $fullPath = public_path($path);
-                    if (is_file($fullPath)) {
-                        @unlink($fullPath);
-                    }
-                }
+                \App\Support\BerkasMahasiswa::hapus($sidang->{$field});
             }
         });
     }

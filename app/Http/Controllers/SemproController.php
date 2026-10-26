@@ -18,6 +18,22 @@ use Illuminate\Validation\Rule;
 
 class SemproController extends Controller
 {
+    use \App\Http\Controllers\Concerns\KelolaDataSidang;
+
+    /** Lihat Concerns\KelolaDataSidang. */
+    protected function dataSidangKonfigurasi(): array
+    {
+        return [
+            'jenis'          => ['sempro'],
+            'label'          => 'sempro',
+            'label_semua'    => 'sempro',
+            'label_terpilih' => 'sempro',
+            'label_jadwal'   => 'sempro',
+            'route_index'    => 'master.sempro.index',
+            'view_import'    => 'sempro.import',
+        ];
+    }
+
     // ─── Index ───────────────────────────────────────────────────────────────
 
     /**
@@ -756,44 +772,7 @@ class SemproController extends Controller
         ]);
     }
 
-    // ─── Reschedule (Geser Jadwal via Drag & Drop di Kalender) ─────────────────
-
-    public function reschedule(Request $request, Sidang $sidang)
-    {
-        $validated = $request->validate([
-            'tanggal' => ['required', 'date'],
-            'jam'     => ['required', 'string', 'max:100'],
-        ], [
-            'tanggal.required' => 'Tanggal baru tidak valid.',
-            'jam.required'     => 'Jam baru tidak valid.',
-        ]);
-
-        // Only tanggal & jam move — ruang stays as it already was.
-        $checkData = array_merge($sidang->toArray(), $validated);
-        $scheduleConflicts = SidangConflictService::checkConflicts($checkData, $sidang->id);
-        if (!empty($scheduleConflicts)) {
-            return response()->json([
-                'success' => false,
-                'message' => '⚠️ Bentrok Jadwal: ' . implode(' | ', $scheduleConflicts),
-                'conflicts' => $scheduleConflicts,
-            ], 422);
-        }
-
-        $before = $sidang->only(['tanggal', 'jam']);
-        $sidang->update($validated);
-
-        ActivityLogger::log(
-            'reschedule',
-            $sidang,
-            "Menggeser jadwal sempro {$sidang->nama_mahasiswa} ({$sidang->nim}) dari {$before['tanggal']} {$before['jam']} ke {$validated['tanggal']} {$validated['jam']}.",
-            ['before' => $before, 'after' => $validated]
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => '✅ Jadwal ' . $sidang->nama_mahasiswa . ' berhasil dipindahkan.',
-        ]);
-    }
+    // Geser jadwal (drag & drop kalender), hapus data & form impor: lihat trait KelolaDataSidang.
 
     // ─── Store (manual input) ─────────────────────────────────────────────────
 
@@ -930,65 +909,7 @@ class SemproController extends Controller
         return back()->with('success', 'Data sempro berhasil diperbarui!');
     }
 
-    // ─── Destroy ──────────────────────────────────────────────────────────────
-
-    public function destroy(Request $request, Sidang $sidang)
-    {
-        $sidang->delete();
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Data sempro berhasil dihapus!'
-            ]);
-        }
-
-        return back()->with('success', 'Data sempro berhasil dihapus!');
-    }
-
-    /**
-     * Hapus SELURUH data sempro dengan konfirmasi
-     */
-    public function destroyAll(Request $request): RedirectResponse
-    {
-        // ->get()->each->delete() (not a query-builder ->delete()) so the
-        // model's deleting() hook fires per record and cleans up uploaded files.
-        $rows = Sidang::where('jenis_tugas_akhir', 'sempro')->get();
-        $count = $rows->count();
-        $rows->each->delete();
-
-        return redirect()->route('master.sempro.index')->with('success', "Berhasil menghapus seluruh data sempro ({$count} data berhasil dihapus).");
-    }
-
-    /**
-     * Bulk hapus beberapa data sempro terpilih.
-     */
-    public function bulkDestroy(Request $request)
-    {
-        $validated = $request->validate([
-            'ids'   => ['required', 'array', 'min:1'],
-            'ids.*' => ['integer', 'exists:sidangs,id'],
-        ]);
-
-        $rows = Sidang::where('jenis_tugas_akhir', 'sempro')->whereIn('id', $validated['ids'])->get();
-        $count = $rows->count();
-        $rows->each->delete();
-
-        $message = "🗑️ {$count} data sempro berhasil dihapus.";
-
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => $message]);
-        }
-
-        return back()->with('success', $message);
-    }
-
     // ─── Import Excel ─────────────────────────────────────────────────────────
-
-    public function importForm(): View
-    {
-        return view('sempro.import');
-    }
 
     public function import(Request $request): RedirectResponse
     {
@@ -1213,68 +1134,4 @@ class SemproController extends Controller
         return redirect()->route('master.sempro.index')->with('success', $message);
     }
 
-    /**
-     * Helper to parse Indonesian date string like "Senin, 13 Juli 2026" or "13 Juli 2026" to Y-m-d.
-     */
-    private function parseIndonesianDate(mixed $dateVal, $cell = null): ?string
-    {
-        if (empty($dateVal)) return null;
-
-        if ($cell && is_numeric($cell->getValue())) {
-            try {
-                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($cell->getValue())->format('Y-m-d');
-            } catch (\Exception $e) {}
-        }
-
-        if (is_numeric($dateVal)) {
-            try {
-                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($dateVal)->format('Y-m-d');
-            } catch (\Exception $e) {}
-        }
-
-        $dateStr = trim((string)$dateVal);
-        if (empty($dateStr)) return null;
-
-        // Standard Y-m-d
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
-            return $dateStr;
-        }
-
-        // Clean string for Indonesian word month
-        $clean = preg_replace('/^[A-Za-z]+,\s*/u', '', $dateStr);
-        $bulanIndo = [
-            'Januari'   => '01', 'Februari' => '02', 'Maret'     => '03',
-            'April'     => '04', 'Mei'      => '05', 'Juni'      => '06',
-            'Juli'      => '07', 'Agustus'  => '08', 'September' => '09',
-            'Oktober'   => '10', 'November' => '11', 'Desember'  => '12',
-        ];
-
-        foreach ($bulanIndo as $namaBulan => $numBulan) {
-            if (stripos($clean, $namaBulan) !== false) {
-                if (preg_match('/(\d{1,2})\s+' . $namaBulan . '\s+(\d{4})/i', $clean, $m)) {
-                    $day = str_pad($m[1], 2, '0', STR_PAD_LEFT);
-                    $year = $m[2];
-                    return "{$year}-{$numBulan}-{$day}";
-                }
-            }
-        }
-
-        try {
-            return Carbon::parse($dateStr)->format('Y-m-d');
-        } catch (\Exception $e) {
-            if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $dateStr, $m)) {
-                $val1 = (int)$m[1];
-                $val2 = (int)$m[2];
-                $year = (int)$m[3];
-                if ($val1 > 12 && $val2 <= 12) {
-                    return sprintf('%04d-%02d-%02d', $year, $val2, $val1);
-                } elseif ($val2 > 12 && $val1 <= 12) {
-                    return sprintf('%04d-%02d-%02d', $year, $val1, $val2);
-                } else {
-                    return sprintf('%04d-%02d-%02d', $year, $val2, $val1);
-                }
-            }
-            return null;
-        }
-    }
 }

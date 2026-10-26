@@ -33,9 +33,9 @@ class DokumenController extends Controller
 
         abort_if(! $path, 404);
 
-        $fullPath = public_path($path);
+        $fullPath = \App\Support\BerkasMahasiswa::lokasi($path);
 
-        abort_unless(is_file($fullPath), 404);
+        abort_unless($fullPath && is_file($fullPath), 404);
 
         if ($request->boolean('download')) {
             return response()->download($fullPath, basename($fullPath));

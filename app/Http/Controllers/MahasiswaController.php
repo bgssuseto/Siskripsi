@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\BerkasMahasiswa;
 use App\Models\Sidang;
 use App\Models\Periode;
 use App\Models\Dosen;
@@ -385,26 +386,12 @@ class MahasiswaController extends Controller
         // Handle File Upload (file_persyaratan - PDF only, max 4MB, overwrite old)
         $filePath = $existing ? $existing->file_persyaratan : null;
         if ($request->hasFile('file_persyaratan')) {
-            // Delete old file if exists
+            // Hapus berkas lama, lalu simpan yang baru di penyimpanan privat
+            // (di luar public/, nama acak) — berkas berisi data pribadi mahasiswa.
             if ($existing && $existing->file_persyaratan) {
-                $oldPath = public_path($existing->file_persyaratan);
-                if (file_exists($oldPath)) {
-                    @unlink($oldPath);
-                }
+                BerkasMahasiswa::hapus($existing->file_persyaratan);
             }
-
-            // Ensure directory exists
-            $uploadDir = public_path('uploads/persyaratan');
-            if (!file_exists($uploadDir)) {
-                @mkdir($uploadDir, 0777, true);
-            }
-
-            // Save new file
-            $file = $request->file('file_persyaratan');
-            // Nama acak (tidak bisa ditebak) — berkas berisi data pribadi mahasiswa.
-            $fileName = $validated['jenis_tugas_akhir'] . '_' . \Illuminate\Support\Str::random(40) . '.pdf';
-            $file->move($uploadDir, $fileName);
-            $filePath = 'uploads/persyaratan/' . $fileName;
+            $filePath = BerkasMahasiswa::simpan($request->file('file_persyaratan'), 'persyaratan', $validated['jenis_tugas_akhir']);
         }
 
         // Determine actual jenis_tugas_akhir for skripsi (sidang/jurnal)
@@ -507,27 +494,12 @@ class MahasiswaController extends Controller
             'file_persyaratan.uploaded' => 'File persyaratan gagal diunggah ke server — kemungkinan ukurannya terlalu besar. Coba kompres file PDF-nya lalu unggah ulang.',
         ]);
 
-        // Delete old file
-        if ($sidang->file_persyaratan) {
-            $oldPath = public_path($sidang->file_persyaratan);
-            if (file_exists($oldPath)) {
-                @unlink($oldPath);
-            }
-        }
+        // Ganti berkas lama dengan revisi (penyimpanan privat, nama acak).
+        BerkasMahasiswa::hapus($sidang->file_persyaratan);
+        $filePath = BerkasMahasiswa::simpan($request->file('file_persyaratan'), 'persyaratan', 'revisi');
 
-        // Ensure directory exists
-        $uploadDir = public_path('uploads/persyaratan');
-        if (!file_exists($uploadDir)) {
-            @mkdir($uploadDir, 0777, true);
-        }
-
-        // Store new file
-        $file = $request->file('file_persyaratan');
-        $fileName = 'revisi_' . \Illuminate\Support\Str::random(40) . '.pdf';
-        $file->move($uploadDir, $fileName);
-        
         $sidang->update([
-            'file_persyaratan'    => 'uploads/persyaratan/' . $fileName,
+            'file_persyaratan'    => $filePath,
             'verifikasi_status'   => 'menunggu',
             'verifikasi_komentar' => null,
             'verifikasi_tanggal'  => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),

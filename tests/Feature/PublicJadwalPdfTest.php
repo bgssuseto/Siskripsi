@@ -33,9 +33,12 @@ class PublicJadwalPdfTest extends TestCase
             'tanggal_selesai' => '2026-01-31',
         ]);
 
+        // Link publik dibatasi lewat parameter p (periode), g (gelombang), j (jenis).
         $response = $this->get(route('public.dosen.jadwal', [
             'token' => $dosen->public_token,
-            'wave_id' => $wave->id,
+            'p' => $periode->id,
+            'g' => $wave->gelombang,
+            'j' => 'skripsi',
         ]));
 
         $response->assertStatus(200);

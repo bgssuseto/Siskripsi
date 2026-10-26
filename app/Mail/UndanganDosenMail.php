@@ -14,14 +14,22 @@ class UndanganDosenMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    /** Dicoba ulang bila server email sedang gangguan. */
+    public int $tries = 3;
+    public int $backoff = 120;
+
+    /** PDF disimpan base64 supaya aman diserialisasi ke antrian (payload JSON). */
+    public string $pdfBase64;
+
     public function __construct(
         public Dosen $dosen,
         public string $jenisUndangan,
         public string $namaPeriode,
         public int $totalUji,
-        public string $pdfContent,
+        string $pdfContent,
         public string $pdfFileName,
     ) {
+        $this->pdfBase64 = base64_encode($pdfContent);
     }
 
     public function envelope(): Envelope
@@ -46,7 +54,7 @@ class UndanganDosenMail extends Mailable
     public function attachments(): array
     {
         return [
-            Attachment::fromData(fn () => $this->pdfContent, $this->pdfFileName)
+            Attachment::fromData(fn () => base64_decode($this->pdfBase64), $this->pdfFileName)
                 ->withMime('application/pdf'),
         ];
     }

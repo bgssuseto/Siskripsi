@@ -50,6 +50,31 @@
         </x-slot:aksi>
     </x-sambutan>
 
+    {{-- Kesehatan sistem (khusus Super Admin): debug, penjadwal, backup --}}
+    @if($user->isSuperAdmin() && ($peringatanSistem = \App\Support\StatusSistem::peringatan()))
+        <section class="mb-6 overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/5">
+            <div class="flex items-center justify-between gap-3 border-b border-amber-200/80 px-4 py-2.5 dark:border-amber-500/20">
+                <p class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                    <x-icon name="warning" class="h-4 w-4" /> Kesehatan sistem
+                </p>
+                @if($bisa('backup.index'))
+                    <a href="{{ route('backup.index') }}" class="text-xs font-semibold text-amber-800 underline-offset-2 hover:underline dark:text-amber-300">Menu Backup</a>
+                @endif
+            </div>
+            <ul class="divide-y divide-amber-200/70 dark:divide-amber-500/15">
+                @foreach($peringatanSistem as [$judul, $ket, $tingkat])
+                    <li class="flex items-start gap-3 px-4 py-3">
+                        <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ $tingkat === 'rose' ? 'bg-rose-500' : 'bg-amber-500' }}"></span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $judul }}</p>
+                            <p class="mt-0.5 break-words text-xs leading-relaxed text-slate-600 dark:text-slate-400">{{ $ket }}</p>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     {{-- 2. Filter periode & gelombang --}}
     <form method="GET" action="{{ route('dashboard') }}"
           class="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:flex-row sm:items-end dark:border-slate-800 dark:bg-slate-900">

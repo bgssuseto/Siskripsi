@@ -312,16 +312,27 @@ class AdministrasiController extends Controller
         $invType = $built['jenisUndangan'] === 'sempro' ? 'Sempro' : 'Sidang_Skripsi';
         $filename = "Undangan_{$invType}_{$dosen->nama_dosen}.pdf";
 
-        \Illuminate\Support\Facades\Mail::to($dosen->email)->send(new \App\Mail\UndanganDosenMail(
-            $dosen,
-            $built['jenisUndangan'],
-            $built['namaPeriode'],
-            $built['totalUji'],
-            $built['pdf']->output(),
-            $filename,
-        ));
+        try {
+            $cara = \App\Support\KirimEmail::ke($dosen->email, new \App\Mail\UndanganDosenMail(
+                $dosen,
+                $built['jenisUndangan'],
+                $built['namaPeriode'],
+                $built['totalUji'],
+                $built['pdf']->output(),
+                $filename,
+            ));
+        } catch (\Throwable $e) {
+            report($e);
+            $message = "Email ke {$dosen->email} gagal dikirim: server email tidak merespons. Coba lagi beberapa saat lagi.";
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 502);
+            }
+            return back()->with('error', $message);
+        }
 
-        $message = "Undangan berhasil dikirim ke email {$dosen->email} ({$dosen->nama_dosen}).";
+        $message = $cara === 'antri'
+            ? "Undangan untuk {$dosen->nama_dosen} masuk antrian dan akan terkirim ke {$dosen->email} dalam 1–2 menit."
+            : "Undangan berhasil dikirim ke email {$dosen->email} ({$dosen->nama_dosen}).";
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => $message]);
         }

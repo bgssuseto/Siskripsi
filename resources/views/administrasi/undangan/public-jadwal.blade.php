@@ -28,6 +28,9 @@
                         @if($activePeriode)
                             <span class="text-xs text-slate-500 dark:text-slate-400">Periode: {{ $activePeriode->nama_periode }}</span>
                         @endif
+                        @if(filled(request('g')))
+                            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">· Gelombang {{ request('g') }}</span>
+                        @endif
                     </div>
 
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight dark:text-slate-100">

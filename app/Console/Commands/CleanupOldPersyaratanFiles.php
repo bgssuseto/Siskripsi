@@ -29,11 +29,7 @@ class CleanupOldPersyaratanFiles extends Command
         $deleted = 0;
 
         foreach ($sidangs as $sidang) {
-            $path = public_path($sidang->file_persyaratan);
-
-            if (file_exists($path)) {
-                @unlink($path);
-            }
+            \App\Support\BerkasMahasiswa::hapus($sidang->file_persyaratan);
 
             $sidang->update(['file_persyaratan' => null]);
             $deleted++;

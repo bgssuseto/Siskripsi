@@ -68,6 +68,12 @@ return [
     'timezone' => 'Asia/Jakarta',
 
     /*
+    | Email pemberitahuan otomatis ke mahasiswa & dosen (verifikasi berkas, jadwal,
+    | pengingat H-1). Matikan dengan NOTIFIKASI_EMAIL=false.
+    */
+    'notifikasi_email' => (bool) env('NOTIFIKASI_EMAIL', true),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------

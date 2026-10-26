@@ -121,14 +121,14 @@ class KesediaanDosenTest extends TestCase
         // 4. Koordinator can toggle individual Dosen form access
         $this->assertTrue($dosenObj->can_fill_kesediaan);
         
-        $toggleResponse = $this->actingAs($koordinator)->post(route('master.kesediaan-dosen.toggle-access', $dosenObj->id));
+        $toggleResponse = $this->actingAs($koordinator)->post(route('master.kesediaan-dosen.toggle-access', $dosenObj));
         $toggleResponse->assertRedirect();
         
         $dosenObj->refresh();
         $this->assertFalse($dosenObj->can_fill_kesediaan);
 
         // Toggle back using Super Admin
-        $toggleResponse2 = $this->actingAs($superAdmin)->post(route('master.kesediaan-dosen.toggle-access', $dosenObj->id));
+        $toggleResponse2 = $this->actingAs($superAdmin)->post(route('master.kesediaan-dosen.toggle-access', $dosenObj));
         $toggleResponse2->assertRedirect();
         
         $dosenObj->refresh();
