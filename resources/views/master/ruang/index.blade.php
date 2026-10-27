@@ -417,7 +417,8 @@
         async function bulkDeleteRuang() {
             const ids = Array.from(document.querySelectorAll('.row-checkbox-ruang:checked')).map(cb => cb.value);
             if (ids.length === 0) return;
-            if (!confirm('Hapus ' + ids.length + ' data ruangan terpilih?')) return;
+            const ok = await window.confirmDialog(ids.length + ' data ruangan akan dihapus secara permanen.', { title: 'Hapus Ruangan Terpilih?', confirmText: 'Ya, Hapus' });
+            if (!ok) return;
 
             const params = new URLSearchParams();
             ids.forEach(id => params.append('ids[]', id));

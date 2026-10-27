@@ -132,7 +132,7 @@
                                         <a href="{{ route('bebas-prodi.cetak', $p) }}" target="_blank" class="px-2.5 py-1.5 bg-slate-800 dark:bg-slate-600 hover:bg-slate-900 text-white text-[11px] font-bold rounded-lg"><x-icon name="printer" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Cetak</a>
                                     @endif
                                     @if($isSuperAdmin)
-                                        <form method="POST" action="{{ route('bebas-prodi.destroy', $p) }}" onsubmit="return confirm('Hapus pengajuan Bebas Prodi {{ addslashes($p->nama_mahasiswa) }}? Berkas juga akan dihapus.')">
+                                        <form method="POST" action="{{ route('bebas-prodi.destroy', $p) }}" onsubmit="event.preventDefault(); window.confirmDialog('Berkas terkait juga akan dihapus.', { title: 'Hapus pengajuan Bebas Prodi {{ addslashes($p->nama_mahasiswa) }}?', confirmText: 'Ya, Hapus' }).then(ok => ok && this.submit()); return false;">
                                             @csrf @method('DELETE')
                                             <button class="px-2.5 py-1.5 border border-slate-300 dark:border-slate-600 text-slate-500 hover:text-rose-600 text-[11px] font-bold rounded-lg">Hapus</button>
                                         </form>
@@ -223,7 +223,7 @@
                             </div>
                             <div class="flex gap-1.5">
                                 <button type="button" @click="edit = !edit" class="px-2.5 py-1.5 bg-slate-800 dark:bg-slate-600 text-white text-[11px] font-bold rounded-lg">Ubah</button>
-                                <form method="POST" action="{{ route('bebas-prodi.kaprodi.destroy', $k) }}" onsubmit="return confirm('Hapus Kaprodi {{ addslashes($k->nama) }}?')">
+                                <form method="POST" action="{{ route('bebas-prodi.kaprodi.destroy', $k) }}" onsubmit="event.preventDefault(); window.confirmDialog('Data Kaprodi ini akan dihapus secara permanen.', { title: 'Hapus Kaprodi {{ addslashes($k->nama) }}?', confirmText: 'Ya, Hapus' }).then(ok => ok && this.submit()); return false;">
                                     @csrf @method('DELETE')
                                     <button class="px-2.5 py-1.5 border border-slate-300 dark:border-slate-600 text-slate-500 hover:text-rose-600 text-[11px] font-bold rounded-lg">Hapus</button>
                                 </form>

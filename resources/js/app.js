@@ -10,6 +10,80 @@ Alpine.plugin(collapse);
 
 window.Alpine = Alpine;
 
+// Dialog konfirmasi global, pengganti confirm() bawaan browser yang tampilannya
+// tidak konsisten (beda tiap OS/browser, tidak ikut dark mode). Dipakai lewat
+// window.confirmDialog(pesan, opsi) → Promise<boolean>. Dibuat sebagai satu
+// elemen (singleton) dipakai ulang di semua halaman; animasinya otomatis
+// ditangani smooth.js (overlay fade + dialog "pop") karena cuma toggle
+// style.display seperti modal lain di aplikasi ini — tidak perlu kode animasi
+// sendiri di sini. Gaya ditulis pakai utility Tailwind biasa (bukan kelas
+// .modal-overlay/.modal-box lokal tiap halaman) supaya tampil konsisten di
+// SEMUA halaman, termasuk yang belum punya CSS modal sendiri.
+const CONFIRM_TONES = {
+    danger:  { icon: '⚠️', iconBg: 'bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400', btn: 'bg-rose-600 hover:bg-rose-700' },
+    warning: { icon: '⚠️', iconBg: 'bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400', btn: 'bg-amber-600 hover:bg-amber-700' },
+    info:    { icon: 'ℹ️', iconBg: 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400', btn: 'bg-indigo-600 hover:bg-indigo-700' },
+};
+
+window.confirmDialog = function (message, options = {}) {
+    const tone = CONFIRM_TONES[options.type] || CONFIRM_TONES.danger;
+    const title = options.title || 'Konfirmasi';
+    const confirmText = options.confirmText || 'Ya, Lanjutkan';
+    const cancelText = options.cancelText || 'Batal';
+
+    return new Promise((resolve) => {
+        let overlay = document.getElementById('confirm-dialog-global');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'confirm-dialog-global';
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.55);padding:1rem;';
+            overlay.innerHTML = `
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 dark:border-slate-700">
+                    <div class="p-5 flex items-start gap-3.5">
+                        <span id="confirm-dialog-icon" class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-lg"></span>
+                        <div class="min-w-0 pt-1">
+                            <h3 id="confirm-dialog-title" class="text-sm font-extrabold text-slate-800 dark:text-slate-100"></h3>
+                            <p id="confirm-dialog-message" class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" id="confirm-dialog-cancel" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700 transition-colors"></button>
+                        <button type="button" id="confirm-dialog-confirm" class="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-colors"></button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+        }
+
+        const iconEl = overlay.querySelector('#confirm-dialog-icon');
+        const titleEl = overlay.querySelector('#confirm-dialog-title');
+        const messageEl = overlay.querySelector('#confirm-dialog-message');
+        const cancelBtn = overlay.querySelector('#confirm-dialog-cancel');
+        const confirmBtn = overlay.querySelector('#confirm-dialog-confirm');
+
+        iconEl.className = 'w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-lg ' + tone.iconBg;
+        iconEl.textContent = tone.icon;
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        cancelBtn.textContent = cancelText;
+        confirmBtn.textContent = confirmText;
+        confirmBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-colors ' + tone.btn;
+
+        const close = (result) => {
+            overlay.style.display = 'none';
+            document.removeEventListener('keydown', onKeydown);
+            resolve(result);
+        };
+        const onKeydown = (e) => { if (e.key === 'Escape') close(false); };
+
+        cancelBtn.onclick = () => close(false);
+        confirmBtn.onclick = () => close(true);
+        overlay.onclick = (e) => { if (e.target === overlay) close(false); };
+        document.addEventListener('keydown', onKeydown);
+
+        overlay.style.display = 'flex';
+    });
+};
+
 // Helper to refresh elements dynamically via AJAX — dipakai setelah aksi
 // (plotting, edit, hapus, bulk, dll) supaya halaman tidak perlu di-reload
 // penuh. Isi lama di-fade-out singkat sebelum diganti, lalu fade-in —

@@ -200,7 +200,7 @@
         <div x-show="selectedIds.length > 0" x-cloak class="px-5 py-3.5 bg-indigo-50 dark:bg-indigo-950/40 border-b border-indigo-100 dark:border-indigo-900 flex items-center justify-between gap-3 flex-wrap">
             <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300" x-text="selectedIds.length + ' pendaftaran dipilih'"></span>
             <div class="flex items-center gap-2 flex-wrap">
-                <button type="button" @click="if(confirm('Setujui ' + selectedIds.length + ' pendaftaran terpilih?')) $refs.bulkApproveForm.submit()"
+                <button type="button" @click="window.confirmDialog('Pendaftaran terpilih akan ditandai disetujui.', { title: 'Setujui ' + selectedIds.length + ' Pendaftaran Terpilih?', type: 'info', confirmText: 'Ya, Setujui' }).then(ok => ok && $refs.bulkApproveForm.submit())"
                         style="background-color: #059669; color: #ffffff;"
                         class="px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer">
                     <x-icon name="check" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Setujui Terpilih

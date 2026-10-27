@@ -652,7 +652,11 @@
         async function bulkDeleteDosen() {
             const ids = Array.from(document.querySelectorAll('.row-checkbox-dosen:checked')).map(cb => cb.value);
             if (ids.length === 0) return;
-            if (!confirm('Hapus ' + ids.length + ' data dosen terpilih? Kolom pembimbing/penguji terkait akan tampil sebagai "-" dan otomatis kembali jika dosen ditambahkan lagi dengan NIDN yang sama.')) return;
+            const ok = await window.confirmDialog(
+                'Kolom pembimbing/penguji terkait akan tampil sebagai "-" dan otomatis kembali jika dosen ditambahkan lagi dengan NIDN yang sama.',
+                { title: 'Hapus ' + ids.length + ' Data Dosen Terpilih?', confirmText: 'Ya, Hapus' }
+            );
+            if (!ok) return;
 
             const params = new URLSearchParams();
             ids.forEach(id => params.append('ids[]', id));

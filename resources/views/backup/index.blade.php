@@ -67,7 +67,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                         </a>
-                        <form method="POST" action="{{ route('backup.destroy', $file['name']) }}" onsubmit="return confirm('Hapus file backup {{ $file['name'] }}? Tindakan ini tidak dapat dibatalkan.');">
+                        <form method="POST" action="{{ route('backup.destroy', $file['name']) }}" onsubmit="event.preventDefault(); window.confirmDialog('Tindakan ini tidak dapat dibatalkan.', { title: 'Hapus file backup {{ addslashes($file['name']) }}?', confirmText: 'Ya, Hapus' }).then(ok => ok && this.submit()); return false;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" title="Hapus" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 transition-all cursor-pointer">
@@ -98,8 +98,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('backup.restore') }}" enctype="multipart/form-data" class="space-y-3"
-                  onsubmit="return confirm('Anda benar-benar yakin? Semua data saat ini akan diganti dengan isi file backup ini.');">
+            <form method="POST" action="{{ route('backup.restore') }}" enctype="multipart/form-data" class="space-y-3">
                 @csrf
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Pilih File Backup (.sql)</label>

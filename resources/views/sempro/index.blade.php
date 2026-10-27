@@ -233,9 +233,11 @@
         },
         async resetJadwalTerpilih() {
             if (this.selectedIds.length === 0) return;
-            if (!confirm(`Reset jadwal ${this.selectedIds.length} mahasiswa terpilih?
-
-Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Mahasiswa yang sudah memiliki hasil ujian akan dilewati.`)) return;
+            const ok = await window.confirmDialog(
+                `Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Mahasiswa yang sudah memiliki hasil ujian akan dilewati.`,
+                { title: `Reset jadwal ${this.selectedIds.length} mahasiswa terpilih?`, type: 'warning', confirmText: 'Ya, Reset' }
+            );
+            if (!ok) return;
             try {
                 const response = await fetch('{{ route('jadwal.sempro.bulk-reset') }}', {
                     method: 'POST',

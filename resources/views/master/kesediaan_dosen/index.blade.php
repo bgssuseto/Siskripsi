@@ -163,7 +163,7 @@
                         <span x-show="!copied"><x-icon name="clipboard-list" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Salin Link</span>
                         <span x-show="copied"><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Tersalin</span>
                     </button>
-                    <form method="POST" action="{{ route('master.kesediaan-dosen.reset-public-token') }}" onsubmit="return confirm('Reset link publik? Link lama yang sudah dibagikan akan langsung tidak berlaku.')" class="shrink-0">
+                    <form method="POST" action="{{ route('master.kesediaan-dosen.reset-public-token') }}" onsubmit="event.preventDefault(); window.confirmDialog('Link lama yang sudah dibagikan akan langsung tidak berlaku.', { title: 'Reset Link Publik?', type: 'warning', confirmText: 'Ya, Reset' }).then(ok => ok && this.submit()); return false;" class="shrink-0">
                         @csrf
                         <button type="submit" class="w-full px-4 py-2.5 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-xs font-bold transition-all">
                             <x-icon name="refresh" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Reset Link
@@ -299,19 +299,14 @@
                     </p>
                 </div>
                 @if($kesediaans->total() > 0)
+                    @php
+                        $resetTitle = $lingkupReset ? "Reset Kesediaan untuk {$lingkupReset}?" : 'Hapus SEMUA Data Kesediaan?';
+                        $resetMessage = $lingkupReset
+                            ? 'Dosen dapat mengisi ulang kesediaannya setelah direset. Tindakan ini tidak dapat dibatalkan.'
+                            : 'Seluruh data kesediaan dosen (semua dosen, semua periode/gelombang) akan dihapus. Tindakan ini tidak dapat dibatalkan.';
+                    @endphp
                     <form action="{{ route('master.kesediaan-dosen.destroy-all') }}" method="POST"
-                          onsubmit="return confirm(@js($lingkupReset
-                              ? "RESET KESEDIAAN
-
-Hapus semua data kesediaan untuk {$lingkupReset}?
-Dosen dapat mengisi ulang kesediaannya setelah direset.
-
-Tindakan ini tidak dapat dibatalkan."
-                              : "HAPUS SEMUA DATA KESEDIAAN
-
-Hapus SELURUH data kesediaan dosen (semua dosen, semua periode/gelombang)?
-
-Tindakan ini tidak dapat dibatalkan."));">
+                          onsubmit="event.preventDefault(); window.confirmDialog(@js($resetMessage), { title: @js($resetTitle), confirmText: 'Ya, Lanjutkan' }).then(ok => ok && this.submit()); return false;">
                         @csrf
                         @method('DELETE')
                         @if($filterPeriode)<input type="hidden" name="periode_id" value="{{ $filterPeriode->id }}">@endif
@@ -373,7 +368,7 @@ Tindakan ini tidak dapat dibatalkan."));">
                                     {{ implode(', ', $item['keterangans']) ?: '—' }}
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <form method="POST" action="{{ route('master.kesediaan-dosen.destroy-group') }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus seluruh data kesediaan dosen untuk gelombang ini?')">
+                                    <form method="POST" action="{{ route('master.kesediaan-dosen.destroy-group') }}" onsubmit="event.preventDefault(); window.confirmDialog('Seluruh data kesediaan dosen untuk gelombang ini akan dihapus.', { title: 'Hapus Kesediaan Gelombang Ini?', confirmText: 'Ya, Hapus' }).then(ok => ok && this.submit()); return false;">
                                         @csrf
                                         <input type="hidden" name="dosen_id" value="{{ $item['dosen_id'] }}">
                                         <input type="hidden" name="wave_id" value="{{ $item['wave_id'] }}">

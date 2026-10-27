@@ -169,7 +169,7 @@
                                     </a>
                                     @if($item['dosen']->email)
                                         <form method="POST" action="{{ route('administrasi.undangan.send-email', array_merge(['dosen' => $item['dosen']->hash_id], request()->all())) }}"
-                                              onsubmit="return confirm('Kirim undangan ini via email ke {{ addslashes($item['dosen']->email) }}?');" class="inline">
+                                              onsubmit="event.preventDefault(); window.confirmDialog('Undangan akan dikirim ke {{ addslashes($item['dosen']->email) }}.', { title: 'Kirim Undangan?', type: 'info', confirmText: 'Ya, Kirim' }).then(ok => ok && this.submit()); return false;" class="inline">
                                             @csrf
                                             <button type="submit" class="inline-flex items-center justify-center p-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 rounded-lg transition-all border border-rose-200 dark:border-rose-800 cursor-pointer" title="Kirim Undangan via Email ke {{ $item['dosen']->email }}">
                                                 <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

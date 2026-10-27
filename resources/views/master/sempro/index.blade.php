@@ -162,7 +162,7 @@
                 <button type="button" onclick="openModal('modal-tambah')" class="ui-btn-primary">
                     <x-icon name="plus" class="w-4 h-4" /> Tambah Data
                 </button>
-                <form action="{{ route('master.sempro.destroy-all') }}" method="POST" onsubmit="return confirm('⚠️ KONFIRMASI HAPUS SEMUA DATA:\nApakah Anda yakin ingin menghapus SELURUH data sempro?\n\nTindakan ini tidak dapat dibatalkan!');" class="inline">
+                <form action="{{ route('master.sempro.destroy-all') }}" method="POST" onsubmit="event.preventDefault(); window.confirmDialog('Tindakan ini tidak dapat dibatalkan — seluruh data sempro akan hilang permanen.', { title: 'Hapus SEMUA Data Sempro?', confirmText: 'Ya, Hapus Semua' }).then(ok => ok && this.submit()); return false;" class="inline">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="ui-btn-danger-soft">
@@ -723,7 +723,8 @@
         async function bulkDeleteSelected() {
             const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
             if (ids.length === 0) return;
-            if (!confirm('Hapus ' + ids.length + ' data sempro terpilih? Aksi ini permanen.')) return;
+            const ok = await window.confirmDialog('Aksi ini permanen dan tidak dapat dibatalkan.', { title: 'Hapus ' + ids.length + ' Data Sempro Terpilih?', confirmText: 'Ya, Hapus' });
+            if (!ok) return;
 
             const params = new URLSearchParams();
             ids.forEach(id => params.append('ids[]', id));
