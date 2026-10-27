@@ -367,20 +367,28 @@ class MahasiswaController extends Controller
         }
 
         $today = now()->timezone('Asia/Jakarta')->format('Y-m-d');
-        
-        // Check if current date falls in any defined registration wave/period
-        $wave = PendaftaranPeriode::where('periode_id', $activePeriode->id)
-            ->where('jenis', $validated['jenis_tugas_akhir'])
-            ->whereDate('tanggal_mulai', '<=', $today)
-            ->whereDate('tanggal_selesai', '>=', $today)
-            ->first();
 
-        if (!$wave) {
-            $msg = 'Pendaftaran gagal! Saat ini pendaftaran untuk ' . ($validated['jenis_tugas_akhir'] === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi') . ' sedang ditutup.';
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => $msg], 422);
+        // Check if current date falls in any defined registration wave/period —
+        // tapi TIDAK berlaku untuk revisi (berkas yang sudah ditolak koordinator):
+        // mahasiswa yang berkasnya ditolak harus tetap bisa mengirim ulang
+        // revisinya kapan saja sampai diterima, walau gelombang pendaftarannya
+        // sendiri sudah tutup. Kalau tidak, berkas yang ditolak persis di
+        // penghujung gelombang jadi mandek selamanya karena tidak bisa direvisi
+        // maupun didaftarkan ulang (NIM-nya sudah terpakai periode ini).
+        if (!$isRevision) {
+            $wave = PendaftaranPeriode::where('periode_id', $activePeriode->id)
+                ->where('jenis', $validated['jenis_tugas_akhir'])
+                ->whereDate('tanggal_mulai', '<=', $today)
+                ->whereDate('tanggal_selesai', '>=', $today)
+                ->first();
+
+            if (!$wave) {
+                $msg = 'Pendaftaran gagal! Saat ini pendaftaran untuk ' . ($validated['jenis_tugas_akhir'] === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi') . ' sedang ditutup.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+                return back()->with('error', $msg);
             }
-            return back()->with('error', $msg);
         }
 
         // Handle File Upload (file_persyaratan - PDF only, max 4MB, overwrite old)

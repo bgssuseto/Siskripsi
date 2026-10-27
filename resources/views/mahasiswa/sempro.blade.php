@@ -57,7 +57,16 @@
                     @endif
                 </div>
 
-                @if($activeWave)
+                {{-- Area aksi ini tetap tampil walau gelombang sudah TUTUP, selama mahasiswa
+                     sudah punya pendaftaran pada periode aktif ($mySidang) — supaya status
+                     "menunggu"/"disetujui" tidak hilang begitu saja, dan yang terpenting:
+                     mahasiswa yang berkasnya DITOLAK tetap bisa merevisi & mengirim ulang
+                     kapan saja sampai diterima, walau gelombangnya sendiri sudah berakhir
+                     (lihat juga storeRegistration() di MahasiswaController — backend-nya
+                     memang sengaja tidak menolak revisi di luar gelombang). Tombol "Ajukan
+                     Pendaftaran Sempro" (pendaftaran BARU) tetap hanya muncul saat gelombang
+                     masih terbuka, lewat kondisi !$mySidang di bawah. --}}
+                @if($activeWave || $mySidang)
                     <div class="mt-4">
                         @if($user->status_kelulusan === 'lulus')
                             <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
@@ -235,9 +244,12 @@
     </div>
 
 
-    {{-- Modal Pendaftaran Seminar Proposal (Proporsional & Compact) --}}
-    @if($activeWave)
-    <div x-show="regModal" 
+    {{-- Modal Pendaftaran Seminar Proposal (Proporsional & Compact). Kondisinya
+         sengaja disamakan dengan tombol pemicunya di atas ($activeWave || $mySidang)
+         — modal ini juga dipakai untuk revisi berkas yang ditolak, yang harus tetap
+         bisa dibuka walau gelombang pendaftarannya sudah tutup. --}}
+    @if($activeWave || $mySidang)
+    <div x-show="regModal"
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto" 
          x-cloak 
          x-transition:enter="transition ease-out duration-200"

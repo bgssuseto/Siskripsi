@@ -59,7 +59,13 @@
                     @endif
                 </div>
 
-                @if($activeWave)
+                {{-- Tetap tampil walau gelombang TUTUP, selama mahasiswa sudah punya
+                     pendaftaran pada periode aktif ($mySidang) — supaya status
+                     "menunggu"/"disetujui" tidak hilang, dan mahasiswa yang berkasnya
+                     DITOLAK tetap bisa merevisi kapan saja sampai diterima (lihat
+                     storeRegistration() di MahasiswaController, dan perbaikan yang
+                     sama di mahasiswa/sempro.blade.php). --}}
+                @if($activeWave || $mySidang)
                     <div class="mt-4">
                         @if($user->status_kelulusan === 'lulus')
                             <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-xs text-emerald-900 dark:text-emerald-300 font-extrabold flex items-center gap-2">
@@ -152,8 +158,12 @@
 
     </div>
 
-    {{-- Modal Pendaftaran Sidang Skripsi --}}
-    @if($activeWave && $hasSempro)
+    {{-- Modal Pendaftaran Sidang Skripsi. Kondisi disamakan dengan tombol
+         pemicunya di atas ($activeWave || $mySidang) — modal ini juga dipakai
+         untuk revisi berkas yang ditolak, yang harus tetap bisa dibuka walau
+         gelombang pendaftarannya sudah tutup. $hasSempro tetap wajib terlepas
+         dari itu (prasyarat: harus sudah terdaftar Sempro). --}}
+    @if(($activeWave || $mySidang) && $hasSempro)
     <div x-show="regModal" 
          class="fixed inset-0 z-50 flex items-start justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto" 
          x-cloak 
