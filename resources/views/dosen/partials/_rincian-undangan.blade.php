@@ -91,24 +91,27 @@
                         @endphp
                         <li class="rounded-2xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-700 hover:ring-indigo-300 dark:hover:ring-indigo-500/50 transition-all p-3.5 sm:p-4">
                             <div class="flex flex-col sm:flex-row gap-2.5 sm:gap-4">
-                                {{-- Jam & ruang: baris di HP, kolom di layar lebar --}}
-                                <div class="flex flex-wrap sm:flex-nowrap sm:flex-col items-center gap-x-2 gap-y-1.5 sm:gap-0 sm:w-16 shrink-0 sm:text-center min-w-0">
+                                {{-- Jam: baris di HP, kolom sempit di layar lebar (ruang dipindah ke baris info
+                                     karena nama ruang bisa panjang, mis. "Perpustakaan Fakultas Teknik"). --}}
+                                <div class="flex sm:flex-col items-center gap-2 sm:gap-0 sm:w-20 shrink-0 sm:text-center sm:pt-0.5">
                                     <p class="text-sm font-extrabold text-indigo-700 dark:text-indigo-300 leading-tight whitespace-nowrap">{{ $mulai ?? '—' }}<span class="sm:hidden font-semibold text-slate-400">{{ $selesai ? ' – ' . $selesai : '' }}</span></p>
                                     @if($selesai)<p class="hidden sm:block text-[11px] text-slate-400 whitespace-nowrap">s/d {{ $selesai }}</p>@endif
-                                    <p class="sm:mt-1.5 inline-flex items-center gap-0.5 px-1.5 py-px rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 whitespace-nowrap">
-                                        <x-icon name="map-pin" class="w-3 h-3" />{{ $s->ruang?->kode_ruangan ?? '—' }}
-                                    </p>
                                     @if($peran)
-                                        <span class="sm:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold ring-1 ring-inset whitespace-nowrap {{ $warnaPeran[$peran] ?? $warnaPeran['Anggota Penguji 1'] }}">
+                                        <span class="sm:hidden ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold ring-1 ring-inset whitespace-nowrap {{ $warnaPeran[$peran] ?? $warnaPeran['Anggota Penguji 1'] }}">
                                             <x-icon name="user" class="w-3 h-3" /> {{ $peran }}
                                         </span>
                                     @endif
                                 </div>
-                                <div class="min-w-0 flex-1">
+                                <div class="min-w-0 flex-1 sm:border-l sm:border-slate-100 sm:dark:border-slate-800 sm:pl-4">
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="min-w-0">
                                             <p class="font-extrabold text-slate-900 dark:text-slate-100 leading-snug break-words">{{ $s->nama_mahasiswa }}</p>
-                                            <p class="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">{{ $s->nim }}</p>
+                                            <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                                <span class="font-mono font-semibold">{{ $s->nim }}</span>
+                                                <span class="inline-flex items-start gap-1 px-1.5 py-px rounded-md font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 break-words">
+                                                    <x-icon name="map-pin" class="w-3 h-3 mt-px shrink-0" />{{ $s->ruang?->kode_ruangan ?? 'Ruang belum ditentukan' }}
+                                                </span>
+                                            </p>
                                         </div>
                                         @if($peran)
                                             <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold ring-1 ring-inset shrink-0 whitespace-nowrap {{ $warnaPeran[$peran] ?? $warnaPeran['Anggota Penguji 1'] }}">
