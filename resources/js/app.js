@@ -10,24 +10,45 @@ Alpine.plugin(collapse);
 
 window.Alpine = Alpine;
 
-// Helper to refresh elements dynamically via AJAX
+// Helper to refresh elements dynamically via AJAX — dipakai setelah aksi
+// (plotting, edit, hapus, bulk, dll) supaya halaman tidak perlu di-reload
+// penuh. Isi lama di-fade-out singkat sebelum diganti, lalu fade-in —
+// murni CSS opacity (ringan), dan otomatis dilewati untuk pengguna dengan
+// preferensi "kurangi gerakan".
+const REFRESH_FADE_MS = 120;
+const reduceMotionRC = window.matchMedia('(prefers-reduced-motion: reduce)');
+
 window.refreshComponent = async function(selectors) {
     try {
         const response = await fetch(window.location.href);
         const html = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
-        
-        selectors.forEach(selector => {
-            const el = document.querySelector(selector);
-            const newEl = doc.querySelector(selector);
-            if (el && newEl) {
-                el.innerHTML = newEl.innerHTML;
-                if (window.Alpine) {
-                    window.Alpine.initTree(el);
-                }
+
+        const targets = selectors
+            .map(selector => ({ el: document.querySelector(selector), newEl: doc.querySelector(selector) }))
+            .filter(t => t.el && t.newEl);
+
+        const animate = !reduceMotionRC.matches && targets.some(t => t.el.animate);
+
+        if (animate) {
+            await Promise.all(targets.map(({ el }) =>
+                el.animate([{ opacity: 1 }, { opacity: .35 }], { duration: REFRESH_FADE_MS, easing: 'ease-out' }).finished.catch(() => {})
+            ));
+        }
+
+        targets.forEach(({ el, newEl }) => {
+            el.innerHTML = newEl.innerHTML;
+            if (window.Alpine) {
+                window.Alpine.initTree(el);
             }
         });
+
+        if (animate) {
+            targets.forEach(({ el }) =>
+                el.animate([{ opacity: .35 }, { opacity: 1 }], { duration: REFRESH_FADE_MS, easing: 'ease-out' })
+            );
+        }
         return true;
     } catch (error) {
         console.error('Error refreshing component:', error);

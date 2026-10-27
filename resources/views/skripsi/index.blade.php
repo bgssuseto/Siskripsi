@@ -344,7 +344,12 @@
                     }
                     resultBox.innerHTML = html;
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    setTimeout(() => location.reload(), (result.gagal && result.gagal.length > 0) ? 3500 : 1200);
+                    setTimeout(async () => {
+                        closeModal('modal-bulk-jadwalkan');
+                        this.selectedIds = [];
+                        await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                        if (this.currentView === 'calendar') initCalendar();
+                    }, (result.gagal && result.gagal.length > 0) ? 3500 : 1200);
                 } else {
                     resultBox.innerHTML = '';
                     showModalAlert('form-bulk-jadwalkan-alert', 'form-bulk-jadwalkan-alert-text', result.message || 'Terjadi kesalahan.');
@@ -1932,7 +1937,8 @@
                 if (res.ok && data.success) {
                     closeModal('modal-hasil-ujian');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
-                    setTimeout(() => location.reload(), 900);
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                    if (typeof calendar !== 'undefined' && calendar) initCalendar();
                 } else {
                     showModalAlert('form-hasil-ujian-alert', 'form-hasil-ujian-alert-text', data.message || 'Gagal menyimpan hasil ujian.');
                 }
@@ -2099,7 +2105,8 @@
                     closeModal('modal-tambah');
                     form.reset();
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    setTimeout(() => location.reload(), 800);
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                    if (typeof calendar !== 'undefined' && calendar) initCalendar();
                 } else {
                     if (response.status === 422) {
                         if (result.errors) {
@@ -2149,7 +2156,8 @@
                 if (response.ok) {
                     closeModal('modal-edit');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    setTimeout(() => location.reload(), 800);
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                    if (typeof calendar !== 'undefined' && calendar) initCalendar();
                 } else {
                     if (response.status === 422) {
                         if (result.errors) {
@@ -2198,7 +2206,8 @@
                 if (response.ok) {
                     closeModal('modal-hapus');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    setTimeout(() => location.reload(), 800);
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                    if (typeof calendar !== 'undefined' && calendar) initCalendar();
                 } else {
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal menghapus.', type: 'error' } }));
                 }
@@ -2234,7 +2243,8 @@
                 if (response.ok && result.success) {
                     closeModal('modal-jadwalkan');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || '✅ Jadwal berhasil disimpan!', type: 'success' } }));
-                    setTimeout(() => location.reload(), 800);
+                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                    if (typeof calendar !== 'undefined' && calendar) initCalendar();
                 } else if (Array.isArray(result.conflicts) && result.conflicts.length > 0 && typeof window.showBentrokModal === 'function') {
                     window.showBentrokModal(result.conflicts);
                 } else {

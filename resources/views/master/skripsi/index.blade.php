@@ -1064,7 +1064,7 @@
                 if (res.ok && data.success) {
                     closeModal('modal-hapus');
                     showToast('success', data.message || 'Data berhasil dihapus!');
-                    setTimeout(() => location.reload(), 1200);
+                    await refreshTableContent();
                 } else {
                     closeModal('modal-hapus');
                     showToast('error', data.message || 'Gagal menghapus data.');

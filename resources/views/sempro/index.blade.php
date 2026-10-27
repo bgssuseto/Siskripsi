@@ -249,7 +249,9 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                         message += ' ' + result.gagal.length + ' dilewati: ' + result.gagal.map(g => g.nama + ' (' + g.alasan + ')').join(', ');
                     }
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message, type: (result.gagal && result.gagal.length > 0) ? 'warning' : 'success' } }));
-                    setTimeout(() => location.reload(), (result.gagal && result.gagal.length > 0) ? 3500 : 1200);
+                    this.selectedIds = [];
+                    await refreshComponent(['#table-container', '#calendar-container']);
+                    if (typeof calendar !== 'undefined' && calendar) initCalendar();
                 } else {
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal mereset jadwal.', type: 'error' } }));
                 }
@@ -289,7 +291,12 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                     }
                     resultBox.innerHTML = html;
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
-                    setTimeout(() => location.reload(), (result.gagal && result.gagal.length > 0) ? 3500 : 1200);
+                    setTimeout(async () => {
+                        closeModal('modal-bulk-jadwalkan');
+                        this.selectedIds = [];
+                        await refreshComponent(['#table-container', '#calendar-container']);
+                        if (typeof calendar !== 'undefined' && calendar) initCalendar();
+                    }, (result.gagal && result.gagal.length > 0) ? 3500 : 1200);
                 } else {
                     resultBox.innerHTML = '';
                     showModalAlert('form-bulk-jadwalkan-alert', 'form-bulk-jadwalkan-alert-text', result.message || 'Terjadi kesalahan.');
@@ -1276,7 +1283,8 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                 if (res.ok && data.success) {
                     closeModal('modal-hasil-ujian');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
-                    setTimeout(() => location.reload(), 900);
+                    await refreshComponent(['#table-container', '#calendar-container']);
+                    if (typeof calendar !== 'undefined' && calendar) initCalendar();
                 } else {
                     showModalAlert('form-hasil-ujian-alert', 'form-hasil-ujian-alert-text', data.message || 'Gagal menyimpan hasil ujian.');
                 }
@@ -1403,12 +1411,9 @@ Tanggal, jam, dan ruangan akan dikosongkan sehingga bisa dijadwalkan ulang. Maha
                     if (response.ok) {
                         closeModal(modalId);
                         if (formId === 'form-tambah') this.reset();
-                        // Show brief success toast then reload
-                        const toastDiv = document.createElement('div');
-                        toastDiv.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;background:#10b981;color:#fff;padding:.75rem 1.25rem;border-radius:.75rem;font-size:.875rem;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.15);';
-                        toastDiv.textContent = result.message || '✅ Berhasil!';
-                        document.body.appendChild(toastDiv);
-                        setTimeout(() => { toastDiv.remove(); location.reload(); }, 1000);
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || '✅ Berhasil!', type: 'success' } }));
+                        await refreshComponent(['#table-container', '#calendar-container']);
+                        if (typeof calendar !== 'undefined' && calendar) initCalendar();
                         if (typeof onSuccess === 'function') onSuccess();
                     } else {
                         if (response.status === 422 && result.errors) {

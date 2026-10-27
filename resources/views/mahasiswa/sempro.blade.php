@@ -23,7 +23,7 @@
 @endphp
 
     <!-- Top Grid: Status Cards & Card Syarat & Ketentuan Pendaftaran -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div id="status-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Left Side: Status Periode & Gelombang Cards -->
         <div class="lg:col-span-1 space-y-6 h-fit">
@@ -443,7 +443,7 @@
     @endif
 
     <!-- History Table -->
-    <div class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 p-4 sm:p-6">
+    <div id="riwayat-section" class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 p-4 sm:p-6">
         <h2 class="text-base font-extrabold text-slate-800 dark:text-slate-200 mb-4">Riwayat Pendaftaran Sempro</h2>
         @if($sidangs->isEmpty())
             <div class="text-center py-8 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-600">
@@ -595,7 +595,9 @@
                 }
                 if (res.ok && data.success) {
                     showToastMhs('success', data.message || 'Pendaftaran berhasil dikirim!');
-                    setTimeout(() => location.reload(), 1200);
+                    const modalRoot = formDaftar.closest('[x-data]');
+                    if (modalRoot && window.Alpine) window.Alpine.$data(modalRoot).regModal = false;
+                    await refreshComponent(['#status-section', '#riwayat-section']);
                 } else {
                     showToastMhs(res.status === 422 ? 'warning' : 'error', extractErrorMessageMhs(data, 'Terjadi kesalahan.'));
                 }

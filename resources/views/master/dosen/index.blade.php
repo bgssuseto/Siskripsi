@@ -667,7 +667,7 @@
                 const data = await res.json();
                 if (res.ok && data.success) {
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
-                    setTimeout(() => location.reload(), 1200);
+                    await refreshComponent(['#table-container', '#filter-container']);
                 } else {
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message || 'Gagal menghapus data.', type: 'error' } }));
                 }
