@@ -29,9 +29,18 @@ class StatusSistem
         return $ts ? Carbon::createFromTimestamp($ts) : null;
     }
 
-    /** Penjadwal dianggap aktif bila berdetak dalam 10 menit terakhir. */
+    /** Fitur penjadwal dinyalakan di .env (PENJADWAL_AKTIF=true). */
+    public static function penjadwalDiaktifkan(): bool
+    {
+        return (bool) config('app.penjadwal_aktif', false);
+    }
+
+    /** Penjadwal dianggap aktif bila dinyalakan dan berdetak dalam 10 menit terakhir. */
     public static function penjadwalAktif(): bool
     {
+        if (!self::penjadwalDiaktifkan()) {
+            return false;
+        }
         $t = self::detakTerakhir();
         return $t !== null && $t->gt(now()->subMinutes(10));
     }
@@ -71,7 +80,8 @@ class StatusSistem
             $daftar[] = ['Mode debug menyala', 'Ubah APP_DEBUG=false di file .env server, lalu jalankan php artisan config:clear. Saat debug menyala, detail error (termasuk konfigurasi) bisa terlihat pengunjung.', 'rose'];
         }
 
-        if (!self::penjadwalAktif()) {
+        // Peringatan hanya bila penjadwal sengaja dinyalakan tapi Cron Job-nya tidak berjalan.
+        if (self::penjadwalDiaktifkan() && !self::penjadwalAktif()) {
             $t = self::detakTerakhir();
             $daftar[] = ['Penjadwal otomatis tidak berjalan', ($t ? 'Terakhir berjalan ' . $t->locale('id')->diffForHumans() . '. ' : 'Belum pernah berjalan. ')
                 . 'Backup harian, pengiriman email, pengingat ujian, dan pemindahan berkas tidak berjalan. Tambahkan Cron Job tiap menit di hPanel: php ' . base_path('artisan') . ' schedule:run', 'amber'];
@@ -89,7 +99,7 @@ class StatusSistem
         $backup = self::backupTerakhir();
         if (!$backup || $backup->lt(now()->subDays(2))) {
             $daftar[] = ['Backup database sudah lama', $backup
-                ? 'Backup terakhir ' . $backup->locale('id')->diffForHumans() . '. Buat backup manual di menu Backup bila penjadwal belum aktif.'
+                ? 'Backup terakhir ' . $backup->locale('id')->diffForHumans() . '. ' . (self::penjadwalDiaktifkan() ? 'Periksa penjadwal, atau buat backup manual di menu Backup.' : 'Backup otomatis nonaktif — buat backup manual di menu Backup secara berkala.')
                 : 'Belum ada backup sama sekali. Buat backup manual di menu Backup.', 'amber'];
         }
 

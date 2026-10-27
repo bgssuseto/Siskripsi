@@ -27,9 +27,13 @@ class NotifikasiService
     public const JEDA_MENIT = 15;
     private const KUNCI_TERTUNDA = 'notifikasi:tertunda';
 
+    /**
+     * Notifikasi otomatis dikirim oleh penjadwal — tanpa penjadwal tidak ada yang
+     * memprosesnya, jadi jangan ditampung (akan menumpuk tanpa pernah terkirim).
+     */
     public static function aktif(): bool
     {
-        return (bool) config('app.notifikasi_email', true);
+        return (bool) config('app.notifikasi_email', true) && (bool) config('app.penjadwal_aktif', false);
     }
 
     /** Dipanggil dari event model Sidang::updated. */

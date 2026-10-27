@@ -74,6 +74,15 @@ return [
     'notifikasi_email' => (bool) env('NOTIFIKASI_EMAIL', true),
 
     /*
+    | Penjadwal otomatis (Cron Job `php artisan schedule:run` tiap menit). Selama
+    | belum ada Cron Job di server, biarkan false: tugas terjadwal (backup harian,
+    | antrian email, notifikasi & pengingat H-1, pindah/bersihkan berkas) tidak
+    | didaftarkan dan peringatan "penjadwal tidak berjalan" tidak ditampilkan.
+    | Undangan dosen tetap terkirim langsung. Aktifkan: PENJADWAL_AKTIF=true.
+    */
+    'penjadwal_aktif' => (bool) env('PENJADWAL_AKTIF', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------

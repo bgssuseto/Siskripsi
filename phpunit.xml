@@ -27,6 +27,7 @@
         <env name="DB_DATABASE" value="skripsi_ti_test"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="MAIL_MAILER" value="array"/>
+        <env name="PENJADWAL_AKTIF" value="true"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
