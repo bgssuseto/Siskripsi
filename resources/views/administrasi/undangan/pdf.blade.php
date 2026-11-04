@@ -448,7 +448,7 @@
                 <div>Koordinator Skripsi/Tugas Akhir</div>
                 <div>Program Studi Teknik Informatika</div>
                 @if(!empty($qrTtd))
-                    {{-- Tanda tangan elektronik: QR (logo TI UMK menyatu di gambar) di ruang tanda tangan --}}
+                    {{-- Tanda tangan elektronik: QR (logo UMK menyatu di gambar) di ruang tanda tangan --}}
                     <div class="signature-qr"><img src="{{ $qrTtd }}" width="60" height="60" alt="QR Tanda Tangan Elektronik" style="width: 60px; height: 60px;"></div>
                     <div class="signature-name">{{ $koordinator->nama_dosen ?? '-' }}</div>
                     <div class="signature-nidn">NIDN. {{ $koordinator->nidn ?? '-' }}</div>

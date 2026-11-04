@@ -229,8 +229,8 @@ class AdministrasiController extends Controller
             return $kosong;
         }
 
-        // Satu gambar PNG (QR + logo TI UMK di tengah) — tampil sama di halaman Cetak & PDF.
-        $qrPng = \App\Support\QrCode::pngDenganLogo($ttd->url_verifikasi, public_path('images/logo-ti-umk-icon.png'));
+        // Satu gambar PNG (QR + logo UMK di tengah) — tampil sama di halaman Cetak & PDF.
+        $qrPng = \App\Support\QrCode::pngDenganLogo($ttd->url_verifikasi, public_path('images/logo-umk-qr.png'));
 
         return ['ttdUndangan' => $ttd, 'qrTtd' => $qrPng ?? \App\Support\QrCode::svgDataUri($ttd->url_verifikasi, 8, 'M')];
     }

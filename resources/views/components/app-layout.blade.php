@@ -399,15 +399,14 @@
                     <div class="relative w-10 h-10 shrink-0">
                         <span aria-hidden="true" class="absolute -inset-0.5 rounded-[14px] bg-gradient-to-br from-indigo-500 via-violet-500 to-sky-400 opacity-60 blur-[6px] transition-opacity group-hover:opacity-90"></span>
                         <div class="relative w-10 h-10 rounded-xl flex items-center justify-center p-1.5 ring-1 ring-indigo-100 shadow-md shadow-indigo-500/10 transition-transform group-hover:scale-105" style="background-color:#fff">
-                            <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI-UMK" class="w-full h-full object-contain">
+                            <img src="{{ asset('images/logo-umk.png') }}" alt="Universitas Muria Kudus" class="w-full h-full object-contain">
                         </div>
                     </div>
-                    <div class="overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-40 opacity-100' : 'w-0 opacity-0'">
-                        <img x-show="darkMode" src="{{ asset('images/logo-ti-umk-text-white.png') }}" alt="TI-UMK" class="h-[18px] w-auto object-contain">
-                        <img x-show="!darkMode" src="{{ asset('images/logo-ti-umk-text.png') }}" alt="TI-UMK" class="h-[18px] w-auto object-contain">
-                        <p class="mt-1.5 flex items-center gap-1.5 whitespace-nowrap">
-                            <span class="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[0_0_0_3px_rgba(99,102,241,0.15)]"></span>
-                            <span class="text-[9.5px] font-extrabold uppercase tracking-[0.2em] bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">Portal Akademik</span>
+                    <div class="overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-44 opacity-100' : 'w-0 opacity-0'">
+                        <p class="whitespace-nowrap text-[13.5px] font-extrabold leading-tight tracking-tight text-slate-900 dark:text-white">Sistem Informasi Skripsi</p>
+                        <p class="mt-1 flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_0_3px_rgba(251,191,36,0.18)]"></span>
+                            <span class="text-[9.5px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Teknik Informatika &middot; UMK</span>
                         </p>
                     </div>
                 </a>

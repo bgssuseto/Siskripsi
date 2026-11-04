@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Portal Skripsi TI' }} - Portal Skripsi Program Studi Teknik Informatika</title>
+    <title>{{ $title ?? 'Masuk' }} - Sistem Informasi Skripsi TI UMK</title>
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
@@ -42,12 +42,12 @@
         <div class="hidden lg:flex lg:w-1/2 bg-slate-50 dark:bg-slate-900 flex-col p-10 xl:p-14 relative overflow-hidden transition-colors duration-200">
             <!-- Logo Lockup -->
             <div class="flex items-center gap-3.5 relative z-10">
-                <div class="w-16 h-16 shrink-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center justify-center p-2 shadow-sm">
-                    <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI-UMK" class="w-full h-full object-contain">
+                <div class="w-16 h-16 shrink-0 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center justify-center p-2 shadow-sm" style="background-color:#fff">
+                    <img src="{{ asset('images/logo-umk.png') }}" alt="Universitas Muria Kudus" class="w-full h-full object-contain">
                 </div>
                 <div>
-                    <p class="font-extrabold text-slate-800 dark:text-slate-100 text-xl leading-tight">TI &ndash; UMK</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Portal Skripsi</p>
+                    <p class="font-extrabold text-slate-800 dark:text-slate-100 text-xl leading-tight">Sistem Informasi Skripsi</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Teknik Informatika &middot; Universitas Muria Kudus</p>
                 </div>
             </div>
 
@@ -98,7 +98,7 @@
 
             <!-- Footer -->
             <p class="text-xs text-slate-400 dark:text-slate-500 relative z-10">
-                &copy; {{ date('Y') }} Portal Skripsi TI &mdash; Program Studi Teknik Informatika, Universitas Muria Kudus.
+                &copy; {{ date('Y') }} Sistem Informasi Skripsi &mdash; Program Studi Teknik Informatika, Universitas Muria Kudus.
             </p>
             <p class="text-[11px] text-slate-400 dark:text-slate-500 relative z-10 mt-1">
                 Made with <span class="text-rose-500">&hearts;</span> by Tim Pengembang TI UMK
@@ -127,12 +127,11 @@
 
             <!-- Mobile Logo -->
             <div class="lg:hidden flex flex-col items-center gap-2.5 mb-8">
-                <div class="w-20 h-20 shrink-0 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl flex items-center justify-center p-2.5">
-                    <img src="{{ asset('images/logo-ti-umk-icon.png') }}" alt="TI-UMK" class="w-full h-full object-contain">
+                <div class="w-20 h-20 shrink-0 border border-slate-100 dark:border-slate-700 rounded-2xl flex items-center justify-center p-2.5 shadow-sm" style="background-color:#fff">
+                    <img src="{{ asset('images/logo-umk.png') }}" alt="Universitas Muria Kudus" class="w-full h-full object-contain">
                 </div>
-                <img x-show="!darkMode" src="{{ asset('images/logo-ti-umk-text.png') }}" alt="TI-UMK" class="h-8 w-auto object-contain">
-                <img x-show="darkMode" src="{{ asset('images/logo-ti-umk-text-white.png') }}" alt="TI-UMK" class="h-8 w-auto object-contain">
-                <p class="text-sm text-slate-500 dark:text-slate-400">Portal Skripsi</p>
+                <p class="text-xl font-extrabold leading-tight text-slate-800 dark:text-slate-100 text-center">Sistem Informasi Skripsi</p>
+                <p class="-mt-1.5 text-sm text-slate-500 dark:text-slate-400 text-center">Teknik Informatika &middot; Universitas Muria Kudus</p>
             </div>
 
             <div class="w-full max-w-md">

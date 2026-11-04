@@ -20,9 +20,9 @@ class SuratBebasProdi
         $kaprodi = $bebasProdi->kaprodi ?? Kaprodi::untukTanggal($bebasProdi->tanggal_surat);
 
         $kopPath  = public_path('images/kop_surat.png');
-        $logoPath = public_path('images/logo-ti-umk-icon.png');
+        $logoPath = public_path('images/logo-umk-qr.png');
 
-        // QR level H (tahan ~30% kerusakan) dengan area tengah kosong untuk logo TI UMK.
+        // QR level H (tahan ~30% kerusakan) dengan area tengah kosong untuk logo UMK.
         $qr = $bebasProdi->url_verifikasi ? QrCode::denganRuangLogo($bebasProdi->url_verifikasi) : null;
 
         return Pdf::loadView('bebas-prodi.surat', [

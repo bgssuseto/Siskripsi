@@ -94,7 +94,7 @@
                     <div class="qr">
                         <img class="kode" src="{{ $qrBase64 }}" alt="QR Tanda Tangan Elektronik">
                         @if(!empty($logoBase64) && $sisi > 0)
-                            <img class="logo" src="{{ $logoBase64 }}" alt="TI UMK"
+                            <img class="logo" src="{{ $logoBase64 }}" alt="UMK"
                                  style="left: {{ round(($ukuran - $sisi) / 2 + $pad, 2) }}px; top: {{ round(($ukuran - $sisi) / 2 + $pad, 2) }}px; width: {{ round($sisi - 2 * $pad, 2) }}px; height: {{ round($sisi - 2 * $pad, 2) }}px;">
                         @endif
                     </div>
