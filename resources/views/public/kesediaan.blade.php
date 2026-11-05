@@ -31,6 +31,11 @@
             </div>
         </div>
 
+        {{-- Alert dinamis (JS): ditampilkan lewat showAlert() setelah submit AJAX.
+             Fallback non-JS (sesi/redirect) tetap di bawah untuk browser yang
+             entah kenapa tidak menjalankan script. --}}
+        <div id="js-alert" class="hidden rounded-2xl p-4 text-sm font-semibold"></div>
+
         @if(!session('success') && (int) request('tersimpan') > 0)
         <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl p-4 text-sm font-semibold dark:bg-emerald-500/15 dark:border-emerald-500/30 dark:text-emerald-300">
             <x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Terima kasih — {{ (int) request('tersimpan') }} tanggal kesediaan menguji Anda berhasil disimpan.
@@ -56,9 +61,13 @@
 
         <!-- Form Card -->
         <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-lg dark:bg-slate-800/80 dark:border-slate-700">
-            {{-- Action RELATIF: form selalu dikirim ke domain & protokol (http/https) yang sama
-                 dengan halaman yang sedang dibuka dosen, apa pun alamat link yang dibagikan. --}}
-            <form method="POST" action="{{ route('public.kesediaan.store', $token, false) }}" class="space-y-4">
+            {{-- Dikirim lewat JS (fetch) ke window.location.pathname — bukan ke action
+                 ini secara langsung — supaya tujuannya SELALU persis sama dengan URL
+                 yang sedang dibuka dosen, tidak bergantung route()/APP_URL di server
+                 (skema/host/subfolder bisa salah di balik proxy hosting kampus dan
+                 berakhir 404). Action & method native tetap diisi sebagai fallback
+                 kalau untuk alasan tertentu JS gagal berjalan. --}}
+            <form method="POST" action="{{ route('public.kesediaan.store', $token, false) }}" id="kesediaan-form" class="space-y-4">
                 @csrf
 
                 <div>
@@ -83,12 +92,13 @@
                 </div>
 
                 <x-kesediaan-date-picker
+                    id="kesediaan-datepicker"
                     :selected="collect(old('slots', []))->pluck('tanggal')->filter()->unique()->values()->all()"
                     :keterangan="old('slots.0.keterangan', '')"
                     :min="$periode->rentangKesediaan()['min']"
                     :max="$periode->rentangKesediaan()['max']" />
 
-                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all">
+                <button type="submit" id="kesediaan-submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed">
                     Simpan Kesediaan
                 </button>
                 @else
@@ -103,5 +113,76 @@
 
         <p class="text-center text-[11px] text-slate-500 dark:text-slate-400">Sistem Informasi Tugas Akhir — Program Studi Teknik Informatika, Universitas Muria Kudus.</p>
     </div>
+
+    <script>
+        (function () {
+            const form = document.getElementById('kesediaan-form');
+            if (!form) return;
+            const alertBox = document.getElementById('js-alert');
+            const btn = document.getElementById('kesediaan-submit-btn');
+            const datepickerEl = document.getElementById('kesediaan-datepicker');
+            const origBtnText = btn ? btn.textContent : '';
+
+            function showAlert(type, message) {
+                const styles = {
+                    success: 'bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/15 dark:border-emerald-500/30 dark:text-emerald-300',
+                    error: 'bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-500/15 dark:border-rose-500/30 dark:text-rose-300',
+                };
+                alertBox.className = 'rounded-2xl p-4 text-sm font-semibold ' + styles[type];
+                alertBox.textContent = message;
+                alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            // Dikirim ke window.location.pathname (URL persis yang sedang dibuka
+            // dosen), BUKAN form.action — supaya tidak pernah 404 gara-gara
+            // route()/APP_URL salah menebak skema/host/subfolder di server
+            // (lihat PublicKesediaanController::store()).
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan…'; }
+                alertBox.classList.add('hidden');
+
+                try {
+                    const res = await fetch(window.location.pathname, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': form.querySelector('input[name=_token]').value,
+                        },
+                        body: new FormData(form),
+                    });
+
+                    let data = {};
+                    try {
+                        data = await res.json();
+                    } catch (parseErr) {
+                        showAlert('error', 'Server mengembalikan respons tak terduga (status ' + res.status + '). Coba lagi atau hubungi Koordinator.');
+                        return;
+                    }
+
+                    if (res.ok && data.success) {
+                        showAlert('success', data.message || 'Kesediaan menguji Anda berhasil disimpan.');
+                        // Kosongkan pilihan tanggal & tandai yang baru disimpan sebagai
+                        // "sudah diisi" (hijau), supaya dosen bisa langsung isi tanggal
+                        // lain tanpa reload halaman.
+                        if (window.Alpine && datepickerEl) {
+                            const picker = window.Alpine.$data(datepickerEl);
+                            picker.existing = [...new Set([...picker.existing, ...picker.selected])];
+                            picker.selected = [];
+                            picker.keterangan = '';
+                        }
+                    } else if (res.status === 422 && data.errors) {
+                        showAlert('error', Object.values(data.errors).flat().join(' '));
+                    } else {
+                        showAlert('error', data.message || 'Terjadi kesalahan. Silakan coba lagi.');
+                    }
+                } catch (err) {
+                    showAlert('error', 'Gagal terhubung ke server. Periksa koneksi internet Anda lalu coba lagi.');
+                } finally {
+                    if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

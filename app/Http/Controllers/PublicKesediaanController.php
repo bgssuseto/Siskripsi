@@ -6,6 +6,7 @@ use App\Models\Dosen;
 use App\Models\KesediaanDosen;
 use App\Models\PendaftaranPeriode;
 use App\Models\Periode;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -70,13 +71,26 @@ class PublicKesediaanController extends Controller
             ->header('X-LiteSpeed-Cache-Control', 'no-cache');
     }
 
-    public function store(Request $request, string $token): RedirectResponse
+    /**
+     * Dipanggil lewat AJAX (fetch) dari public/kesediaan.blade.php, BUKAN form
+     * native — sengaja, supaya tujuan request selalu persis window.location.pathname
+     * halaman yang sedang dibuka dosen (lihat komentar di view-nya), tidak
+     * bergantung sama sekali pada route()/APP_URL di server (skema/host/subfolder
+     * bisa salah di balik proxy/alias hosting kampus dan berakhir 404 — ini yang
+     * sempat terjadi walau sudah sekali diperbaiki lewat redirect relatif).
+     * Setiap jalur keluar mengembalikan JSON {success, message} supaya halaman
+     * bisa menampilkan alert sukses/gagal tanpa pernah pindah ke URL lain.
+     */
+    public function store(Request $request, string $token): RedirectResponse|JsonResponse
     {
         $periode = Periode::where('kesediaan_public_token', $token)->first();
 
         if (!$periode || !$periode->isKesediaanPublicLinkActive()) {
-            return redirect()->route('public.kesediaan.show', $token)
-                ->with('error', 'Link ini sudah tidak aktif — di luar jadwal gelombang yang berjalan.');
+            $msg = 'Link ini sudah tidak aktif — di luar jadwal gelombang yang berjalan.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->route('public.kesediaan.show', $token)->with('error', $msg);
         }
 
         $validated = $request->validate([
@@ -94,7 +108,11 @@ class PublicKesediaanController extends Controller
             ->excludingSuperAdminPlaceholder()
             ->first();
         if (!$dosen) {
-            return back()->with('error', 'Dosen tidak ditemukan atau belum diberi akses mengisi kesediaan.')->withInput();
+            $msg = 'Dosen tidak ditemukan atau belum diberi akses mengisi kesediaan.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg)->withInput();
         }
 
         // Pastikan gelombang yang dipilih benar-benar milik periode ini — tidak
@@ -106,13 +124,21 @@ class PublicKesediaanController extends Controller
             ->first();
 
         if (!$wave) {
-            return back()->with('error', 'Gelombang yang dipilih tidak valid untuk periode ini. Silakan muat ulang halaman.')->withInput();
+            $msg = 'Gelombang yang dipilih tidak valid untuk periode ini. Silakan muat ulang halaman.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg)->withInput();
         }
 
         // Tanggal harus berada dalam rentang pengisian yang diatur koordinator.
         $diLuar = $periode->tanggalDiLuarRentangKesediaan(array_column($validated['slots'], 'tanggal'));
         if ($diLuar) {
-            return back()->with('error', $periode->pesanDiLuarRentangKesediaan($diLuar))->withInput();
+            $msg = $periode->pesanDiLuarRentangKesediaan($diLuar);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg)->withInput();
         }
 
         foreach ($validated['slots'] as $slot) {
@@ -133,10 +159,15 @@ class PublicKesediaanController extends Controller
             );
         }
 
-        // Alamat RELATIF (tetap di domain & http/https yang sama dengan halaman dosen),
-        // plus penanda ?tersimpan=N supaya pesan sukses tetap tampil walau browser
-        // dosen tidak menyimpan cookie sesi (pesan flash lewat sesi bisa hilang).
+        $msg = 'Terima kasih, ' . $dosen->nama_dosen . ' — kesediaan menguji Anda berhasil disimpan.';
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $msg, 'count' => count($validated['slots'])]);
+        }
+
+        // Fallback non-JS: alamat RELATIF (tetap di domain & http/https yang sama
+        // dengan halaman dosen), plus penanda ?tersimpan=N supaya pesan sukses
+        // tetap tampil walau browser dosen tidak menyimpan cookie sesi.
         return redirect()->away(route('public.kesediaan.show', $token, false) . '?tersimpan=' . count($validated['slots']))
-            ->with('success', 'Terima kasih, ' . $dosen->nama_dosen . ' — kesediaan menguji Anda berhasil disimpan.');
+            ->with('success', $msg);
     }
 }
