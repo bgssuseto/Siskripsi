@@ -1181,7 +1181,7 @@
             // jadi data pembimbingnya dibawa langsung lewat extendedProps.
             if (sidangId && Array.isArray(pembimbing)) extraPembimbing[String(sidangId)] = pembimbing;
             const form = document.getElementById('form-jadwalkan');
-            form.action = '/jadwal/sempro/' + hashId + '/jadwalkan';
+            form.action = @json(route('jadwal.sempro.jadwalkan', '__ID__')).replace('__ID__', hashId);
             document.getElementById('jadwalkan-mhs-nama').textContent = nama;
             document.getElementById('jadwalkan-mhs-nim').textContent = 'NIM: ' + nim;
             document.getElementById('jadwalkan-tanggal').value = tgl || '';
@@ -1232,7 +1232,7 @@
         }
 
         function openEdit(hashId, data) {
-            document.getElementById('form-edit').action = '/master/sempro/' + hashId;
+            document.getElementById('form-edit').action = @json(route('master.sempro.update', '__ID__')).replace('__ID__', hashId);
             document.getElementById('edit-nim').value                             = data.nim || '';
             document.getElementById('edit-nama').value                            = data.nama_mahasiswa || '';
             document.getElementById('edit-judul').value                           = data.judul_skripsi || '';
@@ -1250,7 +1250,7 @@
 
         function openDelete(hashId, nama) {
             document.getElementById('hapus-nama').textContent = nama;
-            document.getElementById('form-hapus').action = '/master/sempro/' + hashId;
+            document.getElementById('form-hapus').action = @json(route('master.sempro.destroy', '__ID__')).replace('__ID__', hashId);
             openModal('modal-hapus');
         }
 

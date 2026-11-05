@@ -1804,7 +1804,7 @@
 
         function openJadwalkan(id, hashId, nama, nim, tgl, jam, ruangId, ketuaId, p1Id, p2Id, pembimbingUtamaId, pembimbingUtamaNama) {
             const form = document.getElementById('form-jadwalkan');
-            form.action = '/jadwal/skripsi/' + hashId + '/jadwalkan';
+            form.action = @json(route('jadwal.skripsi.jadwalkan', '__ID__')).replace('__ID__', hashId);
             document.getElementById('jadwalkan-sidang-id').value = id;
             document.getElementById('jadwalkan-mhs-nama').textContent = nama;
             document.getElementById('jadwalkan-mhs-nim').textContent = 'NIM: ' + nim;
@@ -1843,7 +1843,7 @@
         }
 
         function openEdit(hashId, data) {
-            document.getElementById('form-edit').action = '/master/skripsi/' + hashId;
+            document.getElementById('form-edit').action = @json(route('master.skripsi.update', '__ID__')).replace('__ID__', hashId);
             document.getElementById('edit-nim').value                             = data.nim || '';
             document.getElementById('edit-nama').value                            = data.nama_mahasiswa || '';
             document.getElementById('edit-judul').value                           = data.judul_skripsi || '';
@@ -1902,7 +1902,7 @@
 
         function openDelete(hashId, nama) {
             document.getElementById('hapus-nama').textContent = nama;
-            document.getElementById('form-hapus').action = '/master/skripsi/' + hashId;
+            document.getElementById('form-hapus').action = @json(route('master.skripsi.destroy', '__ID__')).replace('__ID__', hashId);
             openModal('modal-hapus');
         }
 
