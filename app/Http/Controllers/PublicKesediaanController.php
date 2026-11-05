@@ -8,7 +8,7 @@ use App\Models\PendaftaranPeriode;
 use App\Models\Periode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Http\Response;
 
 /**
  * Form kesediaan menguji publik (tanpa login) via link token per-periode.
@@ -20,14 +20,14 @@ use Illuminate\View\View;
  */
 class PublicKesediaanController extends Controller
 {
-    public function show(Request $request, string $token): View
+    public function show(Request $request, string $token): Response
     {
         $periode = Periode::where('kesediaan_public_token', $token)->first();
 
         if (!$periode || !$periode->isKesediaanPublicLinkActive()) {
-            return view('public.kesediaan-inactive', [
+            return $this->tanpaCache(response()->view('public.kesediaan-inactive', [
                 'periode' => $periode,
-            ]);
+            ]));
         }
 
         // Seluruh gelombang periode ini — SENGAJA tidak dibatasi ke yang sedang
@@ -49,12 +49,25 @@ class PublicKesediaanController extends Controller
             ->orderBy('nama_dosen')
             ->get();
 
-        return view('public.kesediaan', [
+        return $this->tanpaCache(response()->view('public.kesediaan', [
             'periode' => $periode,
             'token' => $token,
             'activeWaves' => $activeWaves,
             'dosens' => $dosens,
-        ]);
+        ]));
+    }
+
+    /**
+     * Halaman form publik tidak boleh disimpan cache (browser, maupun cache server
+     * seperti LiteSpeed di Hostinger) — supaya dosen selalu melihat status form,
+     * pilihan gelombang & rentang tanggal terbaru.
+     */
+    private function tanpaCache(Response $response): Response
+    {
+        return $response
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('X-LiteSpeed-Cache-Control', 'no-cache');
     }
 
     public function store(Request $request, string $token): RedirectResponse
@@ -120,7 +133,10 @@ class PublicKesediaanController extends Controller
             );
         }
 
-        return redirect()->route('public.kesediaan.show', $token)
+        // Alamat RELATIF (tetap di domain & http/https yang sama dengan halaman dosen),
+        // plus penanda ?tersimpan=N supaya pesan sukses tetap tampil walau browser
+        // dosen tidak menyimpan cookie sesi (pesan flash lewat sesi bisa hilang).
+        return redirect()->away(route('public.kesediaan.show', $token, false) . '?tersimpan=' . count($validated['slots']))
             ->with('success', 'Terima kasih, ' . $dosen->nama_dosen . ' — kesediaan menguji Anda berhasil disimpan.');
     }
 }

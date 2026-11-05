@@ -31,6 +31,11 @@
             </div>
         </div>
 
+        @if(!session('success') && (int) request('tersimpan') > 0)
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl p-4 text-sm font-semibold dark:bg-emerald-500/15 dark:border-emerald-500/30 dark:text-emerald-300">
+            <x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Terima kasih — {{ (int) request('tersimpan') }} tanggal kesediaan menguji Anda berhasil disimpan.
+        </div>
+        @endif
         @if(session('success'))
         <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl p-4 text-sm font-semibold dark:bg-emerald-500/15 dark:border-emerald-500/30 dark:text-emerald-300">
             <x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> {{ session('success') }}
@@ -51,7 +56,9 @@
 
         <!-- Form Card -->
         <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-lg dark:bg-slate-800/80 dark:border-slate-700">
-            <form method="POST" action="{{ route('public.kesediaan.store', $token) }}" class="space-y-4">
+            {{-- Action RELATIF: form selalu dikirim ke domain & protokol (http/https) yang sama
+                 dengan halaman yang sedang dibuka dosen, apa pun alamat link yang dibagikan. --}}
+            <form method="POST" action="{{ route('public.kesediaan.store', $token, false) }}" class="space-y-4">
                 @csrf
 
                 <div>

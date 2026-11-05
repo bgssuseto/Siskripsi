@@ -15,6 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\KunciRahasiaSaatPindah::class,
         ]);
+        // Form kesediaan PUBLIK (tanpa login) — siapa pun yang memegang link memang
+        // boleh mengisi, jadi token CSRF tidak menambah keamanan di sini, tapi justru
+        // membuat kiriman gagal (419) bila sesi dosen habis karena halaman dibiarkan
+        // lama terbuka, atau browser bawaan WhatsApp/HP tidak menyimpan cookie sesi.
+        // Penyalahgunaan tetap dibatasi throttle:20,1 di route-nya.
+        $middleware->validateCsrfTokens(except: [
+            'kesediaan-publik/*',
+        ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'menu.permission' => \App\Http\Middleware\CheckMenuPermission::class,
