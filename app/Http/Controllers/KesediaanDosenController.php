@@ -80,7 +80,15 @@ class KesediaanDosenController extends Controller
         $waves = PendaftaranPeriode::with('periode')->orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
 
-        return view('master.kesediaan_dosen.index', compact('kesediaans', 'dosens', 'periodes', 'waves', 'activePeriode'));
+        // Ringkasan periode aktif untuk kartu status di atas halaman.
+        $kesediaanAktif = $activePeriode ? KesediaanDosen::where('periode_id', $activePeriode->id) : null;
+        $ringkasan = [
+            'dosen_berhak'  => $dosens->where('can_fill_kesediaan', true)->count(),
+            'sudah_mengisi' => $kesediaanAktif ? (clone $kesediaanAktif)->distinct()->count('dosen_id') : 0,
+            'jumlah_hari'   => $kesediaanAktif ? (clone $kesediaanAktif)->distinct()->count('tanggal') : 0,
+        ];
+
+        return view('master.kesediaan_dosen.index', compact('kesediaans', 'dosens', 'periodes', 'waves', 'activePeriode', 'ringkasan'));
     }
 
     /**
