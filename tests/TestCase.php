@@ -28,7 +28,7 @@ abstract class TestCase extends BaseTestCase
     /**
      * Tes hanya boleh berjalan di database yang namanya berakhiran "_test" (lihat
      * phpunit.xml) — dulu tes memakai database kerja dan RefreshDatabase
-     * mengosongkannya. Database tes dibuat & dimigrasi otomatis bila belum ada.
+     * mengosongkannya. Database tes dibuat otomatis bila belum ada.
      */
     private function siapkanDatabaseTes(): void
     {
@@ -47,18 +47,8 @@ abstract class TestCase extends BaseTestCase
             DB::purge($koneksi);
         }
 
-        Artisan::call('migrate', ['--force' => true]);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        parent::tearDownAfterClass();
-
-        // Kembalikan user & menu bawaan di database tes setelah tiap kelas tes.
-        try {
-            Artisan::call('db:seed', ['--force' => true]);
-        } catch (\Throwable $e) {
-            // Abaikan.
-        }
+        // Mulai dari database tes yang benar-benar kosong di setiap putaran, supaya
+        // hasil tes tidak bergantung pada sisa data putaran/seed sebelumnya.
+        Artisan::call('migrate:fresh', ['--force' => true]);
     }
 }

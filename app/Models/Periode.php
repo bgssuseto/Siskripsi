@@ -22,13 +22,65 @@ class Periode extends Model
         'kesediaan_public_token',
         'link_grup_wa_skripsi',
         'link_grup_wa_sempro',
+        'kesediaan_tanggal_mulai',
+        'kesediaan_tanggal_selesai',
     ];
 
     protected $casts = [
         'aktif' => 'boolean',
         'show_form_kesediaan' => 'boolean',
         'lock_form_kesediaan' => 'boolean',
+        'kesediaan_tanggal_mulai' => 'date',
+        'kesediaan_tanggal_selesai' => 'date',
     ];
+
+    /**
+     * Batas tanggal yang boleh dipilih dosen di form kesediaan menguji
+     * (Y-m-d atau null = tanpa batas di sisi itu).
+     *
+     * @return array{min: ?string, max: ?string}
+     */
+    public function rentangKesediaan(): array
+    {
+        return [
+            'min' => $this->kesediaan_tanggal_mulai?->format('Y-m-d'),
+            'max' => $this->kesediaan_tanggal_selesai?->format('Y-m-d'),
+        ];
+    }
+
+    /** Label rentang untuk ditampilkan, mis. "10 Nov 2026 – 30 Nov 2026"; null bila tanpa batas. */
+    public function labelRentangKesediaan(): ?string
+    {
+        $f = fn ($t) => $t?->locale('id')->translatedFormat('j M Y');
+        return match (true) {
+            $this->kesediaan_tanggal_mulai && $this->kesediaan_tanggal_selesai => $f($this->kesediaan_tanggal_mulai) . ' – ' . $f($this->kesediaan_tanggal_selesai),
+            (bool) $this->kesediaan_tanggal_mulai => 'mulai ' . $f($this->kesediaan_tanggal_mulai),
+            (bool) $this->kesediaan_tanggal_selesai => 'sampai ' . $f($this->kesediaan_tanggal_selesai),
+            default => null,
+        };
+    }
+
+    /**
+     * Tanggal kesediaan yang berada di luar rentang yang diizinkan.
+     *
+     * @param  array<int, string>  $tanggal  daftar Y-m-d
+     * @return array<int, string>
+     */
+    public function tanggalDiLuarRentangKesediaan(array $tanggal): array
+    {
+        ['min' => $min, 'max' => $max] = $this->rentangKesediaan();
+        return array_values(array_filter($tanggal, function ($t) use ($min, $max) {
+            $t = substr((string) $t, 0, 10);
+            return ($min && $t < $min) || ($max && $t > $max);
+        }));
+    }
+
+    /** Pesan galat standar untuk tanggal di luar rentang. */
+    public function pesanDiLuarRentangKesediaan(array $tanggalLuar): string
+    {
+        $daftar = collect($tanggalLuar)->map(fn ($t) => \Carbon\Carbon::parse($t)->locale('id')->translatedFormat('j M Y'))->unique()->implode(', ');
+        return "Tanggal {$daftar} di luar rentang pengisian kesediaan ({$this->labelRentangKesediaan()}). Pilih tanggal di dalam rentang tersebut.";
+    }
 
     /**
      * Relationship with Sidangs.

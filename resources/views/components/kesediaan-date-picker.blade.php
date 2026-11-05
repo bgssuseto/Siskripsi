@@ -7,7 +7,16 @@
     // setelah validasi gagal).
     'selected' => [],
     'keterangan' => '',
+    // Rentang tanggal yang boleh dipilih (Y-m-d, null = tanpa batas) — diatur
+    // koordinator di menu Kesediaan Dosen (lihat Periode::rentangKesediaan()).
+    'min' => null,
+    'max' => null,
 ])
+@php
+    // Kalender dibuka di bulan awal rentang bila rentang belum dimulai.
+    $mulaiTampil = \Carbon\Carbon::parse(max(now()->format('Y-m-d'), $min ?? '0000-00-00'));
+    $labelRentang = fn ($t) => \Carbon\Carbon::parse($t)->locale('id')->translatedFormat('j M Y');
+@endphp
 
 {{--
     Kalender multi-pilih untuk form kesediaan menguji. Dosen cukup klik
@@ -18,11 +27,13 @@
 --}}
 <div x-data="{
         today: '{{ now()->format('Y-m-d') }}',
+        min: @js($min),
+        max: @js($max),
         existing: @js(array_values($existing)),
         selected: @js(array_values($selected)),
         keterangan: @js($keterangan),
-        year: {{ now()->year }},
-        month: {{ now()->month - 1 }},
+        year: {{ $mulaiTampil->year }},
+        month: {{ $mulaiTampil->month - 1 }},
         dayNames: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
         monthNames: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
         pad(n) { return String(n).padStart(2, '0'); },
@@ -38,7 +49,8 @@
         get sorted() { return [...this.selected].sort(); },
         isPast(date) { return date < this.today; },
         isExisting(date) { return this.existing.includes(date); },
-        isSelectable(date) { return !this.isPast(date); },
+        isOutOfRange(date) { return (this.min && date < this.min) || (this.max && date > this.max); },
+        isSelectable(date) { return !this.isPast(date) && !this.isOutOfRange(date); },
         isSelected(date) { return this.selected.includes(date); },
         toggle(date) {
             if (!this.isSelectable(date)) return;
@@ -59,8 +71,10 @@
         toggleColumn(col) { this.toggleMany(this.cells.filter(c => c && c.col === col).map(c => c.date)); },
         toggleWorkdays() { this.toggleMany(this.cells.filter(c => c && c.col < 5).map(c => c.date)); },
         prevMonth() { this.month === 0 ? (this.month = 11, this.year--) : this.month--; },
-        nextMonth() { this.month === 11 ? (this.month = 0, this.year++) : this.month++; },
-        get canGoPrev() { return this.year + '-' + this.pad(this.month + 1) > this.today.slice(0, 7); },
+        nextMonth() { if (this.canGoNext) { this.month === 11 ? (this.month = 0, this.year++) : this.month++; } },
+        get ym() { return this.year + '-' + this.pad(this.month + 1); },
+        get canGoPrev() { return this.ym > (this.min && this.min > this.today ? this.min : this.today).slice(0, 7); },
+        get canGoNext() { return !this.max || this.ym < this.max.slice(0, 7); },
         label(date) {
             const [y, m, d] = date.split('-').map(Number);
             return new Date(y, m - 1, d).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -73,6 +87,14 @@
               :class="selected.length ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'"
               x-text="selected.length + ' tanggal dipilih'"></span>
     </div>
+    @if($min || $max)
+        <div class="-mt-1 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            <x-icon name="calendar" class="mt-px h-3.5 w-3.5 shrink-0" />
+            <span>Tanggal yang bisa dipilih:
+                <strong>{{ $min && $max ? $labelRentang($min) . ' – ' . $labelRentang($max) : ($min ? 'mulai ' . $labelRentang($min) : 'sampai ' . $labelRentang($max)) }}</strong>
+                (ditentukan koordinator).</span>
+        </div>
+    @endif
     <p class="text-[11px] text-slate-500 dark:text-slate-400 -mt-1">Klik tanggal untuk memilih (klik lagi untuk batal). Klik nama hari untuk memilih semua hari itu di bulan ini.</p>
 
     <div class="rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/60 p-3 sm:p-4 select-none">
@@ -81,8 +103,8 @@
             <button type="button" @click="prevMonth()" :disabled="!canGoPrev"
                     class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer" aria-label="Bulan sebelumnya">‹</button>
             <div class="text-sm font-extrabold text-slate-800 dark:text-slate-100" x-text="monthNames[month] + ' ' + year"></div>
-            <button type="button" @click="nextMonth()"
-                    class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" aria-label="Bulan berikutnya">›</button>
+            <button type="button" @click="nextMonth()" :disabled="!canGoNext"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer" aria-label="Bulan berikutnya">›</button>
         </div>
 
         {{-- Header hari (klik = pilih semua hari itu di bulan ini) --}}
@@ -106,11 +128,11 @@
                                 :class="{
                                     'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-700 cursor-pointer': isSelected(cell.date),
                                     'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:border-indigo-400 cursor-pointer': isExisting(cell.date) && isSelectable(cell.date) && !isSelected(cell.date),
-                                    'text-slate-300 dark:text-slate-600 cursor-not-allowed': isPast(cell.date),
+                                    'text-slate-300 dark:text-slate-600 cursor-not-allowed': !isSelectable(cell.date),
                                     'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer': isSelectable(cell.date) && !isSelected(cell.date) && !isExisting(cell.date),
                                     'ring-2 ring-amber-400': cell.date === today,
                                 }"
-                                :title="isPast(cell.date) ? 'Tanggal sudah lewat' : (isExisting(cell.date) ? 'Sudah pernah diisi' : '')"
+                                :title="isPast(cell.date) ? 'Tanggal sudah lewat' : (isOutOfRange(cell.date) ? 'Di luar rentang pengisian kesediaan' : (isExisting(cell.date) ? 'Sudah pernah diisi' : ''))"
                                 x-text="cell.day"></button>
                     </template>
                 </div>
@@ -121,7 +143,7 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
             <div class="flex flex-wrap gap-2">
                 <button type="button" @click="toggleWorkdays()"
-                        class="text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 hover:bg-indigo-100 cursor-pointer">Semua Sen–Jum bulan ini</button>
+                        class="text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 hover:bg-indigo-100 cursor-pointer">Semua Sen–Jum yang bisa dipilih</button>
                 <button type="button" @click="selected = []" x-show="selected.length"
                         class="text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 cursor-pointer">Kosongkan pilihan</button>
             </div>

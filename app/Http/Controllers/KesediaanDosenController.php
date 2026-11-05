@@ -238,6 +238,11 @@ class KesediaanDosenController extends Controller
         $request->validate([
             'show_form_kesediaan' => 'required|boolean',
             'lock_form_kesediaan' => 'required|boolean',
+            // Rentang tanggal yang boleh dipilih dosen (kosong = tanpa batas).
+            'kesediaan_tanggal_mulai'   => 'nullable|date',
+            'kesediaan_tanggal_selesai' => 'nullable|date|after_or_equal:kesediaan_tanggal_mulai',
+        ], [
+            'kesediaan_tanggal_selesai.after_or_equal' => 'Tanggal selesai rentang kesediaan harus sama dengan atau setelah tanggal mulai.',
         ]);
 
         $activePeriode = Periode::where('aktif', true)->first();
@@ -246,10 +251,17 @@ class KesediaanDosenController extends Controller
             return redirect()->back()->with('error', 'Gagal menyimpan. Tidak ada periode akademik yang aktif saat ini.');
         }
 
-        $activePeriode->update([
+        $data = [
             'show_form_kesediaan' => $request->show_form_kesediaan,
             'lock_form_kesediaan' => $request->lock_form_kesediaan,
-        ]);
+        ];
+        // Hanya diubah bila field rentang ikut dikirim (form pengaturan selalu mengirimnya).
+        foreach (['kesediaan_tanggal_mulai', 'kesediaan_tanggal_selesai'] as $kolom) {
+            if ($request->exists($kolom)) {
+                $data[$kolom] = $request->input($kolom) ?: null;
+            }
+        }
+        $activePeriode->update($data);
 
         return redirect()->back()->with('success', 'Pengaturan form kesediaan menguji berhasil diperbarui.');
     }

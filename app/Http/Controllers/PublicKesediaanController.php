@@ -96,6 +96,12 @@ class PublicKesediaanController extends Controller
             return back()->with('error', 'Gelombang yang dipilih tidak valid untuk periode ini. Silakan muat ulang halaman.')->withInput();
         }
 
+        // Tanggal harus berada dalam rentang pengisian yang diatur koordinator.
+        $diLuar = $periode->tanggalDiLuarRentangKesediaan(array_column($validated['slots'], 'tanggal'));
+        if ($diLuar) {
+            return back()->with('error', $periode->pesanDiLuarRentangKesediaan($diLuar))->withInput();
+        }
+
         foreach ($validated['slots'] as $slot) {
             // firstOrCreate on the natural key so a double-submit (double-click,
             // browser retry) doesn't leave duplicate slots for the same date.

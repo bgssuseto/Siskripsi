@@ -185,6 +185,12 @@ class DosenPortalController extends Controller
             return redirect()->back()->with('error', 'Gelombang yang dipilih tidak valid untuk periode aktif ini.');
         }
 
+        // Tanggal harus berada dalam rentang pengisian yang diatur koordinator.
+        $diLuar = $activePeriode->tanggalDiLuarRentangKesediaan(array_column($request->input('slots', []), 'tanggal'));
+        if ($diLuar) {
+            return redirect()->back()->with('error', $activePeriode->pesanDiLuarRentangKesediaan($diLuar));
+        }
+
         foreach ($request->slots as $slot) {
             // firstOrCreate on the natural key so a double-submit (double-click,
             // browser retry) doesn't leave duplicate slots for the same date.

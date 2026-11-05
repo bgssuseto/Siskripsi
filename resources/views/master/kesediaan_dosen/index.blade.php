@@ -124,6 +124,40 @@
                         </div>
                     </div>
 
+                    {{-- Rentang tanggal yang boleh dipilih dosen --}}
+                    <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40 p-4">
+                        <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Rentang Tanggal Kesediaan</label>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Dosen hanya bisa memilih tanggal di dalam rentang ini (form di dashboard dosen &amp; link publik). Kosongkan untuk tanpa batas.</p>
+                            </div>
+                            @if($activePeriode->labelRentangKesediaan())
+                                <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                                    <x-icon name="calendar" class="w-3.5 h-3.5" /> Berlaku: {{ $activePeriode->labelRentangKesediaan() }}
+                                </span>
+                            @else
+                                <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Belum dibatasi</span>
+                            @endif
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="kesediaan_tanggal_mulai" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1.5">Dari tanggal</label>
+                                <input type="date" id="kesediaan_tanggal_mulai" name="kesediaan_tanggal_mulai"
+                                       value="{{ old('kesediaan_tanggal_mulai', $activePeriode->kesediaan_tanggal_mulai?->format('Y-m-d')) }}"
+                                       class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200">
+                            </div>
+                            <div>
+                                <label for="kesediaan_tanggal_selesai" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1.5">Sampai tanggal</label>
+                                <input type="date" id="kesediaan_tanggal_selesai" name="kesediaan_tanggal_selesai"
+                                       value="{{ old('kesediaan_tanggal_selesai', $activePeriode->kesediaan_tanggal_selesai?->format('Y-m-d')) }}"
+                                       class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200">
+                            </div>
+                        </div>
+                        @error('kesediaan_tanggal_selesai')
+                            <p class="mt-2 text-xs font-bold text-rose-600 dark:text-rose-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <div class="flex justify-end pt-2">
                         <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer hover:-translate-y-0.5 flex items-center justify-center gap-2">
                             <span><x-icon name="save" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Simpan Pengaturan

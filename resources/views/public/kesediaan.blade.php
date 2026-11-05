@@ -28,13 +28,6 @@
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight dark:text-slate-100">Form Kesediaan Menguji</h1>
                 <p class="text-xs text-indigo-700 mt-1 dark:text-indigo-300">Isikan hari &amp; tanggal Anda bersedia menjadi penguji Sempro / Sidang Skripsi.</p>
-                <div class="flex flex-wrap gap-2 mt-3">
-                    @foreach($activeWaves as $w)
-                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30">
-                            Gelombang {{ $w->gelombang }} · {{ ucfirst($w->jenis) }} — {{ $w->tanggal_mulai?->format('d/m/Y') }} s/d {{ $w->tanggal_selesai?->format('d/m/Y') }}
-                        </span>
-                    @endforeach
-                </div>
             </div>
         </div>
 
@@ -84,7 +77,9 @@
 
                 <x-kesediaan-date-picker
                     :selected="collect(old('slots', []))->pluck('tanggal')->filter()->unique()->values()->all()"
-                    :keterangan="old('slots.0.keterangan', '')" />
+                    :keterangan="old('slots.0.keterangan', '')"
+                    :min="$periode->rentangKesediaan()['min']"
+                    :max="$periode->rentangKesediaan()['max']" />
 
                 <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all">
                     Simpan Kesediaan

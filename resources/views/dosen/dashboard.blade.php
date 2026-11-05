@@ -369,7 +369,9 @@
 
                         {{-- Kalender multi-pilih tanggal --}}
                         <x-kesediaan-date-picker
-                            :existing="$existingKesediaan->map(fn ($k) => \Carbon\Carbon::parse($k->tanggal)->format('Y-m-d'))->unique()->values()->all()" />
+                            :existing="$existingKesediaan->map(fn ($k) => \Carbon\Carbon::parse($k->tanggal)->format('Y-m-d'))->unique()->values()->all()"
+                            :min="$activePeriode?->rentangKesediaan()['min']"
+                            :max="$activePeriode?->rentangKesediaan()['max']" />
                     @else
                         {{-- Kesediaan WAJIB ditautkan ke gelombang + periode semester aktif —
                              tanpa gelombang yang tersedia, form tidak bisa disubmit sama sekali. --}}
