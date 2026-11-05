@@ -84,6 +84,49 @@ window.confirmDialog = function (message, options = {}) {
     });
 };
 
+// Baca respons fetch sebagai JSON. Kalau server mengembalikan HTML (halaman
+// error 419/500/502/504, halaman login, dll), JSON.parse akan gagal — dulu
+// itu jatuh ke catch dan tampil sebagai "Gagal terhubung ke server" sehingga
+// penyebab aslinya tersembunyi. Sekarang dikembalikan pesan yang jelas.
+const PESAN_STATUS_HTTP = {
+    401: 'Sesi login berakhir. Muat ulang halaman lalu login kembali.',
+    403: 'Anda tidak memiliki hak akses untuk aksi ini.',
+    404: 'Alamat tujuan tidak ditemukan di server (404).',
+    413: 'Data yang dikirim terlalu besar (413).',
+    419: 'Sesi halaman kedaluwarsa. Muat ulang halaman (F5) lalu coba lagi.',
+    429: 'Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.',
+    500: 'Terjadi error di server (500). Lihat storage/logs/laravel.log di server.',
+    502: 'Server tidak merespons (502 Bad Gateway). Coba lagi beberapa saat.',
+    503: 'Server sedang sibuk / pemeliharaan (503).',
+    504: 'Server terlalu lama memproses (504 Timeout). Coba lagi beberapa saat.',
+};
+
+window.readJson = async function (response) {
+    const text = await response.text();
+    try {
+        return JSON.parse(text);
+    } catch {
+        console.error(`Respons bukan JSON (HTTP ${response.status}) dari ${response.url}:`, text.slice(0, 500));
+        const keLogin = response.redirected && /\/login(\?|$)/.test(response.url);
+        return {
+            success: false,
+            message: keLogin
+                ? PESAN_STATUS_HTTP[401]
+                : (PESAN_STATUS_HTTP[response.status] || `Respons server tidak valid (HTTP ${response.status}).`),
+        };
+    }
+};
+
+// Pesan untuk error yang tertangkap di catch: bedakan gagal jaringan sungguhan
+// dengan error JavaScript biasa supaya pesannya tidak menyesatkan.
+window.fetchErrorMessage = function (err) {
+    const msg = String(err?.message || err || '');
+    if (/failed to fetch|networkerror|load failed|network request failed/i.test(msg)) {
+        return 'Gagal terhubung ke server. Periksa koneksi internet Anda lalu coba lagi.';
+    }
+    return 'Terjadi kesalahan: ' + msg;
+};
+
 // Helper to refresh elements dynamically via AJAX — dipakai setelah aksi
 // (plotting, edit, hapus, bulk, dll) supaya halaman tidak perlu di-reload
 // penuh. Isi lama di-fade-out singkat sebelum diganti, lalu fade-in —

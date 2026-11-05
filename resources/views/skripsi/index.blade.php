@@ -334,7 +334,7 @@
                         ruang_id: ruangId, ketua_penguji_id: ketuaId, anggota_penguji_1_id: penguji1Id,
                     })
                 });
-                const result = await response.json();
+                const result = await window.readJson(response);
                 if (response.ok && result.success) {
                     let html = `<div class='text-emerald-700 font-bold mb-1'>✅ ${result.berhasil.length} mahasiswa berhasil dijadwalkan.</div>`;
                     if (result.gagal && result.gagal.length > 0) {
@@ -357,7 +357,7 @@
             } catch (err) {
                 console.error(err);
                 resultBox.innerHTML = '';
-                showModalAlert('form-bulk-jadwalkan-alert', 'form-bulk-jadwalkan-alert-text', 'Gagal terhubung ke server.');
+                showModalAlert('form-bulk-jadwalkan-alert', 'form-bulk-jadwalkan-alert-text', window.fetchErrorMessage(err));
             }
         },
         async navigate(url) {
@@ -2239,12 +2239,16 @@
                     headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: new FormData(form)
                 });
-                const result = await response.json();
+                const result = await window.readJson(response);
                 if (response.ok && result.success) {
                     closeModal('modal-jadwalkan');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || '✅ Jadwal berhasil disimpan!', type: 'success' } }));
-                    await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
-                    if (typeof calendar !== 'undefined' && calendar) initCalendar();
+                    // Data sudah tersimpan — error saat menyegarkan tampilan
+                    // jangan sampai tampil sebagai "gagal".
+                    try {
+                        await refreshComponent(['#table-container', '#filter-container', '#stats-container', '#calendar-container', '#alerts-container']);
+                        if (typeof calendar !== 'undefined' && calendar) initCalendar();
+                    } catch (uiErr) { console.error(uiErr); }
                 } else if (Array.isArray(result.conflicts) && result.conflicts.length > 0 && typeof window.showBentrokModal === 'function') {
                     window.showBentrokModal(result.conflicts);
                 } else {
@@ -2252,7 +2256,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                showModalAlert('form-jadwalkan-alert', 'form-jadwalkan-alert-text', 'Gagal terhubung ke server.');
+                showModalAlert('form-jadwalkan-alert', 'form-jadwalkan-alert-text', window.fetchErrorMessage(err));
             } finally {
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origText; }
             }

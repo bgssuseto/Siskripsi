@@ -43,7 +43,7 @@
             <!-- Logo Lockup -->
             <div class="flex items-center gap-3.5 relative z-10">
                 <div class="w-16 h-16 shrink-0 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center justify-center p-2 shadow-sm" style="background-color:#fff">
-                    <img src="{{ asset('images/logo-umk.png') }}" alt="Universitas Muria Kudus" class="w-full h-full object-contain">
+                    <x-logo-umk />
                 </div>
                 <div>
                     <p class="font-extrabold text-slate-800 dark:text-slate-100 text-xl leading-tight">Sistem Informasi Skripsi</p>
@@ -128,7 +128,7 @@
             <!-- Mobile Logo -->
             <div class="lg:hidden flex flex-col items-center gap-2.5 mb-8">
                 <div class="w-20 h-20 shrink-0 border border-slate-100 dark:border-slate-700 rounded-2xl flex items-center justify-center p-2.5 shadow-sm" style="background-color:#fff">
-                    <img src="{{ asset('images/logo-umk.png') }}" alt="Universitas Muria Kudus" class="w-full h-full object-contain">
+                    <x-logo-umk />
                 </div>
                 <p class="text-xl font-extrabold leading-tight text-slate-800 dark:text-slate-100 text-center">Sistem Informasi Skripsi</p>
                 <p class="-mt-1.5 text-sm text-slate-500 dark:text-slate-400 text-center">Teknik Informatika &middot; Universitas Muria Kudus</p>

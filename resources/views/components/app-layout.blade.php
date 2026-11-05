@@ -399,7 +399,7 @@
                     <div class="relative w-10 h-10 shrink-0">
                         <span aria-hidden="true" class="absolute -inset-0.5 rounded-[14px] bg-gradient-to-br from-indigo-500 via-violet-500 to-sky-400 opacity-60 blur-[6px] transition-opacity group-hover:opacity-90"></span>
                         <div class="relative w-10 h-10 rounded-xl flex items-center justify-center p-1.5 ring-1 ring-indigo-100 shadow-md shadow-indigo-500/10 transition-transform group-hover:scale-105" style="background-color:#fff">
-                            <img src="{{ asset('images/logo-umk.png') }}" alt="Universitas Muria Kudus" class="w-full h-full object-contain">
+                            <x-logo-umk />
                         </div>
                     </div>
                     <div class="overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-44 opacity-100' : 'w-0 opacity-0'">

@@ -13,7 +13,7 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen flex items-start sm:items-center justify-center p-4 dark:text-slate-200 dark:bg-slate-950">
     <div class="max-w-2xl w-full my-6">
         <div class="flex items-center gap-3 mb-4 px-1">
-            <span class="w-11 h-11 shrink-0 rounded-xl border border-slate-200 p-1.5 shadow-sm dark:border-slate-700" style="background-color:#fff"><img src="{{ asset('images/logo-umk.png') }}" alt="Universitas Muria Kudus" class="w-full h-full object-contain"></span>
+            <span class="w-11 h-11 shrink-0 rounded-xl border border-slate-200 p-1.5 shadow-sm dark:border-slate-700" style="background-color:#fff"><x-logo-umk /></span>
             <div>
                 <p class="text-sm font-extrabold text-slate-900 leading-tight dark:text-slate-100">Sistem Informasi Skripsi</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Teknik Informatika · Universitas Muria Kudus</p>

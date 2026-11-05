@@ -283,7 +283,7 @@
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ ids: this.selectedIds, tanggal, jam_mulai: jamMulai, durasi_menit: durasi, ruang_id: ruangId })
                 });
-                const result = await response.json();
+                const result = await window.readJson(response);
                 if (response.ok && result.success) {
                     let html = `<div class='text-emerald-700 font-bold mb-1'>✅ ${result.berhasil.length} mahasiswa berhasil dijadwalkan.</div>`;
                     if (result.gagal && result.gagal.length > 0) {
@@ -306,7 +306,7 @@
             } catch (err) {
                 console.error(err);
                 resultBox.innerHTML = '';
-                showModalAlert('form-bulk-jadwalkan-alert', 'form-bulk-jadwalkan-alert-text', 'Gagal terhubung ke server.');
+                showModalAlert('form-bulk-jadwalkan-alert', 'form-bulk-jadwalkan-alert-text', window.fetchErrorMessage(err));
             }
         },
     }">
@@ -1409,14 +1409,18 @@
                         headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: new FormData(this)
                     });
-                    const result = await response.json();
-                    if (response.ok) {
+                    const result = await window.readJson(response);
+                    if (response.ok && result.success !== false) {
                         closeModal(modalId);
                         if (formId === 'form-tambah') this.reset();
                         window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || '✅ Berhasil!', type: 'success' } }));
-                        await refreshComponent(['#table-container', '#calendar-container']);
-                        if (typeof calendar !== 'undefined' && calendar) initCalendar();
-                        if (typeof onSuccess === 'function') onSuccess();
+                        // Data sudah tersimpan — error saat menyegarkan tampilan
+                        // jangan sampai tampil sebagai "gagal".
+                        try {
+                            await refreshComponent(['#table-container', '#calendar-container']);
+                            if (typeof calendar !== 'undefined' && calendar) initCalendar();
+                            if (typeof onSuccess === 'function') onSuccess();
+                        } catch (uiErr) { console.error(uiErr); }
                     } else {
                         if (response.status === 422 && result.errors) {
                             Object.keys(result.errors).forEach(key => {
@@ -1445,10 +1449,10 @@
                 } catch (err) {
                     console.error(err);
                     if (alertBox && alertText) {
-                        alertText.textContent = 'Gagal terhubung ke server. Silakan coba lagi.';
+                        alertText.textContent = window.fetchErrorMessage(err);
                         alertBox.style.display = 'flex';
                     } else {
-                        alert('Gagal terhubung ke server. Silakan coba lagi.');
+                        alert(window.fetchErrorMessage(err));
                     }
                 } finally {
                     if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origText; }
