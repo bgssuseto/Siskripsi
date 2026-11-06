@@ -97,6 +97,22 @@
 
         @if($generated)
 
+        {{-- Rentang tanggal yang dipakai usulan: mulai besok s/d akhir rentang kesediaan periode --}}
+        @if($rentang)
+        <div class="flex items-start gap-2 px-4 py-3 rounded-xl border text-xs {{ $rentang['berakhir'] ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-800 dark:text-rose-300' : 'bg-sky-50 border-sky-200 text-sky-800 dark:bg-sky-500/10 dark:border-sky-800 dark:text-sky-300' }}">
+            <x-icon name="info" class="w-4 h-4 shrink-0 mt-px" />
+            <span>
+                @if($rentang['berakhir'])
+                    <strong>Tidak ada tanggal yang bisa diusulkan:</strong> {{ $rentang['label'] }}. Perbarui rentang di menu Kesediaan Dosen.
+                @else
+                    Tanggal usulan dibatasi <strong>{{ $rentang['label'] }}</strong> — tanggal yang sudah lewat
+                    @if($rentang['max']) dan di luar rentang kesediaan dosen @endif tidak dipakai.
+                    @unless($rentang['max']) Rentang kesediaan periode ini belum diatur, jadi tidak ada batas akhir. @endunless
+                @endif
+            </span>
+        </div>
+        @endif
+
         <!-- Ringkasan -->
         <div class="grid grid-cols-2 gap-4">
             <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
@@ -161,6 +177,7 @@
                                 </td>
                                 <td class="py-3.5 px-4">
                                     <input type="date" name="{{ $fieldPrefix }}[tanggal]" value="{{ $p['tanggal'] }}"
+                                           @if($rentang) min="{{ $rentang['min'] }}" @if($rentang['max']) max="{{ $rentang['max'] }}" @endif @endif
                                            class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
                                 </td>
                                 <td class="py-3.5 px-4">

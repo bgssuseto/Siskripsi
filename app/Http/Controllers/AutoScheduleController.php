@@ -88,13 +88,15 @@ class AutoScheduleController extends Controller
             $unresolved = $result['unresolved'];
         }
 
+        $rentang = $selectedPeriodeId ? AutoScheduleService::rentangTanggalUsulan((int) $selectedPeriodeId) : null;
+
         $ruangs = Ruang::orderBy('kode_ruangan')->where('status', Ruang::STATUS_SIAP)->get();
         $dosens = Dosen::excludingSuperAdminPlaceholder()->orderBy('nama_dosen')->get();
         $jamOptions = ['07.00', '07.30', '08.00', '08.30', '09.00', '09.30', '10.00', '10.30', '11.00', '11.30', '12.00', '12.30', '13.00', '13.30', '14.00', '14.30', '15.00', '15.30', '16.00', '16.30', '17.00', '17.30', '18.00'];
 
         return view('penjadwalan.auto-schedule.index', compact(
             'periodes', 'selectedPeriodeId', 'jenis', 'selectedGelombang', 'allWaves',
-            'slotMinutes', 'proposals', 'unresolved', 'generated', 'ruangs', 'sidangIds', 'dosens', 'jamOptions'
+            'slotMinutes', 'proposals', 'unresolved', 'generated', 'ruangs', 'sidangIds', 'dosens', 'jamOptions', 'rentang'
         ));
     }
 
@@ -117,6 +119,7 @@ class AutoScheduleController extends Controller
 
         $applied = 0;
         $skipped = [];
+        $rentangPerPeriode = [];
 
         foreach ($selected as $sidangId) {
             $row = $rows[$sidangId] ?? null;
@@ -130,6 +133,14 @@ class AutoScheduleController extends Controller
             $sidang = Sidang::find($sidangId);
             if (!$sidang || $sidang->tanggal) {
                 $skipped[] = "{$sidangId}: sudah terjadwal atau tidak ditemukan, dilewati.";
+                continue;
+            }
+
+            // Tanggal usulan bisa diedit di halaman — tetap wajib di dalam rentang
+            // kesediaan periode & tidak boleh tanggal yang sudah lewat.
+            $rentangSidang = $rentangPerPeriode[$sidang->periode_id] ??= AutoScheduleService::rentangTanggalUsulan((int) $sidang->periode_id);
+            if (!AutoScheduleService::tanggalDalamRentangUsulan($row['tanggal'], $rentangSidang)) {
+                $skipped[] = "{$sidang->nama_mahasiswa}: tanggal {$row['tanggal']} di luar rentang yang diizinkan ({$rentangSidang['label']}), dilewati.";
                 continue;
             }
 

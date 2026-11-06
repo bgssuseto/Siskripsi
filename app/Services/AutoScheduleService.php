@@ -52,7 +52,7 @@ class AutoScheduleService
             ->get();
 
         if ($unscheduled->isEmpty()) {
-            return ['proposals' => [], 'unresolved' => []];
+            return ['proposals' => [], 'unresolved' => [], 'rentang' => self::rentangTanggalUsulan($periodeId)];
         }
 
         $ruangs = Ruang::orderBy('kode_ruangan')->get()
@@ -79,12 +79,21 @@ class AutoScheduleService
         });
 
         // ── Kesediaan dosen: [dosen_id][Y-m-d] => [[start,end], ...] ──
+        // Hanya tanggal di dalam rentang usulan yang dipakai (lihat
+        // rentangTanggalUsulan()): tidak pernah tanggal yang sudah lewat, dan
+        // tidak melewati batas akhir rentang kesediaan yang diatur koordinator.
+        $rentang = self::rentangTanggalUsulan($periodeId);
         $kesediaanMap = [];
-        KesediaanDosen::where('periode_id', $periodeId)->get()->each(function ($k) use (&$kesediaanMap) {
+        $kesediaanDiLuarRentang = []; // [dosen_id] => true — punya kesediaan, tapi semuanya di luar rentang
+        KesediaanDosen::where('periode_id', $periodeId)->get()->each(function ($k) use (&$kesediaanMap, &$kesediaanDiLuarRentang, $rentang) {
             if (!$k->tanggal) {
                 return;
             }
             $tgl = $k->tanggal->format('Y-m-d');
+            if ($tgl < $rentang['min'] || ($rentang['max'] && $tgl > $rentang['max'])) {
+                $kesediaanDiLuarRentang[$k->dosen_id] = true;
+                return;
+            }
 
             // Dosen biasanya cuma memilih TANGGAL kesediaan lewat portal dosen atau
             // link publik — jam_mulai/jam_selesai tetap kosong kecuali datanya hasil
@@ -173,8 +182,17 @@ class AutoScheduleService
 
             $missingKesediaan = array_filter($uniqueDosenIds, fn ($id) => empty($kesediaanMap[$id]));
             if (!empty($missingKesediaan)) {
-                $namaDosen = Dosen::whereIn('id', $missingKesediaan)->pluck('nama_dosen')->implode(', ');
-                $unresolved[] = self::unresolvedEntry($sidang, "Menunggu kesediaan dosen: {$namaDosen}.");
+                $diLuar = array_filter($missingKesediaan, fn ($id) => isset($kesediaanDiLuarRentang[$id]));
+                $belum = array_diff($missingKesediaan, $diLuar);
+                $alasan = [];
+                if ($belum) {
+                    $alasan[] = 'Menunggu kesediaan dosen: ' . Dosen::whereIn('id', $belum)->pluck('nama_dosen')->implode(', ') . '.';
+                }
+                if ($diLuar) {
+                    $alasan[] = 'Kesediaan dosen ' . Dosen::whereIn('id', $diLuar)->pluck('nama_dosen')->implode(', ')
+                        . ' hanya pada tanggal yang sudah lewat / di luar rentang (' . $rentang['label'] . ').';
+                }
+                $unresolved[] = self::unresolvedEntry($sidang, implode(' ', $alasan));
                 continue;
             }
 
@@ -187,7 +205,7 @@ class AutoScheduleService
             sort($tanggalCandidates);
 
             if (empty($tanggalCandidates)) {
-                $unresolved[] = self::unresolvedEntry($sidang, 'Tidak ada tanggal kesediaan yang beririsan untuk seluruh dosen terkait.');
+                $unresolved[] = self::unresolvedEntry($sidang, 'Tidak ada tanggal kesediaan yang beririsan untuk seluruh dosen terkait dalam rentang ' . $rentang['label'] . '.');
                 continue;
             }
 
@@ -250,7 +268,45 @@ class AutoScheduleService
             }
         }
 
-        return ['proposals' => $proposals, 'unresolved' => $unresolved];
+        return ['proposals' => $proposals, 'unresolved' => $unresolved, 'rentang' => $rentang];
+    }
+
+    /**
+     * Rentang tanggal yang boleh dipakai Asisten Plotting Otomatis untuk satu
+     * periode: mulai BESOK (tanggal yang sudah lewat & hari ini tidak pernah
+     * diusulkan — undangan perlu waktu) atau tanggal mulai rentang kesediaan
+     * bila lebih lambat, sampai tanggal selesai rentang kesediaan (null =
+     * tanpa batas akhir, bila koordinator belum mengaturnya).
+     *
+     * @return array{min: string, max: ?string, label: string}
+     */
+    public static function rentangTanggalUsulan(int $periodeId): array
+    {
+        $besok = Carbon::tomorrow()->format('Y-m-d');
+        $periode = \App\Models\Periode::find($periodeId);
+        ['min' => $min, 'max' => $max] = $periode?->rentangKesediaan() ?? ['min' => null, 'max' => null];
+
+        $min = max($besok, $min ?? $besok); // Y-m-d → aman dibandingkan sebagai string
+        $fmt = fn (string $t) => Carbon::parse($t)->locale('id')->translatedFormat('j M Y');
+
+        $berakhir = $max && $max < $min; // batas akhir rentang sudah lewat → tidak ada tanggal tersisa
+
+        return [
+            'min'      => $min,
+            'max'      => $max,
+            'berakhir' => $berakhir,
+            'label'    => match (true) {
+                $berakhir   => 'rentang kesediaan sudah berakhir ' . $fmt($max),
+                (bool) $max => $fmt($min) . ' – ' . $fmt($max),
+                default     => 'mulai ' . $fmt($min),
+            },
+        ];
+    }
+
+    public static function tanggalDalamRentangUsulan(string $tanggal, array $rentang): bool
+    {
+        $t = substr($tanggal, 0, 10);
+        return $t >= $rentang['min'] && (!$rentang['max'] || $t <= $rentang['max']);
     }
 
     /**

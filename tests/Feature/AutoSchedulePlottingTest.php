@@ -189,4 +189,80 @@ class AutoSchedulePlottingTest extends TestCase
         $this->assertSame($sidang->id, $proposals[0]['sidang_id']);
         $this->assertSame(5, $sidang->fresh()->gelombang);
     }
+
+    /** Tambah kesediaan kedua dosen di tanggal tertentu. */
+    private function kesediaanKeduaDosen(string $tanggal): void
+    {
+        foreach ([$this->utama, $this->pendamping] as $dosen) {
+            KesediaanDosen::create([
+                'dosen_id' => $dosen->id, 'periode_id' => $this->periode->id,
+                'tanggal' => $tanggal, 'jam_mulai' => '09:00', 'jam_selesai' => '11:00',
+            ]);
+        }
+    }
+
+    private function generateSempro()
+    {
+        return $this->actingAs($this->superAdmin)->get(route('jadwal.auto-plot.index', [
+            'generate' => 1, 'periode_id' => $this->periode->id, 'jenis' => 'sempro',
+        ]));
+    }
+
+    public function test_usulan_tidak_pernah_memakai_tanggal_yang_sudah_lewat_atau_hari_ini(): void
+    {
+        KesediaanDosen::where('periode_id', $this->periode->id)->delete();
+        $this->kesediaanKeduaDosen(now()->subDays(2)->format('Y-m-d'));
+        $this->kesediaanKeduaDosen(now()->format('Y-m-d'));
+        $this->daftarSempro();
+
+        $response = $this->generateSempro();
+
+        $this->assertCount(0, $response->viewData('proposals'));
+        $unresolved = $response->viewData('unresolved');
+        $this->assertCount(1, $unresolved);
+        $this->assertStringContainsString('sudah lewat / di luar rentang', $unresolved[0]['reason']);
+    }
+
+    public function test_usulan_dibatasi_rentang_kesediaan_periode(): void
+    {
+        KesediaanDosen::where('periode_id', $this->periode->id)->delete();
+        $this->periode->update([
+            'kesediaan_tanggal_mulai'   => now()->addDays(5)->format('Y-m-d'),
+            'kesediaan_tanggal_selesai' => now()->addDays(10)->format('Y-m-d'),
+        ]);
+        // Lebih awal dari rentang (besok), terlalu jauh ke depan (+20), dan satu di dalam rentang (+7).
+        $this->kesediaanKeduaDosen(now()->addDay()->format('Y-m-d'));
+        $this->kesediaanKeduaDosen(now()->addDays(20)->format('Y-m-d'));
+        $this->kesediaanKeduaDosen(now()->addDays(7)->format('Y-m-d'));
+        $this->daftarSempro();
+
+        $response = $this->generateSempro();
+        $proposals = $response->viewData('proposals');
+
+        $this->assertCount(1, $proposals);
+        $this->assertSame(now()->addDays(7)->format('Y-m-d'), $proposals[0]['tanggal']);
+        $this->assertSame(now()->addDays(5)->format('Y-m-d'), $response->viewData('rentang')['min']);
+        $this->assertSame(now()->addDays(10)->format('Y-m-d'), $response->viewData('rentang')['max']);
+    }
+
+    public function test_menerapkan_usulan_menolak_tanggal_di_luar_rentang(): void
+    {
+        $this->periode->update([
+            'kesediaan_tanggal_mulai'   => now()->addDays(2)->format('Y-m-d'),
+            'kesediaan_tanggal_selesai' => now()->addDays(4)->format('Y-m-d'),
+        ]);
+        $sidang = $this->daftarSempro();
+
+        foreach ([now()->subDay(), now()->addDays(30)] as $tgl) {
+            $this->actingAs($this->superAdmin)->post(route('jadwal.auto-plot.apply'), [
+                'selected'  => [$sidang->id],
+                'proposals' => [$sidang->id => [
+                    'tanggal' => $tgl->format('Y-m-d'), 'jam_mulai' => '09.00', 'jam_selesai' => '10.00',
+                    'ruang_id' => $this->ruangSiap->id,
+                ]],
+            ])->assertSessionHas('warning');
+
+            $this->assertNull($sidang->fresh()->tanggal);
+        }
+    }
 }
