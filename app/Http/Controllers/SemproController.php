@@ -49,7 +49,7 @@ class SemproController extends Controller
             'ruang',
             'periode'
         ])->where('jenis_tugas_akhir', 'sempro')
-          ->where('verifikasi_status', 'disetujui');
+          ->terverifikasi();
 
         // Search
         if ($search = $request->get('search')) {
@@ -128,7 +128,7 @@ class SemproController extends Controller
         $allSidangs = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping',
             'ruang', 'periode'
-        ])->get();
+        ])->terverifikasi()->get();
 
         // Detect all conflicts across the entire database
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
@@ -233,13 +233,14 @@ class SemproController extends Controller
         // Distinct dates for filter dropdown
         $daftarTanggal = Sidang::select('tanggal')
             ->distinct()
+            ->terverifikasi()
             ->whereNotNull('tanggal')
             ->orderBy('tanggal', 'asc')
             ->pluck('tanggal');
 
-        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
-        $totalJalurSidang = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
-        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalSempro = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurSidang = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         return view('master.sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
@@ -311,7 +312,9 @@ class SemproController extends Controller
 
         $query = Sidang::with([
             'pembimbingUtama', 'pembimbingPendamping', 'ruang', 'periode'
-        ])->where('jenis_tugas_akhir', 'sempro');
+        ])->where('jenis_tugas_akhir', 'sempro')
+          // Berkas yang ditolak / masih menunggu verifikasi belum boleh dijadwalkan.
+          ->terverifikasi();
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
@@ -359,7 +362,7 @@ class SemproController extends Controller
         }
 
         $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ruang', 'periode'])
-                            ->where('jenis_tugas_akhir', 'sempro')->get();
+                            ->where('jenis_tugas_akhir', 'sempro')->terverifikasi()->get();
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
 
         $allMatching = $query->get();
@@ -497,10 +500,10 @@ class SemproController extends Controller
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
         $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')
-                               ->where('jenis_tugas_akhir', 'sempro')->orderBy('tanggal')->pluck('tanggal');
-        $totalSempro = Sidang::where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
-        $totalJalurSidang = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
-        $totalJalurJurnal = Sidang::where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+                               ->where('jenis_tugas_akhir', 'sempro')->terverifikasi()->orderBy('tanggal')->pluck('tanggal');
+        $totalSempro = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurSidang = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJalurJurnal = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
 
@@ -515,6 +518,13 @@ class SemproController extends Controller
 
     public function jadwalkan(Request $request, Sidang $sidang)
     {
+        if (!$sidang->isTerverifikasi()) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => Sidang::PESAN_BELUM_TERVERIFIKASI], 422);
+            }
+            return back()->with('warning', Sidang::PESAN_BELUM_TERVERIFIKASI);
+        }
+
         $jadwalTerpisah = $request->boolean('jadwal_terpisah');
 
         if ($request->filled('jam_mulai') && $request->filled('jam_selesai')) {
@@ -666,6 +676,10 @@ class SemproController extends Controller
             $sidang = $sidangs->get($id);
             if (!$sidang) {
                 $gagal[] = ['nama' => "ID {$id}", 'alasan' => 'Data tidak ditemukan.'];
+                continue;
+            }
+            if (!$sidang->isTerverifikasi()) {
+                $gagal[] = ['nama' => $sidang->nama_mahasiswa, 'alasan' => 'Berkas belum disetujui koordinator (menunggu/ditolak).'];
                 continue;
             }
 

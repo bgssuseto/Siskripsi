@@ -53,7 +53,7 @@ class SkripsiController extends Controller
             'ruang',
             'periode'
         ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])
-          ->where('verifikasi_status', 'disetujui');
+          ->terverifikasi();
 
         // Search
         if ($search = $request->get('search')) {
@@ -149,7 +149,7 @@ class SkripsiController extends Controller
             'pembimbingUtama', 'pembimbingPendamping',
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'ruang', 'periode'
-        ])->get();
+        ])->terverifikasi()->get();
 
         // Detect all conflicts across the entire database
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
@@ -264,12 +264,13 @@ class SkripsiController extends Controller
         // Distinct dates for filter dropdown
         $daftarTanggal = Sidang::select('tanggal')
             ->distinct()
+            ->terverifikasi()
             ->whereNotNull('tanggal')
             ->orderBy('tanggal', 'asc')
             ->pluck('tanggal');
 
-        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
-        $totalJurnal = Sidang::where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalSkripsi = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJurnal = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         return view('master.skripsi.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
@@ -445,7 +446,9 @@ class SkripsiController extends Controller
             'pembimbingUtama', 'pembimbingPendamping',
             'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2',
             'ruang', 'periode'
-        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang']);
+        ])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])
+          // Berkas yang ditolak / masih menunggu verifikasi belum boleh dijadwalkan.
+          ->terverifikasi();
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
@@ -518,7 +521,7 @@ class SkripsiController extends Controller
                 ->pluck('gelombang')
             : collect();
 
-        $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang', 'periode'])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->get();
+        $allSidangs = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang', 'periode'])->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->terverifikasi()->get();
         $conflictMap = SidangConflictService::detectAllConflicts($allSidangs);
 
         $allMatching = $query->get();
@@ -657,9 +660,9 @@ class SkripsiController extends Controller
         $ruangs = Ruang::siapDigunakan()->orderBy('kode_ruangan')->get();
         $periodes = Periode::orderBy('id', 'desc')->get();
         $activePeriode = Periode::where('aktif', true)->first();
-        $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->orderBy('tanggal')->pluck('tanggal');
-        $totalSkripsi = Sidang::where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
-        $totalJurnal  = Sidang::where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->terverifikasi()->orderBy('tanggal')->pluck('tanggal');
+        $totalSkripsi = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalJurnal  = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
 
         $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
 
@@ -674,6 +677,13 @@ class SkripsiController extends Controller
 
     public function jadwalkan(Request $request, Sidang $sidang)
     {
+        if (!$sidang->isTerverifikasi()) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => Sidang::PESAN_BELUM_TERVERIFIKASI], 422);
+            }
+            return back()->with('warning', Sidang::PESAN_BELUM_TERVERIFIKASI);
+        }
+
         if ($request->filled('jam_mulai') && $request->filled('jam_selesai')) {
             $request->merge(['jam' => $request->input('jam_mulai') . ' - ' . $request->input('jam_selesai')]);
         }
@@ -796,6 +806,10 @@ class SkripsiController extends Controller
             $sidang = $sidangs->get($id);
             if (!$sidang) {
                 $gagal[] = ['nama' => "ID {$id}", 'alasan' => 'Data tidak ditemukan.'];
+                continue;
+            }
+            if (!$sidang->isTerverifikasi()) {
+                $gagal[] = ['nama' => $sidang->nama_mahasiswa, 'alasan' => 'Berkas belum disetujui koordinator (menunggu/ditolak).'];
                 continue;
             }
 

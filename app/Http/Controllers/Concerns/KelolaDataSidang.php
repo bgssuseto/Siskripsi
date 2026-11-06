@@ -79,6 +79,10 @@ trait KelolaDataSidang
     /** Geser jadwal dari kalender (drag & drop): hanya tanggal & jam yang berubah. */
     public function reschedule(Request $request, Sidang $sidang)
     {
+        if (!$sidang->isTerverifikasi()) {
+            return response()->json(['success' => false, 'message' => Sidang::PESAN_BELUM_TERVERIFIKASI], 422);
+        }
+
         $validated = $request->validate([
             'tanggal' => ['required', 'date'],
             'jam'     => ['required', 'string', 'max:100'],

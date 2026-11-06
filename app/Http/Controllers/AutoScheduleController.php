@@ -135,6 +135,10 @@ class AutoScheduleController extends Controller
                 $skipped[] = "{$sidangId}: sudah terjadwal atau tidak ditemukan, dilewati.";
                 continue;
             }
+            if (!$sidang->isTerverifikasi()) {
+                $skipped[] = "{$sidang->nama_mahasiswa}: berkas belum disetujui koordinator (menunggu/ditolak), dilewati.";
+                continue;
+            }
 
             // Tanggal usulan bisa diedit di halaman — tetap wajib di dalam rentang
             // kesediaan periode & tidak boleh tanggal yang sudah lewat.

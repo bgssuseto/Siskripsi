@@ -26,7 +26,27 @@ class Sidang extends Model
         'Seminar Internasional', 'Lainnya',
     ];
 
+    /**
+     * Pesan saat mencoba menjadwalkan pendaftaran yang berkasnya belum disetujui
+     * koordinator (masih menunggu verifikasi atau ditolak).
+     */
+    public const PESAN_BELUM_TERVERIFIKASI = 'Berkas pendaftaran mahasiswa ini belum disetujui koordinator (masih menunggu verifikasi atau ditolak), jadi belum bisa dijadwalkan.';
+
     protected $table = 'sidangs';
+
+    /**
+     * Hanya pendaftaran yang berkasnya sudah DISETUJUI koordinator. Berkas yang
+     * ditolak / masih menunggu tidak boleh masuk menu Data maupun Penjadwalan.
+     */
+    public function scopeTerverifikasi($query)
+    {
+        return $query->where('verifikasi_status', 'disetujui');
+    }
+
+    public function isTerverifikasi(): bool
+    {
+        return $this->verifikasi_status === 'disetujui';
+    }
 
     protected $fillable = [
         'nim',
