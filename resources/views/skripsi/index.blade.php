@@ -442,27 +442,35 @@
         </x-page-header>
 
         {{-- Stats --}}
-        <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-            <div class="stat-card">
-                <div class="stat-icon blue"><x-icon name="clipboard-list" /></div>
-                <div>
-                    <div class="stat-value">{{ $totalSkripsi + $totalJurnal }}</div>
-                    <div class="stat-label">Total Mahasiswa</div>
+        <div id="stats-container">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><x-icon name="clipboard-list" /></div>
+                    <div>
+                        <div class="stat-value">{{ $totalSkripsi + $totalJurnal }}</div>
+                        <div class="stat-label">Total Mahasiswa</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon violet"><x-icon name="academic" /></div>
+                    <div>
+                        <div class="stat-value">{{ $totalSkripsi }}</div>
+                        <div class="stat-label">Skripsi</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><x-icon name="book" /></div>
+                    <div>
+                        <div class="stat-value">{{ $totalJurnal }}</div>
+                        <div class="stat-label">Jurnal / Artikel</div>
+                    </div>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon violet"><x-icon name="academic" /></div>
-                <div>
-                    <div class="stat-value">{{ $totalSkripsi }}</div>
-                    <div class="stat-label">Skripsi</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon green"><x-icon name="book" /></div>
-                <div>
-                    <div class="stat-value">{{ $totalJurnal }}</div>
-                    <div class="stat-label">Jurnal / Artikel</div>
-                </div>
+
+            {{-- Infografis Status Plotting — supaya langsung terlihat berapa yang
+                 masih perlu diplot tanpa harus menghitung manual dari tabel. --}}
+            <div class="mb-6">
+                <x-plotting-status-infografis :terjadwal="$totalSudahTerjadwal" :belum-plotting="$totalBelumPlotting" />
             </div>
         </div>
 

@@ -663,13 +663,19 @@ class SkripsiController extends Controller
         $daftarTanggal = Sidang::select('tanggal')->distinct()->whereNotNull('tanggal')->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->terverifikasi()->orderBy('tanggal')->pluck('tanggal');
         $totalSkripsi = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
         $totalJurnal  = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        // Infografis status plotting — selalu dihitung dari total periode (tidak
+        // ikut berubah oleh filter pencarian/gelombang aktif), supaya tetap jadi
+        // acuan "berapa sisa yang perlu diplot" yang stabil.
+        $totalBelumPlotting = Sidang::terverifikasi()->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->whereNull('tanggal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalSudahTerjadwal = ($totalSkripsi + $totalJurnal) - $totalBelumPlotting;
 
         $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
 
         return view('skripsi.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
             'daftarTanggal', 'totalSkripsi', 'totalJurnal', 'calendarEvents', 'conflictMap', 'kesediaanDosens',
-            'selectedGelombang', 'gelombangOptions', 'pembimbingGroups', 'unscheduledIds'
+            'selectedGelombang', 'gelombangOptions', 'pembimbingGroups', 'unscheduledIds',
+            'totalBelumPlotting', 'totalSudahTerjadwal'
         ));
     }
 

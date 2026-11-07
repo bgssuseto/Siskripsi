@@ -252,7 +252,7 @@
                     }
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message, type: (result.gagal && result.gagal.length > 0) ? 'warning' : 'success' } }));
                     this.selectedIds = [];
-                    await refreshComponent(['#table-container', '#calendar-container']);
+                    await refreshComponent(['#table-container', '#calendar-container', '#stats-container']);
                     if (typeof calendar !== 'undefined' && calendar) initCalendar();
                 } else {
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Gagal mereset jadwal.', type: 'error' } }));
@@ -296,7 +296,7 @@
                     setTimeout(async () => {
                         closeModal('modal-bulk-jadwalkan');
                         this.selectedIds = [];
-                        await refreshComponent(['#table-container', '#calendar-container']);
+                        await refreshComponent(['#table-container', '#calendar-container', '#stats-container']);
                         if (typeof calendar !== 'undefined' && calendar) initCalendar();
                     }, (result.gagal && result.gagal.length > 0) ? 3500 : 1200);
                 } else {
@@ -330,27 +330,35 @@
             </x-slot:actions>
         </x-page-header>
 
-        {{-- Stats --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="stat-card">
-                <div class="stat-icon violet"><x-icon name="clipboard-list" /></div>
-                <div>
-                    <div class="stat-value">{{ $totalSempro }}</div>
-                    <div class="stat-label">Total Mahasiswa Sempro</div>
+        <div id="stats-container">
+            {{-- Stats --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon violet"><x-icon name="clipboard-list" /></div>
+                    <div>
+                        <div class="stat-value">{{ $totalSempro }}</div>
+                        <div class="stat-label">Total Mahasiswa Sempro</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><x-icon name="calendar" /></div>
+                    <div>
+                        <div class="stat-value" style="font-size:1.1rem;line-height:1.3">{{ $activePeriode ? $activePeriode->nama_periode : '—' }}</div>
+                        <div class="stat-label">Periode Aktif</div>
+                    </div>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon green"><x-icon name="calendar" /></div>
-                <div>
-                    <div class="stat-value" style="font-size:1.1rem;line-height:1.3">{{ $activePeriode ? $activePeriode->nama_periode : '—' }}</div>
-                    <div class="stat-label">Periode Aktif</div>
-                </div>
-            </div>
-        </div>
 
-        {{-- Infografis Jalur --}}
-        <div class="mb-6">
-            <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$totalSempro" />
+            {{-- Infografis Jalur --}}
+            <div class="mb-4">
+                <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$totalSempro" />
+            </div>
+
+            {{-- Infografis Status Plotting — supaya langsung terlihat berapa yang
+                 masih perlu diplot tanpa harus menghitung manual dari tabel. --}}
+            <div class="mb-6">
+                <x-plotting-status-infografis :terjadwal="$totalSudahTerjadwal" :belum-plotting="$totalBelumPlotting" />
+            </div>
         </div>
 
         {{-- Toolbar / Filter --}}
@@ -1285,7 +1293,7 @@
                 if (res.ok && data.success) {
                     closeModal('modal-hasil-ujian');
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.message, type: 'success' } }));
-                    await refreshComponent(['#table-container', '#calendar-container']);
+                    await refreshComponent(['#table-container', '#calendar-container', '#stats-container']);
                     if (typeof calendar !== 'undefined' && calendar) initCalendar();
                 } else {
                     showModalAlert('form-hasil-ujian-alert', 'form-hasil-ujian-alert-text', data.message || 'Gagal menyimpan hasil ujian.');
@@ -1417,7 +1425,7 @@
                         // Data sudah tersimpan — error saat menyegarkan tampilan
                         // jangan sampai tampil sebagai "gagal".
                         try {
-                            await refreshComponent(['#table-container', '#calendar-container']);
+                            await refreshComponent(['#table-container', '#calendar-container', '#stats-container']);
                             if (typeof calendar !== 'undefined' && calendar) initCalendar();
                             if (typeof onSuccess === 'function') onSuccess();
                         } catch (uiErr) { console.error(uiErr); }

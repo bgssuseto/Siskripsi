@@ -504,13 +504,19 @@ class SemproController extends Controller
         $totalSempro = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
         $totalJalurSidang = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
         $totalJalurJurnal = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        // Infografis status plotting — selalu dihitung dari total periode (tidak
+        // ikut berubah oleh filter pencarian/gelombang aktif), supaya tetap jadi
+        // acuan "berapa sisa yang perlu diplot" yang stabil.
+        $totalBelumPlotting = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->whereNull('tanggal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalSudahTerjadwal = $totalSempro - $totalBelumPlotting;
 
         $kesediaanDosens = \App\Models\KesediaanDosen::with('dosen')->orderBy('tanggal', 'asc')->get();
 
         return view('sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
             'daftarTanggal', 'totalSempro', 'totalJalurSidang', 'totalJalurJurnal', 'calendarEvents', 'conflictMap', 'kesediaanDosens',
-            'selectedGelombang', 'gelombangOptions', 'pembimbingGroups', 'unscheduledIds'
+            'selectedGelombang', 'gelombangOptions', 'pembimbingGroups', 'unscheduledIds',
+            'totalBelumPlotting', 'totalSudahTerjadwal'
         ));
     }
 
