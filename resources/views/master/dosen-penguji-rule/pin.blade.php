@@ -76,11 +76,9 @@
 
         <div class="pin-kartu w-full max-w-md">
             <div class="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/5">
-                <span aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-indigo-50 to-transparent dark:from-indigo-500/10"></span>
-
                 <div class="relative px-6 sm:px-8 pt-8 pb-7 text-center">
-                    <div class="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg transition-all duration-500"
-                         :class="berhasil ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30 scale-110' : 'pin-ikon bg-gradient-to-br from-indigo-500 to-violet-600 shadow-indigo-500/30'">
+                    <div class="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-sm transition-all duration-500"
+                         :class="berhasil ? 'bg-emerald-600 scale-110' : 'pin-ikon bg-indigo-600'">
                         <svg x-show="!berhasil" class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         <svg x-show="berhasil" x-cloak class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 117.9-1M5 21h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
                     </div>

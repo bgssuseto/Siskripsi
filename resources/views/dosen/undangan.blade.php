@@ -3,8 +3,8 @@
 
     @php
         $infoJenis = [
-            'sempro'  => ['label' => 'Seminar Proposal', 'singkat' => 'Sempro', 'chip' => 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30', 'ikon' => 'document', 'tile' => 'amber', 'garis' => 'from-amber-400 to-orange-500'],
-            'skripsi' => ['label' => 'Sidang Skripsi', 'singkat' => 'Skripsi', 'chip' => 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/30', 'ikon' => 'academic', 'tile' => 'violet', 'garis' => 'from-violet-500 to-fuchsia-500'],
+            'sempro'  => ['label' => 'Seminar Proposal', 'singkat' => 'Sempro', 'chip' => 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30', 'ikon' => 'document', 'tile' => 'amber', 'garis' => 'bg-amber-500'],
+            'skripsi' => ['label' => 'Sidang Skripsi', 'singkat' => 'Skripsi', 'chip' => 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/30', 'ikon' => 'academic', 'tile' => 'violet', 'garis' => 'bg-violet-600'],
         ];
         $rentang = function ($it) {
             if (!$it['mulai']) return 'Jadwal belum ditentukan';
@@ -88,7 +88,7 @@
                     @php $j = $infoJenis[$it['jenis']]; @endphp
                     <article x-show="!jenis || jenis === '{{ $it['jenis'] }}'" x-data="{ rinci: {{ $it['jumlah'] <= 8 ? 'true' : 'false' }} }"
                              class="relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
-                        <span class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r {{ $j['garis'] }}"></span>
+                        <span class="absolute inset-x-0 top-0 h-1 {{ $j['garis'] }}"></span>
 
                         <header class="p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center gap-4">
                             <div class="flex items-start gap-4 min-w-0 flex-1">

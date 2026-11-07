@@ -463,7 +463,7 @@
                 <ul class="divide-y divide-slate-100 dark:divide-slate-800 transition-opacity" :class="userMemuat && 'opacity-50'">
                     <template x-for="u in users" :key="u.hid">
                         <li class="flex items-center gap-3 px-4 py-3">
-                            <span class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-bold flex items-center justify-center text-xs shrink-0" x-text="u.name.charAt(0).toUpperCase()"></span>
+                            <span class="w-9 h-9 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0" x-text="u.name.charAt(0).toUpperCase()"></span>
                             <div class="min-w-0 flex-1">
                                 <p class="text-sm font-bold text-slate-900 dark:text-slate-100 truncate" x-text="u.name"></p>
                                 <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate" x-text="u.email"></p>
@@ -588,7 +588,7 @@
         <div x-show="userTerbuka" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto" @keydown.escape.window="userTerbuka = false">
             <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-2xl w-full my-8 border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col max-h-[calc(100vh-4rem)]" @click.outside="userTerbuka = false">
                 <div class="flex items-center gap-3 px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-                    <span class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-bold flex items-center justify-center shrink-0" x-text="userTerpilih?.name?.charAt(0).toUpperCase()"></span>
+                    <span class="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center shrink-0" x-text="userTerpilih?.name?.charAt(0).toUpperCase()"></span>
                     <div class="min-w-0 flex-1">
                         <h3 class="font-extrabold text-slate-900 dark:text-slate-100 truncate" x-text="'Akses khusus: ' + (userTerpilih?.name ?? '')"></h3>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate" x-text="(userTerpilih?.email ?? '') + ' · ' + (userTerpilih?.roles ?? []).join(', ')"></p>

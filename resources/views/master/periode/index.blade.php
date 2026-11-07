@@ -400,7 +400,7 @@
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola rentang tanggal dibukanya gelombang pendaftaran Seminar Proposal & Sidang Skripsi bagi Mahasiswa.</p>
             </div>
             <button @click="editWave = { id: null, periode_id: '{{ $periodes->where('aktif', true)->first()->id ?? '' }}', jenis: 'sempro', gelombang: 1, tanggal_mulai: '', tanggal_selesai: '' }; errors = {}; waveCreateModal = true;"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all shrink-0 cursor-pointer">
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl shadow-sm hover:shadow-md transition-all shrink-0 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -539,7 +539,7 @@
                     </div>
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <button type="button" @click="createModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-md disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Simpan Data</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
@@ -591,7 +591,7 @@
                     </div>
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <button type="button" @click="editModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-md disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Simpan Perubahan</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
@@ -685,7 +685,7 @@
 
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <button type="button" @click="waveCreateModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-md disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Simpan</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
@@ -756,7 +756,7 @@
 
                     <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <button type="button" @click="waveEditModal = false" class="px-4 py-2 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm rounded-xl transition-all cursor-pointer">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all hover:shadow-md disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Simpan Perubahan</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>

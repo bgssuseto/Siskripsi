@@ -46,9 +46,8 @@
     }
 @endphp
 <section {{ $attributes->merge(['class' => 'relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 mb-6']) }}>
-    {{-- aksen: garis tipis di atas, cahaya lembut & pola titik samar di kanan --}}
-    <span aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-sky-400"></span>
-    <span aria-hidden="true" class="pointer-events-none absolute -top-28 -right-20 h-72 w-72 rounded-full bg-indigo-400/15 blur-3xl dark:bg-indigo-500/15"></span>
+    {{-- aksen: garis tipis di atas & pola titik samar di kanan --}}
+    <span aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-indigo-600"></span>
     <span aria-hidden="true" class="pointer-events-none absolute inset-0 text-slate-300 dark:text-slate-700"
           style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 18px 18px; -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,.55), transparent 55%); mask-image: linear-gradient(to left, rgba(0,0,0,.55), transparent 55%);"></span>
 
@@ -58,7 +57,7 @@
                 @if($foto)
                     <img src="{{ asset($foto) }}" alt="" class="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-2xl object-cover ring-4 ring-indigo-50 dark:ring-indigo-500/10">
                 @else
-                    <span class="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-base sm:text-lg font-bold text-white shadow-md shadow-indigo-500/20 ring-4 ring-indigo-50 dark:ring-indigo-500/10">{{ $inisial ?: '?' }}</span>
+                    <span class="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-base sm:text-lg font-bold text-white shadow-sm ring-4 ring-indigo-50 dark:ring-indigo-500/10">{{ $inisial ?: '?' }}</span>
                 @endif
                 <div class="min-w-0">
                     <p class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">

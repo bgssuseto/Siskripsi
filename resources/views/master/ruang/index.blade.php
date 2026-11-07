@@ -299,7 +299,7 @@
 
                         <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                             <button type="button" @click="createModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
-                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-600/30 disabled:opacity-50">
+                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm disabled:opacity-50">
                                 <span x-show="!isLoading">Simpan Data</span>
                                 <span x-show="isLoading">Menyimpan...</span>
                             </button>
@@ -355,7 +355,7 @@
 
                         <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                             <button type="button" @click="editModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
-                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-600/30 disabled:opacity-50">
+                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm disabled:opacity-50">
                                 <span x-show="!isLoading">Simpan Perubahan</span>
                                 <span x-show="isLoading">Menyimpan...</span>
                             </button>
@@ -386,7 +386,7 @@
                         @csrf
                         @method('DELETE')
                         <button type="button" @click="deleteModal = false" class="w-1/2 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="w-1/2 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-md shadow-rose-600/30 disabled:opacity-50">
+                        <button type="submit" :disabled="isLoading" class="w-1/2 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-sm disabled:opacity-50">
                             <span x-show="!isLoading">Hapus</span>
                             <span x-show="isLoading">Menghapus...</span>
                         </button>

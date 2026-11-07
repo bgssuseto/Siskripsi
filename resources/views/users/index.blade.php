@@ -329,7 +329,7 @@
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/40 transition-colors">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
                                         {{ strtoupper(substr($user->name, 0, 1)) }}
                                     </div>
                                     <div>
@@ -469,7 +469,7 @@
                     </div>
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <button type="button" @click="createModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Simpan User</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
@@ -557,7 +557,7 @@
                     </div>
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <button type="button" @click="editModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">Batal</button>
-                        <button type="submit" :disabled="isLoading" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 disabled:opacity-50 cursor-pointer">
+                        <button type="submit" :disabled="isLoading" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm disabled:opacity-50 cursor-pointer">
                             <span x-show="!isLoading">Update User</span>
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
@@ -584,7 +584,7 @@
                     @csrf
                     @method('DELETE')
                     <button type="button" @click="deleteModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">Batal</button>
-                    <button type="submit" :disabled="isLoading" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 disabled:opacity-50 cursor-pointer">
+                    <button type="submit" :disabled="isLoading" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm disabled:opacity-50 cursor-pointer">
                         <span x-show="!isLoading">Ya, Hapus</span>
                         <span x-show="isLoading">Menghapus...</span>
                     </button>
@@ -635,7 +635,7 @@
 
                         <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-700">
                             <button type="button" @click="importModal = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 cursor-pointer">Batal</button>
-                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md shadow-emerald-600/30 disabled:opacity-50 cursor-pointer">
+                            <button type="submit" :disabled="isLoading" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm disabled:opacity-50 cursor-pointer">
                                 <span x-show="!isLoading">Import Data</span>
                                 <span x-show="isLoading">Meng-import...</span>
                             </button>

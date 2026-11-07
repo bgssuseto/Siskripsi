@@ -82,7 +82,7 @@
 
                 <div class="sm:col-span-2 lg:col-span-1">
                     <button type="submit"
-                            class="w-full h-10 inline-flex items-center justify-center gap-2 px-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-bold text-sm rounded-xl shadow-md shadow-violet-500/25 whitespace-nowrap transition-all duration-200">
+                            class="w-full h-10 inline-flex items-center justify-center gap-2 px-3 bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm rounded-xl shadow-sm whitespace-nowrap transition-all duration-200">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>

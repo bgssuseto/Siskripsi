@@ -23,10 +23,7 @@
             <!-- Left Side: Profile Card -->
             <div class="space-y-6">
                 <div class="bg-white rounded-3xl border border-slate-200/80 p-6 text-center shadow-sm relative overflow-hidden">
-                    <!-- Subtle background decoration -->
-                    <div class="absolute -top-12 -left-12 w-24 h-24 bg-indigo-50 rounded-full blur-xl"></div>
-                    
-                    <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-extrabold flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/20 mx-auto mb-4 relative z-10">
+                    <div class="w-24 h-24 rounded-full bg-indigo-600 text-white font-extrabold flex items-center justify-center text-3xl shadow-sm mx-auto mb-4 relative z-10">
                         {{ strtoupper(substr($dosen->nama_dosen, 0, 1)) }}
                     </div>
 

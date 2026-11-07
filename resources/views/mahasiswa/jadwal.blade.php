@@ -141,7 +141,7 @@
                                     </div>
                                 </div>
                                 @if($waLink)
-                                    <a href="{{ route('mahasiswa.sidang.join-wa', $s) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 shrink-0">
+                                    <a href="{{ route('mahasiswa.sidang.join-wa', $s) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm hover:shadow-md shrink-0">
                                         <span><x-icon name="chat" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Join Grup WhatsApp
                                     </a>
                                 @else

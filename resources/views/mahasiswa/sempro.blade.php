@@ -77,11 +77,11 @@
                                 <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
                             </div>
                         @elseif(!$mySidang)
-                            <button @click="regModal = true" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                            <button @click="regModal = true" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-sm flex items-center justify-center gap-2 cursor-pointer">
                                 <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Ajukan Pendaftaran Sempro
                             </button>
                         @elseif($mySidang->verifikasi_status === 'ditolak')
-                            <button @click="regModal = true" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                            <button @click="regModal = true" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-sm flex items-center justify-center gap-2 cursor-pointer">
                                 <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Revisi Pendaftaran Sempro
                             </button>
                         @elseif($mySidang->verifikasi_status === 'disetujui')
@@ -91,7 +91,7 @@
                                     <span><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Pendaftaran Anda telah terverifikasi.
                                 </p>
                                 @if($waLink)
-                                    <a href="{{ route('mahasiswa.sidang.join-wa', $mySidang) }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                                    <a href="{{ route('mahasiswa.sidang.join-wa', $mySidang) }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-sm flex items-center justify-center gap-2 cursor-pointer">
                                         <span><x-icon name="chat" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Join Grup WhatsApp
                                     </a>
                                 @else
@@ -433,7 +433,7 @@
 
                 <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
                     <button type="button" @click="regModal = false" class="px-3.5 py-1.5 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl transition-all">Batal</button>
-                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5 cursor-pointer">
+                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
                         <span></span> Kirim Pendaftaran
                     </button>
                 </div>

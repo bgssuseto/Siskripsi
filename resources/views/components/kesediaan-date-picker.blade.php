@@ -126,7 +126,7 @@
                         <button type="button" @click="toggle(cell.date)" :disabled="!isSelectable(cell.date)"
                                 class="relative w-full aspect-square sm:aspect-auto sm:h-10 rounded-xl text-xs sm:text-sm font-bold transition-colors"
                                 :class="{
-                                    'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-700 cursor-pointer': isSelected(cell.date),
+                                    'bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 cursor-pointer': isSelected(cell.date),
                                     'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:border-indigo-400 cursor-pointer': isExisting(cell.date) && isSelectable(cell.date) && !isSelected(cell.date),
                                     'text-slate-300 dark:text-slate-600 cursor-not-allowed': !isSelectable(cell.date),
                                     'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer': isSelectable(cell.date) && !isSelected(cell.date) && !isExisting(cell.date),

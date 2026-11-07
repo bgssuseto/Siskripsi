@@ -397,8 +397,7 @@
             <div class="flex items-center h-16 px-4 border-b border-white/[0.07] shrink-0">
                 <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 min-w-0">
                     <div class="relative w-10 h-10 shrink-0">
-                        <span aria-hidden="true" class="absolute -inset-0.5 rounded-[14px] bg-gradient-to-br from-indigo-500 via-violet-500 to-sky-400 opacity-60 blur-[6px] transition-opacity group-hover:opacity-90"></span>
-                        <div class="relative w-10 h-10 rounded-xl flex items-center justify-center p-1.5 ring-1 ring-indigo-100 shadow-md shadow-indigo-500/10 transition-transform group-hover:scale-105" style="background-color:#fff">
+                        <div class="relative w-10 h-10 rounded-xl flex items-center justify-center p-1.5 ring-1 ring-indigo-100 shadow-sm transition-transform group-hover:scale-105" style="background-color:#fff">
                             <x-logo-umk />
                         </div>
                     </div>
@@ -431,7 +430,7 @@
                     <!-- Dashboard -->
                     <a href="{{ route('dashboard') }}"
                        class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                              {{ request()->routeIs('dashboard') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                              {{ request()->routeIs('dashboard') ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
                        title="Dashboard">
                         <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('dashboard') ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -471,7 +470,7 @@
                                     @endphp
                                     <a href="{{ $targetUrl }}"
                                        class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                                              {{ $isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                              {{ $isActive ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
                                        title="{{ $parent->name }}">
                                         <svg class="w-5 h-5 shrink-0 {{ $isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             @if(str_contains(strtolower($parent->name), 'dashboard'))
@@ -585,7 +584,7 @@
                                     @endphp
                                     <a href="{{ $targetUrl }}"
                                        class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                                              {{ $isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                              {{ $isActive ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
                                        title="{{ $parent->name }}">
                                         <svg class="w-5 h-5 shrink-0 {{ $isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             @if($parent->icon === 'home' || str_contains(strtolower($parent->name), 'dashboard'))
@@ -838,7 +837,7 @@
                     <!-- BEBAS PRODI -->
                     <a href="{{ route('bebas-prodi.index') }}"
                        class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                              {{ request()->routeIs('bebas-prodi.*') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                              {{ request()->routeIs('bebas-prodi.*') ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
                        title="Bebas Prodi">
                         <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('bebas-prodi.*') ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
@@ -1123,7 +1122,7 @@
                                 @endphp
                                 <a href="{{ $kUrl }}"
                                    class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative
-                                          {{ $kParentActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
+                                          {{ $kParentActive ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' }}"
                                    title="{{ $kParent->name }}">
                                     <svg class="w-5 h-5 shrink-0 {{ $kParentActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -1203,7 +1202,7 @@
                 <a href="{{ route('profile.edit') }}"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/[0.06] hover:text-white transition-all duration-200 group"
                    title="{{ Auth::user()->name }}">
-                    <div class="w-7 h-7 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-bold flex items-center justify-center text-xs shadow-md">
+                    <div class="w-7 h-7 shrink-0 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-sm">
                         {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                     </div>
                     <div class="overflow-hidden transition-all duration-300 min-w-0" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
@@ -1540,7 +1539,7 @@
                     <!-- Profile Dropdown Trigger -->
                     <button @click="open = !open"
                             class="flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center text-xs shadow-sm">
+                        <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-sm">
                             {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                         </div>
                         <div class="hidden sm:block text-left">
@@ -1564,9 +1563,9 @@
                          x-cloak>
 
                         <!-- Profile Card -->
-                        <div class="p-4 bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/60 dark:to-violet-950/60 border-b border-slate-100 dark:border-slate-700">
+                        <div class="p-4 bg-indigo-50 dark:bg-indigo-500/10 border-b border-slate-100 dark:border-slate-700">
                             <div class="flex items-center gap-3">
-                                <div class="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white font-extrabold flex items-center justify-center text-base shadow-md">
+                                <div class="w-11 h-11 rounded-full bg-indigo-600 text-white font-extrabold flex items-center justify-center text-base shadow-sm">
                                     {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                                 </div>
                                 <div class="min-w-0">

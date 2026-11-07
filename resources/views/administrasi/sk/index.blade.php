@@ -42,8 +42,6 @@
 
             <!-- Card 1: SK Pembimbing Excel -->
             <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-indigo-100 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden group">
-                <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-indigo-50 dark:bg-indigo-950/30 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
-
                 <div class="relative z-10 space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-700">
@@ -77,7 +75,7 @@
                 </div>
 
                 <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-2.5">
-                    <a href="{{ route('administrasi.sk.export-pembimbing', request()->except('jenis')) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-600/20 transition-all">
+                    <a href="{{ route('administrasi.sk.export-pembimbing', request()->except('jenis')) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-xs rounded-2xl shadow-sm transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
@@ -94,8 +92,6 @@
 
             <!-- Card 2: SK Penguji Excel -->
             <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-purple-100 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden group">
-                <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-purple-50 dark:bg-purple-950/30 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
-
                 <div class="relative z-10 space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-700">
@@ -130,7 +126,7 @@
                 </div>
 
                 <div class="relative z-10 pt-6 mt-6 border-t border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-2.5">
-                    <a href="{{ route('administrasi.sk.export-penguji', request()->except('jenis')) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-purple-600/20 transition-all">
+                    <a href="{{ route('administrasi.sk.export-penguji', request()->except('jenis')) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-extrabold text-xs rounded-2xl shadow-sm transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>

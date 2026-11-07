@@ -6,12 +6,12 @@
     $namaInti = trim(preg_replace('/^((dr|prof|ir|drs|dra)\.?\s+)+/i', '', explode(',', $user->name ?? 'U')[0]));
     $inisial = collect(preg_split('/\s+/', $namaInti))->filter()->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode('') ?: 'U';
 
-    // [gradien aksen, deskripsi peran, kelas chip peran, kelas cahaya]
+    // [warna aksen solid, deskripsi peran, kelas chip peran]
     $roleTheme = match (true) {
-        $user->isSuperAdmin()  => ['from-violet-600 to-indigo-600', 'Mengelola seluruh data, penjadwalan, administrasi, dan hak akses sistem.', 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/30', 'bg-violet-400/15'],
-        $user->isKoordinator() => ['from-sky-600 to-indigo-600', 'Mengelola pendaftaran, penjadwalan, dan administrasi sesuai menu yang diberikan.', 'bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/30', 'bg-sky-400/15'],
-        $isDosen               => ['from-amber-500 to-orange-600', 'Membimbing dan menguji Seminar Proposal serta Sidang Skripsi.', 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30', 'bg-amber-400/15'],
-        default                => ['from-emerald-500 to-teal-600', 'Mendaftar dan mengikuti Seminar Proposal serta Sidang Skripsi.', 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30', 'bg-emerald-400/15'],
+        $user->isSuperAdmin()  => ['bg-violet-600', 'Mengelola seluruh data, penjadwalan, administrasi, dan hak akses sistem.', 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/30'],
+        $user->isKoordinator() => ['bg-sky-600', 'Mengelola pendaftaran, penjadwalan, dan administrasi sesuai menu yang diberikan.', 'bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/30'],
+        $isDosen               => ['bg-amber-500', 'Membimbing dan menguji Seminar Proposal serta Sidang Skripsi.', 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30'],
+        default                => ['bg-emerald-600', 'Mendaftar dan mengikuti Seminar Proposal serta Sidang Skripsi.', 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30'],
     };
     $chip = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ring-inset';
 
@@ -41,8 +41,7 @@
 
     {{-- ═══════════════ Kartu identitas ═══════════════ --}}
     <section class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <span aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r {{ $roleTheme[0] }}"></span>
-        <span aria-hidden="true" class="pointer-events-none absolute -top-28 -right-20 h-72 w-72 rounded-full blur-3xl {{ $roleTheme[3] }}"></span>
+        <span aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-1 {{ $roleTheme[0] }}"></span>
         <span aria-hidden="true" class="pointer-events-none absolute inset-0 text-slate-300 dark:text-slate-700"
               style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 18px 18px; -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,.55), transparent 55%); mask-image: linear-gradient(to left, rgba(0,0,0,.55), transparent 55%);"></span>
 
@@ -53,7 +52,7 @@
                         <img :src="preview" alt="{{ $user->name }}" class="h-24 w-24 rounded-2xl object-cover bg-white shadow-md ring-4 ring-slate-100 dark:ring-slate-800">
                     </template>
                     <template x-if="!preview">
-                        <div class="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br {{ $roleTheme[0] }} text-3xl font-bold tracking-tight text-white shadow-md ring-4 ring-slate-100 dark:ring-slate-800">{{ $inisial }}</div>
+                        <div class="flex h-24 w-24 items-center justify-center rounded-2xl {{ $roleTheme[0] }} text-3xl font-bold tracking-tight text-white shadow-sm ring-4 ring-slate-100 dark:ring-slate-800">{{ $inisial }}</div>
                     </template>
                     <label for="foto_profil" title="Ganti foto profil"
                            class="absolute -bottom-1.5 -right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl bg-white text-slate-600 shadow-md ring-1 ring-slate-200 transition hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">
@@ -291,7 +290,7 @@
                 </div>
 
                 <div class="px-5 sm:px-7 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                    <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-600/30 transition">
+                    <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition">
                         <x-icon name="check-circle" class="w-4 h-4" /> Simpan perubahan
                     </button>
                 </div>

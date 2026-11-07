@@ -76,11 +76,11 @@
                                 <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Silakan hubungi Koordinator Skripsi untuk didaftarkan kembali pada periode ini.
                             </div>
                         @elseif(!$mySidang)
-                            <button @click="regModal = true" style="background-color: #9333ea; color: #ffffff;" class="w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer border border-purple-500">
+                            <button @click="regModal = true" style="background-color: #9333ea; color: #ffffff;" class="w-full px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-sm flex items-center justify-center gap-2 cursor-pointer border border-purple-500">
                                 <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Ajukan Pendaftaran Sidang Skripsi
                             </button>
                         @elseif($mySidang->verifikasi_status === 'ditolak')
-                            <button @click="regModal = true" style="background-color: #e11d48; color: #ffffff;" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer border border-rose-500">
+                            <button @click="regModal = true" style="background-color: #e11d48; color: #ffffff;" class="w-full px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-sm flex items-center justify-center gap-2 cursor-pointer border border-rose-500">
                                 <span><x-icon name="pencil" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Revisi Pendaftaran Skripsi
                             </button>
                         @elseif($mySidang->verifikasi_status === 'disetujui')
@@ -90,7 +90,7 @@
                                     <span><x-icon name="check-circle" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Pendaftaran Anda telah terverifikasi.
                                 </p>
                                 @if($waLink)
-                                    <a href="{{ route('mahasiswa.sidang.join-wa', $mySidang) }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer">
+                                    <a href="{{ route('mahasiswa.sidang.join-wa', $mySidang) }}" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-sm flex items-center justify-center gap-2 cursor-pointer">
                                         <span><x-icon name="chat" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span> Join Grup WhatsApp
                                     </a>
                                 @else

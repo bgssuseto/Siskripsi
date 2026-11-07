@@ -338,7 +338,7 @@
                                         @click="selectedSidang = {{ json_encode($s) }}; verifikasiStatus = '{{ $s->verifikasi_status ?? 'disetujui' }}'; verifikasiKomentar = '{{ addslashes($s->verifikasi_komentar ?? '') }}'; verifikasiModal = true"
                                         style="background-color: #9333ea; color: #ffffff;"
                                         title="Verifikasi Pendaftaran"
-                                        class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-purple-600 text-white transition-all shadow-md shadow-purple-600/30 hover:bg-purple-700 border border-purple-500 cursor-pointer">
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-purple-600 text-white transition-all shadow-sm hover:bg-purple-700 border border-purple-500 cursor-pointer">
                                     <x-icon name="lightning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
                                 </button>
                                 <button type="button"
@@ -547,7 +547,7 @@
                     <button type="button" @click="deleteModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">
                         Batal
                     </button>
-                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/30">
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-sm">
                         Ya, Hapus Data
                     </button>
                 </form>
@@ -580,7 +580,7 @@
                 </div>
                 <div class="flex gap-3 pt-1">
                     <button type="button" @click="bulkRejectModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">Batal</button>
-                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/30">Ya, Tolak Semua</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-sm">Ya, Tolak Semua</button>
                 </div>
             </form>
         </div>
@@ -599,7 +599,7 @@
                 @method('DELETE')
                 <template x-for="id in selectedIds" :key="id"><input type="hidden" name="ids[]" :value="id"></template>
                 <button type="button" @click="bulkDeleteModal = false" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all">Batal</button>
-                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/30">Ya, Hapus Semua</button>
+                <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-sm">Ya, Hapus Semua</button>
             </form>
         </div>
     </div>
