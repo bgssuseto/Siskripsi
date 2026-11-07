@@ -1,10 +1,18 @@
 @props(['form'])
 
-{{-- Verifikasi keamanan: soal hitungan berupa gambar (jawaban hanya di session). --}}
+{{-- Verifikasi keamanan: soal hitungan berupa gambar (jawaban hanya di session).
+     PENTING: img di bawah HANYA boleh punya satu sumber src (:src Alpine) — jangan
+     tambahkan atribut src statis lagi di sampingnya. Setiap request ke
+     captcha.image MEMBUAT SOAL BARU & MENIMPA jawaban lama di session (lihat
+     CaptchaController::image()); dua atribut src yang masing-masing menghitung
+     timestamp sendiri bisa memicu DUA request kalau keduanya kebetulan jatuh di
+     detik yang berbeda — gambar yang akhirnya tampil bisa jadi tidak sinkron
+     dengan jawaban yang tersimpan di session, sehingga jawaban yang benar
+     ditolak sebagai salah. --}}
 <div x-data="{ src: '{{ route('captcha.image', $form) }}?t={{ now()->timestamp }}', muat() { this.src = '{{ route('captcha.image', $form) }}?t=' + Date.now(); this.$refs.jawaban.value = ''; this.$refs.jawaban.focus(); } }">
     <label for="captcha_input" class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-2">Verifikasi Keamanan</label>
     <div class="flex items-center gap-2">
-        <img :src="src" src="{{ route('captcha.image', $form) }}?t={{ now()->timestamp }}" alt="Soal hitungan verifikasi keamanan"
+        <img :src="src" alt="Soal hitungan verifikasi keamanan"
              width="150" height="52" class="shrink-0 w-[120px] h-auto sm:w-[150px] rounded-xl border border-slate-200 dark:border-slate-700 select-none" draggable="false">
         <button type="button" @click="muat()" title="Ganti soal" aria-label="Ganti soal"
                 class="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-700 hover:text-indigo-600 transition-colors">
