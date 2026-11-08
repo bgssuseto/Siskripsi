@@ -29,6 +29,23 @@ class TanggalIndo
     }
 
     /**
+     * Format tanggal bahasa Indonesia tanpa nama hari, mis. "10 Juni 2026".
+     * Dipakai di baris "Kudus, ..." pada berita acara — bagian itu saja yang
+     * tidak menampilkan hari, berbeda dari lengkap() yang dipakai di kalimat
+     * "Pada hari ..." yang memang butuh nama harinya.
+     */
+    public static function singkat($tanggal, string $kosong = '-'): string
+    {
+        if (empty($tanggal)) {
+            return $kosong;
+        }
+
+        $date = $tanggal instanceof Carbon ? $tanggal : Carbon::parse($tanggal);
+
+        return $date->locale('id')->translatedFormat('j F Y');
+    }
+
+    /**
      * Baca tanggal dari sel Excel impor (Sempro & Skripsi) → "Y-m-d".
      * Menerima nomor seri tanggal Excel, "Y-m-d", "Senin, 10 Juni 2026",
      * "10 Juni 2026", serta "d/m/Y" atau "m/d/Y" (ditebak dari nilai > 12).

@@ -9,6 +9,8 @@
 @php
     $kosong = '___________';
     $tglLengkap = fn ($tgl) => $tgl ? \App\Support\TanggalIndo::lengkap($tgl) : $kosong;
+    // Khusus baris "Kudus, ..." di lembar revisi: tanpa nama hari.
+    $tglSingkat = fn ($tgl) => $tgl ? \App\Support\TanggalIndo::singkat($tgl) : $kosong;
 
     $nama  = mb_strtoupper($sidang->nama_mahasiswa);
     $nim   = $sidang->nim;
@@ -17,7 +19,8 @@
     $pend  = $sidang->pembimbingPendamping?->nama_dosen;
 
     $sesiUtama = [
-        'tanggal' => $tglLengkap($sidang->tanggal),
+        'tanggal'         => $tglLengkap($sidang->tanggal),
+        'tanggal_singkat' => $tglSingkat($sidang->tanggal),
         'jam'     => $sidang->jam ? $sidang->jam . ' WIB' : $kosong,
         'ruang'   => $sidang->ruang?->kode_ruangan ?? $kosong,
     ];
@@ -25,7 +28,8 @@
     $terpisah = $sidang->isJadwalTerpisah() && $pend;
     $sesiPend = $terpisah
         ? [
-            'tanggal' => $tglLengkap($sidang->tanggal_pendamping),
+            'tanggal'         => $tglLengkap($sidang->tanggal_pendamping),
+            'tanggal_singkat' => $tglSingkat($sidang->tanggal_pendamping),
             'jam'     => $sidang->jam_pendamping ? $sidang->jam_pendamping . ' WIB' : $kosong,
             'ruang'   => $sidang->ruangPendamping?->kode_ruangan ?? $kosong,
         ]
@@ -127,7 +131,7 @@
     </table>
 
     <div class="ba-revisi-sign">
-        <p>Kudus, {{ $ev['sesi']['tanggal'] }}</p>
+        <p>Kudus, {{ $ev['sesi']['tanggal_singkat'] }}</p>
         <p class="ba-bold" style="margin-top: 6px;">{{ $ev['role'] }}</p>
         <p class="ba-bold" style="margin-top: 70px;">({{ $ev['name'] }})</p>
     </div>

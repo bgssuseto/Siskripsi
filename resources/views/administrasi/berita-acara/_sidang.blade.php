@@ -13,6 +13,8 @@
     $nim    = $sidang->nim;
     $judul  = mb_strtoupper($sidang->judul_skripsi);
     $tanggal = $sidang->tanggal ? \App\Support\TanggalIndo::lengkap($sidang->tanggal) : $kosong;
+    // Khusus baris "Kudus, ..." di lembar revisi: tanpa nama hari.
+    $tanggalSingkat = $sidang->tanggal ? \App\Support\TanggalIndo::singkat($sidang->tanggal) : $kosong;
     $jam     = $sidang->jam ?: $kosong;
     $ruang   = $sidang->ruang?->kode_ruangan ?? $kosong;
 
@@ -129,7 +131,7 @@
     </table>
 
     <div class="ba-revisi-sign" style="line-height: 1.3;">
-        <p>Kudus, {{ $tanggal }}</p>
+        <p>Kudus, {{ $tanggalSingkat }}</p>
         <p>{{ $ev['role'] }}</p>
         <p class="ba-bold" style="margin-top: 70px;">({{ $ev['name'] }})</p>
     </div>
