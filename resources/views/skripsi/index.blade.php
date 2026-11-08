@@ -441,36 +441,54 @@
             </x-slot:actions>
         </x-page-header>
 
-        {{-- Stats --}}
-        <div id="stats-container">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
-                <div class="stat-card">
-                    <div class="stat-icon blue"><x-icon name="clipboard-list" /></div>
-                    <div>
-                        <div class="stat-value">{{ $totalSkripsi + $totalJurnal }}</div>
-                        <div class="stat-label">Total Mahasiswa</div>
+        {{-- Ringkasan: satu baris padat agar tidak makan banyak tempat. --}}
+        <div id="stats-container" class="mb-6">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                        <x-icon name="clipboard-list" class="w-4 h-4" />
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-lg font-extrabold text-slate-900 dark:text-slate-100 leading-none">{{ $totalSkripsi + $totalJurnal }}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Total Mahasiswa</p>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon violet"><x-icon name="academic" /></div>
-                    <div>
-                        <div class="stat-value">{{ $totalSkripsi }}</div>
-                        <div class="stat-label">Skripsi</div>
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+                        <x-icon name="academic" class="w-4 h-4" />
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-lg font-extrabold text-violet-700 dark:text-violet-300 leading-none">{{ $totalSkripsi }}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Skripsi</p>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon green"><x-icon name="book" /></div>
-                    <div>
-                        <div class="stat-value">{{ $totalJurnal }}</div>
-                        <div class="stat-label">Jurnal / Artikel</div>
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                        <x-icon name="book" class="w-4 h-4" />
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-lg font-extrabold text-teal-700 dark:text-teal-300 leading-none">{{ $totalJurnal }}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Jurnal / Artikel</p>
                     </div>
                 </div>
-            </div>
-
-            {{-- Infografis Status Plotting — supaya langsung terlihat berapa yang
-                 masih perlu diplot tanpa harus menghitung manual dari tabel. --}}
-            <div class="mb-6">
-                <x-plotting-status-infografis :terjadwal="$totalSudahTerjadwal" :belum-plotting="$totalBelumPlotting" />
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <x-icon name="check-circle" class="w-4 h-4" />
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-lg font-extrabold text-emerald-700 dark:text-emerald-300 leading-none">{{ $totalSudahTerjadwal }}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Sudah Terjadwal</p>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <x-icon name="clock" class="w-4 h-4" />
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-lg font-extrabold text-amber-700 dark:text-amber-300 leading-none">{{ $totalBelumPlotting }}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Belum Plotting</p>
+                    </div>
+                </div>
             </div>
         </div>
 
