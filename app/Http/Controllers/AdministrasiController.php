@@ -20,6 +20,7 @@ use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use ZipArchive;
+use App\Support\PdfGabung;
 
 use Illuminate\Support\Facades\Crypt;
 
@@ -1548,6 +1549,53 @@ class AdministrasiController extends Controller
         $pdf = $this->renderBeritaAcaraGabungan($request);
 
         return $pdf instanceof RedirectResponse ? $pdf : $pdf->stream($this->namaFileBeritaAcara($request, 'pdf'));
+    }
+
+    /**
+     * Unduh semua Berita Acara pada filter sebagai SATU PDF gabungan, tanpa
+     * batas jumlah mahasiswa. Tiap mahasiswa dirender sendiri-sendiri (seperti
+     * ZIP) lalu digabung, jadi memori tidak habis walau datanya banyak.
+     */
+    public function generateBeritaAcaraGabunganPdf(Request $request): BinaryFileResponse|RedirectResponse
+    {
+        $sidangs = $this->beritaAcaraQuery($request, $this->resolvePeriodeId($request))
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('jam', 'asc')
+            ->orderBy('nama_mahasiswa', 'asc')
+            ->get();
+
+        if ($sidangs->isEmpty()) {
+            return back()->with('warning', 'Tidak ada data sidang mahasiswa pada filter yang dipilih.');
+        }
+
+        $this->siapkanCetakBesar();
+
+        $namaFile = $this->namaFileBeritaAcara($request, 'pdf');
+        $tempPath = storage_path('app/public/' . uniqid('', true) . '_' . $namaFile);
+        $kopBase64 = $this->kopSuratBase64();
+
+        try {
+            $gabung = new PdfGabung($tempPath);
+
+            foreach ($sidangs as $sidang) {
+                $pdf = Pdf::loadView('administrasi.berita-acara.pdf', [
+                    'sidangs'   => collect([$sidang]),
+                    'kopBase64' => $kopBase64,
+                ])->setPaper('a4', 'portrait');
+
+                $gabung->tambah($pdf->output());
+                unset($pdf);
+            }
+
+            $gabung->selesai();
+        } catch (\Throwable $e) {
+            @unlink($tempPath);
+            report($e);
+
+            return back()->with('error', 'Gagal membuat PDF gabungan. Silakan coba "Unduh Semua (ZIP)".');
+        }
+
+        return response()->download($tempPath, $namaFile)->deleteFileAfterSend(true);
     }
 
     /**

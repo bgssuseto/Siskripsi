@@ -15,7 +15,7 @@
             @if($sidangs->count() > $maksCetakGabungan)
                 <div class="flex items-start gap-2 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-xs text-amber-800 dark:text-amber-300">
                     <span><x-icon name="warning" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></span>
-                    <span>Ada <strong>{{ $sidangs->count() }}</strong> mahasiswa pada filter ini — terlalu banyak untuk satu PDF gabungan (maksimal {{ $maksCetakGabungan }}). Pilih <strong>Gelombang</strong> terlebih dahulu untuk "Cetak Semua", atau gunakan <strong>Unduh Semua (ZIP)</strong>.</span>
+                    <span>Ada <strong>{{ $sidangs->count() }}</strong> mahasiswa pada filter ini — terlalu banyak untuk satu PDF gabungan (maksimal {{ $maksCetakGabungan }}). Pilih <strong>Gelombang</strong> terlebih dahulu untuk "Cetak Semua", atau gunakan <strong>Unduh 1 PDF Gabungan</strong> / <strong>Unduh Semua (ZIP)</strong>.</span>
                 </div>
             @endif
 
@@ -39,6 +39,16 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                     </svg>
                     Cetak Semua
+                </a>
+
+                <!-- Satu PDF gabungan berisi semua berita acara (tanpa batas jumlah) -->
+                <a href="{{ route('administrasi.berita-acara.gabungan-pdf', request()->all()) }}"
+                   title="Semua berita acara pada filter ini digabung menjadi 1 file PDF"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm rounded-xl shadow-sm transition-all duration-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Unduh 1 PDF Gabungan
                 </a>
 
                 <!-- Download ZIP Button -->
