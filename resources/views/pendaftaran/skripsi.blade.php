@@ -96,8 +96,28 @@
         </a>
     </div>
 
-    <!-- Infografis Jalur -->
-    <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$counts['total']" />
+    {{-- Rincian jalur — "Total" sudah tampil di kartu "Semua Berkas" di atas,
+         jadi di sini cukup rincian sidang/jurnal agar tidak duplikat. --}}
+    <div class="grid grid-cols-2 gap-3 sm:max-w-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <x-icon name="academic" class="w-4 h-4" />
+            </div>
+            <div class="min-w-0">
+                <p class="text-lg font-extrabold text-indigo-700 dark:text-indigo-300 leading-none">{{ $totalJalurSidang }}</p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Jalur Sidang</p>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                <x-icon name="book" class="w-4 h-4" />
+            </div>
+            <div class="min-w-0">
+                <p class="text-lg font-extrabold text-teal-700 dark:text-teal-300 leading-none">{{ $totalJalurJurnal }}</p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Jalur Jurnal</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Data Table Container -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">

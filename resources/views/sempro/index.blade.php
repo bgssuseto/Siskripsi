@@ -19,21 +19,6 @@
             background: #fff; color: #8b5cf6; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
         }
 
-        .stat-card {
-            background: #fff; border-radius: 16px; padding: 1.25rem 1.5rem;
-            display: flex; align-items: center; gap: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #f1f5f9;
-        }
-        .stat-icon {
-            width: 48px; height: 48px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem; flex-shrink: 0;
-        }
-        .stat-icon.purple, .stat-icon.violet { background: #f3e8ff; }
-        .stat-icon.green  { background: #f0fdf4; }
-        .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; }
-        .stat-label { font-size: .8rem; font-weight: 600; margin-top: .2rem; }
-
         .toolbar {
             background: #fff; border-radius: 14px; padding: 1rem;
             display: flex; flex-wrap: wrap; gap: .75rem; align-items: center;
@@ -95,13 +80,11 @@
         html.dark .view-toggle { background: #334155 !important; }
         html.dark .view-toggle-btn { color: #94a3b8 !important; }
         html.dark .view-toggle-btn.active { background: #1e293b !important; color: #a78bfa !important; }
-        html.dark .stat-card, html.dark .toolbar, html.dark .table-card {
+        html.dark .toolbar, html.dark .table-card {
             background-color: #1e293b !important;
             border-color: #334155 !important;
             color: #f8fafc !important;
         }
-        html.dark .stat-value { color: #f8fafc !important; }
-        html.dark .stat-label { color: #94a3b8 !important; }
         html.dark table.sidang-table tbody tr {
             border-bottom-color: #334155 !important;
         }

@@ -342,14 +342,6 @@
             border-color: #334155 !important;
         }
 
-        /* Stat Infographics High Contrast Rules */
-        .stat-card { background-color: #ffffff; border: 1px solid #e2e8f0; }
-        .stat-value { color: #0f172a !important; font-weight: 800 !important; }
-        .stat-label { color: #475569 !important; font-weight: 600 !important; }
-        html.dark .stat-card { background-color: #1e293b !important; border-color: #334155 !important; }
-        html.dark .stat-value { color: #f8fafc !important; }
-        html.dark .stat-label { color: #cbd5e1 !important; }
-
         /* Tema FullCalendar: resources/css/calendar.css */
     </style>
 </head>

@@ -4,18 +4,6 @@
     <style>
         .data-page { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
 
-        /* Stats */
-        .stat-card {
-            background: #fff; border-radius: 16px; padding: 1.25rem 1.5rem;
-            display: flex; align-items: center; gap: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid #f1f5f9;
-        }
-        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
-        .stat-icon.blue  { background: #eff6ff; }
-        .stat-icon.green { background: #f0fdf4; }
-        .stat-value { font-size: 1.75rem; font-weight: 800; color: #0f172a; line-height: 1; }
-        .stat-label { font-size: .8rem; color: #64748b; margin-top: .2rem; }
-
         /* Toolbar */
         .toolbar {
             background: #fff; border-radius: 14px; padding: 1rem;
@@ -100,12 +88,6 @@
         .page-btn.disabled { opacity: .4; pointer-events: none; }
 
         /* Dark Mode Overrides */
-        html.dark .stat-card { background: #1e293b; border-color: #334155; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
-        html.dark .stat-value { color: #f8fafc; }
-        html.dark .stat-label { color: #94a3b8; }
-        html.dark .stat-icon.blue  { background: rgba(59,130,246,.15); }
-        html.dark .stat-icon.green { background: rgba(34,197,94,.15); }
-
         html.dark .toolbar { background: #1e293b; border-color: #334155; }
         html.dark .toolbar-search input,
         html.dark .filter-select { background: #0f172a; border-color: #334155; color: #f8fafc; }
@@ -172,27 +154,44 @@
             </x-slot:actions>
         </x-page-header>
 
-        {{-- Stats --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="stat-card">
-                <div class="stat-icon blue"><x-icon name="clipboard-list" /></div>
-                <div>
-                    <div class="stat-value">{{ $totalSempro }}</div>
-                    <div class="stat-label">Total Mahasiswa Sempro</div>
+        {{-- Ringkasan: satu baris padat, tanpa duplikasi "Total Mahasiswa". --}}
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+                    <x-icon name="clipboard-list" class="w-4 h-4" />
+                </div>
+                <div class="min-w-0">
+                    <p class="text-lg font-extrabold text-slate-900 dark:text-slate-100 leading-none">{{ $totalSempro }}</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Total Mahasiswa</p>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon green"><x-icon name="calendar" /></div>
-                <div>
-                    <div class="stat-value" style="font-size:1.1rem;line-height:1.3">{{ $activePeriode ? $activePeriode->nama_periode : '—' }}</div>
-                    <div class="stat-label">Periode Aktif</div>
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5" title="{{ $activePeriode ? $activePeriode->nama_periode : '—' }}">
+                <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
+                    <x-icon name="calendar" class="w-4 h-4" />
+                </div>
+                <div class="min-w-0">
+                    <p class="text-sm font-extrabold text-slate-900 dark:text-slate-100 leading-none truncate">{{ $activePeriode ? $activePeriode->nama_periode : '—' }}</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Periode Aktif</p>
                 </div>
             </div>
-        </div>
-
-        {{-- Infografis Jalur --}}
-        <div class="mb-6">
-            <x-jalur-infografis :sidang="$totalJalurSidang" :jurnal="$totalJalurJurnal" :total="$totalSempro" />
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <x-icon name="academic" class="w-4 h-4" />
+                </div>
+                <div class="min-w-0">
+                    <p class="text-lg font-extrabold text-indigo-700 dark:text-indigo-300 leading-none">{{ $totalJalurSidang }}</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Jalur Sidang</p>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                    <x-icon name="book" class="w-4 h-4" />
+                </div>
+                <div class="min-w-0">
+                    <p class="text-lg font-extrabold text-teal-700 dark:text-teal-300 leading-none">{{ $totalJalurJurnal }}</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Jalur Jurnal</p>
+                </div>
+            </div>
         </div>
 
         {{-- Toolbar / Filter --}}
