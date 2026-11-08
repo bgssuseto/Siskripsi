@@ -164,35 +164,15 @@
             </x-slot:actions>
         </x-page-header>
 
-        {{-- Ringkasan --}}
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
-                    <x-icon name="academic" class="w-4 h-4" />
-                </div>
-                <div class="min-w-0">
-                    <p class="text-lg font-extrabold text-violet-700 dark:text-violet-300 leading-none">{{ $totalSkripsi }}</p>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Total Skripsi</p>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                    <x-icon name="book" class="w-4 h-4" />
-                </div>
-                <div class="min-w-0">
-                    <p class="text-lg font-extrabold text-teal-700 dark:text-teal-300 leading-none">{{ $totalJurnal }}</p>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Jurnal / Artikel</p>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5" title="{{ $activePeriode ? $activePeriode->nama_periode : '—' }}">
-                <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
-                    <x-icon name="calendar" class="w-4 h-4" />
-                </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-extrabold text-slate-900 dark:text-slate-100 leading-none truncate">{{ $activePeriode ? $activePeriode->nama_periode : '—' }}</p>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Periode Aktif</p>
-                </div>
-            </div>
+        {{-- Ringkasan: satu baris kartu padat, sama seperti menu Penjadwalan. --}}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <x-stat-ringkas icon="clipboard-list" warna="blue" netral label="Total Mahasiswa" :nilai="$totalSkripsi + $totalJurnal" />
+        <x-stat-ringkas icon="academic" warna="violet" label="Skripsi" :nilai="$totalSkripsi" />
+        <x-stat-ringkas icon="book" warna="teal" label="Jurnal / Artikel" :nilai="$totalJurnal" />
+        <x-stat-ringkas icon="calendar" warna="slate" kecil label="Periode Aktif" :nilai="$activePeriode ? $activePeriode->nama_periode : '—'"
+            :title="$activePeriode ? $activePeriode->nama_periode : '—'" />
+        <x-stat-ringkas icon="check-circle" warna="emerald" label="Sudah Terjadwal" :nilai="$totalSudahTerjadwal" />
+        <x-stat-ringkas icon="clock" warna="amber" label="Belum Plotting" :nilai="$totalBelumPlotting" />
         </div>
 
         {{-- Toolbar / Filter --}}

@@ -271,11 +271,14 @@ class SkripsiController extends Controller
 
         $totalSkripsi = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'skripsi')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
         $totalJurnal = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        // Sama dengan infografis menu Jadwal Sidang Skripsi.
+        $totalBelumPlotting = Sidang::terverifikasi()->whereIn('jenis_tugas_akhir', ['skripsi', 'jurnal', 'sidang'])->whereNull('tanggal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalSudahTerjadwal = ($totalSkripsi + $totalJurnal) - $totalBelumPlotting;
 
         return view('master.skripsi.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
             'daftarTanggal', 'totalSkripsi', 'totalJurnal', 'calendarEvents', 'conflictMap',
-            'selectedGelombang', 'gelombangOptions'
+            'selectedGelombang', 'gelombangOptions', 'totalBelumPlotting', 'totalSudahTerjadwal'
         ));
     }
 

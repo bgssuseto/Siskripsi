@@ -241,11 +241,14 @@ class SemproController extends Controller
         $totalSempro = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
         $totalJalurSidang = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'sidang')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
         $totalJalurJurnal = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->where('jalur_ta', 'jurnal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        // Sama dengan infografis menu Jadwal Sempro.
+        $totalBelumPlotting = Sidang::terverifikasi()->where('jenis_tugas_akhir', 'sempro')->whereNull('tanggal')->when($periodeId, fn ($q) => $q->where('periode_id', $periodeId))->count();
+        $totalSudahTerjadwal = $totalSempro - $totalBelumPlotting;
 
         return view('master.sempro.index', compact(
             'sidangs', 'dosens', 'ruangs', 'periodes', 'activePeriode',
             'daftarTanggal', 'totalSempro', 'totalJalurSidang', 'totalJalurJurnal', 'calendarEvents', 'conflictMap',
-            'selectedGelombang', 'gelombangOptions'
+            'selectedGelombang', 'gelombangOptions', 'totalBelumPlotting', 'totalSudahTerjadwal'
         ));
     }
 

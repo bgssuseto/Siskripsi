@@ -38,85 +38,23 @@
         </div>
     @endif
 
-    <!-- Stat Infographics Cards (4 Interactive Columns) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        <!-- Card 1: Semua Pendaftaran -->
-        <a href="{{ route('pendaftaran.skripsi') }}" 
-           class="group bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border transition-all duration-300 shadow-xs hover:shadow-md relative overflow-hidden {{ !request('verifikasi_status') ? 'border-purple-600 ring-2 ring-purple-500/20 bg-purple-50/10' : 'border-slate-200/80 dark:border-slate-800 hover:border-purple-300' }}">
-            <div class="flex items-center justify-between">
-                <p class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">SEMUA BERKAS</p>
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center text-sm sm:text-base border border-purple-100 dark:border-purple-900 group-hover:scale-110 transition-transform">
-                    <x-icon name="academic" class="w-[18px] h-[18px]" />
-                </div>
-            </div>
-            <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">{{ $counts['total'] }}</p>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Total pendaftaran skripsi</p>
-        </a>
-
-        <!-- Card 2: Menunggu Verifikasi -->
-        <a href="{{ route('pendaftaran.skripsi', ['verifikasi_status' => 'menunggu']) }}" 
-           class="group bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border transition-all duration-300 shadow-xs hover:shadow-md relative overflow-hidden {{ request('verifikasi_status') === 'menunggu' ? 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/10' : 'border-slate-200/80 dark:border-slate-800 hover:border-amber-300' }}">
-            <div class="flex items-center justify-between">
-                <p class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">MENUNGGU</p>
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center text-sm sm:text-base border border-amber-100 dark:border-amber-900 group-hover:scale-110 transition-transform relative">
-                    <x-icon name="clock" class="w-[18px] h-[18px]" />
-                    @if($counts['menunggu'] > 0)
-                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-ping"></span>
-                    @endif
-                </div>
-            </div>
-            <p class="text-2xl sm:text-3xl font-extrabold text-amber-700 dark:text-amber-400 mt-2">{{ $counts['menunggu'] }}</p>
-            <p class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-0.5">Perlu verifikasi segera</p>
-        </a>
-
-        <!-- Card 3: Disetujui -->
-        <a href="{{ route('pendaftaran.skripsi', ['verifikasi_status' => 'disetujui']) }}" 
-           class="group bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border transition-all duration-300 shadow-xs hover:shadow-md relative overflow-hidden {{ request('verifikasi_status') === 'disetujui' ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/10' : 'border-slate-200/80 dark:border-slate-800 hover:border-emerald-300' }}">
-            <div class="flex items-center justify-between">
-                <p class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">DISETUJUI</p>
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center text-sm sm:text-base border border-emerald-100 dark:border-emerald-900 group-hover:scale-110 transition-transform">
-                    <x-icon name="check" class="w-[18px] h-[18px]" />
-                </div>
-            </div>
-            <p class="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-2">{{ $counts['disetujui'] }}</p>
-            <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">Masuk ke Master Skripsi</p>
-        </a>
-
-        <!-- Card 4: Ditolak -->
-        <a href="{{ route('pendaftaran.skripsi', ['verifikasi_status' => 'ditolak']) }}" 
-           class="group bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border transition-all duration-300 shadow-xs hover:shadow-md relative overflow-hidden {{ request('verifikasi_status') === 'ditolak' ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/10' : 'border-slate-200/80 dark:border-slate-800 hover:border-rose-300' }}">
-            <div class="flex items-center justify-between">
-                <p class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400">DITOLAK</p>
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-bold flex items-center justify-center text-sm sm:text-base border border-rose-100 dark:border-rose-900 group-hover:scale-110 transition-transform">
-                    <x-icon name="x" class="w-[18px] h-[18px]" />
-                </div>
-            </div>
-            <p class="text-2xl sm:text-3xl font-extrabold text-rose-700 dark:text-rose-400 mt-2">{{ $counts['ditolak'] }}</p>
-            <p class="text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-0.5">Perlu perbaikan berkas</p>
-        </a>
-    </div>
-
-    {{-- Rincian jalur — "Total" sudah tampil di kartu "Semua Berkas" di atas,
-         jadi di sini cukup rincian sidang/jurnal agar tidak duplikat. --}}
-    <div class="grid grid-cols-2 gap-3 sm:max-w-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                <x-icon name="academic" class="w-4 h-4" />
-            </div>
-            <div class="min-w-0">
-                <p class="text-lg font-extrabold text-indigo-700 dark:text-indigo-300 leading-none">{{ $totalJalurSidang }}</p>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Jalur Sidang</p>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-3.5 flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                <x-icon name="book" class="w-4 h-4" />
-            </div>
-            <div class="min-w-0">
-                <p class="text-lg font-extrabold text-teal-700 dark:text-teal-300 leading-none">{{ $totalJalurJurnal }}</p>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5 truncate">Jalur Jurnal</p>
-            </div>
-        </div>
+    {{-- Ringkasan: satu baris kartu padat seperti menu Penjadwalan. Empat kartu
+         pertama sekaligus jadi tombol filter status verifikasi. --}}
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <x-stat-ringkas icon="clipboard-list" warna="indigo" netral label="Semua Berkas" :nilai="$counts['total']"
+            :href="route('pendaftaran.skripsi')" :aktif="!request('verifikasi_status')" />
+        <x-stat-ringkas icon="clock" warna="amber" label="Menunggu" :nilai="$counts['menunggu']"
+            :href="route('pendaftaran.skripsi', ['verifikasi_status' => 'menunggu'])" :aktif="request('verifikasi_status') === 'menunggu'">
+            @if($counts['menunggu'] > 0)
+                <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-amber-500 rounded-full animate-ping"></span>
+            @endif
+        </x-stat-ringkas>
+        <x-stat-ringkas icon="check" warna="emerald" label="Disetujui" :nilai="$counts['disetujui']"
+            :href="route('pendaftaran.skripsi', ['verifikasi_status' => 'disetujui'])" :aktif="request('verifikasi_status') === 'disetujui'" />
+        <x-stat-ringkas icon="x" warna="rose" label="Ditolak" :nilai="$counts['ditolak']"
+            :href="route('pendaftaran.skripsi', ['verifikasi_status' => 'ditolak'])" :aktif="request('verifikasi_status') === 'ditolak'" />
+        <x-stat-ringkas icon="academic" warna="indigo" label="Jalur Sidang" :nilai="$totalJalurSidang" />
+        <x-stat-ringkas icon="book" warna="teal" label="Jalur Jurnal" :nilai="$totalJalurJurnal" />
     </div>
 
     <!-- Main Data Table Container -->
