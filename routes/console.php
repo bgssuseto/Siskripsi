@@ -42,6 +42,11 @@ if (config('app.penjadwal_aktif')) {
     Schedule::call(fn () => NotifikasiService::kirimPengingatBesok())
         ->name('pengingat-h1')->dailyAt('07:00')->withoutOverlapping(30);
 
+    // Pengingat gelombang pendaftaran Sempro/Skripsi buka, H-3/H-1 sebelum
+    // tutup, dan berkas yang masih menunggu verifikasi menjelang tutup.
+    Schedule::call(fn () => NotifikasiService::kirimPengingatGelombang())
+        ->name('pengingat-gelombang')->dailyAt('08:00')->withoutOverlapping(30);
+
     // Hasil ujian yang sudah lewat & belum diisi → Lulus (juga dicek saat halaman jadwal dibuka).
     Schedule::call(fn () => KelulusanService::autoFinalizePastExams())
         ->name('finalisasi-kelulusan')->everyThirtyMinutes()->withoutOverlapping(10);

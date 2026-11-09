@@ -55,18 +55,23 @@ class LoginRequest extends FormRequest
         $loginInput = trim($this->input('email'));
         $authenticated = false;
 
+        // Requests from the Android app always stay logged in until the user
+        // explicitly logs out — there's no "remember me" checkbox concept on
+        // a dedicated app, so treat every app login as if it were checked.
+        $remember = $this->boolean('remember') || $this->isFromAndroidApp();
+
         // Coba login via email
         if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
             $authenticated = Auth::attempt([
                 'email'    => $loginInput,
                 'password' => $this->input('password'),
-            ], $this->boolean('remember'));
+            ], $remember);
         } else {
             // Coba login via NIM (untuk Mahasiswa)
             $authenticated = Auth::attempt([
                 'nim'      => $loginInput,
                 'password' => $this->input('password'),
-            ], $this->boolean('remember'));
+            ], $remember);
 
             // Jika gagal via NIM, coba via NIDN (untuk Dosen)
             // NIDN disimpan di tabel dosens, bukan users, jadi perlu lookup dulu
@@ -78,7 +83,7 @@ class LoginRequest extends FormRequest
                         $authenticated = Auth::attempt([
                             'email'    => $dosenUser->email,
                             'password' => $this->input('password'),
-                        ], $this->boolean('remember'));
+                        ], $remember);
                     }
                 }
             }
@@ -121,5 +126,14 @@ class LoginRequest extends FormRequest
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+    }
+
+    /**
+     * Whether this request came from the Skripsi Android app's WebView
+     * (identified by a marker appended to its user agent string).
+     */
+    public function isFromAndroidApp(): bool
+    {
+        return str_contains((string) $this->userAgent(), 'SkripsiAndroidApp');
     }
 }

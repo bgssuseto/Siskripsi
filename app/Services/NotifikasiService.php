@@ -4,8 +4,11 @@ namespace App\Services;
 
 use App\Mail\PemberitahuanMail;
 use App\Models\Dosen;
+use App\Models\PendaftaranPeriode;
+use App\Models\Periode;
 use App\Models\Sidang;
 use App\Models\User;
+use App\Services\FcmNotificationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
@@ -91,7 +94,8 @@ class NotifikasiService
 
     private static function kirimVerifikasi(Sidang $s): int
     {
-        $email = self::emailMahasiswa($s);
+        $user = self::userMahasiswa($s);
+        $email = $user?->email;
         $tanda = 'notifikasi:terkirim:verifikasi:' . $s->id;
         $isi = $s->verifikasi_status . '|' . $s->verifikasi_komentar;
         if (!$email || !in_array($s->verifikasi_status, ['disetujui', 'ditolak'], true) || Cache::get($tanda) === md5($isi)) {
@@ -123,6 +127,16 @@ class NotifikasiService
             self::url('mahasiswa.dashboard'),
             $disetujui ? '#10b981' : '#e11d48',
         ));
+
+        self::push(
+            $user,
+            $disetujui ? 'Berkas Disetujui' : 'Berkas Perlu Diperbaiki',
+            $disetujui
+                ? "Berkas pendaftaran {$jenis} Anda telah disetujui koordinator."
+                : "Berkas pendaftaran {$jenis} Anda ditolak" . ($s->verifikasi_komentar ? ": {$s->verifikasi_komentar}" : '.'),
+            ['type' => 'verifikasi', 'sidang_id' => (string) $s->id],
+        );
+
         if ($ok) {
             Cache::put($tanda, md5($isi), now()->addMonths(6));
         }
@@ -131,7 +145,8 @@ class NotifikasiService
 
     private static function kirimJadwal(Sidang $s): int
     {
-        $email = self::emailMahasiswa($s);
+        $user = self::userMahasiswa($s);
+        $email = $user?->email;
         if (!$email || !$s->tanggal) {
             return 0;
         }
@@ -143,12 +158,13 @@ class NotifikasiService
         }
 
         $jenis = self::jenisPanjang($s);
-        $paragraf = [$sebelumnya
+        $diperbarui = (bool) $sebelumnya;
+        $paragraf = [$diperbarui
             ? "Jadwal {$jenis} Anda telah DIPERBARUI. Mohon perhatikan jadwal terbaru di bawah ini."
             : "Jadwal {$jenis} Anda telah ditetapkan. Mohon hadir tepat waktu dan mempersiapkan presentasi serta berkas yang diperlukan."];
 
         $ok = self::kirim($email, new PemberitahuanMail(
-            ($sebelumnya ? 'Perubahan Jadwal' : 'Jadwal') . " {$jenis} - " . self::tanggal($s->tanggal),
+            ($diperbarui ? 'Perubahan Jadwal' : 'Jadwal') . " {$jenis} - " . self::tanggal($s->tanggal),
             "Halo {$s->nama_mahasiswa},",
             $paragraf,
             self::rincianJadwal($s),
@@ -156,6 +172,16 @@ class NotifikasiService
             self::url('mahasiswa.dashboard'),
             '#4f46e5',
         ));
+
+        $jamLabel = $s->jam ? " pukul {$s->jam} WIB" : '';
+        self::push(
+            $user,
+            ($diperbarui ? 'Perubahan Jadwal' : 'Jadwal') . " {$jenis}",
+            ($diperbarui ? "Jadwal {$jenis} Anda diperbarui: " : "Jadwal {$jenis} Anda telah ditetapkan: ")
+                . self::tanggal($s->tanggal) . $jamLabel . ($s->ruang ? ", Ruang {$s->ruang->kode_ruangan}" : ''),
+            ['type' => 'jadwal', 'sidang_id' => (string) $s->id],
+        );
+
         if ($ok) {
             Cache::put($tanda, md5($isi), now()->addMonths(6));
         }
@@ -185,8 +211,9 @@ class NotifikasiService
         $perDosen = [];
 
         foreach ($sidangs as $s) {
-            if ($email = self::emailMahasiswa($s)) {
-                $terkirim += (int) self::kirim($email, new PemberitahuanMail(
+            $user = self::userMahasiswa($s);
+            if ($user?->email) {
+                $terkirim += (int) self::kirim($user->email, new PemberitahuanMail(
                     "Pengingat: {$s->jenis_label} Anda besok, " . self::tanggal($s->tanggal),
                     "Halo {$s->nama_mahasiswa},",
                     ['Ini pengingat bahwa ujian Anda dijadwalkan BESOK. Pastikan Anda hadir 15 menit sebelum jadwal dan membawa kelengkapan yang diperlukan.'],
@@ -196,6 +223,14 @@ class NotifikasiService
                     '#f59e0b',
                 ));
             }
+            $jamLabel = $s->jam ? " pukul {$s->jam} WIB" : '';
+            self::push(
+                $user,
+                "Pengingat: {$s->jenis_label} besok",
+                "Ujian Anda dijadwalkan BESOK, " . self::tanggal($s->tanggal) . $jamLabel
+                    . ($s->ruang ? ", Ruang {$s->ruang->kode_ruangan}" : '') . '.',
+                ['type' => 'pengingat_h1', 'sidang_id' => (string) $s->id],
+            );
             foreach (self::peranDosen($s) as $dosenId => [$dosen, $peran]) {
                 $perDosen[$dosenId]['dosen'] = $dosen;
                 $perDosen[$dosenId]['ujian'][] = [$s, $peran];
@@ -203,29 +238,158 @@ class NotifikasiService
         }
 
         foreach ($perDosen as ['dosen' => $dosen, 'ujian' => $ujian]) {
-            if (!$dosen->email) {
-                continue;
-            }
-            $rincian = array_map(fn ($u) => array_filter([
-                'Mahasiswa' => $u[0]->nama_mahasiswa . ' (' . $u[0]->nim . ')',
-                'Ujian'     => self::jenisPanjang($u[0]),
-                'Jam'       => $u[0]->jam ? $u[0]->jam . ' WIB' : 'Belum ditentukan',
-                'Ruang'     => $u[0]->ruang?->kode_ruangan,
-                'Peran Anda' => $u[1],
-            ]), $ujian);
             $jumlah = count($ujian);
-            $terkirim += (int) self::kirim($dosen->email, new PemberitahuanMail(
-                "Pengingat: {$jumlah} jadwal ujian besok, " . self::tanggal($besok),
-                "Yth. Bapak/Ibu {$dosen->nama_dosen},",
-                ["Dengan hormat, kami mengingatkan bahwa Bapak/Ibu dijadwalkan pada {$jumlah} ujian tugas akhir BESOK, " . self::tanggal($besok) . ', dengan rincian berikut.'],
-                $rincian,
-                'Buka Jadwal Saya',
-                self::url('dosen.dashboard'),
-                '#f59e0b',
-            ));
+            if ($dosen->email) {
+                $rincian = array_map(fn ($u) => array_filter([
+                    'Mahasiswa' => $u[0]->nama_mahasiswa . ' (' . $u[0]->nim . ')',
+                    'Ujian'     => self::jenisPanjang($u[0]),
+                    'Jam'       => $u[0]->jam ? $u[0]->jam . ' WIB' : 'Belum ditentukan',
+                    'Ruang'     => $u[0]->ruang?->kode_ruangan,
+                    'Peran Anda' => $u[1],
+                ]), $ujian);
+                $terkirim += (int) self::kirim($dosen->email, new PemberitahuanMail(
+                    "Pengingat: {$jumlah} jadwal ujian besok, " . self::tanggal($besok),
+                    "Yth. Bapak/Ibu {$dosen->nama_dosen},",
+                    ["Dengan hormat, kami mengingatkan bahwa Bapak/Ibu dijadwalkan pada {$jumlah} ujian tugas akhir BESOK, " . self::tanggal($besok) . ', dengan rincian berikut.'],
+                    $rincian,
+                    'Buka Jadwal Saya',
+                    self::url('dosen.dashboard'),
+                    '#f59e0b',
+                ));
+            }
+            self::push(
+                self::userForDosen($dosen),
+                "Pengingat: {$jumlah} jadwal ujian besok",
+                "Bapak/Ibu dijadwalkan pada {$jumlah} ujian tugas akhir BESOK, " . self::tanggal($besok) . '.',
+                ['type' => 'pengingat_h1_dosen'],
+            );
         }
 
         Cache::put($tanda, true, now()->addDays(3));
+        return $terkirim;
+    }
+
+    /**
+     * Pengingat gelombang pendaftaran Sempro/Skripsi (periode aktif saja):
+     * - saat gelombang baru DIBUKA (tanggal_mulai = hari ini) → ke mahasiswa
+     *   yang belum punya pendaftaran (bukan ditolak) di gelombang/jenis ini.
+     * - H-3 & H-1 sebelum DITUTUP (tanggal_selesai) → ke mahasiswa yang sama,
+     *   plus ke mahasiswa yang SUDAH daftar tapi berkasnya masih menunggu
+     *   verifikasi, supaya sempat diperiksa sebelum gelombang ini tutup.
+     */
+    public static function kirimPengingatGelombang(): int
+    {
+        if (!self::aktif()) {
+            return 0;
+        }
+
+        $periode = Periode::where('aktif', true)->first();
+        if (!$periode) {
+            return 0;
+        }
+
+        $today = now()->timezone('Asia/Jakarta')->startOfDay();
+        $h3 = $today->copy()->addDays(3);
+        $h1 = $today->copy()->addDays(1);
+        $terkirim = 0;
+
+        foreach (PendaftaranPeriode::where('periode_id', $periode->id)->get() as $wave) {
+            if ($wave->tanggal_mulai?->isSameDay($today)) {
+                $terkirim += self::pengingatBelumDaftar($wave, $periode, 'buka');
+            }
+            if ($wave->tanggal_selesai?->isSameDay($h3)) {
+                $terkirim += self::pengingatBelumDaftar($wave, $periode, 'tutup_h3');
+                $terkirim += self::pengingatBerkasBelumLengkap($wave, $periode, 'h3');
+            }
+            if ($wave->tanggal_selesai?->isSameDay($h1)) {
+                $terkirim += self::pengingatBelumDaftar($wave, $periode, 'tutup_h1');
+                $terkirim += self::pengingatBerkasBelumLengkap($wave, $periode, 'h1');
+            }
+        }
+
+        return $terkirim;
+    }
+
+    private static function pengingatBelumDaftar(PendaftaranPeriode $wave, Periode $periode, string $momen): int
+    {
+        $tanda = "notifikasi:gelombang-daftar:{$wave->id}:{$momen}";
+        if (Cache::has($tanda)) {
+            return 0;
+        }
+
+        $bucket = $wave->jenis === 'sempro' ? ['sempro'] : Sidang::SKRIPSI_BUCKET;
+        $sudahDaftar = Sidang::where('periode_id', $periode->id)
+            ->whereIn('jenis_tugas_akhir', $bucket)
+            ->where('verifikasi_status', '!=', 'ditolak')
+            ->pluck('nim');
+
+        $mahasiswa = User::where('role', User::ROLE_MAHASISWA)
+            ->where(fn ($q) => $q->whereNull('status_kelulusan')->orWhere('status_kelulusan', '!=', 'lulus'))
+            ->whereNotNull('nim')
+            ->whereNotIn('nim', $sudahDaftar)
+            ->get();
+
+        $jenisLabel = $wave->jenis === 'sempro' ? 'Seminar Proposal' : 'Skripsi';
+        $terkirim = 0;
+
+        foreach ($mahasiswa as $m) {
+            if ($momen === 'buka') {
+                $judul = "Pendaftaran {$jenisLabel} Dibuka";
+                $isi = "Pendaftaran {$jenisLabel} Gelombang {$wave->gelombang} telah DIBUKA, " . self::tanggal($wave->tanggal_mulai) . ' s/d ' . self::tanggal($wave->tanggal_selesai) . '. Segera daftar melalui sistem.';
+                $warna = '#10b981';
+            } else {
+                $judul = "Pendaftaran {$jenisLabel} Segera Ditutup";
+                $isi = "Pendaftaran {$jenisLabel} Gelombang {$wave->gelombang} akan DITUTUP " . self::tanggal($wave->tanggal_selesai) . '. Anda belum terdaftar — segera daftar sebelum ditutup.';
+                $warna = '#e11d48';
+            }
+
+            if ($m->email) {
+                $terkirim += (int) self::kirim($m->email, new PemberitahuanMail(
+                    $judul, "Halo {$m->name},", [$isi], [], 'Buka Sistem Skripsi', self::url('mahasiswa.dashboard'), $warna,
+                ));
+            }
+            self::push($m, $judul, $isi, ['type' => 'pendaftaran_gelombang', 'wave_id' => (string) $wave->id, 'momen' => $momen]);
+        }
+
+        Cache::put($tanda, true, now()->addDays(10));
+        return $terkirim;
+    }
+
+    private static function pengingatBerkasBelumLengkap(PendaftaranPeriode $wave, Periode $periode, string $momen): int
+    {
+        $tanda = "notifikasi:gelombang-berkas:{$wave->id}:{$momen}";
+        if (Cache::has($tanda)) {
+            return 0;
+        }
+
+        $bucket = $wave->jenis === 'sempro' ? ['sempro'] : Sidang::SKRIPSI_BUCKET;
+        $belumLengkap = Sidang::where('periode_id', $periode->id)
+            ->whereIn('jenis_tugas_akhir', $bucket)
+            ->where('gelombang', $wave->gelombang)
+            ->where(fn ($q) => $q->whereNull('verifikasi_status')->orWhere('verifikasi_status', 'menunggu'))
+            ->get();
+
+        $jenisLabel = $wave->jenis === 'sempro' ? 'Seminar Proposal' : 'Skripsi';
+        $terkirim = 0;
+
+        foreach ($belumLengkap as $s) {
+            $user = self::userMahasiswa($s);
+            if (!$user) {
+                continue;
+            }
+
+            $judul = "Lengkapi Berkas Pendaftaran {$jenisLabel}";
+            $isi = "Berkas pendaftaran {$jenisLabel} Anda masih menunggu verifikasi koordinator, dan gelombang pendaftaran ini akan ditutup " . self::tanggal($wave->tanggal_selesai) . '. Pastikan berkas Anda sudah lengkap.';
+
+            if ($user->email) {
+                $terkirim += (int) self::kirim($user->email, new PemberitahuanMail(
+                    $judul, "Halo {$s->nama_mahasiswa},", [$isi], [], 'Buka Sistem Skripsi', self::url('mahasiswa.dashboard'), '#f59e0b',
+                ));
+            }
+            self::push($user, $judul, $isi, ['type' => 'berkas_belum_lengkap', 'sidang_id' => (string) $s->id]);
+        }
+
+        Cache::put($tanda, true, now()->addDays(10));
         return $terkirim;
     }
 
@@ -244,10 +408,29 @@ class NotifikasiService
 
     private static function emailMahasiswa(Sidang $s): ?string
     {
+        return self::userMahasiswa($s)?->email;
+    }
+
+    private static function userMahasiswa(Sidang $s): ?User
+    {
         if (!$s->nim) {
             return null;
         }
-        return User::where('nim', $s->nim)->where('role', User::ROLE_MAHASISWA)->whereNotNull('email')->value('email');
+        return User::where('nim', $s->nim)->where('role', User::ROLE_MAHASISWA)->first();
+    }
+
+    private static function userForDosen(Dosen $d): ?User
+    {
+        return User::where('dosen_id', $d->id)->first();
+    }
+
+    /** Push notification ke satu user — no-op kalau FCM belum dikonfigurasi atau user tidak punya device terdaftar. */
+    private static function push(?User $user, string $title, string $body, array $data = []): void
+    {
+        if (!$user) {
+            return;
+        }
+        app(FcmNotificationService::class)->sendToUser($user, $title, $body, $data);
     }
 
     /** @return array<int, array{0: Dosen, 1: string}> */
