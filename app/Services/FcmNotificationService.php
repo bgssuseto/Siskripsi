@@ -45,7 +45,8 @@ class FcmNotificationService
     private function sendToToken(Messaging $messaging, string $token, string $title, string $body, array $data): void
     {
         try {
-            $message = CloudMessage::withTargetToken($token)
+            $message = CloudMessage::new()
+                ->withToken($token)
                 ->withNotification(FirebaseNotification::create($title, $body))
                 ->withData($data);
 
