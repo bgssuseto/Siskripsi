@@ -29,3 +29,6 @@ Thumbs.db
 # Berkas unggahan mahasiswa (data pribadi) — jangan pernah di-commit
 /public/uploads/*/*
 !/public/uploads/*/.htaccess
+
+# Kredensial Firebase service-account (jangan pernah commit)
+/storage/app/firebase-service-account.json

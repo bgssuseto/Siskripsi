@@ -62,6 +62,15 @@ class User extends Authenticatable
     }
 
     /**
+     * FCM tokens for the Android app instances this user is logged into
+     * (a user may have several devices registered at once).
+     */
+    public function deviceTokens(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
+    /**
      * Additional roles held on top of the primary `role` column (e.g. a dosen who
      * has also been designated koordinator). The `role` column stays the "primary"
      * role — it drives which portal/dashboard the user lands on — while rows here

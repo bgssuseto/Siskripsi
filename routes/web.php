@@ -34,6 +34,7 @@ use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\DosenPengujiRuleController;
 use App\Http\Controllers\PublicKesediaanController;
 use App\Http\Controllers\VerifikasiDokumenController;
+use App\Http\Controllers\DeviceTokenController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -89,6 +90,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/bebas-prodi/{bebasProdi}/berkas', [BebasProdiController::class, 'berkas'])->name('bebas-prodi.berkas');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Dipanggil dari WebView app Android setiap kali FCM token didapat/diperbarui.
+    Route::post('/fcm-token', [DeviceTokenController::class, 'store'])->name('fcm-token.store');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

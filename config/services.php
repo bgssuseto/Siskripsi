@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'fcm' => [
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
+
 ];
