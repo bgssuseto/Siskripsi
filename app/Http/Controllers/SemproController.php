@@ -47,7 +47,8 @@ class SemproController extends Controller
             'pembimbingUtama',
             'pembimbingPendamping',
             'ruang',
-            'periode'
+            'periode',
+            'pengumpulanProposal',
         ])->where('jenis_tugas_akhir', 'sempro')
           ->terverifikasi();
 

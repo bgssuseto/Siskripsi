@@ -30,7 +30,8 @@ class MahasiswaController extends Controller
             'anggotaPenguji1',
             'anggotaPenguji2',
             'ruang',
-            'periode'
+            'periode',
+            'pengumpulanProposal',
         ]);
 
         // Data hanya dicocokkan lewat NIM. Pencocokan nama dihapus: nama bisa diubah

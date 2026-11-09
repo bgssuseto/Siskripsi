@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\BebasProdi;
+use App\Models\PengumpulanProposal;
 use App\Models\TandaTanganUndangan;
 use App\Services\SuratBebasProdi;
+use App\Services\SuratPengumpulanProposal;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -39,5 +41,25 @@ class VerifikasiDokumenController extends Controller
         $ttd = TandaTanganUndangan::with('dosen')->where('kode', $kode)->first();
 
         return view('public.verifikasi-undangan', ['ttd' => $ttd]);
+    }
+
+    /** Tujuan QR tanda tangan Koordinator Skripsi pada Surat Keterangan Pengumpulan Proposal. */
+    public function proposal(string $kode): View
+    {
+        $surat = PengumpulanProposal::with('sidang')->where('kode_verifikasi', $kode)->first();
+
+        return view('public.verifikasi-proposal', [
+            'surat' => $surat,
+            'sah'   => $surat && $surat->isDiterima(),
+            'kode'  => $kode,
+        ]);
+    }
+
+    public function proposalSurat(string $kode): Response
+    {
+        $surat = PengumpulanProposal::where('kode_verifikasi', $kode)->first();
+        abort_unless($surat && $surat->isDiterima(), 404);
+
+        return SuratPengumpulanProposal::stream($surat);
     }
 }

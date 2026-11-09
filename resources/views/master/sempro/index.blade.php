@@ -250,6 +250,7 @@
                             <th>Nama Mahasiswa</th>
                             <th>Status Ujian</th>
                             <th>Verifikasi</th>
+                            <th>Proposal</th>
                             <th>Periode</th>
                             <th>Dosbing Utama</th>
                             <th>Dosbing Pendamping</th>
@@ -310,6 +311,44 @@
                                         @endif
                                     </div>
                                 </td>
+                                <td>
+                                    @php
+                                        $prop = $item->pengumpulanProposal;
+                                        $propStatus = $prop->status ?? 'belum';
+                                        [$propClass, $propLabel] = match ($propStatus) {
+                                            'diterima' => ['bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', 'Diterima'],
+                                            'ditolak'  => ['bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800', 'Ditolak'],
+                                            default    => ['bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700', 'Belum'],
+                                        };
+                                    @endphp
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border {{ $propClass }}">{{ $propLabel }}</span>
+                                        @if($propStatus === 'diterima')
+                                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">{{ $prop->nomor_surat_lengkap }}</span>
+                                        @elseif($propStatus === 'ditolak' && $prop->catatan)
+                                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-normal max-w-[150px] truncate" title="{{ $prop->catatan }}">Catatan: {{ $prop->catatan }}</span>
+                                        @endif
+                                        <div class="flex gap-1">
+                                            <button type="button" class="btn btn-outline btn-sm" title="Terima / Tolak Pengumpulan Proposal"
+                                                onclick="openProposal('{{ $item->hash_id }}', {{ json_encode([
+                                                    'nama'    => $item->nama_mahasiswa,
+                                                    'nim'     => $item->nim,
+                                                    'judul'   => $item->judul_skripsi,
+                                                    'status'  => $propStatus,
+                                                    'catatan' => $prop->catatan ?? '',
+                                                    'nomor'   => $prop->nomor_surat ?? null,
+                                                    'tanggal' => $prop?->tanggal_surat?->format('Y-m-d'),
+                                                ]) }})">
+                                                <x-icon name="clipboard" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Proposal
+                                            </button>
+                                            @if($propStatus === 'diterima')
+                                                <a href="{{ route('master.sempro.proposal.cetak', $item) }}" target="_blank" class="btn btn-outline btn-sm" title="Cetak Surat Keterangan">
+                                                    <x-icon name="printer" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" />
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
                                 <td><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                 <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                 <td><span class="dosen-chip {{ $item->pembimbingPendamping ? 'pendamping' : 'kosong' }}">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
@@ -336,7 +375,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center text-slate-400 dark:text-slate-500" style="padding:3rem;">
+                                <td colspan="12" class="text-center text-slate-400 dark:text-slate-500" style="padding:3rem;">
                                     <div style="font-size:2.5rem; margin-bottom:.5rem;"><x-icon name="folder" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></div>
                                     <div class="font-bold text-slate-500 dark:text-slate-400">Belum ada data sempro</div>
                                     <div class="text-slate-400 dark:text-slate-500" style="font-size:.82rem; margin-top:.25rem;">Import Excel atau tambah data secara manual.</div>
@@ -615,6 +654,58 @@
         </div>
     </div>
 
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    {{-- MODAL: PENGUMPULAN PROPOSAL SKRIPSI                              --}}
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    <div id="modal-proposal" class="modal-overlay" style="display:none;" onclick="closeOnOverlay(event,'modal-proposal')">
+        <div class="modal-box modal-sm">
+            <div class="modal-header">
+                <span class="modal-title"><x-icon name="clipboard" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Pengumpulan Proposal Skripsi</span>
+                <button class="modal-close" onclick="closeModal('modal-proposal')"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
+            </div>
+            <form id="proposal-form" method="POST" action="">
+                @csrf
+                <div class="modal-body space-y-4">
+                    <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300" style="border-radius: 8px; padding: 0.85rem; font-size: 0.8rem; line-height: 1.5;">
+                        <div><strong>NIM:</strong> <span id="proposal-nim"></span></div>
+                        <div><strong>Nama:</strong> <span id="proposal-nama"></span></div>
+                        <div><strong>Judul:</strong> <span id="proposal-judul" style="font-style: italic;"></span></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status Pengumpulan</label>
+                        <select name="status" id="proposal-status" onchange="toggleProposalFields()" class="form-control">
+                            <option value="belum">Belum Mengumpulkan</option>
+                            <option value="diterima">Terima (terbitkan surat keterangan)</option>
+                            <option value="ditolak">Tolak (dengan catatan)</option>
+                        </select>
+                    </div>
+
+                    <div id="proposal-surat-group" style="display:none;">
+                        <div class="form-group">
+                            <label>Nomor Surat</label>
+                            <input type="number" min="1" name="nomor_surat" id="proposal-nomor" class="form-control" placeholder="Otomatis">
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400" style="margin-top:.3rem;">Kosongkan untuk nomor otomatis (berikutnya: {{ \App\Models\PengumpulanProposal::nomorBerikutnya() }}). Format: nomor/PROPOSAL.TI.UMK/bulan/tahun.</p>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label>Tanggal Surat</label>
+                            <input type="date" name="tanggal_surat" id="proposal-tanggal" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="proposal-catatan-group" style="display:none;">
+                        <label>Catatan Penolakan</label>
+                        <textarea name="catatan" id="proposal-catatan" placeholder="Sebutkan apa yang perlu diperbaiki mahasiswa..." class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('modal-proposal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- Toast Notification System --}}
     <style>
         #toast-container { position:fixed; bottom:1.5rem; right:1.5rem; z-index:99999; display:flex; flex-direction:column; gap:.65rem; pointer-events:none; }
@@ -839,6 +930,47 @@
                     await refreshTableContent();
                 } else {
                     showToast(res.status === 422 ? 'warning' : 'error', data.message || 'Terjadi kesalahan.');
+                }
+            } catch(err) { showToast('error', 'Gagal terhubung ke server.'); }
+            finally { btn.disabled = false; btn.innerHTML = orig; }
+        });
+
+        // ── Pengumpulan Proposal Skripsi ──────────────────────────────────────
+        function openProposal(id, data) {
+            document.getElementById('proposal-form').action = '{{ url("master/sempro") }}/' + id + '/proposal';
+            document.getElementById('proposal-nim').innerText = data.nim || '';
+            document.getElementById('proposal-nama').innerText = data.nama || '';
+            document.getElementById('proposal-judul').innerText = data.judul || '';
+            // Yang belum pernah diproses langsung diarahkan ke "Terima" — aksi yang paling sering.
+            document.getElementById('proposal-status').value = data.status === 'belum' ? 'diterima' : data.status;
+            document.getElementById('proposal-catatan').value = data.catatan || '';
+            document.getElementById('proposal-nomor').value = data.nomor || '';
+            document.getElementById('proposal-tanggal').value = data.tanggal || new Date().toLocaleDateString('en-CA');
+            toggleProposalFields();
+            openModal('modal-proposal');
+        }
+
+        function toggleProposalFields() {
+            const status = document.getElementById('proposal-status').value;
+            document.getElementById('proposal-surat-group').style.display = status === 'diterima' ? 'block' : 'none';
+            document.getElementById('proposal-catatan-group').style.display = status === 'ditolak' ? 'block' : 'none';
+            document.getElementById('proposal-catatan').required = status === 'ditolak';
+        }
+
+        document.getElementById('proposal-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('[type=submit]'), orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '⏳ Menyimpan…';
+            try {
+                const res = await fetch(this.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }, body: new FormData(this) });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    closeModal('modal-proposal');
+                    showToast('success', data.message || 'Status proposal disimpan.');
+                    await refreshTableContent();
+                } else {
+                    const msg = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'Terjadi kesalahan.');
+                    showToast(res.status === 422 ? 'warning' : 'error', msg);
                 }
             } catch(err) { showToast('error', 'Gagal terhubung ke server.'); }
             finally { btn.disabled = false; btn.innerHTML = orig; }

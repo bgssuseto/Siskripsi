@@ -442,6 +442,53 @@
     </div>
     @endif
 
+    {{-- Surat Keterangan Pengumpulan Proposal Skripsi: muncul setelah pendaftaran
+         Sempro disetujui. Proposal yang sudah diterima diutamakan (bila ada
+         beberapa pendaftaran Sempro, mis. remidi). --}}
+    @php
+        $semproDisetujui = $sidangs->where('verifikasi_status', 'disetujui');
+        $proposalSidang = $semproDisetujui->first(fn ($s) => $s->pengumpulanProposal?->isDiterima())
+            ?? $semproDisetujui->first();
+        $proposal = $proposalSidang?->pengumpulanProposal;
+        $proposalStatus = $proposal->status ?? 'belum';
+    @endphp
+    @if($proposalSidang)
+    <div id="proposal-section" class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div class="flex items-start gap-3 flex-1">
+                <span class="w-10 h-10 shrink-0 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
+                    <x-icon name="clipboard" class="w-5 h-5" />
+                </span>
+                <div>
+                    <h2 class="text-base font-extrabold text-slate-800 dark:text-slate-200">Surat Keterangan Pengumpulan Proposal Skripsi</h2>
+                    @if($proposalStatus === 'diterima')
+                        <p class="text-xs text-emerald-700 dark:text-emerald-300 font-semibold mt-1">
+                            Proposal Anda sudah diterima Koordinator Skripsi. Nomor surat: <span class="font-mono">{{ $proposal->nomor_surat_lengkap }}</span>
+                        </p>
+                    @elseif($proposalStatus === 'ditolak')
+                        <p class="text-xs text-rose-700 dark:text-rose-300 font-semibold mt-1">Proposal Anda ditolak. Silakan perbaiki lalu serahkan ulang ke Koordinator Skripsi.</p>
+                        @if($proposal->catatan)
+                            <div class="mt-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl p-3 text-xs text-rose-900 dark:text-rose-200 whitespace-pre-line"><span class="font-extrabold">Catatan:</span> {{ $proposal->catatan }}</div>
+                        @endif
+                    @else
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Serahkan Proposal Skripsi Anda ke Koordinator Skripsi. Setelah diterima, surat keterangan bisa dicetak di sini.</p>
+                    @endif
+                </div>
+            </div>
+            @if($proposalStatus === 'diterima')
+                <a href="{{ route('mahasiswa.proposal.cetak', $proposalSidang) }}" target="_blank"
+                   class="shrink-0 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-sm flex items-center justify-center gap-2">
+                    <x-icon name="printer" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Cetak Surat Keterangan
+                </a>
+            @else
+                <span class="shrink-0 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-[11px] font-bold border {{ $proposalStatus === 'ditolak' ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800' : 'bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600' }}">
+                    {{ $proposalStatus === 'ditolak' ? 'Ditolak' : 'Belum Mengumpulkan' }}
+                </span>
+            @endif
+        </div>
+    </div>
+    @endif
+
     <!-- History Table -->
     <div id="riwayat-section" class="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-700 p-4 sm:p-6">
         <h2 class="text-base font-extrabold text-slate-800 dark:text-slate-200 mb-4">Riwayat Pendaftaran Sempro</h2>

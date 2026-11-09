@@ -326,6 +326,12 @@ class Sidang extends Model
         return $this->belongsTo(Dosen::class, 'dosen_pembimbing_pendamping_id');
     }
 
+    /** Status pengumpulan Proposal Skripsi (hanya untuk pendaftaran Sempro). */
+    public function pengumpulanProposal(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PengumpulanProposal::class);
+    }
+
     /**
      * Relasi ke Ketua Penguji
      */

@@ -57,6 +57,8 @@ Route::post('/kesediaan-publik/{token}', [PublicKesediaanController::class, 'sto
 // Verifikasi keaslian surat (tujuan QR tanda tangan elektronik) — publik, tanpa login
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('/verifikasi/undangan/{kode}', [VerifikasiDokumenController::class, 'undangan'])->name('verifikasi.undangan');
+    Route::get('/verifikasi/proposal/{kode}', [VerifikasiDokumenController::class, 'proposal'])->name('verifikasi.proposal');
+    Route::get('/verifikasi/proposal/{kode}/surat', [VerifikasiDokumenController::class, 'proposalSurat'])->name('verifikasi.proposal.surat');
     Route::get('/verifikasi/{kode}', [VerifikasiDokumenController::class, 'bebasProdi'])->name('verifikasi.bebas-prodi');
     Route::get('/verifikasi/{kode}/surat', [VerifikasiDokumenController::class, 'bebasProdiSurat'])->name('verifikasi.bebas-prodi.surat');
 });
@@ -238,6 +240,10 @@ Route::middleware('auth')->group(function () {
         Route::patch('/pendaftaran/{sidang}/tanggal-pendaftaran', [PendaftaranController::class, 'updateTanggalPendaftaran'])->name('pendaftaran.tanggal-pendaftaran');
         Route::delete('/pendaftaran/{sidang}', [PendaftaranController::class, 'destroy'])->name('pendaftaran.destroy');
 
+        // Pengumpulan Proposal Skripsi (menu Data Sempro)
+        Route::post('/master/sempro/{sidang}/proposal', [\App\Http\Controllers\PengumpulanProposalController::class, 'verifikasi'])->name('master.sempro.proposal.verifikasi');
+        Route::get('/master/sempro/{sidang}/proposal/cetak', [\App\Http\Controllers\PengumpulanProposalController::class, 'cetak'])->name('master.sempro.proposal.cetak');
+
         Route::get('/master/kesediaan-dosen', [KesediaanDosenController::class, 'index'])->name('master.kesediaan-dosen.index');
         Route::delete('/master/kesediaan-dosen/destroy-all', [KesediaanDosenController::class, 'destroyAll'])->name('master.kesediaan-dosen.destroy-all');
         Route::delete('/master/kesediaan-dosen/{kesediaanDosen}', [KesediaanDosenController::class, 'destroy'])->name('master.kesediaan-dosen.destroy');
@@ -285,6 +291,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/mahasiswa/bebas-prodi', [BebasProdiController::class, 'mahasiswaIndex'])->name('mahasiswa.bebas-prodi.index');
         Route::post('/mahasiswa/bebas-prodi', [BebasProdiController::class, 'mahasiswaStore'])->name('mahasiswa.bebas-prodi.store');
         Route::get('/mahasiswa/bebas-prodi/cetak', [BebasProdiController::class, 'mahasiswaCetak'])->name('mahasiswa.bebas-prodi.cetak');
+        Route::get('/mahasiswa/sempro/{sidang}/proposal/cetak', [\App\Http\Controllers\PengumpulanProposalController::class, 'mahasiswaCetak'])->name('mahasiswa.proposal.cetak');
     });
     // Dosen routes
     Route::middleware(['role:dosen', 'menu.permission'])->group(function () {
