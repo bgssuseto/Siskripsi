@@ -277,7 +277,6 @@
                             <th>Nama Mahasiswa</th>
                             <th>Status Ujian</th>
                             <th>Verifikasi</th>
-                            <th>Periode</th>
                             <th>Dosbing Utama</th>
                             <th>Dosbing Pendamping</th>
                             <th>Ketua Penguji</th>
@@ -341,7 +340,6 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                 <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                 <td><span class="dosen-chip {{ $item->pembimbingPendamping ? 'pendamping' : 'kosong' }}">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                 <td><span class="dosen-chip ketua">{{ $item->ketuaPenguji ? $item->ketuaPenguji->nama_dosen : '—' }}</span></td>

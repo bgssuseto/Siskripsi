@@ -72,9 +72,15 @@ class PengumpulanProposal extends Model
      * diverifikasi). Dikunci dalam transaksi supaya dua admin yang menerima
      * bersamaan tidak mendapat nomor yang sama.
      */
-    public function terima(int $verifierId, ?int $nomor = null, ?string $tanggalSurat = null): void
+    public function terima(int $verifierId, ?int $nomor = null): void
     {
-        DB::transaction(function () use ($verifierId, $nomor, $tanggalSurat) {
+        DB::transaction(function () use ($verifierId, $nomor) {
+            // Tanggal surat = hari proposal diterima. Kalau surat sudah berstatus
+            // diterima (mis. admin hanya mengoreksi nomor), tanggalnya tidak diubah.
+            $tanggalSurat = $this->isDiterima() && $this->tanggal_surat
+                ? $this->tanggal_surat->toDateString()
+                : now()->timezone('Asia/Jakarta')->toDateString();
+
             if (!$nomor) {
                 $nomor = $this->nomor_surat;
             }
@@ -90,7 +96,7 @@ class PengumpulanProposal extends Model
                 'catatan'            => null,
                 'nomor_surat'        => $nomor,
                 'kode_verifikasi'    => $this->kode_verifikasi ?? Str::random(32),
-                'tanggal_surat'      => $tanggalSurat ?? $this->tanggal_surat?->toDateString() ?? now()->timezone('Asia/Jakarta')->toDateString(),
+                'tanggal_surat'      => $tanggalSurat,
                 'penandatangan_id'   => $koordinator?->id,
                 'nama_penandatangan' => $koordinator?->nama_dosen,
                 'nidn_penandatangan' => $koordinator?->nidn,

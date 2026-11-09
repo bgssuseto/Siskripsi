@@ -42,13 +42,16 @@ class PengumpulanProposalTest extends TestCase
 
         $berikutnya = PengumpulanProposal::nomorBerikutnya();
         $this->actingAs($this->admin)
-            ->postJson(route('master.sempro.proposal.verifikasi', $this->sempro), ['status' => 'diterima', 'tanggal_surat' => '2026-11-09'])
+            ->postJson(route('master.sempro.proposal.verifikasi', $this->sempro), ['status' => 'diterima', 'tanggal_surat' => '2020-01-01'])
             ->assertOk()->assertJsonPath('success', true);
 
         $proposal = $this->sempro->fresh()->pengumpulanProposal;
         $this->assertTrue($proposal->isDiterima());
         $this->assertSame($berikutnya, $proposal->nomor_surat);
-        $this->assertSame("{$berikutnya}/PROPOSAL.TI.UMK/11/2026", $proposal->nomor_surat_lengkap);
+        // Tanggal surat selalu hari ini (tanggal kiriman form diabaikan).
+        $hariIni = now()->timezone('Asia/Jakarta');
+        $this->assertSame($hariIni->toDateString(), $proposal->tanggal_surat->toDateString());
+        $this->assertSame("{$berikutnya}/PROPOSAL.TI.UMK/{$hariIni->format('n')}/{$hariIni->format('Y')}", $proposal->nomor_surat_lengkap);
 
         $this->actingAs($this->mahasiswa)->get(route('mahasiswa.sempro.index'))
             ->assertOk()->assertSee('Cetak Surat Keterangan');

@@ -30,7 +30,6 @@ class PengumpulanProposalController extends Controller
             'status'        => ['required', Rule::in([PengumpulanProposal::STATUS_DITERIMA, PengumpulanProposal::STATUS_DITOLAK, PengumpulanProposal::STATUS_BELUM])],
             'catatan'       => ['nullable', 'required_if:status,ditolak', 'string', 'max:1000'],
             'nomor_surat'   => ['nullable', 'integer', 'min:1', Rule::unique('pengumpulan_proposals', 'nomor_surat')->ignore($proposal->id)],
-            'tanggal_surat' => ['nullable', 'date'],
         ], [
             'catatan.required_if' => 'Catatan wajib diisi bila proposal ditolak.',
             'nomor_surat.unique'  => 'Nomor surat ini sudah dipakai mahasiswa lain.',
@@ -40,7 +39,7 @@ class PengumpulanProposalController extends Controller
         $userId = (int) $request->user()->id;
 
         match ($validated['status']) {
-            PengumpulanProposal::STATUS_DITERIMA => $proposal->terima($userId, $validated['nomor_surat'] ?? null, $validated['tanggal_surat'] ?? null),
+            PengumpulanProposal::STATUS_DITERIMA => $proposal->terima($userId, $validated['nomor_surat'] ?? null),
             PengumpulanProposal::STATUS_DITOLAK  => $proposal->tolak($userId, $validated['catatan']),
             default                              => $proposal->batalkan($userId),
         };

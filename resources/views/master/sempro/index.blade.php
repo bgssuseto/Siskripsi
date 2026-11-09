@@ -251,7 +251,6 @@
                             <th>Status Ujian</th>
                             <th>Verifikasi</th>
                             <th>Proposal</th>
-                            <th>Periode</th>
                             <th>Dosbing Utama</th>
                             <th>Dosbing Pendamping</th>
                             <th style="width:160px; text-align:right;">Aksi</th>
@@ -337,7 +336,6 @@
                                                     'status'  => $propStatus,
                                                     'catatan' => $prop->catatan ?? '',
                                                     'nomor'   => $prop->nomor_surat ?? null,
-                                                    'tanggal' => $prop?->tanggal_surat?->format('Y-m-d'),
                                                 ]) }})">
                                                 <x-icon name="clipboard" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /> Proposal
                                             </button>
@@ -349,7 +347,6 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td><span class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ $item->periode ? $item->periode->nama_periode : '—' }}</span></td>
                                 <td><span class="dosen-chip utama">{{ $item->pembimbingUtama ? $item->pembimbingUtama->nama_dosen : '—' }}</span></td>
                                 <td><span class="dosen-chip {{ $item->pembimbingPendamping ? 'pendamping' : 'kosong' }}">{{ $item->pembimbingPendamping ? $item->pembimbingPendamping->nama_dosen : '—' }}</span></td>
                                 <td class="text-right space-x-1 whitespace-nowrap">
@@ -375,7 +372,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="12" class="text-center text-slate-400 dark:text-slate-500" style="padding:3rem;">
+                                <td colspan="11" class="text-center text-slate-400 dark:text-slate-500" style="padding:3rem;">
                                     <div style="font-size:2.5rem; margin-bottom:.5rem;"><x-icon name="folder" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></div>
                                     <div class="font-bold text-slate-500 dark:text-slate-400">Belum ada data sempro</div>
                                     <div class="text-slate-400 dark:text-slate-500" style="font-size:.82rem; margin-top:.25rem;">Import Excel atau tambah data secara manual.</div>
@@ -687,10 +684,7 @@
                             <input type="number" min="1" name="nomor_surat" id="proposal-nomor" class="form-control" placeholder="Otomatis">
                             <p class="text-[11px] text-slate-500 dark:text-slate-400" style="margin-top:.3rem;">Kosongkan untuk nomor otomatis (berikutnya: {{ \App\Models\PengumpulanProposal::nomorBerikutnya() }}). Format: nomor/PROPOSAL.TI.UMK/bulan/tahun.</p>
                         </div>
-                        <div class="form-group" style="margin-top: 1rem;">
-                            <label>Tanggal Surat</label>
-                            <input type="date" name="tanggal_surat" id="proposal-tanggal" class="form-control">
-                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400" style="margin-top: .75rem;">Tanggal surat otomatis diisi tanggal hari ini saat proposal diterima.</p>
                     </div>
 
                     <div class="form-group" id="proposal-catatan-group" style="display:none;">
@@ -945,7 +939,6 @@
             document.getElementById('proposal-status').value = data.status === 'belum' ? 'diterima' : data.status;
             document.getElementById('proposal-catatan').value = data.catatan || '';
             document.getElementById('proposal-nomor').value = data.nomor || '';
-            document.getElementById('proposal-tanggal').value = data.tanggal || new Date().toLocaleDateString('en-CA');
             toggleProposalFields();
             openModal('modal-proposal');
         }
