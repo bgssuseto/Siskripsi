@@ -10,6 +10,44 @@
         deleteDosen: { id: null, nama_dosen: '' },
         errors: {},
         isLoading: false,
+        // Data hasil salin dari WhatsApp/kontak HP/Excel sering membawa karakter
+        // tak terlihat (tanda arah teks U+202A/U+202C, zero-width, spasi NBSP,
+        // strip non-ASCII). Karakter seperti itu bisa membuat kiriman ditolak
+        // firewall server (HTTP 401/403), jadi dibersihkan dulu sebelum dikirim.
+        bersihkanForm(form) {
+            const fd = new FormData(form);
+            for (const [key, value] of [...fd.entries()]) {
+                if (typeof value !== 'string' || key === '_token' || key === '_method') continue;
+                let v = value
+                    .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF\u00AD]/g, '')
+                    .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
+                    .replace(/[\u2010-\u2015\u2212]/g, '-')
+                    .replace(/[\u2018\u2019]/g, `'`)
+                    .replace(/[\u201C\u201D]/g, '&quot;')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (key === 'no_wa') {
+                    v = (v.trim().startsWith('+') ? '+' : '') + v.replace(/\D/g, '');
+                }
+                fd.set(key, v);
+            }
+            return fd;
+        },
+        // Kirim form (sudah dibersihkan) dan kembalikan { ok, status, result }.
+        // 401/403 dari Laravel selalu JSON; kalau balasannya bukan JSON (halaman
+        // HTML), berarti ditolak server/firewall sebelum sampai ke aplikasi.
+        async kirimForm(form) {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: this.bersihkanForm(form),
+            });
+            const result = await window.readJson(response);
+            if ([401, 403].includes(response.status) && result.success === false && !response.redirected) {
+                result.message = `Permintaan ditolak server (HTTP ${response.status}) sebelum sampai ke aplikasi, kemungkinan diblokir firewall karena ada karakter tidak biasa di salah satu kolom (Nama, Kepakaran, Email, No. WA). Ketik ulang isinya secara manual lalu simpan lagi.`;
+            }
+            return { ok: response.ok, status: response.status, result };
+        },
         openEdit(dosen) {
             this.editDosen = { ...dosen };
             this.errors = {};
@@ -40,22 +78,14 @@
             this.errors = {};
             const form = e.target;
             try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: new FormData(form)
-                });
-                const result = await response.json();
-                if (response.ok) {
+                const { ok, status, result } = await this.kirimForm(form);
+                if (ok) {
                     this.createModal = false;
                     form.reset();
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
                     await refreshComponent(['#table-container', '#filter-container']);
                 } else {
-                    if (response.status === 422) {
+                    if (status === 422) {
                         this.errors = result.errors || {};
                     } else {
                         window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));
@@ -73,21 +103,13 @@
             this.errors = {};
             const form = e.target;
             try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: new FormData(form)
-                });
-                const result = await response.json();
-                if (response.ok) {
+                const { ok, status, result } = await this.kirimForm(form);
+                if (ok) {
                     this.editModal = false;
                     window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message, type: 'success' } }));
                     await refreshComponent(['#table-container', '#filter-container']);
                 } else {
-                    if (response.status === 422) {
+                    if (status === 422) {
                         this.errors = result.errors || {};
                     } else {
                         window.dispatchEvent(new CustomEvent('notify', { detail: { message: result.message || 'Terjadi kesalahan.', type: 'error' } }));

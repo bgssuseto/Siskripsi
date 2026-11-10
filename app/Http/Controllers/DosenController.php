@@ -416,13 +416,13 @@ class DosenController extends Controller
                 $row = $rows[$i];
                 if (!is_array($row)) continue;
 
-                $namaDosen = trim((string)($row[$namaCol] ?? ''));
+                $namaDosen = (string) \App\Support\TeksBersih::teks((string)($row[$namaCol] ?? ''));
                 $nidn = trim((string)($row[$nidnCol] ?? ''));
                 $noWa = trim((string)($row[$waCol] ?? ''));
                 $alias = $aliasCol !== null ? trim((string)($row[$aliasCol] ?? '')) : '';
                 $kepakaran = $kepakaranCol !== null ? trim((string)($row[$kepakaranCol] ?? '')) : '';
                 $jabatanRaw = $jabatanCol !== null ? trim((string)($row[$jabatanCol] ?? '')) : '';
-                $email = $emailCol !== null ? trim((string)($row[$emailCol] ?? '')) : '';
+                $email = $emailCol !== null ? (string) \App\Support\TeksBersih::teks((string)($row[$emailCol] ?? '')) : '';
                 if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $email = '';
                 }

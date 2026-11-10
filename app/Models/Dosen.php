@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Support\Facades\Crypt;
+use App\Support\TeksBersih;
 
 class Dosen extends Model
 {
@@ -123,6 +124,28 @@ class Dosen extends Model
     public function getJabatanRankAttribute(): int
     {
         return self::JABATAN_FUNGSIONAL_RANKS[$this->jabatan_fungsional] ?? 0;
+    }
+
+    // Bersihkan karakter tak terlihat dari data hasil salin (WhatsApp/Excel),
+    // baik lewat form, import, maupun sinkron akun — lihat App\Support\TeksBersih.
+    public function setNoWaAttribute($value): void
+    {
+        $this->attributes['no_wa'] = TeksBersih::nomorHp($value);
+    }
+
+    public function setNamaDosenAttribute($value): void
+    {
+        $this->attributes['nama_dosen'] = TeksBersih::teks($value);
+    }
+
+    public function setKepakaranAttribute($value): void
+    {
+        $this->attributes['kepakaran'] = TeksBersih::teks($value);
+    }
+
+    public function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = TeksBersih::teks($value);
     }
 
     public function getWaFormattedAttribute(): ?string
