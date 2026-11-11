@@ -26,11 +26,10 @@
         .isi { margin-top: 9mm; }
         .isi p { margin: 0; }
 
-        .data { border-collapse: collapse; margin-top: 1mm; }
+        .data { border-collapse: collapse; margin-top: 1mm; width: 100%; }
         .data td { padding: 0; vertical-align: top; }
         .data .l { width: 34mm; }
         .data .c { width: 8mm; }
-        .data .v { width: 70mm; }
         .data .judul-v { padding: 1mm 0; }
 
         .ttd { margin: 10mm 0 0 106mm; white-space: nowrap; }

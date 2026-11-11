@@ -163,8 +163,11 @@ class BebasProdiTest extends TestCase
 
         $html = view('bebas-prodi.surat', [
             'p' => $p, 'nama' => 'Oesama Hakim Adsandi', 'tanggal' => '22 September 2026',
-            'kaprodi' => 'Dr. Ahmad Abdul Chamid, S.Kom., M.Kom', 'kopBase64' => '', 'qrBase64' => 'data:image/svg+xml;base64,AAAA',
+            'kaprodi' => 'Dr. Ahmad Abdul Chamid, S.Kom., M.Kom', 'kopBase64' => '',
         ])->render();
+        // Tanpa tanda tangan digital: tidak ada QR maupun catatan TTE di surat.
+        $this->assertStringNotContainsString('QR', $html);
+        $this->assertStringNotContainsString('ditandatangani secara elektronik', $html);
         $this->assertStringContainsString('NO:TI/BP/' . $expected, $html);
         $this->assertStringContainsString('Bebas Peminjaman Perangkat Lab TI', $html);
     }

@@ -34,16 +34,8 @@
 
         .ttd { margin: 18px 0 0 96mm; white-space: nowrap; }
         .ttd p { margin: 0; }
+        /* Ruang kosong untuk tanda tangan basah Kaprodi. */
         .ttd .ruang { height: 118px; padding: 4px 0; }
-        .qr { position: relative; width: 112px; height: 112px; }
-        .qr .kode { position: absolute; left: 0; top: 0; width: 112px; height: 112px; }
-        .qr .logo { position: absolute; background: #fff; }
-
-        .catatan-tte {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            border-top: 1px solid #999; padding-top: 5px;
-            font-size: 8.5pt; color: #444; font-style: italic; line-height: 1.35;
-        }
     </style>
 </head>
 <body>
@@ -83,32 +75,10 @@
         <div class="ttd">
             <p>Kudus, {{ $tanggal }}</p>
             <p>Ka. Prodi Teknik Informatika</p>
-            <div class="ruang">
-                @if($qrBase64)
-                    @php
-                        // Logo pas menutupi area tengah QR yang dikosongkan (lihat QrCode::denganRuangLogo).
-                        $ukuran = 112;
-                        $sisi = $ukuran * ($qrRasioLogo ?? 0);
-                        $pad  = 1.5;
-                    @endphp
-                    <div class="qr">
-                        <img class="kode" src="{{ $qrBase64 }}" alt="QR Tanda Tangan Elektronik">
-                        @if(!empty($logoBase64) && $sisi > 0)
-                            <img class="logo" src="{{ $logoBase64 }}" alt="UMK"
-                                 style="left: {{ round(($ukuran - $sisi) / 2 + $pad, 2) }}px; top: {{ round(($ukuran - $sisi) / 2 + $pad, 2) }}px; width: {{ round($sisi - 2 * $pad, 2) }}px; height: {{ round($sisi - 2 * $pad, 2) }}px;">
-                        @endif
-                    </div>
-                @endif
-            </div>
+            <div class="ruang"></div>
             <p>{{ $kaprodi }}</p>
         </div>
     </div>
 
-    @if($qrBase64)
-    <div class="catatan-tte">
-        Dokumen ini telah ditandatangani secara elektronik oleh Ka. Prodi Teknik Informatika Universitas Muria Kudus.
-        Keaslian dan keabsahan surat dapat diverifikasi dengan memindai QR Code di atas.
-    </div>
-    @endif
 </body>
 </html>

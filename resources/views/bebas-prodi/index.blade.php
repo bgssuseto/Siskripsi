@@ -58,9 +58,6 @@
                 <p class="text-sm font-bold text-rose-600 dark:text-rose-400">Belum ada data Kaprodi — surat belum bisa ditandatangani.</p>
             @endif
         </div>
-        <span class="inline-flex items-center gap-1.5 self-start sm:self-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30">
-            <x-icon name="check-circle" class="w-3.5 h-3.5" /> TTE QR otomatis di setiap surat
-        </span>
         @if($isSuperAdmin)
             <button type="button" @click="kaprodiModal = true" class="ui-btn-secondary self-start sm:self-center"><x-icon name="users" class="w-4 h-4" /> Kelola Kaprodi</button>
         @endif
@@ -202,7 +199,7 @@
             <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Kelola Kaprodi Penandatangan</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Surat ditandatangani secara elektronik (QR Code) atas nama Kaprodi yang menjabat pada tanggal surat. Surat yang sudah terbit tetap memakai Kaprodi saat itu.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Nama Kaprodi di surat mengikuti Kaprodi yang menjabat pada tanggal surat. Surat yang sudah terbit tetap memakai Kaprodi saat itu.</p>
                 </div>
                 <button type="button" @click="kaprodiModal = false" class="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-500 text-xs font-bold shrink-0"><x-icon name="x" class="inline-block w-[1.1em] h-[1.1em] align-[-0.2em] shrink-0" /></button>
             </div>
