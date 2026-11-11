@@ -393,6 +393,35 @@ class NotifikasiService
         return $terkirim;
     }
 
+    /**
+     * Push ke semua super admin & koordinator saat mahasiswa mendaftar (atau mengirim
+     * revisi) Sempro/Skripsi — supaya berkas cepat diverifikasi. Dikirim langsung
+     * (bukan lewat penjadwal), jadi cukup NOTIFIKASI_EMAIL yang menyala.
+     */
+    public static function kirimPendaftaranBaru(Sidang $s, bool $revisi = false): int
+    {
+        if (!(bool) config('app.notifikasi_email', true)) {
+            return 0;
+        }
+
+        $sempro = $s->jenis_tugas_akhir === 'sempro';
+        $judul = ($revisi ? 'Revisi Pendaftaran ' : 'Pendaftaran Baru ') . self::jenisPanjang($s);
+        $isi = trim(($s->nama_mahasiswa ?: 'Mahasiswa') . ($s->nim ? " ({$s->nim})" : ''))
+            . ($revisi ? ' mengirim ulang berkas pendaftaran.' : ' mendaftar.')
+            . ' Menunggu verifikasi.';
+        $url = self::url($sempro ? 'pendaftaran.sempro' : 'pendaftaran.skripsi');
+
+        $peran = [User::ROLE_SUPER_ADMIN, User::ROLE_KOORDINATOR];
+        $penerima = User::whereIn('role', $peran)
+            ->orWhereHas('additionalRoles', fn ($q) => $q->whereIn('role', $peran))
+            ->get();
+
+        foreach ($penerima as $admin) {
+            self::push($admin, $judul, $isi, ['url' => $url]);
+        }
+        return $penerima->count();
+    }
+
     // ── Pembantu ──
 
     private static function kirim(string $email, PemberitahuanMail $mail): bool

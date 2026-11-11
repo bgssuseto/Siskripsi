@@ -436,6 +436,7 @@ class MahasiswaController extends Controller
                 'verifikasi_komentar'            => null,
                 'verifikasi_tanggal'             => now()->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
             ]);
+            $sidangTersimpan = $existing;
             $message = 'Pendaftaran berhasil direvisi dan dikirim kembali!';
         } else {
             // Create new registration. A unique DB constraint on
@@ -445,7 +446,7 @@ class MahasiswaController extends Controller
             // catch it here and turn it into the same friendly message the
             // $existing check already gives for the non-race case.
             try {
-                Sidang::create([
+                $sidangTersimpan = Sidang::create([
                     'nim'                            => $validated['nim'],
                     'nama_mahasiswa'                 => $user->name,
                     'judul_skripsi'                  => $validated['judul_skripsi'],
@@ -476,6 +477,10 @@ class MahasiswaController extends Controller
             }
             $message = 'Pendaftaran ' . ($validated['jenis_tugas_akhir'] === 'sempro' ? 'Seminar Proposal' : 'Sidang Skripsi') . ' berhasil dikirim!';
         }
+
+        // Kabari super admin & koordinator lewat push — dijalankan setelah respons
+        // terkirim supaya mahasiswa tidak menunggu panggilan ke Firebase.
+        \Illuminate\Support\defer(fn () => \App\Services\NotifikasiService::kirimPendaftaranBaru($sidangTersimpan, $isRevision));
 
         if ($request->expectsJson()) {
             return response()->json([
