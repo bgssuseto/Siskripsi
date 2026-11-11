@@ -134,7 +134,7 @@ class NotifikasiService
             $disetujui
                 ? "Berkas pendaftaran {$jenis} Anda telah disetujui koordinator."
                 : "Berkas pendaftaran {$jenis} Anda ditolak" . ($s->verifikasi_komentar ? ": {$s->verifikasi_komentar}" : '.'),
-            ['type' => 'verifikasi', 'sidang_id' => (string) $s->id],
+            ['type' => 'verifikasi', 'sidang_id' => (string) $s->id, 'url' => self::urlPendaftaran($s->jenis_tugas_akhir)],
         );
 
         if ($ok) {
@@ -179,7 +179,7 @@ class NotifikasiService
             ($diperbarui ? 'Perubahan Jadwal' : 'Jadwal') . " {$jenis}",
             ($diperbarui ? "Jadwal {$jenis} Anda diperbarui: " : "Jadwal {$jenis} Anda telah ditetapkan: ")
                 . self::tanggal($s->tanggal) . $jamLabel . ($s->ruang ? ", Ruang {$s->ruang->kode_ruangan}" : ''),
-            ['type' => 'jadwal', 'sidang_id' => (string) $s->id],
+            ['type' => 'jadwal', 'sidang_id' => (string) $s->id, 'url' => self::url('mahasiswa.jadwal.index')],
         );
 
         if ($ok) {
@@ -229,7 +229,7 @@ class NotifikasiService
                 "Pengingat: {$s->jenis_label} besok",
                 "Ujian Anda dijadwalkan BESOK, " . self::tanggal($s->tanggal) . $jamLabel
                     . ($s->ruang ? ", Ruang {$s->ruang->kode_ruangan}" : '') . '.',
-                ['type' => 'pengingat_h1', 'sidang_id' => (string) $s->id],
+                ['type' => 'pengingat_h1', 'sidang_id' => (string) $s->id, 'url' => self::url('mahasiswa.jadwal.index')],
             );
             foreach (self::peranDosen($s) as $dosenId => [$dosen, $peran]) {
                 $perDosen[$dosenId]['dosen'] = $dosen;
@@ -261,7 +261,7 @@ class NotifikasiService
                 self::userForDosen($dosen),
                 "Pengingat: {$jumlah} jadwal ujian besok",
                 "Bapak/Ibu dijadwalkan pada {$jumlah} ujian tugas akhir BESOK, " . self::tanggal($besok) . '.',
-                ['type' => 'pengingat_h1_dosen'],
+                ['type' => 'pengingat_h1_dosen', 'url' => self::url('dosen.dashboard')],
             );
         }
 
@@ -348,7 +348,7 @@ class NotifikasiService
                     $judul, "Halo {$m->name},", [$isi], [], 'Buka Sistem Skripsi', self::url('mahasiswa.dashboard'), $warna,
                 ));
             }
-            self::push($m, $judul, $isi, ['type' => 'pendaftaran_gelombang', 'wave_id' => (string) $wave->id, 'momen' => $momen]);
+            self::push($m, $judul, $isi, ['type' => 'pendaftaran_gelombang', 'wave_id' => (string) $wave->id, 'momen' => $momen, 'url' => self::urlPendaftaran($wave->jenis)]);
         }
 
         Cache::put($tanda, true, now()->addDays(10));
@@ -386,7 +386,7 @@ class NotifikasiService
                     $judul, "Halo {$s->nama_mahasiswa},", [$isi], [], 'Buka Sistem Skripsi', self::url('mahasiswa.dashboard'), '#f59e0b',
                 ));
             }
-            self::push($user, $judul, $isi, ['type' => 'berkas_belum_lengkap', 'sidang_id' => (string) $s->id]);
+            self::push($user, $judul, $isi, ['type' => 'berkas_belum_lengkap', 'sidang_id' => (string) $s->id, 'url' => self::urlPendaftaran($wave->jenis)]);
         }
 
         Cache::put($tanda, true, now()->addDays(10));
@@ -430,6 +430,8 @@ class NotifikasiService
         if (!$user) {
             return;
         }
+        // FCM data values must be strings; drop links whose route doesn't exist.
+        $data = array_filter($data, fn ($v) => $v !== null);
         app(FcmNotificationService::class)->sendToUser($user, $title, $body, $data);
     }
 
@@ -487,6 +489,12 @@ class NotifikasiService
     private static function tanggal($t): string
     {
         return Carbon::parse($t)->locale('id')->translatedFormat('l, j F Y');
+    }
+
+    /** Halaman pendaftaran Sempro/Skripsi mahasiswa — tujuan saat notifikasi diketuk di aplikasi. */
+    private static function urlPendaftaran(?string $jenis): ?string
+    {
+        return self::url($jenis === 'sempro' ? 'mahasiswa.sempro.index' : 'mahasiswa.skripsi.index');
     }
 
     private static function url(string $route): ?string
