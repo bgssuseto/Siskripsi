@@ -1964,18 +1964,21 @@
             const calendarEl = document.getElementById('calendar-view');
             if (!calendarEl) return;
             
+            // Kalender dibuat ulang setelah data diperbarui: tetap di bulan yang sedang dilihat.
+            let tanggalAwal = new Date();
             if (calendar) {
+                tanggalAwal = calendar.getDate();
                 calendar.destroy();
             }
             
             const eventsData = JSON.parse(calendarEl.getAttribute('data-events') || '[]');
-            const firstDate = (eventsData.length > 0 && eventsData[0].start) ? eventsData[0].start.split('T')[0] : null;
             const isMobileScreen = window.innerWidth < 640;
 
             calendar = new FullCalendar.Calendar(calendarEl, {
                 ...CalendarKit.options(),
                 initialView: isMobileScreen ? 'listWeek' : 'dayGridMonth',
-                initialDate: firstDate || undefined,
+                // Dibuka di bulan berjalan (bukan bulan jadwal pertama di data).
+                initialDate: tanggalAwal,
                 locale: 'id',
                 headerToolbar: isMobileScreen
                     ? { left: 'prev,next', center: 'title', right: 'today' }

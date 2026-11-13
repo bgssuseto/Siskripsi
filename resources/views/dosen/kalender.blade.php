@@ -77,15 +77,13 @@
                 if (calendarEl._fc) { calendarEl._fc.updateSize(); return; }
 
                 const eventsData = JSON.parse(calendarEl.getAttribute('data-events') || '[]');
-                const today = new Date().toISOString().slice(0, 10);
-                const upcoming = eventsData.find(e => (e.start || '').slice(0, 10) >= today);
-                const firstDate = (upcoming || eventsData[0] || {}).start;
                 const isMobileScreen = window.innerWidth < 640;
 
                 const calendar = new FullCalendar.Calendar(calendarEl, {
                     ...CalendarKit.options(),
                     initialView: isMobileScreen ? 'listMonth' : 'dayGridMonth',
-                    initialDate: firstDate ? firstDate.slice(0, 10) : undefined,
+                    // Selalu dibuka di bulan berjalan.
+                    initialDate: new Date(),
                     locale: 'id',
                     headerToolbar: isMobileScreen
                         ? { left: 'prev,next', center: 'title', right: 'today' }
