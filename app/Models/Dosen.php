@@ -30,6 +30,9 @@ class Dosen extends Model
         'can_fill_kesediaan' => 'boolean',
     ];
 
+    // Token link kalender bersifat rahasia — jangan ikut ter-serialize ke JSON/halaman.
+    protected $hidden = ['token_kalender'];
+
     /**
      * Urutan jabatan fungsional dosen dari yang terendah ke tertinggi.
      * Dipakai untuk membandingkan pangkat pada aturan komposisi dewan penguji.
@@ -146,6 +149,19 @@ class Dosen extends Model
     public function setEmailAttribute($value): void
     {
         $this->attributes['email'] = TeksBersih::teks($value);
+    }
+
+    /**
+     * Token link langganan kalender (.ics). Dibuat saat pertama dibutuhkan;
+     * $baru = true membuat token baru sehingga link lama tidak berlaku lagi.
+     */
+    public function tokenKalender(bool $baru = false): string
+    {
+        if ($baru || empty($this->token_kalender)) {
+            $this->forceFill(['token_kalender' => \Illuminate\Support\Str::random(40)])->save();
+        }
+
+        return $this->token_kalender;
     }
 
     public function getWaFormattedAttribute(): ?string

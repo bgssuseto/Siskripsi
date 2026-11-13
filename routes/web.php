@@ -55,6 +55,11 @@ Route::get('/j/{alias}/pdf', [AdministrasiController::class, 'publicJadwalDosenB
 Route::get('/kesediaan-publik/{token}', [PublicKesediaanController::class, 'show'])->name('public.kesediaan.show');
 Route::post('/kesediaan-publik/{token}', [PublicKesediaanController::class, 'store'])->name('public.kesediaan.store')->middleware('throttle:20,1');
 
+// Link langganan kalender dosen (.ics) untuk Google Calendar / kalender HP — publik,
+// diamankan token acak per dosen (lihat KalenderDosenController).
+Route::get('/kalender/dosen/{token}.ics', [\App\Http\Controllers\KalenderDosenController::class, 'ics'])
+    ->where('token', '[A-Za-z0-9]+')->name('public.dosen.kalender-ics')->middleware('throttle:60,1');
+
 // Verifikasi keaslian surat (tujuan QR tanda tangan elektronik) — publik, tanpa login
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('/verifikasi/undangan/{kode}', [VerifikasiDokumenController::class, 'undangan'])->name('verifikasi.undangan');
@@ -307,6 +312,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dosen/sk', [DosenPortalController::class, 'sk'])->name('dosen.sk.index');
         Route::get('/dosen/sk/{periode}/{mode}', [DosenPortalController::class, 'skDownload'])->whereIn('mode', ['pembimbing', 'penguji'])->name('dosen.sk.download');
         Route::get('/dosen/kalender', [DosenPortalController::class, 'kalender'])->name('dosen.kalender');
+        Route::post('/dosen/kalender/ganti-link', [\App\Http\Controllers\KalenderDosenController::class, 'gantiToken'])->name('dosen.kalender.ganti-link');
         Route::get('/dosen/undangan', [DosenPortalController::class, 'undangan'])->name('dosen.undangan.index');
         Route::get('/dosen/undangan/{periode}/zip', [DosenPortalController::class, 'undanganZip'])->name('dosen.undangan.zip');
         Route::get('/dosen/undangan/{periode}/{jenis}/{gelombang}', [DosenPortalController::class, 'undanganLihat'])->whereIn('jenis', ['sempro', 'skripsi'])->name('dosen.undangan.lihat');

@@ -130,6 +130,53 @@
             <!-- Header Section -->
             <x-page-header title="Agenda & Kalender Ujian" subtitle="Timeline menyeluruh jadwal ujian Seminar Proposal, Sidang Skripsi, dan kegiatan akademik Anda." icon="calendar" accent="indigo"></x-page-header>
 
+            {{-- Sinkron ke Google Calendar / kalender HP (langganan .ics) --}}
+            @if($linkKalender)
+                @php
+                    $webcal = preg_replace('#^https?://#', 'webcal://', $linkKalender);
+                    $linkGoogle = 'https://calendar.google.com/calendar/render?cid=' . urlencode($webcal);
+                @endphp
+                <div x-data="{ buka: false, ok: false }" class="mb-6 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
+                    <button type="button" @click="buka = !buka" class="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-left">
+                        <span class="flex items-center gap-3 min-w-0">
+                            <span class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0"><x-icon name="calendar" class="w-4 h-4" /></span>
+                            <span class="min-w-0">
+                                <span class="block text-sm font-extrabold text-slate-800 dark:text-slate-100">Sinkron ke Google Calendar / Kalender HP</span>
+                                <span class="block text-[11px] text-slate-500 dark:text-slate-400">Jadwal menguji & membimbing otomatis muncul (dan ikut berubah) di kalender Anda.</span>
+                            </span>
+                        </span>
+                        <span class="text-xs font-bold text-indigo-600 dark:text-indigo-300 shrink-0" x-text="buka ? 'Tutup' : 'Atur'"></span>
+                    </button>
+                    <div x-show="buka" x-cloak class="px-4 sm:px-5 pb-5 pt-1 space-y-4 border-t border-slate-100 dark:border-slate-700">
+                        <div class="flex flex-wrap gap-2 pt-3">
+                            <a href="{{ $linkGoogle }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">
+                                <x-icon name="calendar" class="w-4 h-4" /> Tambah ke Google Calendar
+                            </a>
+                            <a href="{{ $webcal }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold">
+                                iPhone / Mac / Outlook
+                            </a>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Link langganan (iCal)</label>
+                            <div class="flex gap-2">
+                                <input type="text" readonly value="{{ $linkKalender }}" onclick="this.select()" class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-xs font-mono text-slate-700 dark:text-slate-200">
+                                <button type="button" @click="navigator.clipboard.writeText(@js($linkKalender)); ok = true; setTimeout(() => ok = false, 1600)" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shrink-0" x-text="ok ? 'Tersalin' : 'Salin'"></button>
+                            </div>
+                        </div>
+                        <ul class="text-[11px] text-slate-500 dark:text-slate-400 space-y-1 list-disc pl-4">
+                            <li><b>Android:</b> klik "Tambah ke Google Calendar" sekali (lebih mudah dari laptop/browser), lalu jadwal otomatis muncul di aplikasi Google Calendar HP dengan akun yang sama.</li>
+                            <li><b>iPhone:</b> buka halaman ini di Safari lalu klik "iPhone / Mac / Outlook" → Langganan.</li>
+                            <li>Kalender diperbarui otomatis oleh aplikasi kalender (Google Calendar bisa beberapa jam sekali).</li>
+                            <li>Link ini bersifat pribadi — jangan dibagikan. Bila terlanjur tersebar, buat link baru di bawah.</li>
+                        </ul>
+                        <form method="POST" action="{{ route('dosen.kalender.ganti-link') }}" onsubmit="return confirm('Buat link baru? Link lama langsung tidak berlaku dan perlu ditambahkan ulang ke aplikasi kalender.')">
+                            @csrf
+                            <button type="submit" class="text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline">Buat link baru (nonaktifkan link lama)</button>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
             <!-- View Toggle Buttons -->
             <div class="flex sm:justify-end mb-6">
                 <div class="grid grid-cols-2 sm:flex items-center gap-1 bg-slate-200/70 dark:bg-slate-800 p-1 rounded-2xl w-full sm:w-fit ring-1 ring-inset ring-slate-200 dark:ring-slate-700">

@@ -535,7 +535,10 @@ class DosenPortalController extends Controller
             });
         }
 
-        return view('dosen.kalender', compact('schedules', 'dosen', 'calendarEvents'));
+        // Link langganan kalender (.ics) untuk Google Calendar / kalender HP.
+        $linkKalender = $dosen ? route('public.dosen.kalender-ics', $dosen->tokenKalender()) : null;
+
+        return view('dosen.kalender', compact('schedules', 'dosen', 'calendarEvents', 'linkKalender'));
     }
 
     /**
