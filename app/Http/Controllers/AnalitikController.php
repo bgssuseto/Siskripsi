@@ -6,6 +6,7 @@ use App\Models\Dosen;
 use App\Models\Periode;
 use App\Models\Ruang;
 use App\Models\Sidang;
+use App\Services\AnalitikLanjutanService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -28,7 +29,9 @@ class AnalitikController extends Controller
 
         $jenis = $request->get('jenis'); // '' | 'skripsi' | 'sempro'
 
-        $query = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang']);
+        // Hanya pendaftaran yang berkasnya disetujui (selaras menu Data & Penjadwalan).
+        $query = Sidang::with(['pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2', 'ruang'])
+            ->terverifikasi();
         if ($selectedPeriodeId) {
             $query->where('periode_id', $selectedPeriodeId);
         }
@@ -105,10 +108,17 @@ class AnalitikController extends Controller
 
         $maxTimeline = (int) ($timeline->max() ?? 0) ?: 1;
 
+        // ── Analitik lanjutan (lintas periode) ──
+        $lanjutan = new AnalitikLanjutanService();
+        $waktuTempuh = $lanjutan->waktuTempuh();
+        $macet = $lanjutan->macet();
+        $bebanSemester = $lanjutan->bebanPerSemester();
+
         return view('administrasi.analitik.index', compact(
             'periodes', 'selectedPeriode', 'selectedPeriodeId', 'jenis',
             'totalSkripsi', 'totalSempro', 'totalTerjadwal', 'totalBelumJadwal',
-            'bebanDosen', 'maxBeban', 'keterpakaianRuang', 'maxRuang', 'timeline', 'maxTimeline'
+            'bebanDosen', 'maxBeban', 'keterpakaianRuang', 'maxRuang', 'timeline', 'maxTimeline',
+            'waktuTempuh', 'macet', 'bebanSemester'
         ));
     }
 }

@@ -187,5 +187,7 @@
             </div>
         </div>
 
+        @include('administrasi.analitik._lanjutan')
+
     </div>
 </x-app-layout>
