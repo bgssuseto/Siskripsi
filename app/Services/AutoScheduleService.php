@@ -74,7 +74,7 @@ class AutoScheduleService
         $busyRuang = [];      // [ruang_id][Y-m-d] => [[start,end], ...]
         $dosenRuangHariIni = []; // [dosen_id][Y-m-d] => [ruang_id => true, ...]
 
-        Sidang::whereNotNull('tanggal')->whereNotNull('jam')->get()->each(function ($s) use (&$busyDosen, &$busyRuang, &$dosenRuangHariIni) {
+        Sidang::whereNotNull('tanggal')->whereNotNull('jam')->terverifikasi()->get()->each(function ($s) use (&$busyDosen, &$busyRuang, &$dosenRuangHariIni) {
             self::markBusyFromSidang($s, $busyDosen, $busyRuang, $dosenRuangHariIni);
         });
 

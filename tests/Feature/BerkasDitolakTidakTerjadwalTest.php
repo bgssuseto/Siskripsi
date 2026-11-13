@@ -85,4 +85,63 @@ class BerkasDitolakTidakTerjadwalTest extends TestCase
             ->assertOk()->assertJsonCount(0, 'berhasil')->assertJsonCount(1, 'gagal');
         $this->assertNull($sempro->fresh()->tanggal);
     }
+
+    public function test_menolak_berkas_mengosongkan_jadwal_dan_slot_tidak_dianggap_bentrok(): void
+    {
+        $ruang = Ruang::create(['kode_ruangan' => 'TLK' . substr(uniqid(), -4), 'nama_ruangan' => 'R', 'status' => Ruang::STATUS_SIAP]);
+        $tgl = now()->addDays(4)->toDateString();
+        $jadwal = ['tanggal' => $tgl, 'jam' => '08.00 - 09.00', 'ruang_id' => $ruang->id];
+
+        $a = $this->sidang('sempro', 'disetujui', 'Mhs A');
+        $a->update($jadwal);
+        $b = $this->sidang('sempro', 'disetujui', 'Mhs B');
+        $b->update(['jam' => '09.00 - 10.00'] + $jadwal);
+        $sudahUjian = $this->sidang('sempro', 'disetujui', 'Mhs Sudah Ujian');
+        $sudahUjian->update(['tanggal' => now()->subDays(3)->toDateString(), 'jam' => '10.00 - 11.00', 'status_ujian' => 'lulus']);
+
+        $this->actingAs($this->admin)
+            ->postJson(route('pendaftaran.verifikasi', $a), ['verifikasi_status' => 'ditolak', 'verifikasi_komentar' => 'Berkas kurang'])
+            ->assertOk();
+        $a->refresh();
+        $this->assertNull($a->tanggal);
+        $this->assertNull($a->ruang_id);
+
+        // Bulk: jadwal B dikosongkan, yang sudah punya hasil ujian tidak disentuh.
+        $this->actingAs($this->admin)
+            ->postJson(route('pendaftaran.bulk-verifikasi'), ['ids' => [$b->id, $sudahUjian->id], 'verifikasi_status' => 'ditolak', 'verifikasi_komentar' => 'x'])
+            ->assertOk();
+        $this->assertNull($b->fresh()->tanggal);
+        $this->assertNotNull($sudahUjian->fresh()->tanggal);
+
+        // Data lama: pendaftaran ditolak yang masih memegang jadwal tidak dihitung bentrok.
+        $lama = $this->sidang('sempro', 'ditolak', 'Mhs Ditolak Lama');
+        $lama->update($jadwal);
+        $c = $this->sidang('sempro', 'disetujui', 'Mhs C');
+        $hasil = \App\Services\SidangConflictService::checkConflicts(
+            $jadwal + ['jenis_tugas_akhir' => 'sempro', 'dosen_pembimbing_utama_id' => $this->dosen->id], $c->id);
+        $this->assertSame([], $hasil);
+
+        // Pembanding: pendaftaran disetujui di jam yang sama (ruang lain, dosen sama) tetap bentrok.
+        $ruang2 = Ruang::create(['kode_ruangan' => 'TLK' . substr(uniqid(), -4), 'nama_ruangan' => 'R2', 'status' => Ruang::STATUS_SIAP]);
+        $this->sidang('sempro', 'disetujui', 'Mhs D')->update(['ruang_id' => $ruang2->id] + $jadwal);
+        $this->assertNotEmpty(\App\Services\SidangConflictService::checkConflicts(
+            $jadwal + ['jenis_tugas_akhir' => 'sempro', 'dosen_pembimbing_utama_id' => $this->dosen->id], $c->id));
+    }
+
+    public function test_migrasi_membersihkan_jadwal_lama_milik_berkas_ditolak(): void
+    {
+        $ruang = Ruang::create(['kode_ruangan' => 'TLK' . substr(uniqid(), -4), 'nama_ruangan' => 'R', 'status' => Ruang::STATUS_SIAP]);
+        $ditolak = $this->sidang('sempro', 'ditolak', 'Mhs Lama Ditolak');
+        $ditolak->update(['tanggal' => now()->addDays(6)->toDateString(), 'jam' => '13.00 - 14.00', 'ruang_id' => $ruang->id]);
+        $sah = $this->sidang('sempro', 'disetujui', 'Mhs Lama Sah');
+        $sah->update(['tanggal' => now()->addDays(6)->toDateString(), 'jam' => '14.00 - 15.00', 'ruang_id' => $ruang->id]);
+
+        $migrasi = require database_path('migrations/2026_11_13_000000_kosongkan_jadwal_pendaftaran_ditolak.php');
+        $migrasi->up();
+
+        $this->assertNull($ditolak->fresh()->tanggal);
+        $this->assertNull($ditolak->fresh()->ruang_id);
+        $this->assertNotNull($sah->fresh()->tanggal);
+        $this->assertDatabaseHas('activity_logs', ['subject_id' => $ditolak->id, 'action' => 'reset_jadwal']);
+    }
 }

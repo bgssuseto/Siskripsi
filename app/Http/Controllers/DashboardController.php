@@ -114,7 +114,7 @@ class DashboardController extends Controller
         $link = fn (string $route, array $extra = []) => $bisa($route) ? route($route, $q + $extra) : null;
 
         // Bentrok dicek pada semua jadwal mendatang (lintas periode), karena ruang & dosen dipakai bersama.
-        $mendatang = Sidang::with('ruang')->whereNotNull('tanggal')->whereNotNull('jam')
+        $mendatang = Sidang::with('ruang')->whereNotNull('tanggal')->whereNotNull('jam')->terverifikasi()
             ->whereDate('tanggal', '>=', $hariIni->format('Y-m-d'))->get();
         $peta = SidangConflictService::detectAllConflicts($mendatang);
         $bentrok = $mendatang->filter(fn ($s) => !empty($peta[$s->id]['schedule']));

@@ -279,6 +279,7 @@ class SidangConflictService
 
         $existing = Sidang::with(['ruang', 'pembimbingUtama', 'pembimbingPendamping', 'ketuaPenguji', 'anggotaPenguji1', 'anggotaPenguji2'])
             ->whereDate('tanggal', $tanggalYmd)
+            ->terverifikasi() // pendaftaran ditolak/menunggu tidak memakai slot
             ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
             ->get();
 
@@ -424,6 +425,7 @@ class SidangConflictService
         $others = Sidang::with('ruangPendamping')
             ->where('jadwal_terpisah', true)
             ->whereDate('tanggal_pendamping', $tanggalYmd)
+            ->terverifikasi()
             ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
             ->get();
 

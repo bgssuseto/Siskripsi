@@ -48,6 +48,37 @@ class Sidang extends Model
         return $this->verifikasi_status === 'disetujui';
     }
 
+    public const KOLOM_JADWAL = [
+        'tanggal', 'jam', 'ruang_id', 'jadwal_terpisah', 'tanggal_pendamping',
+        'jam_pendamping', 'ruang_id_pendamping', 'catatan_jadwal_terpisah',
+    ];
+
+    /**
+     * Kosongkan jadwal (tanggal/jam/ruang, termasuk sesi pendamping terpisah)
+     * supaya slot ruang & dosen bisa dipakai mahasiswa lain. Dosen penguji
+     * tidak diubah. Jadwal yang sudah punya hasil ujian tidak disentuh.
+     *
+     * @return array|null nilai jadwal sebelum dikosongkan, null bila tidak ada yang diubah
+     */
+    public function kosongkanJadwal(): ?array
+    {
+        $punyaJadwal = $this->tanggal || $this->jam || $this->ruang_id
+            || $this->tanggal_pendamping || $this->jam_pendamping || $this->ruang_id_pendamping;
+        if (!$punyaJadwal || !empty($this->status_ujian)) {
+            return null;
+        }
+
+        $sebelum = $this->only(self::KOLOM_JADWAL);
+        $this->update([
+            'tanggal' => null, 'jam' => null, 'ruang_id' => null,
+            'jadwal_terpisah' => false, 'tanggal_pendamping' => null,
+            'jam_pendamping' => null, 'ruang_id_pendamping' => null,
+            'catatan_jadwal_terpisah' => null,
+        ]);
+
+        return $sebelum;
+    }
+
     protected $fillable = [
         'nim',
         'nama_mahasiswa',

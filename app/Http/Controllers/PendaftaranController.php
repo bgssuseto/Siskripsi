@@ -237,10 +237,12 @@ class PendaftaranController extends Controller
                 (!empty($validated['verifikasi_komentar']) ? " Catatan: {$validated['verifikasi_komentar']}" : ''),
             ['before' => ['verifikasi_status' => $statusBefore], 'after' => ['verifikasi_status' => $validated['verifikasi_status']]]
         );
+        $jadwalDikosongkan = $this->kosongkanJadwalBilaDitolak($sidang);
 
         $statusMessage = match($validated['verifikasi_status']) {
             'disetujui' => "Pendaftaran mahasiswa {$sidang->nama_mahasiswa} ({$sidang->nim}) berhasil disetujui! Data kini muncul pada Master Data.",
-            'ditolak'   => "Pendaftaran mahasiswa {$sidang->nama_mahasiswa} ({$sidang->nim}) telah ditolak dengan catatan.",
+            'ditolak'   => "Pendaftaran mahasiswa {$sidang->nama_mahasiswa} ({$sidang->nim}) telah ditolak dengan catatan." .
+                ($jadwalDikosongkan ? ' Jadwal ujiannya dikosongkan agar slot bisa dipakai mahasiswa lain.' : ''),
             default     => "Status pendaftaran mahasiswa {$sidang->nama_mahasiswa} diubah menjadi Menunggu Verifikasi."
         };
 
@@ -409,6 +411,31 @@ class PendaftaranController extends Controller
     }
 
     /**
+     * Pendaftaran yang ditolak tidak boleh memegang slot jadwal: kosongkan
+     * tanggal/jam/ruangnya (dicatat di log aktivitas). True bila ada jadwal dikosongkan.
+     */
+    private function kosongkanJadwalBilaDitolak(Sidang $sidang): bool
+    {
+        if ($sidang->verifikasi_status !== 'ditolak') {
+            return false;
+        }
+
+        $sebelum = $sidang->kosongkanJadwal();
+        if ($sebelum === null) {
+            return false;
+        }
+
+        ActivityLogger::log(
+            'reset_jadwal',
+            $sidang,
+            "Mengosongkan jadwal {$sidang->jenis_tugas_akhir} {$sidang->nama_mahasiswa} ({$sidang->nim}) karena berkas pendaftarannya ditolak.",
+            ['before' => $sebelum, 'after' => $sidang->only(array_keys($sebelum))]
+        );
+
+        return true;
+    }
+
+    /**
      * Bulk verifikasi (setujui / tolak) beberapa pendaftaran sekaligus.
      */
     public function bulkVerifikasi(Request $request)
@@ -438,6 +465,7 @@ class PendaftaranController extends Controller
                     (!empty($validated['verifikasi_komentar']) ? " Catatan: {$validated['verifikasi_komentar']}" : ''),
                 ['before' => ['verifikasi_status' => $statusBefore], 'after' => ['verifikasi_status' => $validated['verifikasi_status']]]
             );
+            $this->kosongkanJadwalBilaDitolak($sidang);
             $count++;
         }
 
