@@ -917,14 +917,14 @@ class DosenPortalController extends Controller
         $dosen = $this->dosenPemilikUndangan($periode, $jenis, $gelombang);
 
         return view('administrasi.undangan.preview',
-            app(AdministrasiController::class)->buildUndanganContext($this->requestUndangan($periode, $jenis, $gelombang), $dosen));
+            app(UndanganController::class)->buildUndanganContext($this->requestUndangan($periode, $jenis, $gelombang), $dosen));
     }
 
     /** Unduh PDF satu undangan milik dosen ini. */
     public function undanganUnduh(Periode $periode, string $jenis, string $gelombang)
     {
         $dosen = $this->dosenPemilikUndangan($periode, $jenis, $gelombang);
-        $built = app(AdministrasiController::class)->buildUndanganPdfForDosen($this->requestUndangan($periode, $jenis, $gelombang), $dosen);
+        $built = app(UndanganController::class)->buildUndanganPdfForDosen($this->requestUndangan($periode, $jenis, $gelombang), $dosen);
 
         return $built['pdf']->download($this->namaFileUndangan($periode, $jenis, $gelombang));
     }
@@ -939,7 +939,7 @@ class DosenPortalController extends Controller
         abort_if($items->isEmpty(), 404);
 
         @set_time_limit(300);
-        $admin = app(AdministrasiController::class);
+        $admin = app(UndanganController::class);
         $tmp = tempnam(sys_get_temp_dir(), 'undangan_');
         $zip = new \ZipArchive();
         $zip->open($tmp, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);

@@ -17,7 +17,11 @@ use App\Http\Controllers\PeriodeController;
 use App\Http\Controllers\JadwalUjianController;
 use App\Http\Controllers\SkripsiController;
 use App\Http\Controllers\SemproController;
-use App\Http\Controllers\AdministrasiController;
+use App\Http\Controllers\BeritaAcaraController;
+use App\Http\Controllers\JadwalDosenPublikController;
+use App\Http\Controllers\RekapDosenController;
+use App\Http\Controllers\SkController;
+use App\Http\Controllers\UndanganController;
 use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\BackupController;
@@ -41,14 +45,14 @@ Route::get('/', function () {
 });
 
 // Public Routes (View & Download Jadwal Dosen Tanpa Login)
-Route::get('/jadwal-dosen/{token}', [AdministrasiController::class, 'publicJadwalDosen'])->name('public.dosen.jadwal');
-Route::get('/jadwal-dosen/{token}/pdf', [AdministrasiController::class, 'publicJadwalDosenPdf'])->name('public.dosen.jadwal.pdf');
-Route::get('/jadwal-dosen-penguji', [AdministrasiController::class, 'publicJadwalDosenPenguji'])->name('public.jadwal-dosen-penguji');
-Route::get('/jadwal-dosen-penguji/pdf', [AdministrasiController::class, 'publicJadwalDosenPengujiPdf'])->name('public.jadwal-dosen-penguji.pdf');
+Route::get('/jadwal-dosen/{token}', [JadwalDosenPublikController::class, 'publicJadwalDosen'])->name('public.dosen.jadwal');
+Route::get('/jadwal-dosen/{token}/pdf', [JadwalDosenPublikController::class, 'publicJadwalDosenPdf'])->name('public.dosen.jadwal.pdf');
+Route::get('/jadwal-dosen-penguji', [JadwalDosenPublikController::class, 'publicJadwalDosenPenguji'])->name('public.jadwal-dosen-penguji');
+Route::get('/jadwal-dosen-penguji/pdf', [JadwalDosenPublikController::class, 'publicJadwalDosenPengujiPdf'])->name('public.jadwal-dosen-penguji.pdf');
 
 // Shortlink berbasis alias/inisial dosen (fallback ke token di atas kalau dosen belum punya alias)
-Route::get('/j/{alias}', [AdministrasiController::class, 'publicJadwalDosenByAlias'])->name('public.dosen.jadwal.alias');
-Route::get('/j/{alias}/pdf', [AdministrasiController::class, 'publicJadwalDosenByAliasPdf'])->name('public.dosen.jadwal.alias.pdf');
+Route::get('/j/{alias}', [JadwalDosenPublikController::class, 'publicJadwalDosenByAlias'])->name('public.dosen.jadwal.alias');
+Route::get('/j/{alias}/pdf', [JadwalDosenPublikController::class, 'publicJadwalDosenByAliasPdf'])->name('public.dosen.jadwal.alias.pdf');
 
 // Link publik (tanpa login) form kesediaan menguji dosen — token per-periode,
 // otomatis aktif/nonaktif mengikuti jendela tanggal Gelombang yang berjalan.
@@ -194,29 +198,29 @@ Route::middleware('auth')->group(function () {
 
         // Administrasi (semua route di grup ini murni lihat/generate dokumen, tidak
         // ada yang menghapus/mengubah data master, jadi aman dibuka)
-        Route::get('/administrasi/undangan', [AdministrasiController::class, 'undanganIndex'])->name('administrasi.undangan.index');
-        Route::get('/administrasi/undangan/preview/{dosen}', [AdministrasiController::class, 'previewUndanganHtml'])->name('administrasi.undangan.preview');
-        Route::get('/administrasi/undangan/pdf/{dosen}', [AdministrasiController::class, 'generateUndanganPdf'])->name('administrasi.undangan.pdf');
-        Route::post('/administrasi/undangan/kirim-email/{dosen}', [AdministrasiController::class, 'sendUndanganEmail'])->name('administrasi.undangan.send-email');
-        Route::get('/administrasi/undangan/docx/{dosen}', [AdministrasiController::class, 'generateUndanganDocx'])->name('administrasi.undangan.docx');
-        Route::get('/administrasi/undangan/excel/{dosen}', [AdministrasiController::class, 'generateUndanganExcel'])->name('administrasi.undangan.excel');
-        Route::get('/administrasi/undangan/mass-excel', [AdministrasiController::class, 'generateUndanganMassExcel'])->name('administrasi.undangan.mass-excel');
-        Route::get('/administrasi/undangan/rekap-dosen-penguji', [AdministrasiController::class, 'generateRekapDosenPengujiExcel'])->name('administrasi.undangan.rekap-dosen-penguji');
-        Route::get('/administrasi/undangan/zip', [AdministrasiController::class, 'generateUndanganZip'])->name('administrasi.undangan.zip');
-        Route::get('/administrasi/undangan/mass-docx', [AdministrasiController::class, 'generateUndanganMassDocxZip'])->name('administrasi.undangan.mass-docx');
-        Route::get('/administrasi/rekap-pembimbing', [AdministrasiController::class, 'rekapPembimbingIndex'])->name('administrasi.rekap-pembimbing.index');
-        Route::get('/administrasi/berita-acara', [AdministrasiController::class, 'beritaAcaraIndex'])->name('administrasi.berita-acara.index');
-        Route::get('/administrasi/berita-acara/mass-pdf', [AdministrasiController::class, 'generateBeritaAcaraMassPdf'])->name('administrasi.berita-acara.mass-pdf');
-        Route::get('/administrasi/berita-acara/mass-preview', [AdministrasiController::class, 'previewBeritaAcaraMassPdf'])->name('administrasi.berita-acara.mass-preview');
-        Route::get('/administrasi/berita-acara/pdf/{sidang}', [AdministrasiController::class, 'generateBeritaAcaraPdf'])->name('administrasi.berita-acara.pdf');
-        Route::get('/administrasi/berita-acara/preview/{sidang}', [AdministrasiController::class, 'previewBeritaAcaraPdf'])->name('administrasi.berita-acara.preview');
-        Route::get('/administrasi/berita-acara/gabungan-pdf', [AdministrasiController::class, 'generateBeritaAcaraGabunganPdf'])->name('administrasi.berita-acara.gabungan-pdf');
-        Route::get('/administrasi/berita-acara/zip', [AdministrasiController::class, 'generateBeritaAcaraZip'])->name('administrasi.berita-acara.zip');
-        Route::get('/administrasi/sk', [AdministrasiController::class, 'skIndex'])->name('administrasi.sk.index');
-        Route::get('/administrasi/sk/export-pembimbing', [AdministrasiController::class, 'exportSkPembimbingExcel'])->name('administrasi.sk.export-pembimbing');
-        Route::get('/administrasi/sk/export-penguji', [AdministrasiController::class, 'exportSkPengujiExcel'])->name('administrasi.sk.export-penguji');
-        Route::get('/administrasi/sk/export-pembimbing-pdf', [AdministrasiController::class, 'exportSkPembimbingPdf'])->name('administrasi.sk.export-pembimbing-pdf');
-        Route::get('/administrasi/sk/export-penguji-pdf', [AdministrasiController::class, 'exportSkPengujiPdf'])->name('administrasi.sk.export-penguji-pdf');
+        Route::get('/administrasi/undangan', [UndanganController::class, 'undanganIndex'])->name('administrasi.undangan.index');
+        Route::get('/administrasi/undangan/preview/{dosen}', [UndanganController::class, 'previewUndanganHtml'])->name('administrasi.undangan.preview');
+        Route::get('/administrasi/undangan/pdf/{dosen}', [UndanganController::class, 'generateUndanganPdf'])->name('administrasi.undangan.pdf');
+        Route::post('/administrasi/undangan/kirim-email/{dosen}', [UndanganController::class, 'sendUndanganEmail'])->name('administrasi.undangan.send-email');
+        Route::get('/administrasi/undangan/docx/{dosen}', [UndanganController::class, 'generateUndanganDocx'])->name('administrasi.undangan.docx');
+        Route::get('/administrasi/undangan/excel/{dosen}', [UndanganController::class, 'generateUndanganExcel'])->name('administrasi.undangan.excel');
+        Route::get('/administrasi/undangan/mass-excel', [UndanganController::class, 'generateUndanganMassExcel'])->name('administrasi.undangan.mass-excel');
+        Route::get('/administrasi/undangan/rekap-dosen-penguji', [RekapDosenController::class, 'generateRekapDosenPengujiExcel'])->name('administrasi.undangan.rekap-dosen-penguji');
+        Route::get('/administrasi/undangan/zip', [UndanganController::class, 'generateUndanganZip'])->name('administrasi.undangan.zip');
+        Route::get('/administrasi/undangan/mass-docx', [UndanganController::class, 'generateUndanganMassDocxZip'])->name('administrasi.undangan.mass-docx');
+        Route::get('/administrasi/rekap-pembimbing', [RekapDosenController::class, 'rekapPembimbingIndex'])->name('administrasi.rekap-pembimbing.index');
+        Route::get('/administrasi/berita-acara', [BeritaAcaraController::class, 'beritaAcaraIndex'])->name('administrasi.berita-acara.index');
+        Route::get('/administrasi/berita-acara/mass-pdf', [BeritaAcaraController::class, 'generateBeritaAcaraMassPdf'])->name('administrasi.berita-acara.mass-pdf');
+        Route::get('/administrasi/berita-acara/mass-preview', [BeritaAcaraController::class, 'previewBeritaAcaraMassPdf'])->name('administrasi.berita-acara.mass-preview');
+        Route::get('/administrasi/berita-acara/pdf/{sidang}', [BeritaAcaraController::class, 'generateBeritaAcaraPdf'])->name('administrasi.berita-acara.pdf');
+        Route::get('/administrasi/berita-acara/preview/{sidang}', [BeritaAcaraController::class, 'previewBeritaAcaraPdf'])->name('administrasi.berita-acara.preview');
+        Route::get('/administrasi/berita-acara/gabungan-pdf', [BeritaAcaraController::class, 'generateBeritaAcaraGabunganPdf'])->name('administrasi.berita-acara.gabungan-pdf');
+        Route::get('/administrasi/berita-acara/zip', [BeritaAcaraController::class, 'generateBeritaAcaraZip'])->name('administrasi.berita-acara.zip');
+        Route::get('/administrasi/sk', [SkController::class, 'skIndex'])->name('administrasi.sk.index');
+        Route::get('/administrasi/sk/export-pembimbing', [SkController::class, 'exportSkPembimbingExcel'])->name('administrasi.sk.export-pembimbing');
+        Route::get('/administrasi/sk/export-penguji', [SkController::class, 'exportSkPengujiExcel'])->name('administrasi.sk.export-penguji');
+        Route::get('/administrasi/sk/export-pembimbing-pdf', [SkController::class, 'exportSkPembimbingPdf'])->name('administrasi.sk.export-pembimbing-pdf');
+        Route::get('/administrasi/sk/export-penguji-pdf', [SkController::class, 'exportSkPengujiPdf'])->name('administrasi.sk.export-penguji-pdf');
         Route::get('/administrasi/audit-log', [AuditLogController::class, 'index'])->name('administrasi.audit-log.index');
         Route::get('/administrasi/analitik', [AnalitikController::class, 'index'])->name('administrasi.analitik.index');
         Route::get('/master/dosen-penguji-rule', [DosenPengujiRuleController::class, 'index'])->name('master.dosen-penguji-rule.index')->middleware('pin.rule-penguji');
